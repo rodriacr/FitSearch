@@ -51,7 +51,7 @@ describe('auth.service', () => {
       const resultado = await authService.iniciarSesion({ correo: 'ana@correo.cl', password: PASSWORD });
 
       expect(resultado.usuario.correo).toBe('ana@correo.cl');
-      expect(authService.verificarToken(resultado.token)).toEqual({ id: 1, rol: 'usuario' });
+      expect(authService.verificarToken(resultado.token)).toEqual({ id: 1, rol: 'usuario', vencimiento: expect.any(Number) });
     });
 
     test('con contraseña incorrecta responde 401 con mensaje genérico', async () => {

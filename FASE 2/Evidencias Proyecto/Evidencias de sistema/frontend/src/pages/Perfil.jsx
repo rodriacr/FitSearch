@@ -1,131 +1,111 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
-import CampoFormulario from '../components/CampoFormulario.jsx';
+import Icono from '../components/Icono.jsx';
+import AsistentePerfil from '../components/perfil/AsistentePerfil.jsx';
+import PasoDatosPersonales from '../components/perfil/PasoDatosPersonales.jsx';
+import PasoObjetivos from '../components/perfil/PasoObjetivos.jsx';
+import PasoSalud from '../components/perfil/PasoSalud.jsx';
+import PasoTipoCuenta from '../components/perfil/PasoTipoCuenta.jsx';
+import { TarjetaEstimacion } from '../components/perfil/piezas.jsx';
+import ResumenPerfil from '../components/perfil/ResumenPerfil.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
-import { actualizarPerfil, obtenerPerfil } from '../services/perfil.service.js';
-import { opcionesActividad, opcionesSexo, validarPerfil } from '../services/validaciones.js';
+import { obtenerPerfil } from '../services/perfil.service.js';
 
-const FORMULARIO_VACIO = { pesoKg: '', alturaCm: '', edad: '', sexo: '', actividadFisica: '' };
-const aFormulario = (perfil) =>
-  Object.fromEntries(Object.keys(FORMULARIO_VACIO).map((campo) => [campo, perfil[campo] ?? '']));
+const FINAL = 4;
 
+// Primer paso pendiente del asistente, o null si el perfil está completo.
+function pasoPendiente({ pasos }) {
+  const orden = [pasos.tipoCuenta, pasos.datosPersonales, pasos.objetivos, pasos.salud];
+  const indice = orden.indexOf(false);
+  return indice === -1 ? null : indice;
+}
+
+// "Mi perfil": asistente de 5 pasos mientras falten datos (FS-HU-02, FS-HU-18, FS-HU-19) y luego el resumen con "Editar".
 export default function Perfil() {
-  const { state } = useLocation();
-  const { aviso, limpiarAviso } = useSesion();
+  const { aviso, limpiarAviso, actualizarSesion } = useSesion();
   const [avisoInicial] = useState(aviso);
   const [cargando, setCargando] = useState(true);
-  const [usuario, setUsuario] = useState(null);
-  const [completo, setCompleto] = useState(false);
-  const [requerimiento, setRequerimiento] = useState(null);
-  const [datos, setDatos] = useState(FORMULARIO_VACIO);
-  const [errores, setErrores] = useState({});
-  const [mensaje, setMensaje] = useState({ tipo: 'error', texto: '' });
-  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+  const [datos, setDatos] = useState(null);
+  // Paso en el que se abrió el asistente: ahí se muestra el saludo de bienvenida.
+  const [pasoInicial, setPasoInicial] = useState(null);
+  // vista: { tipo: 'asistente', paso, edicion } | { tipo: 'resumen' }
+  const [vista, setVista] = useState(null);
+  const [mensaje, setMensaje] = useState('');
 
   useEffect(() => {
     let activo = true;
     obtenerPerfil()
       .then((respuesta) => {
         if (!activo) return;
-        setUsuario(respuesta.usuario);
-        setCompleto(respuesta.completo);
-        setRequerimiento(respuesta.requerimientoCaloricoKcal);
-        setDatos(aFormulario(respuesta.perfil));
+        setDatos(respuesta);
+        const pendiente = pasoPendiente(respuesta);
+        setPasoInicial(pendiente);
+        setVista(pendiente === null ? { tipo: 'resumen' } : { tipo: 'asistente', paso: pendiente, edicion: false });
       })
-      .catch((error) => activo && setMensaje({ tipo: 'error', texto: error.message }))
+      .catch((err) => activo && setError(err.message))
       .finally(() => activo && setCargando(false));
     return () => { activo = false; };
   }, []);
 
-  // El aviso de sesión iniciada se muestra una sola vez al llegar al perfil.
+  // El aviso de sesión iniciada o de cuenta creada se muestra una sola vez al llegar al perfil.
   useEffect(() => {
     if (avisoInicial) limpiarAviso();
   }, [avisoInicial, limpiarAviso]);
 
-  const cambiar = (evento) => setDatos({ ...datos, [evento.target.name]: evento.target.value });
+  if (cargando) return <p className="texto-secundario">Cargando tu perfil…</p>;
+  if (error) return <Alerta>{error}</Alerta>;
 
-  const guardar = async (evento) => {
-    evento.preventDefault();
-    setMensaje({ tipo: 'error', texto: '' });
-    const erroresCliente = validarPerfil(datos);
-    setErrores(erroresCliente);
-    if (Object.keys(erroresCliente).length > 0) {
-      setMensaje({ tipo: 'error', texto: 'No se guardaron los datos: completa o corrige los campos marcados.' });
-      return;
-    }
+  const avisos = (
+    <>
+      {avisoInicial && <Alerta tipo={avisoInicial.tipo}>{avisoInicial.texto}</Alerta>}
+      <Alerta tipo="exito">{mensaje}</Alerta>
+    </>
+  );
 
-    setGuardando(true);
-    try {
-      const respuesta = await actualizarPerfil({
-        pesoKg: Number(datos.pesoKg),
-        alturaCm: Number(datos.alturaCm),
-        edad: Number(datos.edad),
-        sexo: datos.sexo,
-        actividadFisica: datos.actividadFisica,
-      });
-      setCompleto(respuesta.completo);
-      setRequerimiento(respuesta.requerimientoCaloricoKcal);
-      setDatos(aFormulario(respuesta.perfil));
-      setMensaje({ tipo: 'exito', texto: 'Tus datos básicos se guardaron correctamente.' });
-    } catch (error) {
-      setErrores(error.detalles || {});
-      setMensaje({ tipo: 'error', texto: error.message });
-    } finally {
-      setGuardando(false);
+  if (vista.tipo === 'resumen') {
+    return (
+      <ResumenPerfil datos={datos} aviso={avisos}
+        onEditar={(paso) => { setMensaje(''); setVista({ tipo: 'asistente', paso, edicion: true }); }} />
+    );
+  }
+
+  const { paso, edicion } = vista;
+  const alGuardar = (respuesta) => {
+    setDatos(respuesta);
+    // El paso del tipo de cuenta devuelve un token nuevo: el rol cambió y viaja dentro del token.
+    if (respuesta.token) actualizarSesion({ token: respuesta.token, usuario: respuesta.usuario });
+    if (edicion) {
+      setMensaje('Tus cambios se guardaron correctamente.');
+      setVista({ tipo: 'resumen' });
+    } else {
+      setVista({ tipo: 'asistente', paso: paso + 1, edicion: false });
     }
   };
-
-  if (cargando) return <p className="texto-secundario">Cargando tu perfil…</p>;
+  const propsPaso = {
+    onGuardado: alGuardar,
+    onVolver: edicion ? () => setVista({ tipo: 'resumen' }) : (paso > 0 ? () => setVista({ ...vista, paso: paso - 1 }) : undefined),
+    textoVolver: edicion ? 'Cancelar' : 'Volver',
+    textoPrincipal: edicion ? 'Guardar cambios' : 'Siguiente',
+  };
 
   return (
-    <section className="tarjeta">
-      <h1>{usuario ? `Hola, ${usuario.nombre}` : 'Mi perfil'}</h1>
-      {usuario && <p className="texto-secundario">{usuario.correo}</p>}
-      {state?.bienvenida && <Alerta tipo="exito">Tu cuenta fue creada y la sesión está iniciada.</Alerta>}
-      {avisoInicial && <Alerta tipo={avisoInicial.tipo}>{avisoInicial.texto}</Alerta>}
-      {!completo && usuario && (
-        <Alerta tipo="info">Completa tus datos básicos para recibir estimaciones nutricionales personalizadas.</Alerta>
-      )}
-      <Alerta tipo={mensaje.tipo}>{mensaje.texto}</Alerta>
-
-      {requerimiento !== null && (
-        <div className="estimacion" aria-live="polite">
-          <p className="estimacion__titulo">Requerimiento calórico diario estimado</p>
-          <p className="estimacion__valor">{requerimiento.toLocaleString('es-CL')} kcal/día</p>
-          <p className="estimacion__nota">
-            Estimación referencial calculada con la ecuación de Mifflin-St Jeor y tu nivel de actividad física.
-            No reemplaza la evaluación de un profesional de la salud.
-          </p>
+    <AsistentePerfil paso={paso} aviso={(!edicion && paso === pasoInicial) || paso === FINAL ? avisos : null}>
+      {paso === 0 && <PasoTipoCuenta rol={datos.pasos.tipoCuenta ? datos.usuario.rol : ''} {...propsPaso} />}
+      {paso === 1 && <PasoDatosPersonales perfil={datos.perfil} {...propsPaso} />}
+      {paso === 2 && <PasoObjetivos objetivos={datos.objetivos} {...propsPaso} />}
+      {paso === 3 && <PasoSalud salud={datos.salud} {...propsPaso} />}
+      {paso === FINAL && (
+        <div className="paso-final">
+          <span className="paso-final__check"><Icono nombre="check" tamano={36} /></span>
+          <h1>¡Información guardada!</h1>
+          <p className="texto-secundario">Tu perfil fue creado correctamente. Ya puedes usar FitSearch con recomendaciones basadas en tus datos.</p>
+          <TarjetaEstimacion kcal={datos.requerimientoCaloricoKcal} />
+          <button type="button" className="boton boton--principal" onClick={() => setVista({ tipo: 'resumen' })}>
+            Ir a mi perfil <Icono nombre="flecha" tamano={18} />
+          </button>
         </div>
       )}
-
-      <form onSubmit={guardar} noValidate>
-        <h2>Datos básicos</h2>
-        <div className="grilla">
-          <CampoFormulario id="pesoKg" etiqueta="Peso (kg)" type="number" inputMode="decimal" step="0.1"
-            value={datos.pesoKg} onChange={cambiar} error={errores.pesoKg} />
-          <CampoFormulario id="alturaCm" etiqueta="Altura (cm)" type="number" inputMode="decimal" step="0.1"
-            value={datos.alturaCm} onChange={cambiar} error={errores.alturaCm} />
-          <CampoFormulario id="edad" etiqueta="Edad (años)" type="number" inputMode="numeric" step="1"
-            value={datos.edad} onChange={cambiar} error={errores.edad} />
-          <CampoFormulario id="sexo" etiqueta="Sexo"
-            value={datos.sexo} onChange={cambiar} error={errores.sexo}>
-            <option value="">Selecciona una opción</option>
-            {opcionesSexo.map((opcion) => (
-              <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-            ))}
-          </CampoFormulario>
-          <CampoFormulario id="actividadFisica" etiqueta="Actividad física"
-            value={datos.actividadFisica} onChange={cambiar} error={errores.actividadFisica}>
-            <option value="">Selecciona una opción</option>
-            {opcionesActividad.map((opcion) => (
-              <option key={opcion.valor} value={opcion.valor}>{opcion.etiqueta}</option>
-            ))}
-          </CampoFormulario>
-        </div>
-        <button type="submit" className="boton" disabled={guardando}>{guardando ? 'Guardando…' : 'Guardar datos'}</button>
-      </form>
-    </section>
+    </AsistentePerfil>
   );
 }
