@@ -161,6 +161,18 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 ## API disponible (Sprints 1 y 2)
 
+### Directorio de profesionales — FS-HU-03
+
+La ruta `/profesionales` muestra fichas desde MySQL, filtro por especialidad y páginas de 12 resultados. Se accede desde «Buscar profesionales» en el encabezado.
+
+Después de actualizar esta rama, ejecutar en backend `npm run db:generate` y `npm run db:migrate`. Para cargar **datos ficticios opcionales**, ejecutar primero `npm run db:seed` y luego `npm run db:seed:profesionales` (solo desarrollo; no crea credenciales de acceso).
+
+- `GET /api/profesionales?especialidad=Nutrición&pagina=1`: devuelve `profesionales`, `pagina` y `hayMas`. Ambos parámetros son opcionales.
+- `GET /api/profesionales/especialidades`: devuelve las especialidades disponibles.
+- No requiere clave de Google; el enlace de ubicación abre Google Maps. La edición de fichas pertenece a HU-04.
+
+Detalle de alcance, datos, pruebas y evidencias: [FS-HU-03 — Listado de profesionales](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%202/FS-HU-03_Listado_profesionales.md).
+
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
 | GET | `/api/salud` | No | Estado de la API |

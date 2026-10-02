@@ -37,9 +37,39 @@ model Usuario {
   perfil             PerfilUsuario?
   tokensRecuperacion TokenRecuperacion[]
   informacionSalud   InformacionSalud?
+  profesional        Profesional?
 
   @@index([rolId])
   @@map("usuarios")
+}
+
+// FS-HU-03: directorio según el diccionario de datos del DAS.
+model Profesional {
+  id                Int       @id @default(autoincrement())
+  usuarioId         Int       @unique @map("usuario_id")
+  establecimientoId Int?      @map("establecimiento_id")
+  especialidad      String    @db.VarChar(100)
+  descripcion       String?   @db.Text
+  verificado        Boolean   @default(false)
+  ubicacionLat      Decimal   @map("ubicacion_lat") @db.Decimal(10, 7)
+  ubicacionLng      Decimal   @map("ubicacion_lng") @db.Decimal(10, 7)
+  usuario           Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  establecimiento   Establecimiento? @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)
+
+  @@index([especialidad])
+  @@map("profesionales")
+}
+
+model Establecimiento {
+  id            Int           @id @default(autoincrement())
+  nombre        String        @db.VarChar(150)
+  categoria     String        @db.VarChar(50)
+  direccion     String        @db.VarChar(255)
+  ubicacionLat  Decimal       @map("ubicacion_lat") @db.Decimal(10, 7)
+  ubicacionLng  Decimal       @map("ubicacion_lng") @db.Decimal(10, 7)
+  profesionales Profesional[]
+
+  @@map("establecimientos")
 }
 
 model PerfilUsuario {

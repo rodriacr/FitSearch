@@ -1,0 +1,10 @@
+const { Router } = require('express');
+const controlador = require('../controllers/profesional.controller');
+const validadores = require('../validators/profesional.validators');
+const validar = require('../middlewares/validar');
+const { autenticar } = require('../middlewares/autenticar');
+const router = Router();
+router.use(autenticar);
+router.get('/especialidades', controlador.especialidades);
+router.get('/', validadores, validar, controlador.listar);
+module.exports = router;
