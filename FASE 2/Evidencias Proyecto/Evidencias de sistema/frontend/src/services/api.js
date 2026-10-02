@@ -1,27 +1,21 @@
 // Cliente HTTP de la API REST de FitSearch.
 const CLAVE_SESION = 'fitsearch_sesion';
 
-// Con "Recordarme" la sesión se guarda en localStorage (sobrevive al cerrar el navegador);
-// sin marcarlo, en sessionStorage (se borra al cerrar el navegador). Ver DAS, D17.
 export function leerSesionGuardada() {
   try {
-    const guardada = localStorage.getItem(CLAVE_SESION) ?? sessionStorage.getItem(CLAVE_SESION);
+    const guardada = localStorage.getItem(CLAVE_SESION);
     return guardada ? JSON.parse(guardada) : null;
   } catch {
     return null;
   }
 }
 
-export function guardarSesion(sesion, recordar = false) {
-  localStorage.removeItem(CLAVE_SESION);
-  sessionStorage.removeItem(CLAVE_SESION);
-  if (sesion) (recordar ? localStorage : sessionStorage).setItem(CLAVE_SESION, JSON.stringify(sesion));
-}
-
-// Reemplaza la sesión guardada conservando dónde estaba: el backend emite un token nuevo cuando
-// la persona confirma su tipo de cuenta, porque el rol viaja dentro del token.
-export function actualizarSesionGuardada(sesion) {
-  guardarSesion(sesion, localStorage.getItem(CLAVE_SESION) !== null);
+export function guardarSesion(sesion) {
+  if (sesion) {
+    localStorage.setItem(CLAVE_SESION, JSON.stringify(sesion));
+  } else {
+    localStorage.removeItem(CLAVE_SESION);
+  }
 }
 
 export class ErrorApi extends Error {

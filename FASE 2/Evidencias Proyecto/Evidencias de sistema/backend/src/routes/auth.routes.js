@@ -8,9 +8,6 @@ const router = Router();
 
 router.post('/registro', validadores.registro, validar, controlador.registrar);
 router.post('/login', validadores.inicioSesion, validar, controlador.iniciarSesion);
-router.post('/google', validadores.inicioSesionGoogle, validar, controlador.iniciarSesionConGoogle);
 router.post('/logout', autenticar, controlador.cerrarSesion);
-router.post('/recuperar', validadores.solicitarRecuperacion, validar, controlador.solicitarRecuperacion);
-router.post('/restablecer', validadores.restablecer, validar, controlador.restablecerPassword);
 
 module.exports = router;

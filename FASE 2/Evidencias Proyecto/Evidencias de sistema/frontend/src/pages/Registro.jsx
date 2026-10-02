@@ -1,17 +1,14 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
-import BotonGoogle from '../components/BotonGoogle.jsx';
 import CampoFormulario from '../components/CampoFormulario.jsx';
-import Icono from '../components/Icono.jsx';
-import PantallaAcceso from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
 import { validarRegistro } from '../services/validaciones.js';
 
 export default function Registro() {
   const { registrar } = useSesion();
   const navegar = useNavigate();
-  const [datos, setDatos] = useState({ nombre: '', correo: '', password: '', confirmacion: '' });
+  const [datos, setDatos] = useState({ nombre: '', correo: '', password: '' });
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
   const [enviando, setEnviando] = useState(false);
@@ -27,9 +24,8 @@ export default function Registro() {
 
     setEnviando(true);
     try {
-      const { nombre, correo, password } = datos;
-      await registrar({ nombre, correo, password });
-      navegar('/perfil', { replace: true });
+      await registrar(datos);
+      navegar('/perfil', { replace: true, state: { bienvenida: true } });
     } catch (error) {
       setErrores(error.detalles || {});
       setMensaje(error.message);
@@ -38,30 +34,20 @@ export default function Registro() {
   };
 
   return (
-    <PantallaAcceso>
-      <div className="acceso__encabezado">
-        <h1>Tu bienestar comienza <span className="texto-acento">aquí</span></h1>
-        <p className="texto-secundario">Regístrate y accede a profesionales, lugares y herramientas para cuidar tu salud y rendimiento.</p>
-      </div>
+    <section className="tarjeta">
+      <h1>Crea tu cuenta</h1>
+      <p className="texto-secundario">Encuentra profesionales de salud, deporte y bienestar cerca de ti.</p>
       <Alerta>{mensaje}</Alerta>
       <form onSubmit={enviar} noValidate>
-        <CampoFormulario id="nombre" etiqueta="Nombre completo" autoComplete="name" icono="usuario" etiquetaOculta
+        <CampoFormulario id="nombre" etiqueta="Nombre completo" autoComplete="name"
           value={datos.nombre} onChange={cambiar} error={errores.nombre} />
-        <CampoFormulario id="correo" etiqueta="Correo electrónico" type="email" autoComplete="email" icono="correo" etiquetaOculta
+        <CampoFormulario id="correo" etiqueta="Correo electrónico" type="email" autoComplete="email"
           value={datos.correo} onChange={cambiar} error={errores.correo} />
-        <div className="fila-doble">
-          <CampoFormulario id="password" etiqueta="Contraseña (mínimo 8 caracteres)" placeholder="Contraseña" type="password"
-            autoComplete="new-password" icono="candado" etiquetaOculta value={datos.password} onChange={cambiar} error={errores.password} />
-          <CampoFormulario id="confirmacion" etiqueta="Confirmar contraseña" placeholder="Confirmar" type="password"
-            autoComplete="new-password" icono="candado" etiquetaOculta value={datos.confirmacion} onChange={cambiar} error={errores.confirmacion} />
-        </div>
-
-        <button type="submit" className="boton boton--principal" disabled={enviando}>
-          {enviando ? 'Creando cuenta…' : <>Registrarse <Icono nombre="flecha" /></>}
-        </button>
+        <CampoFormulario id="password" etiqueta="Contraseña (mínimo 8 caracteres)" type="password" autoComplete="new-password"
+          value={datos.password} onChange={cambiar} error={errores.password} />
+        <button type="submit" className="boton" disabled={enviando}>{enviando ? 'Creando cuenta…' : 'Registrarme'}</button>
       </form>
-      <BotonGoogle separador="o regístrate con" textoGoogle="signup_with" />
-      <p className="pie-acceso">¿Ya tienes una cuenta? <Link to="/iniciar-sesion" className="enlace-acento">Inicia sesión</Link></p>
-    </PantallaAcceso>
+      <p className="texto-secundario">¿Ya tienes cuenta? <Link to="/iniciar-sesion">Inicia sesión</Link></p>
+    </section>
   );
 }

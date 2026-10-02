@@ -1,8 +1,6 @@
 // Modelo de datos de FitSearch.
 // Fuente: Documento de Arquitectura del Sistema (DAS), sección "Diccionario de datos".
 // Sprint 1: roles, usuarios y perfiles_usuario.
-// Sprint 2: google_id en usuarios (password_hash opcional) y tokens_recuperacion (FS-HU-15, FS-HU-16);
-// objetivos y estilo de vida en perfiles_usuario (FS-HU-18) e informacion_salud (FS-HU-19).
 
 generator client {
   provider = "prisma-client-js"
@@ -23,66 +21,28 @@ model Rol {
 }
 
 model Usuario {
-  id                 Int                 @id @default(autoincrement())
-  nombre             String              @db.VarChar(100)
-  correo             String              @unique @db.VarChar(150)
-  passwordHash       String?             @map("password_hash") @db.VarChar(255)
-  googleId           String?             @unique @map("google_id") @db.VarChar(255)
-  rolId              Int                 @map("rol_id")
-  // El registro crea toda cuenta como "usuario"; queda en true cuando la persona elige su tipo de cuenta
-  // en el primer paso del asistente de perfil (FS-HU-02).
-  rolConfirmado      Boolean             @default(false) @map("rol_confirmado")
-  fechaRegistro      DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
-  rol                Rol                 @relation(fields: [rolId], references: [id], onDelete: Restrict)
-  perfil             PerfilUsuario?
-  tokensRecuperacion TokenRecuperacion[]
-  informacionSalud   InformacionSalud?
+  id            Int            @id @default(autoincrement())
+  nombre        String         @db.VarChar(100)
+  correo        String         @unique @db.VarChar(150)
+  passwordHash  String         @map("password_hash") @db.VarChar(255)
+  rolId         Int            @map("rol_id")
+  fechaRegistro DateTime       @default(now()) @map("fecha_registro") @db.DateTime(0)
+  rol           Rol            @relation(fields: [rolId], references: [id], onDelete: Restrict)
+  perfil        PerfilUsuario?
 
   @@index([rolId])
   @@map("usuarios")
 }
 
 model PerfilUsuario {
-  id                Int      @id @default(autoincrement())
-  usuarioId         Int      @unique @map("usuario_id")
-  pesoKg            Decimal? @map("peso_kg") @db.Decimal(5, 2)
-  alturaCm          Decimal? @map("altura_cm") @db.Decimal(5, 2)
-  edad              Int?
-  sexo              String?  @db.VarChar(20)
-  actividadFisica   String?  @map("actividad_fisica") @db.VarChar(50)
-  objetivoPrincipal String?  @map("objetivo_principal") @db.VarChar(30)
-  comidasDia        Int?     @map("comidas_dia") @db.TinyInt
-  horasSueno        String?  @map("horas_sueno") @db.VarChar(20)
-  usuario           Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  id              Int      @id @default(autoincrement())
+  usuarioId       Int      @unique @map("usuario_id")
+  pesoKg          Decimal? @map("peso_kg") @db.Decimal(5, 2)
+  alturaCm        Decimal? @map("altura_cm") @db.Decimal(5, 2)
+  edad            Int?
+  sexo            String?  @db.VarChar(20)
+  actividadFisica String?  @map("actividad_fisica") @db.VarChar(50)
+  usuario         Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("perfiles_usuario")
-}
-
-// Códigos de un solo uso para restablecer la contraseña; solo se guarda el hash SHA-256 (DAS, QS6 y D16).
-model TokenRecuperacion {
-  id              Int       @id @default(autoincrement())
-  usuarioId       Int       @map("usuario_id")
-  tokenHash       String    @unique @map("token_hash") @db.Char(64)
-  fechaExpiracion DateTime  @map("fecha_expiracion") @db.DateTime(0)
-  fechaUso        DateTime? @map("fecha_uso") @db.DateTime(0)
-  fechaCreacion   DateTime  @default(now()) @map("fecha_creacion") @db.DateTime(0)
-  usuario         Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@index([usuarioId])
-  @@map("tokens_recuperacion")
-}
-
-// Información de salud declarada por el usuario (FS-HU-19). Dato sensible: solo lo consulta su dueño (DAS, QS7).
-// Las listas guardan valores de los catálogos de shared/reglas.json (sin texto libre, por minimización de datos).
-model InformacionSalud {
-  id                 Int      @id @default(autoincrement())
-  usuarioId          Int      @unique @map("usuario_id")
-  condicionesMedicas Json     @map("condiciones_medicas")
-  tomaMedicamentos   Boolean  @map("toma_medicamentos")
-  medicamentos       Json
-  alergias           Json
-  fechaActualizacion DateTime @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
-  usuario            Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-
-  @@map("informacion_salud")
 }

@@ -1,233 +1,24 @@
 {
-  "roles": [
-    "usuario",
-    "profesional",
-    "administrador"
-  ],
+  "roles": ["usuario", "profesional", "administrador"],
   "usuario": {
-    "nombre": {
-      "min": 2,
-      "max": 100
-    },
-    "correo": {
-      "max": 150
-    },
-    "password": {
-      "min": 8,
-      "max": 72
-    }
+    "nombre": { "min": 2, "max": 100 },
+    "correo": { "max": 150 },
+    "password": { "min": 8, "max": 72 }
   },
   "perfil": {
-    "pesoKg": {
-      "min": 20,
-      "max": 350
-    },
-    "alturaCm": {
-      "min": 80,
-      "max": 250
-    },
-    "edad": {
-      "min": 14,
-      "max": 100
-    },
+    "pesoKg": { "min": 20, "max": 350 },
+    "alturaCm": { "min": 80, "max": 250 },
+    "edad": { "min": 14, "max": 100 },
     "sexo": [
-      {
-        "valor": "femenino",
-        "etiqueta": "Femenino"
-      },
-      {
-        "valor": "masculino",
-        "etiqueta": "Masculino"
-      }
+      { "valor": "femenino", "etiqueta": "Femenino" },
+      { "valor": "masculino", "etiqueta": "Masculino" }
     ],
     "actividadFisica": [
-      {
-        "valor": "sedentaria",
-        "etiqueta": "Sedentaria (poco o nada de ejercicio)",
-        "factor": 1.2
-      },
-      {
-        "valor": "ligera",
-        "etiqueta": "Ligera (1 a 3 días por semana)",
-        "factor": 1.375
-      },
-      {
-        "valor": "moderada",
-        "etiqueta": "Moderada (3 a 5 días por semana)",
-        "factor": 1.55
-      },
-      {
-        "valor": "intensa",
-        "etiqueta": "Intensa (6 a 7 días por semana)",
-        "factor": 1.725
-      },
-      {
-        "valor": "muy_intensa",
-        "etiqueta": "Muy intensa (entrenamiento diario exigente)",
-        "factor": 1.9
-      }
-    ],
-    "objetivoPrincipal": [
-      {
-        "valor": "bajar_peso",
-        "etiqueta": "Bajar de peso"
-      },
-      {
-        "valor": "mantener_peso",
-        "etiqueta": "Mantener peso"
-      },
-      {
-        "valor": "aumentar_masa",
-        "etiqueta": "Aumentar masa muscular"
-      },
-      {
-        "valor": "mejorar_rendimiento",
-        "etiqueta": "Mejorar rendimiento"
-      },
-      {
-        "valor": "otro",
-        "etiqueta": "Otro"
-      }
-    ],
-    "comidasDia": [
-      {
-        "valor": 1,
-        "etiqueta": "1 comida"
-      },
-      {
-        "valor": 2,
-        "etiqueta": "2 comidas"
-      },
-      {
-        "valor": 3,
-        "etiqueta": "3 comidas"
-      },
-      {
-        "valor": 4,
-        "etiqueta": "4 comidas"
-      },
-      {
-        "valor": 5,
-        "etiqueta": "5 comidas"
-      },
-      {
-        "valor": 6,
-        "etiqueta": "6 o más comidas"
-      }
-    ],
-    "horasSueno": [
-      {
-        "valor": "menos_5",
-        "etiqueta": "Menos de 5 horas"
-      },
-      {
-        "valor": "5_6",
-        "etiqueta": "5 - 6 horas"
-      },
-      {
-        "valor": "7_8",
-        "etiqueta": "7 - 8 horas"
-      },
-      {
-        "valor": "mas_8",
-        "etiqueta": "Más de 8 horas"
-      }
-    ]
-  },
-  "salud": {
-    "condicionesMedicas": [
-      {
-        "valor": "ninguna",
-        "etiqueta": "Ninguna"
-      },
-      {
-        "valor": "diabetes",
-        "etiqueta": "Diabetes"
-      },
-      {
-        "valor": "hipertension",
-        "etiqueta": "Hipertensión arterial"
-      },
-      {
-        "valor": "cardiovascular",
-        "etiqueta": "Enfermedad cardiovascular"
-      },
-      {
-        "valor": "respiratoria",
-        "etiqueta": "Asma u otra enfermedad respiratoria"
-      },
-      {
-        "valor": "tiroides",
-        "etiqueta": "Hipotiroidismo o hipertiroidismo"
-      },
-      {
-        "valor": "colesterol",
-        "etiqueta": "Colesterol o triglicéridos altos"
-      },
-      {
-        "valor": "musculoesqueletica",
-        "etiqueta": "Lesión o dolor musculoesquelético"
-      },
-      {
-        "valor": "embarazo_lactancia",
-        "etiqueta": "Embarazo o lactancia"
-      },
-      {
-        "valor": "otra",
-        "etiqueta": "Otra"
-      }
-    ],
-    "medicamentos": [
-      {
-        "valor": "presion",
-        "etiqueta": "Para la presión arterial"
-      },
-      {
-        "valor": "diabetes",
-        "etiqueta": "Para la diabetes (insulina u orales)"
-      },
-      {
-        "valor": "anticoagulantes",
-        "etiqueta": "Anticoagulantes"
-      },
-      {
-        "valor": "corticoides",
-        "etiqueta": "Corticoides"
-      },
-      {
-        "valor": "salud_mental",
-        "etiqueta": "Antidepresivos o ansiolíticos"
-      },
-      {
-        "valor": "hormonas",
-        "etiqueta": "Anticonceptivos u hormonas"
-      },
-      {
-        "valor": "suplementos",
-        "etiqueta": "Suplementos o vitaminas"
-      },
-      {
-        "valor": "otro",
-        "etiqueta": "Otro"
-      }
-    ],
-    "alergias": [
-      {
-        "valor": "ninguna",
-        "etiqueta": "Ninguna"
-      },
-      {
-        "valor": "alimentarias",
-        "etiqueta": "Alimentarias"
-      },
-      {
-        "valor": "medicamentosas",
-        "etiqueta": "Medicamentosas"
-      },
-      {
-        "valor": "ambientales",
-        "etiqueta": "Ambientales"
-      }
+      { "valor": "sedentaria", "etiqueta": "Sedentaria (poco o nada de ejercicio)", "factor": 1.2 },
+      { "valor": "ligera", "etiqueta": "Ligera (1 a 3 días por semana)", "factor": 1.375 },
+      { "valor": "moderada", "etiqueta": "Moderada (3 a 5 días por semana)", "factor": 1.55 },
+      { "valor": "intensa", "etiqueta": "Intensa (6 a 7 días por semana)", "factor": 1.725 },
+      { "valor": "muy_intensa", "etiqueta": "Muy intensa (entrenamiento diario exigente)", "factor": 1.9 }
     ]
   }
 }
