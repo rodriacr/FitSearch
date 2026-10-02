@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
-import FichasGoogle from '../components/FichasGoogle.jsx';
-import KinesiologosGoogle from '../components/KinesiologosGoogle.jsx';
 import { listarProfesionales, obtenerEspecialidades } from '../services/profesional.service.js';
 import './Profesionales.css';
 
@@ -53,7 +51,7 @@ export default function Profesionales() {
         <button type="submit" className="boton boton--principal boton--compacto">Buscar profesionales</button>
         {(especialidad || zona) && <button type="button" className="boton-texto" onClick={() => setParametros({})}>Limpiar filtro</button>}
       </form>
-      <p className="texto-secundario">Busca en FitSearch y Google Maps por especialidad y comuna.</p>
+      <p className="texto-secundario">Busca profesionales registrados en FitSearch por especialidad y comuna.</p>
       {resultado?.especialidades?.length > 0 && <nav className="directorio__categorias" aria-label="Explorar especialidades">
         <span>Explora:</span>
         <button type="button" aria-pressed={!especialidad} onClick={() => setParametros(zona ? { comuna: zona } : {})}>Todas</button>
@@ -94,7 +92,6 @@ export default function Profesionales() {
                     target="_blank" rel="noopener noreferrer" aria-label={`Ver ubicación de ${profesional.nombre} en Google Maps (nueva pestaña)`}>
                     Ver ubicación <Icono nombre="flecha" tamano={18} />
                   </a>
-                  <a className="directorio__ruta" href={'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(profesional.ubicacionLat + ',' + profesional.ubicacionLng)} target="_blank" rel="noopener noreferrer" aria-label={'Cómo llegar a la atención de ' + profesional.nombre}>Cómo llegar ↗</a>
                 </article>
               ))}
             </div>
@@ -105,9 +102,8 @@ export default function Profesionales() {
             </nav>
           </>
         )}
-        <FichasGoogle especialidad={especialidad} zona={zona} />
       </div>
-      <div className="directorio__lateral"><KinesiologosGoogle especialidad={especialidad} zona={zona} />
+      <div className="directorio__lateral">
         <section className="directorio__ayuda"><span className="directorio__antetitulo">Antes de elegir</span><h2>Encuentra una atención que se ajuste a ti</h2>
           <ul><li><strong>Revisa la especialidad.</strong> Busca un área relacionada con lo que necesitas.</li><li><strong>Comprueba la ubicación.</strong> Revisa la dirección y cómo llegar antes de trasladarte.</li><li><strong>Confirma los detalles.</strong> Consulta directamente al profesional por horarios, valores y servicios.</li></ul>
         </section></div>

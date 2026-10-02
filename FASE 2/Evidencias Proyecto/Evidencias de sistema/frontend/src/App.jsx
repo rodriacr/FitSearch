@@ -22,8 +22,8 @@ export default function App() {
       <Route path="/iniciar-sesion" element={soloInvitado(<InicioSesion />)} />
       <Route path="/recuperar-contrasena" element={soloInvitado(<RecuperarContrasena />)} />
       <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
-      <Route path="/profesionales" element={<><Encabezado /><main className="contenedor contenedor--ancho"><Profesionales /></main></>} />
       <Route element={<RutaProtegida />}>
+        <Route path="/profesionales" element={<><Encabezado /><main className="contenedor contenedor--ancho"><Profesionales /></main></>} />
         <Route path="/perfil" element={<><Encabezado /><main className="contenedor contenedor--ancho"><Perfil /></main></>} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

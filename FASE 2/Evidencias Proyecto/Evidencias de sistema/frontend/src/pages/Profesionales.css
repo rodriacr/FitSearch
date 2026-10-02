@@ -33,8 +33,6 @@
   box-shadow: none;
 }
 .encabezado__directorio .icono { flex-shrink: 0; }
-.directorio__google { margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--color-borde); }
-.directorio__google iframe { display: block; width: 100%; height: 420px; border: 1px solid var(--color-borde); border-radius: var(--radio); margin: 1rem 0; }
 .encabezado { flex-wrap: wrap; gap: .75rem; }
 @media (min-width: 640px) { .directorio__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 1000px) { .directorio__lista { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -44,13 +42,9 @@
   .directorio__paginacion .boton { min-width: 0; width: auto; }
 }
 
-/* Búsqueda unificada: fichas y mapa comparten el formulario. */
+/* Resultados del directorio y consejos de consulta. */
 .directorio__resultados { display: grid; gap: 1.5rem; align-items: start; }
 .directorio__resultados > * { min-width: 0; }
-.directorio__google { margin-top: 0; padding: 1.25rem; background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio); }
-.directorio__google h2, .directorio__titulo-lista { margin-top: 0; }
-.directorio__fuente { font-size: .8rem; color: var(--color-texto-secundario); }
-@media (min-width: 900px) { .directorio__resultados { grid-template-columns: minmax(0,1fr) minmax(0,1fr); } .directorio__lista { grid-template-columns: 1fr; } .directorio__google { position: sticky; top: 6rem; } .directorio__google iframe { height: 500px; } }
 
 /* Presentación del directorio y orientación para elegir. */
 .directorio__cabecera { max-width: none; padding: 2rem; margin: 1.5rem 0; border-radius: 20px; background: linear-gradient(115deg, #e6f0f8, #f7fafc 70%); border: 1px solid #d9e6ef; }
@@ -72,14 +66,10 @@
 .directorio__ubicacion { background: var(--color-superficie-suave); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
 .directorio__ubicacion p { margin-bottom: 0; }
 .directorio__dato { display: block; font-size: .65rem; letter-spacing: .08em; color: var(--color-texto-secundario); margin-bottom: .4rem; }
-.directorio__ruta { align-self: flex-start; margin-top: .7rem; font-size: .8rem; text-underline-offset: 3px; }
 .directorio__ayuda { border: 1px solid var(--color-borde); border-radius: var(--radio); background: white; padding: 1.5rem; margin-top: 1.25rem; }
 .directorio__ayuda h2 { margin-top: .5rem; }
 .directorio__ayuda ul { padding-left: 1.1rem; margin-bottom: 0; font-size: .85rem; color: var(--color-texto-secundario); }
 .directorio__ayuda li + li { margin-top: .9rem; }
-.directorio__lateral .directorio__google { position: static; }
 @media (max-width: 600px) { .directorio__cabecera { padding: 1.4rem; } }
 
-.directorio__lugar-google { padding: 1rem; margin: 1rem 0; border: 1px solid #dce4e9; border-radius: 12px; background: #fff; }
-.directorio__lugar-google h3 { margin: .5rem 0; }
-.directorio__lugar-google small { color: #536776; }
+@media (min-width: 1100px) { .directorio__resultados { grid-template-columns: minmax(0, 3fr) minmax(15rem, 1fr); } .directorio__lista { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

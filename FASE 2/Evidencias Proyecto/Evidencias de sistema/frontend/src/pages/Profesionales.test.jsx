@@ -1,16 +1,20 @@
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, test, vi } from 'vitest';
-import { renderizarApp, respuestaJson } from '../tests/utilidades.jsx';
+import { beforeEach, expect, test, vi } from 'vitest';
+import { renderizarApp, respuestaJson, SESION } from '../tests/utilidades.jsx';
 
-test('la búsqueda actualiza a la vez FitSearch y Google Maps', async () => {
+beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
+
+test('la búsqueda combina especialidad y comuna en FitSearch', async () => {
   const fetch = simular(); renderizarApp('/profesionales');
   await screen.findByRole('heading', { name: 'Ana Demo' });
   await userEvent.type(screen.getByLabelText('Especialidad'), 'Kinesiología');
   await userEvent.clear(screen.getByLabelText('Comuna o ciudad'));
   await userEvent.type(screen.getByLabelText('Comuna o ciudad'), 'Santiago');
   await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
-  expect(await screen.findByTitle('Kinesiología en Santiago — Google Maps')).toHaveAttribute('src', expect.stringContaining('Santiago'));
+  await waitFor(() => expect(fetch.mock.calls.some(([url]) => url.includes('comuna=Santiago'))).toBe(true));
+  expect(document.querySelector('iframe')).toBeNull();
+  expect(fetch.mock.calls.some(([url]) => url.includes('/api/google/'))).toBe(false);
   expect(fetch.mock.calls.some(([url]) => url.includes('comuna=Santiago') && url.includes('especialidad=Kinesiolog%C3%ADa'))).toBe(true);
 });
 
@@ -65,4 +69,28 @@ test('muestra carga y permite reintentar tras un fallo de red', async () => {
   fetch.mockImplementation((url) => respuestaJson(200, url.includes('/especialidades') ? { especialidades: [] } : { profesionales: [ficha], pagina: 1, hayMas: false }));
   await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
   await waitFor(() => expect(screen.getByRole('heading', { name: 'Ana Demo' })).toBeInTheDocument());
+});
+
+test('un visitante debe iniciar sesión antes de consultar el directorio', async () => {
+  sessionStorage.clear();
+  const fetch = simular();
+  renderizarApp('/profesionales');
+  expect(await screen.findByRole('heading', { name: /bienvenido/i })).toBeInTheDocument();
+  expect(fetch.mock.calls.some(([url]) => url.includes('/api/profesionales'))).toBe(false);
+});
+
+test('envía el token en el listado y el catálogo', async () => {
+  const fetch = simular(); renderizarApp('/profesionales');
+  await screen.findByRole('heading', { name: 'Ana Demo' });
+  for (const [url, opciones] of fetch.mock.calls.filter(([url]) => url.includes('/api/profesionales'))) {
+    expect(url).toContain('/api/profesionales');
+    expect(opciones.headers.Authorization).toBe(`Bearer ${SESION.token}`);
+  }
+});
+
+test('una sesión vencida vuelve al inicio de sesión', async () => {
+  vi.spyOn(globalThis, 'fetch').mockImplementation(() => respuestaJson(401, { error: 'Sesión vencida' }));
+  renderizarApp('/profesionales');
+  expect(await screen.findByRole('heading', { name: /bienvenido/i })).toBeInTheDocument();
+  expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
 });

@@ -9,6 +9,6 @@ router.use('/auth', authRoutes);
 router.use('/perfil', perfilRoutes);
 router.use('/profesionales', require('./profesional.routes'));
 
-router.use('/google', require('./google.routes'));
+
 
 module.exports = router;
