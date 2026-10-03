@@ -29,11 +29,30 @@ const TRAZOS = {
   estrella: <path d="m12 3 2.7 5.6 6.1.8-4.4 4.3 1 6.1L12 17l-5.4 2.8 1-6.1-4.4-4.3 6.1-.8Z" />,
   candadoCerrado: <><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V7a4 4 0 0 1 8 0v4M12 15v2" /></>,
   medico: <><path d="M6 3v6a4 4 0 0 0 8 0V3" /><path d="M10 13v2a5 5 0 0 0 10 0v-2" /><circle cx="20" cy="11" r="2" /></>,
+  // Navegación de la aplicación con sesión (Inicio, menú lateral y barra inferior).
+  casa: <><path d="M3 11 12 4l9 7" /><path d="M5 10v10h5v-6h4v6h5V10" /></>,
+  profesional: <><circle cx="10" cy="8" r="4" /><path d="M3 21c0-4 3.1-7 7-7 1.2 0 2.3.3 3.2.8" /><circle cx="17.5" cy="17.5" r="2.5" /><path d="m19.3 19.3 2.2 2.2" /></>,
+  hospital: <><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M12 7.5v6M9 10.5h6M10 21v-3.5h4V21" /></>,
+  pastilla: <><path d="M10.5 3.5a5 5 0 0 1 7 7l-7 7a5 5 0 0 1-7-7Z" /><path d="m7 7 7 7" /></>,
+  chat: <><path d="M4 5h16v11H9l-5 4Z" /><path d="M8 9h8M8 12h5" /></>,
+  chispa: <><path d="M11 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z" /><path d="M19 15v5M16.5 17.5h5" /></>,
+  campana: <><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
+  menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  cerrar: <path d="M6 6l12 12M18 6 6 18" />,
+  chevron: <path d="m6 9 6 6 6-6" />,
+  filtro: <><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" /><circle cx="15" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="17" cy="18" r="2" /></>,
+  pin: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.5" /></>,
+  mira: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></>,
+  diana: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" /></>,
+  fuego: <path d="M12 21c-3.9 0-7-2.7-7-6.5 0-3 2-5.2 3.5-6.5.3 2 1.2 3 2.5 3.5C11 8 12 5 14 3c1 3 5 5.5 5 11 0 4-3.1 7-7 7Z" />,
+  gota: <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z" />,
+  pasos: <><path d="M8 3C6.3 3 5 4.8 5 7.5S6 12 6 12h4s1-2 1-4.5S9.7 3 8 3Z" /><path d="M6 14.5h4V16a2 2 0 0 1-4 0Z" /><path d="M16 7c1.7 0 3 1.8 3 4.5S18 16 18 16h-4s-1-2-1-4.5S14.3 7 16 7Z" /><path d="M14 18.5h4V20a2 2 0 0 1-4 0Z" /></>,
 };
 
-export default function Icono({ nombre, tamano = 20, className = '' }) {
+// "relleno" pinta el interior del ícono (estrella de la calificación, corazón de un favorito guardado).
+export default function Icono({ nombre, tamano = 20, className = '', relleno = false }) {
   return (
-    <svg className={`icono ${className}`} width={tamano} height={tamano} viewBox="0 0 24 24" fill="none"
+    <svg className={`icono${relleno ? ' icono--relleno' : ''} ${className}`} width={tamano} height={tamano} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
       {TRAZOS[nombre]}
     </svg>

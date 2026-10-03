@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import AsistentePerfil from '../components/perfil/AsistentePerfil.jsx';
@@ -22,8 +23,8 @@ function pasoPendiente({ pasos }) {
 
 // "Mi perfil": asistente de 5 pasos mientras falten datos (FS-HU-02, FS-HU-18, FS-HU-19) y luego el resumen con "Editar".
 export default function Perfil() {
-  const { aviso, limpiarAviso, actualizarSesion } = useSesion();
-  const [avisoInicial] = useState(aviso);
+  const { actualizarSesion } = useSesion();
+  const { descartarAviso } = useOutletContext() || {};
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [datos, setDatos] = useState(null);
@@ -48,20 +49,11 @@ export default function Perfil() {
     return () => { activo = false; };
   }, []);
 
-  // El aviso de sesión iniciada o de cuenta creada se muestra una sola vez al llegar al perfil.
-  useEffect(() => {
-    if (avisoInicial) limpiarAviso();
-  }, [avisoInicial, limpiarAviso]);
-
   if (cargando) return <p className="texto-secundario">Cargando tu perfil…</p>;
   if (error) return <Alerta>{error}</Alerta>;
 
-  const avisos = (
-    <>
-      {avisoInicial && <Alerta tipo={avisoInicial.tipo}>{avisoInicial.texto}</Alerta>}
-      <Alerta tipo="exito">{mensaje}</Alerta>
-    </>
-  );
+  // El aviso de sesión iniciada o de cuenta creada lo muestra el diseño común de la aplicación (DisenoAplicacion).
+  const avisos = <Alerta tipo="exito">{mensaje}</Alerta>;
 
   if (vista.tipo === 'resumen') {
     return (
@@ -72,6 +64,8 @@ export default function Perfil() {
 
   const { paso, edicion } = vista;
   const alGuardar = (respuesta) => {
+    // Al guardar un paso, el aviso de cuenta creada o de sesión iniciada ya cumplió su función.
+    descartarAviso?.();
     setDatos(respuesta);
     // El paso del tipo de cuenta devuelve un token nuevo: el rol cambió y viaja dentro del token.
     if (respuesta.token) actualizarSesion({ token: respuesta.token, usuario: respuesta.usuario });

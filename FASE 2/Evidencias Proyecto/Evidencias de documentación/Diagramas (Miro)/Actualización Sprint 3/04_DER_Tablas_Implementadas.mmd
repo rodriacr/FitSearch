@@ -1,0 +1,89 @@
+erDiagram
+  roles ||--o{ usuarios : "rol_id (RESTRICT)"
+  usuarios ||--|| perfiles_usuario : "usuario_id (CASCADE)"
+  usuarios ||--o| informacion_salud : "usuario_id (CASCADE)"
+  usuarios ||--o{ tokens_recuperacion : "usuario_id (CASCADE)"
+  usuarios ||--o| profesionales : "usuario_id (CASCADE)"
+  establecimientos |o--o{ profesionales : "establecimiento_id (SET NULL)"
+  usuarios ||--o{ favoritos : "usuario_id (CASCADE)"
+  profesionales ||--o{ favoritos : "profesional_id (CASCADE)"
+  usuarios ||--o{ resenas : "usuario_id (CASCADE)"
+  profesionales ||--o{ resenas : "profesional_id (CASCADE)"
+  roles {
+    INT id PK
+    VARCHAR30 nombre UK "usuario, profesional, administrador"
+  }
+  usuarios {
+    INT id PK
+    VARCHAR100 nombre
+    VARCHAR150 correo UK
+    VARCHAR255 password_hash "NULL"
+    VARCHAR255 google_id UK "NULL"
+    INT rol_id FK
+    BOOLEAN rol_confirmado
+    DATETIME fecha_registro
+  }
+  perfiles_usuario {
+    INT id PK
+    INT usuario_id FK,UK
+    DECIMAL peso_kg
+    DECIMAL altura_cm
+    INT edad
+    VARCHAR20 sexo
+    VARCHAR50 actividad_fisica
+    VARCHAR30 objetivo_principal
+    TINYINT comidas_dia
+    VARCHAR20 horas_sueno
+  }
+  informacion_salud {
+    INT id PK
+    INT usuario_id FK,UK
+    JSON condiciones_medicas
+    BOOLEAN toma_medicamentos
+    JSON medicamentos
+    JSON alergias
+    DATETIME fecha_actualizacion
+  }
+  tokens_recuperacion {
+    INT id PK
+    INT usuario_id FK
+    CHAR64 token_hash UK
+    DATETIME fecha_expiracion
+    DATETIME fecha_uso
+    DATETIME fecha_creacion
+  }
+  profesionales {
+    INT id PK
+    INT usuario_id FK,UK
+    INT establecimiento_id FK "NULL"
+    VARCHAR100 especialidad
+    TEXT descripcion "NULL"
+    BOOLEAN verificado
+    DECIMAL ubicacion_lat
+    DECIMAL ubicacion_lng
+    VARCHAR80 comuna "NULL"
+    VARCHAR20 modalidad "presencial, online, ambas"
+  }
+  establecimientos {
+    INT id PK
+    VARCHAR150 nombre
+    VARCHAR50 categoria
+    VARCHAR255 direccion
+    DECIMAL ubicacion_lat
+    DECIMAL ubicacion_lng
+  }
+  favoritos {
+    INT id PK
+    INT usuario_id FK "UK con profesional_id"
+    INT profesional_id FK
+    DATETIME fecha_creacion
+  }
+  resenas {
+    INT id PK
+    INT usuario_id FK "UK con profesional_id"
+    INT profesional_id FK
+    TINYINT puntaje "1 a 5"
+    VARCHAR500 comentario "NULL"
+    DATETIME fecha_creacion
+    DATETIME fecha_actualizacion
+  }

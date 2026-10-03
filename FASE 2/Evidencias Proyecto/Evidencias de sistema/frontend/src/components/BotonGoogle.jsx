@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Alerta from './Alerta.jsx';
 import { LogoGoogle } from './Icono.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
+import { destinoTrasIngreso } from '../services/navegacion.js';
 
 // "Continuar con Google" (FS-HU-16; DAS, D15). Usa el botón oficial de Google Identity Services: Google entrega
 // un token de identidad firmado que el backend valida en POST /api/auth/google. Sin VITE_GOOGLE_CLIENT_ID
@@ -40,6 +41,7 @@ export default function BotonGoogle({
   const clienteId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
   const { iniciarSesionConGoogle } = useSesion();
   const navegar = useNavigate();
+  const { state } = useLocation();
   const contenedor = useRef(null);
   const [error, setError] = useState('');
   const [entrando, setEntrando] = useState(false);
@@ -52,8 +54,9 @@ export default function BotonGoogle({
       setError('');
       setEntrando(true);
       try {
-        await iniciarSesionConGoogle({ credencial: credential, recordar });
-        navegar('/perfil', { replace: true });
+        const { cuentaNueva } = await iniciarSesionConGoogle({ credencial: credential, recordar });
+        // Una cuenta nueva parte por el asistente de perfil; si ya existía, vuelve a lo que pidió o al Inicio.
+        navegar(cuentaNueva ? '/perfil' : destinoTrasIngreso(state), { replace: true });
       } catch (fallo) {
         setError(fallo.message);
         setEntrando(false);

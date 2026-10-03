@@ -1,113 +1,231 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
+import reglas from '@shared/reglas.json';
 import Alerta from '../components/Alerta.jsx';
+import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
-import { listarProfesionales, obtenerEspecialidades } from '../services/profesional.service.js';
+import PanelFiltros from '../components/profesionales/PanelFiltros.jsx';
+import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
+import { buscarProfesionales, obtenerFiltros } from '../services/profesional.service.js';
+import { obtenerUbicacion, ubicacionSiHayPermiso } from '../services/ubicacion.js';
 import './Profesionales.css';
 
+// Parámetros de la URL: la búsqueda se puede compartir y el buscador del Inicio llega con ?q=.
+const CLAVES = ['q', 'especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'orden', 'pagina'];
+const FILTROS = ['especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad'];
+const { ordenes, filtroModalidad, busqueda } = reglas.profesionales;
+const UBICACION_INICIAL = { estado: 'inactiva', coords: null, mensaje: '' };
+
+function etiquetaFiltro(clave, valor) {
+  if (clave === 'distancia') return `Hasta ${valor} km`;
+  if (clave === 'calificacion') return `${valor} estrellas o más`;
+  if (clave === 'modalidad') return filtroModalidad.find((opcion) => opcion.valor === valor)?.etiqueta || valor;
+  return valor;
+}
+
+// Buscador de profesionales con texto, filtros, orden y páginas (FS-HU-03, FS-HU-05, FS-HU-22).
 export default function Profesionales() {
   const [parametros, setParametros] = useSearchParams();
-  const especialidad = parametros.get('especialidad') || '';
-  const pagina = parametros.get('pagina') || '1';
+  const { pathname, search } = useLocation();
+  const filtros = Object.fromEntries(CLAVES.map((clave) => [clave, parametros.get(clave) || '']));
+  const necesitaUbicacion = Boolean(filtros.distancia) || filtros.orden === 'cercania';
+  // estado: inactiva | lista | denegada | no-disponible
+  const [ubicacion, setUbicacion] = useState(UBICACION_INICIAL);
+  const [catalogo, setCatalogo] = useState({ especialidades: [], comunas: [] });
+  const [panelAbierto, setPanelAbierto] = useState(false);
   const [intento, setIntento] = useState(0);
-  const zona = parametros.get('comuna') || '';
-  const clave = JSON.stringify([especialidad, pagina, intento, zona]);
   const [resultado, setResultado] = useState(null);
-  const cargando = resultado?.clave !== clave;
 
   useEffect(() => {
     let activo = true;
-    Promise.all([listarProfesionales({ especialidad, comuna: zona, pagina }), obtenerEspecialidades()])
-      .then(([listado, catalogo]) => activo && setResultado({ clave, ...listado, ...catalogo }))
+    obtenerFiltros().then((datos) => activo && setCatalogo(datos)).catch(() => {});
+    return () => { activo = false; };
+  }, []);
+
+  // Si la persona ya dio permiso antes, se muestran las distancias sin volver a preguntar.
+  useEffect(() => {
+    let activo = true;
+    ubicacionSiHayPermiso().then((coords) => { if (activo && coords) setUbicacion({ estado: 'lista', coords, mensaje: '' }); });
+    return () => { activo = false; };
+  }, []);
+
+  // Una distancia o "Más cercanos" sin ubicación disponible: se pide al navegador (FS-HU-05).
+  const pidiendoUbicacion = necesitaUbicacion && ubicacion.estado === 'inactiva';
+  useEffect(() => {
+    if (!pidiendoUbicacion) return undefined;
+    let activo = true;
+    obtenerUbicacion()
+      .then((coords) => activo && setUbicacion({ estado: 'lista', coords, mensaje: '' }))
+      .catch((error) => activo && setUbicacion({ estado: error.motivo || 'no-disponible', coords: null, mensaje: error.message }));
+    return () => { activo = false; };
+  }, [pidiendoUbicacion]);
+
+  // Sin ubicación, la distancia y el orden por cercanía no se envían (escenario 2 de FS-HU-05: se ofrece la comuna).
+  const coords = ubicacion.estado === 'lista' ? ubicacion.coords : null;
+  const consulta = {
+    ...filtros,
+    distancia: coords ? filtros.distancia : '',
+    orden: !coords && filtros.orden === 'cercania' ? '' : filtros.orden,
+  };
+  const clave = JSON.stringify([consulta, coords, intento]);
+  const cargando = pidiendoUbicacion || resultado?.clave !== clave;
+
+  useEffect(() => {
+    if (pidiendoUbicacion) return undefined;
+    let activo = true;
+    const [consultaActual, coordsActuales] = JSON.parse(clave);
+    buscarProfesionales(consultaActual, coordsActuales)
+      .then((respuesta) => activo && setResultado({ clave, ...respuesta }))
       .catch((error) => activo && setResultado({ clave, error: error.message }));
     return () => { activo = false; };
-  }, [clave, especialidad, pagina, zona]);
+  }, [clave, pidiendoUbicacion]);
 
-  const filtrar = (evento) => {
-    evento.preventDefault();
-    const valor = new FormData(evento.currentTarget).get('especialidad').trim();
-    const comuna = new FormData(evento.currentTarget).get('zona').trim();
-    setParametros({ ...(valor ? { especialidad: valor } : {}), ...(comuna ? { comuna } : {}) });
+  const actualizar = (cambios) => {
+    const siguiente = new URLSearchParams(parametros);
+    for (const [nombre, valor] of Object.entries(cambios)) {
+      if (valor) siguiente.set(nombre, valor); else siguiente.delete(nombre);
+    }
+    // Cualquier cambio de búsqueda vuelve a la primera página.
+    if (!('pagina' in cambios)) siguiente.delete('pagina');
+    setParametros(siguiente);
   };
-  const cambiarPagina = (numero) => setParametros({ ...(especialidad ? { especialidad } : {}), ...(zona ? { comuna: zona } : {}), pagina: String(numero) });
+  const reintentarUbicacion = () => setUbicacion(UBICACION_INICIAL);
+  const cambiarFiltros = (cambios) => {
+    // Elegir otra vez una opción por cercanía después de un rechazo vuelve a pedir la ubicación.
+    if ((cambios.distancia || cambios.orden === 'cercania') && ubicacion.estado !== 'lista') reintentarUbicacion();
+    actualizar(cambios);
+  };
+  const limpiar = () => setParametros({});
+  const cerrarPanel = () => setPanelAbierto(false);
+  const buscar = (evento) => {
+    evento.preventDefault();
+    actualizar({ q: new FormData(evento.currentTarget).get('q').trim() });
+  };
+  const cambiarPagina = (numero) => {
+    actualizar({ pagina: numero > 1 ? String(numero) : '' });
+    document.getElementById('resultados')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  };
+
+  const activos = [
+    ...(filtros.q ? [{ clave: 'q', texto: `“${filtros.q}”` }] : []),
+    ...FILTROS.filter((nombre) => filtros[nombre]).map((nombre) => ({ clave: nombre, texto: etiquetaFiltro(nombre, filtros[nombre]) })),
+  ];
+  const cantidadFiltros = FILTROS.filter((nombre) => filtros[nombre]).length;
+  const listo = !cargando && !resultado.error;
+
+  let contenido;
+  if (cargando) {
+    contenido = <p className="buscador__estado" role="status">Cargando profesionales…</p>;
+  } else if (resultado.error) {
+    contenido = (
+      <div className="buscador__estado">
+        <Alerta>{resultado.error}</Alerta>
+        <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setIntento(intento + 1)}>Reintentar</button>
+      </div>
+    );
+  } else if (!resultado.profesionales.length) {
+    contenido = activos.length || filtros.pagina ? (
+      <EstadoVacio nivel={2} icono="buscar" titulo="No encontramos profesionales con esos filtros"
+        accion={<button type="button" className="boton boton--secundario boton--compacto" onClick={limpiar}>Limpiar filtros</button>}>
+        Prueba con otra búsqueda, amplía la distancia o quita algún filtro.
+      </EstadoVacio>
+    ) : (
+      <EstadoVacio nivel={2} icono="profesional" titulo="Aún no hay profesionales para mostrar">
+        Cuando se incorporen fichas profesionales, aparecerán aquí.
+      </EstadoVacio>
+    );
+  } else {
+    const { profesionales, pagina, totalPaginas, hayMas } = resultado;
+    contenido = (
+      <>
+        <h2 className="solo-lector">Resultados de la búsqueda</h2>
+        <div className="buscador__lista">
+          {profesionales.map((profesional) => (
+            <TarjetaProfesional key={profesional.id} profesional={profesional} desde={`${pathname}${search}`} />
+          ))}
+        </div>
+        {totalPaginas > 1 && (
+          <nav className="paginacion" aria-label="Páginas de resultados">
+            <button type="button" className="boton boton--secundario boton--compacto" disabled={pagina === 1} onClick={() => cambiarPagina(pagina - 1)}>Anterior</button>
+            <span>Página {pagina} de {totalPaginas}</span>
+            <button type="button" className="boton boton--secundario boton--compacto" disabled={!hayMas} onClick={() => cambiarPagina(pagina + 1)}>Siguiente</button>
+          </nav>
+        )}
+      </>
+    );
+  }
 
   return (
-    <section className="directorio">
-      <Link className="directorio__volver" to="/perfil">← Volver a mi perfil</Link>
-      <header className="directorio__cabecera">
-        <span className="directorio__antetitulo">Profesionales de FitSearch</span>
-        <h1>Encuentra apoyo para tu bienestar</h1>
-        <p>Explora profesionales de salud y deporte. Conoce su especialidad y dónde atienden.</p>
-      <div className="directorio__ventajas"><span><Icono nombre="buscar" tamano={17} /> Busca por especialidad</span><span><Icono nombre="maletin" tamano={17} /> Conoce sus servicios</span><span><Icono nombre="flecha" tamano={17} /> Encuentra dónde atienden</span></div>
+    <section className="buscador" aria-labelledby="titulo-profesionales">
+      <header className="buscador__cabecera">
+        <h1 id="titulo-profesionales">Profesionales</h1>
+        <p>Busca por nombre, especialidad o palabra clave y filtra según lo que necesitas.</p>
+        <form className="buscador__formulario" role="search" onSubmit={buscar} key={filtros.q}>
+          <label htmlFor="busqueda-profesionales" className="solo-lector">Buscar profesionales</label>
+          <span className="buscador__campo">
+            <Icono nombre="buscar" tamano={20} />
+            <input id="busqueda-profesionales" name="q" type="search" defaultValue={filtros.q} maxLength={busqueda.max}
+              placeholder="Nombre, especialidad o palabra clave" autoComplete="off" />
+          </span>
+          <button type="submit" className="boton boton--principal boton--compacto">Buscar</button>
+        </form>
       </header>
-      <form className="directorio__filtro" onSubmit={filtrar} key={JSON.stringify([especialidad, zona])}>
-        <div className="campo">
-          <label className="campo__etiqueta" htmlFor="especialidad">Especialidad</label>
-          <input className="campo__control" id="especialidad" name="especialidad" type="search" list="especialidades"
-            maxLength="100" defaultValue={especialidad} placeholder="Todas las especialidades" autoComplete="off" />
-          <datalist id="especialidades">{resultado?.especialidades?.map((valor) => <option key={valor} value={valor} />)}</datalist>
-        </div>
-        <div className="campo"><label className="campo__etiqueta" htmlFor="zona">Comuna o ciudad</label><input className="campo__control" id="zona" name="zona" maxLength="150" defaultValue={zona} placeholder="Ej.: Melipilla, Chile" /></div>
-        <button type="submit" className="boton boton--principal boton--compacto">Buscar profesionales</button>
-        {(especialidad || zona) && <button type="button" className="boton-texto" onClick={() => setParametros({})}>Limpiar filtro</button>}
-      </form>
-      <p className="texto-secundario">Busca profesionales registrados en FitSearch por especialidad y comuna.</p>
-      {resultado?.especialidades?.length > 0 && <nav className="directorio__categorias" aria-label="Explorar especialidades">
-        <span>Explora:</span>
-        <button type="button" aria-pressed={!especialidad} onClick={() => setParametros(zona ? { comuna: zona } : {})}>Todas</button>
-        {resultado.especialidades.map((nombre) => <button key={nombre} type="button" aria-pressed={nombre === especialidad}
-          onClick={() => setParametros({ especialidad: nombre, ...(zona ? { comuna: zona } : {}) })}>{nombre}</button>)}
-      </nav>}
-      <div className="directorio__resultados">
-      <div aria-live="polite" aria-busy={cargando}>
-        <h2 className="directorio__titulo-lista">Resultados de la búsqueda</h2>
-        {cargando ? <p className="directorio__estado" role="status">Cargando profesionales…</p> : resultado.error ? (
-          <div className="directorio__estado"><Alerta>{resultado.error}</Alerta>
-            <button className="boton boton--secundario boton--compacto" onClick={() => setIntento(intento + 1)}>Reintentar</button>
-          </div>
-        ) : !resultado.profesionales.length ? (
-          <div className="directorio__estado">
-            <h2>{(especialidad || zona) ? 'No hay profesionales para estos filtros' : 'Aún no hay profesionales para mostrar'}</h2>
-            <p>{(especialidad || zona) ? 'Prueba otra especialidad o comuna, o limpia los filtros para ver todos los resultados.' : 'Cuando se incorporen fichas profesionales, aparecerán aquí.'}</p>
-            {(especialidad || zona || pagina !== '1') && <button className="boton boton--secundario boton--compacto" onClick={() => setParametros({})}>Ver todos los profesionales</button>}
-          </div>
-        ) : (
-          <>
-            <p className="texto-secundario">{resultado.profesionales.length} {resultado.profesionales.length === 1 ? 'profesional en esta página' : 'profesionales en esta página'}{especialidad ? ` · ${especialidad}` : ''}</p>
-            <div className="directorio__lista">
-              {resultado.profesionales.map((profesional) => (
-                <article className="directorio__tarjeta" key={profesional.id}>
-                  <div className="directorio__origen"><span>Registrado en FitSearch</span><Icono nombre="maletin" tamano={16} /></div>
-                  <div className="directorio__identidad">
-                    <span className="directorio__avatar" aria-hidden="true">{profesional.nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]).join('')}</span>
-                    <div><h2>{profesional.nombre}</h2><span className="directorio__especialidad">{profesional.especialidad}</span></div>
-                  </div>
-                  <div className="directorio__servicios"><h3>Sobre su atención</h3><p className="directorio__descripcion">{profesional.descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p></div>
-                  <div className="directorio__ubicacion">
-                    <span className="directorio__dato">LUGAR DE ATENCIÓN</span>
-                    <strong>{profesional.establecimiento?.nombre || 'Ubicación de atención'}</strong>
-                    <p>{profesional.establecimiento?.direccion || `Coordenadas: ${profesional.ubicacionLat}, ${profesional.ubicacionLng}`}</p>
-                  </div>
-                  <a className="directorio__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${profesional.ubicacionLat},${profesional.ubicacionLng}`)}`}
-                    target="_blank" rel="noopener noreferrer" aria-label={`Ver ubicación de ${profesional.nombre} en Google Maps (nueva pestaña)`}>
-                    Ver ubicación <Icono nombre="flecha" tamano={18} />
-                  </a>
-                </article>
-              ))}
+
+      <div className="buscador__cuerpo">
+        <PanelFiltros id="panel-filtros" abierto={panelAbierto} onCerrar={cerrarPanel} filtros={filtros} catalogo={catalogo}
+          ubicacion={{ estado: ubicacion.estado, buscando: pidiendoUbicacion }} onCambiar={cambiarFiltros} onLimpiar={limpiar}
+          total={listo ? resultado.total : undefined} hayFiltros={activos.length > 0} />
+
+        <div className="buscador__resultados" id="resultados">
+          <div className="buscador__barra">
+            <p className="buscador__contador" role="status">
+              {listo && `${resultado.total} ${resultado.total === 1 ? 'profesional encontrado' : 'profesionales encontrados'}`}
+            </p>
+            <div className="buscador__controles">
+              <button type="button" className="boton boton--secundario buscador__boton-filtros" aria-expanded={panelAbierto} aria-controls="panel-filtros"
+                onClick={() => setPanelAbierto(true)}>
+                <Icono nombre="filtro" tamano={18} /> Filtros{cantidadFiltros ? ` (${cantidadFiltros})` : ''}
+              </button>
+              <label className="buscador__orden">
+                <span>Ordenar por</span>
+                <select className="campo__control" value={filtros.orden || 'nombre'}
+                  onChange={(evento) => cambiarFiltros({ orden: evento.target.value === 'nombre' ? '' : evento.target.value })}>
+                  {ordenes.map(({ valor, etiqueta }) => <option key={valor} value={valor}>{etiqueta}</option>)}
+                </select>
+              </label>
             </div>
-            <nav className="directorio__paginacion" aria-label="Páginas de profesionales">
-              <button className="boton boton--secundario boton--compacto" disabled={resultado.pagina === 1} onClick={() => cambiarPagina(resultado.pagina - 1)}>Anterior</button>
-              <span>Página {resultado.pagina}</span>
-              <button className="boton boton--secundario boton--compacto" disabled={!resultado.hayMas} onClick={() => cambiarPagina(resultado.pagina + 1)}>Siguiente</button>
-            </nav>
-          </>
-        )}
+          </div>
+
+          {activos.length > 0 && (
+            <div className="chips" role="group" aria-label="Filtros aplicados">
+              {activos.map(({ clave: nombre, texto }) => (
+                <button key={nombre} type="button" className="chip" aria-label={`Quitar filtro: ${texto}`} onClick={() => actualizar({ [nombre]: '' })}>
+                  {texto} <Icono nombre="cerrar" tamano={14} />
+                </button>
+              ))}
+              <button type="button" className="boton-texto" onClick={limpiar}>Limpiar filtros</button>
+            </div>
+          )}
+
+          {necesitaUbicacion && ubicacion.mensaje && (
+            <Alerta tipo="info">
+              {ubicacion.mensaje}{' '}
+              <button type="button" className="boton-texto" onClick={reintentarUbicacion}>Intentar de nuevo</button>
+            </Alerta>
+          )}
+
+          {contenido}
+        </div>
       </div>
-      <div className="directorio__lateral">
-        <section className="directorio__ayuda"><span className="directorio__antetitulo">Antes de elegir</span><h2>Encuentra una atención que se ajuste a ti</h2>
-          <ul><li><strong>Revisa la especialidad.</strong> Busca un área relacionada con lo que necesitas.</li><li><strong>Comprueba la ubicación.</strong> Revisa la dirección y cómo llegar antes de trasladarte.</li><li><strong>Confirma los detalles.</strong> Consulta directamente al profesional por horarios, valores y servicios.</li></ul>
-        </section></div>
-      </div>
+
+      <aside className="buscador__ayuda" aria-labelledby="titulo-ayuda">
+        <h2 id="titulo-ayuda">Antes de elegir</h2>
+        <ul>
+          <li><strong>Revisa la especialidad.</strong> Busca un área relacionada con lo que necesitas.</li>
+          <li><strong>Lee las reseñas.</strong> Conoce la experiencia de otras personas con el profesional.</li>
+          <li><strong>Confirma los detalles.</strong> Consulta directamente al profesional por horarios, valores y servicios.</li>
+        </ul>
+      </aside>
     </section>
   );
 }

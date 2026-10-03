@@ -1,16 +1,18 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import BotonGoogle from '../components/BotonGoogle.jsx';
 import CampoFormulario from '../components/CampoFormulario.jsx';
 import Icono from '../components/Icono.jsx';
 import PantallaAcceso from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
+import { destinoTrasIngreso } from '../services/navegacion.js';
 import { validarInicioSesion } from '../services/validaciones.js';
 
 export default function InicioSesion() {
   const { iniciarSesion, aviso, limpiarAviso } = useSesion();
   const navegar = useNavigate();
+  const { state } = useLocation();
   const [datos, setDatos] = useState({ correo: '', password: '', recordar: false });
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
@@ -32,7 +34,7 @@ export default function InicioSesion() {
     setEnviando(true);
     try {
       await iniciarSesion(datos);
-      navegar('/perfil', { replace: true });
+      navegar(destinoTrasIngreso(state), { replace: true });
     } catch (error) {
       setMensaje(error.message);
       setEnviando(false);

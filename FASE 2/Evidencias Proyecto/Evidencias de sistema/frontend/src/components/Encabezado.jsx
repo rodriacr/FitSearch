@@ -1,26 +1,31 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useSesion } from '../context/SesionContext.jsx';
+import MenuUsuario from './diseno/MenuUsuario.jsx';
+import Notificaciones from './diseno/Notificaciones.jsx';
 import Icono from './Icono.jsx';
 import { Logo } from './PantallaAcceso.jsx';
 
-export default function Encabezado() {
-  const { sesion, cerrarSesion } = useSesion();
+// El logo lleva al Inicio con sesión y a la portada sin ella; nunca al perfil.
+// No hay acceso a Profesionales en el encabezado: ya están el menú lateral, la barra inferior y los accesos del Inicio.
+export default function Encabezado({ menuAbierto = false, onAlternarMenu }) {
+  const { sesion } = useSesion();
 
   return (
     <header className="encabezado">
-      <Link to="/perfil" className="encabezado__marca" aria-label="FitSearch, ir a mi perfil"><Logo /></Link>
-      <NavLink to="/profesionales" className="encabezado__directorio">
-        <Icono nombre="buscar" tamano={19} />
-        <span>Buscar profesionales</span>
-      </NavLink>
+      <Link to={sesion ? '/inicio' : '/'} className="encabezado__marca" aria-label={sesion ? 'FitSearch, ir al inicio' : 'FitSearch, ir a la portada'}>
+        <Logo />
+      </Link>
       {sesion && (
-        <nav className="encabezado__nav" aria-label="Sesión">
-          <span className="avatar" aria-hidden="true">{sesion.usuario.nombre.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('')}</span>
-          <span className="encabezado__usuario">{sesion.usuario.nombre}</span>
-          <button type="button" className="boton boton--secundario" onClick={cerrarSesion}>
-            <Icono nombre="salir" tamano={18} /> <span className="encabezado__texto-salir">Cerrar sesión</span>
-          </button>
-        </nav>
+        <div className="encabezado__acciones">
+          <Notificaciones />
+          <MenuUsuario />
+        </div>
+      )}
+      {onAlternarMenu && (
+        <button type="button" className="boton-icono encabezado__menu" aria-label={menuAbierto ? 'Cerrar menú' : 'Abrir menú'}
+          aria-expanded={menuAbierto} aria-controls="menu-principal" onClick={onAlternarMenu}>
+          <Icono nombre={menuAbierto ? 'cerrar' : 'menu'} tamano={24} />
+        </button>
       )}
     </header>
   );

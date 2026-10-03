@@ -1,0 +1,132 @@
+erDiagram
+  roles ||--o{ usuarios : "rol_id"
+  usuarios ||--|| perfiles_usuario : "usuario_id"
+  usuarios ||--o| informacion_salud : "usuario_id"
+  usuarios ||--o{ tokens_recuperacion : "usuario_id"
+  usuarios ||--o| profesionales : "usuario_id"
+  establecimientos |o--o{ profesionales : "establecimiento_id"
+  profesionales ||--o{ disponibilidades : "profesional_id"
+  disponibilidades ||--o{ reservas : "disponibilidad_id"
+  usuarios ||--o{ reservas : "usuario_id"
+  usuarios ||--o{ conversaciones : "usuario_id"
+  conversaciones ||--o{ mensajes : "conversacion_id"
+  usuarios ||--o{ registro_comida : "usuario_id"
+  usuarios ||--o{ favoritos : "usuario_id"
+  profesionales ||--o{ favoritos : "profesional_id"
+  usuarios ||--o{ resenas : "usuario_id"
+  profesionales ||--o{ resenas : "profesional_id"
+  roles {
+    INT id PK
+    VARCHAR30 nombre UK
+  }
+  usuarios {
+    INT id PK
+    VARCHAR100 nombre
+    VARCHAR150 correo UK
+    VARCHAR255 password_hash "NULL si usa Google"
+    VARCHAR255 google_id UK "NULL"
+    INT rol_id FK
+    BOOLEAN rol_confirmado "Sprint 2"
+    DATETIME fecha_registro
+  }
+  perfiles_usuario {
+    INT id PK
+    INT usuario_id FK,UK
+    DECIMAL peso_kg
+    DECIMAL altura_cm
+    INT edad
+    VARCHAR20 sexo
+    VARCHAR50 actividad_fisica
+    VARCHAR30 objetivo_principal "Sprint 2"
+    TINYINT comidas_dia "Sprint 2"
+    VARCHAR20 horas_sueno "Sprint 2"
+  }
+  informacion_salud {
+    INT id PK
+    INT usuario_id FK,UK
+    JSON condiciones_medicas
+    BOOLEAN toma_medicamentos
+    JSON medicamentos
+    JSON alergias
+    DATETIME fecha_actualizacion
+  }
+  tokens_recuperacion {
+    INT id PK
+    INT usuario_id FK
+    CHAR64 token_hash UK "SHA-256"
+    DATETIME fecha_expiracion
+    DATETIME fecha_uso "NULL"
+    DATETIME fecha_creacion
+  }
+  profesionales {
+    INT id PK
+    INT usuario_id FK,UK
+    INT establecimiento_id FK "NULL"
+    VARCHAR100 especialidad
+    TEXT descripcion
+    BOOLEAN verificado
+    DECIMAL ubicacion_lat
+    DECIMAL ubicacion_lng
+    VARCHAR80 comuna "Sprint 3, NULL"
+    VARCHAR20 modalidad "Sprint 3"
+  }
+  establecimientos {
+    INT id PK
+    VARCHAR150 nombre
+    VARCHAR50 categoria
+    VARCHAR255 direccion
+    DECIMAL ubicacion_lat
+    DECIMAL ubicacion_lng
+  }
+  disponibilidades {
+    INT id PK
+    INT profesional_id FK
+    DATE fecha
+    TIME hora_inicio
+    TIME hora_fin
+  }
+  reservas {
+    INT id PK
+    INT usuario_id FK
+    INT disponibilidad_id FK
+    VARCHAR500 mensaje
+    ENUM estado "pendiente, confirmada, cancelada"
+    DATETIME fecha_creacion
+  }
+  conversaciones {
+    INT id PK
+    INT usuario_id FK
+    DATETIME fecha_inicio
+  }
+  mensajes {
+    INT id PK
+    INT conversacion_id FK
+    ENUM remitente "usuario, asistente"
+    TEXT contenido
+    DATETIME fecha
+  }
+  registro_comida {
+    INT id PK
+    INT usuario_id FK
+    DATE fecha
+    VARCHAR255 descripcion_alimento
+    INT calorias
+    DECIMAL proteinas_g
+    DECIMAL carbohidratos_g
+    DECIMAL grasas_g
+  }
+  favoritos {
+    INT id PK
+    INT usuario_id FK "UK con profesional_id"
+    INT profesional_id FK
+    DATETIME fecha_creacion
+  }
+  resenas {
+    INT id PK
+    INT usuario_id FK "UK con profesional_id"
+    INT profesional_id FK
+    TINYINT puntaje "1 a 5"
+    VARCHAR500 comentario "NULL"
+    DATETIME fecha_creacion
+    DATETIME fecha_actualizacion
+  }

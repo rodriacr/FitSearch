@@ -4,7 +4,7 @@ Plataforma web responsiva que conecta a personas que buscan mejorar su salud, co
 
 Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicaciones, sección 003D, sede Melipilla.
 
-> **Estado:** Fase 2 — Sprint 1 (FS-HU-01 Registro y login, FS-HU-02 Datos básicos del perfil).
+> **Estado:** Fase 2 — cierre del Sprint 2 (acceso a la cuenta, perfil completo, portada y listado de profesionales) y adelanto del Sprint 3 (Inicio con sesión, búsqueda avanzada y por cercanía, favoritos y reseñas).
 
 ## Equipo
 
@@ -54,7 +54,7 @@ FitSearch/
 │           ├── frontend/          # React + Vite
 │           │   └── src/
 │           │       ├── pages/         # Pantallas de la aplicación (y sus pruebas)
-│           │       ├── components/    # Componentes de UI reutilizables (incluye perfil/)
+│           │       ├── components/    # Componentes de UI reutilizables (perfil/, diseno/ y profesionales/)
 │           │       ├── context/       # Estado global de la sesión
 │           │       ├── services/      # Cliente de la API REST y validaciones
 │           │       ├── assets/        # Logos de FitSearch
@@ -159,19 +159,19 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 > Si cambias `shared/reglas.json` con `npm run dev` en marcha, reinicia el frontend: Vite puede seguir usando la versión anterior del archivo.
 
-## API disponible (Sprints 1 y 2)
+## API disponible (Sprints 1 a 3)
 
-### Directorio de profesionales — FS-HU-03
+### Navegación de la aplicación
 
-La ruta `/profesionales` muestra fichas desde MySQL, filtro por especialidad y páginas de 12 resultados. Se accede desde «Buscar profesionales» en el encabezado.
+Sin sesión, la raíz (`/`) muestra la portada pública. Con sesión, el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Las pantallas con sesión comparten encabezado (logo, notificaciones y menú de la cuenta), menú lateral y, en celular, barra inferior; el acceso a Profesionales está en el menú lateral, la barra inferior y los accesos rápidos del Inicio. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
 
-Después de actualizar esta rama, ejecutar en backend `npm run db:generate` y `npm run db:migrate`. Para cargar **datos ficticios opcionales**, ejecutar primero `npm run db:seed` y luego `npm run db:seed:profesionales` (solo desarrollo; no crea credenciales de acceso).
+### Directorio de profesionales — FS-HU-03, FS-HU-05 y FS-HU-22 a FS-HU-24
 
-- `GET /api/profesionales?especialidad=Nutrición&pagina=1`: devuelve `profesionales`, `pagina` y `hayMas`. Ambos parámetros son opcionales.
-- `GET /api/profesionales/especialidades`: devuelve las especialidades disponibles.
-- No requiere clave de Google; el enlace de ubicación abre Google Maps. La edición de fichas pertenece a HU-04.
+La ruta `/profesionales` busca por texto (nombre, especialidad o palabra clave) y filtra por especialidad, comuna, distancia máxima, calificación mínima y modalidad, con orden por nombre, cercanía, calificación o cantidad de reseñas. Los filtros quedan en la dirección de la página para compartir la búsqueda; la ubicación del navegador se redondea a unos 100 m, se usa solo en memoria y nunca va en la dirección. Cada profesional tiene su ficha (`/profesionales/:id`) con reseñas, y la página `/favoritos` lista los guardados.
 
-Detalle de alcance, datos, pruebas y evidencias: [FS-HU-03 — Listado de profesionales](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%202/FS-HU-03_Listado_profesionales.md).
+Después de actualizar esta rama, ejecutar en backend `npm run db:generate` y `npm run db:migrate`. Para cargar **datos ficticios opcionales** (12 profesionales con comuna y modalidad, y reseñas de demostración), ejecutar primero `npm run db:seed` y luego `npm run db:seed:profesionales` (solo desarrollo; no crea credenciales de acceso).
+
+Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesionales](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%202/FS-HU-03_Listado_profesionales.md).
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
@@ -186,6 +186,15 @@ Detalle de alcance, datos, pruebas y evidencias: [FS-HU-03 — Listado de profes
 | PUT | `/api/perfil` | Bearer JWT | Guarda peso, altura, edad, sexo y actividad física |
 | PUT | `/api/perfil/objetivos` | Bearer JWT | Guarda objetivo principal, comidas al día y horas de sueño (FS-HU-18) |
 | PUT | `/api/perfil/salud` | Bearer JWT | Guarda condiciones médicas, medicamentos y alergias (FS-HU-19; solo valores de `shared/reglas.json`) |
+| GET | `/api/profesionales` | Bearer JWT | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
+| GET | `/api/profesionales/filtros` | Bearer JWT | Especialidades y comunas disponibles para los filtros |
+| GET | `/api/profesionales/:id` | Bearer JWT | Ficha pública, resumen de calificaciones, reseña propia y si la persona puede calificar |
+| GET | `/api/profesionales/:id/resenas` | Bearer JWT | Reseñas paginadas (5 por página) con el autor abreviado |
+| PUT | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Crea o reemplaza la reseña propia: `puntaje` de 1 a 5 y `comentario` opcional de 10 a 500 caracteres (FS-HU-24) |
+| DELETE | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Elimina la reseña propia |
+| GET | `/api/favoritos` | Bearer JWT | Profesionales favoritos del usuario (FS-HU-23) |
+| PUT | `/api/favoritos/:profesionalId` | Bearer JWT | Guarda un favorito (idempotente) |
+| DELETE | `/api/favoritos/:profesionalId` | Bearer JWT | Quita un favorito (idempotente) |
 
 Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "mensaje" } }`.
 

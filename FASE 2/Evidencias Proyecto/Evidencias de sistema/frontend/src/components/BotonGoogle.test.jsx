@@ -52,7 +52,7 @@ describe('FS-HU-16: continuar con Google', () => {
 
     expect(await screen.findByText(/Tu cuenta fue creada con Google/)).toBeInTheDocument();
     // El tipo de cuenta no lo decide Google: lo elige la persona en el asistente (cambio de flujo del 24-09-2026).
-    expect(screen.getByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ credencial: 'token-de-google', recordar: false });
     // Sin "Recordarme" la sesión no debe sobrevivir al cierre del navegador.
     expect(localStorage.getItem('fitsearch_sesion')).toBeNull();

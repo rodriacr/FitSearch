@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1160" viewBox="0 0 1500 1160" font-family="Poppins, Arial, sans-serif">
+<defs><marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5f6f80"/></marker><marker id="abierta" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L11 6 L0 12" fill="none" stroke="#0b4f80" stroke-width="1.6"/></marker></defs>
+<rect width="1500" height="1160" fill="#ffffff"/>
+<rect x="310.0" y="80" width="855.0" height="1030.0" rx="10" fill="#fbfcfe" stroke="#0b4f80" stroke-width="2"/>
+<text x="737.5" y="114" text-anchor="middle" font-size="18" font-weight="700" fill="#0b4f80">Sistema FitSearch</text>
+<line x1="132" y1="391.0" x2="350.0" y2="175" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="391.0" x2="350.0" y2="283" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="391.0" x2="350.0" y2="391" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="391.0" x2="350.0" y2="499" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="391.0" x2="350.0" y2="607" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="391.0" x2="350.0" y2="715" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="823.0" x2="350.0" y2="607" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="823.0" x2="350.0" y2="715" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="823.0" x2="350.0" y2="823" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="823.0" x2="350.0" y2="931" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="1039" x2="350.0" y2="607" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="132" y1="1039" x2="350.0" y2="1039" stroke="#5f6f80" stroke-width="1.4"/>
+<line x1="730.0" y1="175" x2="835.0" y2="175" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<rect x="748.5" y="154.0" width="68" height="18" fill="#fbfcfe"/>
+<text x="782.5" y="167.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#0b4f80">«include»</text>
+<line x1="835.0" y1="569" x2="730.0" y2="607" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<rect x="748.5" y="567.0" width="68" height="18" fill="#fbfcfe"/>
+<text x="782.5" y="580.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#0b4f80">«extend»</text>
+<line x1="835.0" y1="645" x2="730.0" y2="607" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<rect x="748.5" y="605.0" width="68" height="18" fill="#fbfcfe"/>
+<text x="782.5" y="618.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#0b4f80">«extend»</text>
+<line x1="730.0" y1="715" x2="835.0" y2="715" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<rect x="748.5" y="694.0" width="68" height="18" fill="#fbfcfe"/>
+<text x="782.5" y="707.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#0b4f80">«include»</text>
+<line x1="730.0" y1="1039" x2="835.0" y2="1039" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<rect x="748.5" y="1018.0" width="68" height="18" fill="#fbfcfe"/>
+<text x="782.5" y="1031.0" text-anchor="middle" font-size="12.5" font-style="italic" fill="#0b4f80">«include»</text>
+<line x1="730.0" y1="283" x2="1265.0" y2="283" stroke="#5f6f80" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#flecha)"/>
+<line x1="730.0" y1="391" x2="1265.0" y2="445.0" stroke="#5f6f80" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#flecha)"/>
+<line x1="730.0" y1="499" x2="1265.0" y2="445.0" stroke="#5f6f80" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#flecha)"/>
+<line x1="1135.0" y1="569" x2="1265.0" y2="539" stroke="#5f6f80" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#flecha)"/>
+<line x1="1135.0" y1="645" x2="1265.0" y2="675" stroke="#5f6f80" stroke-width="1.3" stroke-dasharray="4 4" marker-end="url(#flecha)"/>
+<ellipse cx="540" cy="175" rx="190.0" ry="37.0" fill="#fff1e6" stroke="#f47b20" stroke-width="2.4"/>
+<text x="540" y="164.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-02 Gestionar perfil: datos básicos,</text>
+<text x="540" y="183.0" text-anchor="middle" font-size="15" fill="#1c2b39">objetivos e información de salud</text>
+<text x="540" y="202.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-02, 18, 19</text>
+<ellipse cx="540" cy="283" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="272.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-03 Buscar, comparar y valorar</text>
+<text x="540" y="291.0" text-anchor="middle" font-size="15" fill="#1c2b39">profesionales y establecimientos</text>
+<text x="540" y="310.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-03, 05, 06, 22, 23, 24</text>
+<ellipse cx="540" cy="391" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="380.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-05 Conversar con el</text>
+<text x="540" y="399.0" text-anchor="middle" font-size="15" fill="#1c2b39">asistente de IA</text>
+<text x="540" y="418.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-07, 08</text>
+<ellipse cx="540" cy="499" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="488.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-06 Registrar alimentación</text>
+<text x="540" y="507.0" text-anchor="middle" font-size="15" fill="#1c2b39">y ver progreso</text>
+<text x="540" y="526.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-09, 10</text>
+<ellipse cx="540" cy="607" rx="190.0" ry="37.0" fill="#fff1e6" stroke="#f47b20" stroke-width="2.4"/>
+<text x="540" y="596.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-01 Registrarse, iniciar</text>
+<text x="540" y="615.0" text-anchor="middle" font-size="15" fill="#1c2b39">y cerrar sesión; ver el Inicio</text>
+<text x="540" y="634.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-01, 17, 20, 21</text>
+<ellipse cx="540" cy="715" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="704.0" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-09 Reservar hora con mensaje</text>
+<text x="540" y="723.0" text-anchor="middle" font-size="15" fill="#1c2b39">y gestionar reservas</text>
+<text x="540" y="742.0" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-14</text>
+<ellipse cx="540" cy="823" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="821.5" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-04 Gestionar perfil profesional</text>
+<text x="540" y="840.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-04</text>
+<ellipse cx="540" cy="931" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="929.5" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-08 Gestionar disponibilidad</text>
+<text x="540" y="948.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-13</text>
+<ellipse cx="540" cy="1039" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="540" y="1037.5" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-07 Administrar plataforma</text>
+<text x="540" y="1056.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-12 y procesos manuales</text>
+<ellipse cx="985" cy="175" rx="150.0" ry="29.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="985" y="172.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Estimar requerimiento calórico</text>
+<text x="985" y="189.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">Mifflin-St Jeor</text>
+<ellipse cx="985" cy="569" rx="150.0" ry="29.0" fill="#fff1e6" stroke="#f47b20" stroke-width="2.4"/>
+<text x="985" y="566.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Recuperar contraseña por correo</text>
+<text x="985" y="583.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-15</text>
+<ellipse cx="985" cy="645" rx="150.0" ry="29.0" fill="#fff1e6" stroke="#f47b20" stroke-width="2.4"/>
+<text x="985" y="642.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Acceder con Google</text>
+<text x="985" y="659.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-16</text>
+<ellipse cx="985" cy="715" rx="150.0" ry="29.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="985" y="712.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Consultar horarios disponibles</text>
+<text x="985" y="729.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">bloques de CU-08</text>
+<ellipse cx="985" cy="1039" rx="150.0" ry="29.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="985" y="1036.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Verificar perfiles profesionales</text>
+<text x="985" y="1053.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-12</text>
+<g stroke="#0b4f80" stroke-width="3" fill="none" stroke-linecap="round"><circle cx="110" cy="361.0" r="13" fill="#ffffff"/><line x1="110" y1="374.0" x2="110" y2="409.0"/><line x1="88" y1="387.0" x2="132" y2="387.0"/><line x1="110" y1="409.0" x2="92" y2="437.0"/><line x1="110" y1="409.0" x2="128" y2="437.0"/></g>
+<text x="110" y="461.0" text-anchor="middle" font-size="16" font-weight="700" fill="#0b4f80">Usuario</text>
+<g stroke="#0b4f80" stroke-width="3" fill="none" stroke-linecap="round"><circle cx="110" cy="793.0" r="13" fill="#ffffff"/><line x1="110" y1="806.0" x2="110" y2="841.0"/><line x1="88" y1="819.0" x2="132" y2="819.0"/><line x1="110" y1="841.0" x2="92" y2="869.0"/><line x1="110" y1="841.0" x2="128" y2="869.0"/></g>
+<text x="110" y="893.0" text-anchor="middle" font-size="16" font-weight="700" fill="#0b4f80">Profesional</text>
+<g stroke="#0b4f80" stroke-width="3" fill="none" stroke-linecap="round"><circle cx="110" cy="1009" r="13" fill="#ffffff"/><line x1="110" y1="1022" x2="110" y2="1057"/><line x1="88" y1="1035" x2="132" y2="1035"/><line x1="110" y1="1057" x2="92" y2="1085"/><line x1="110" y1="1057" x2="128" y2="1085"/></g>
+<text x="110" y="1109" text-anchor="middle" font-size="16" font-weight="700" fill="#0b4f80">Administrador</text>
+<rect x="1265.0" y="259" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
+<text x="1370" y="279" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
+<text x="1370" y="297" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Google Maps Platform</text>
+<rect x="1265.0" y="421.0" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
+<text x="1370" y="441.0" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
+<text x="1370" y="459.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">API de Claude</text>
+<rect x="1265.0" y="515" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
+<text x="1370" y="535" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
+<text x="1370" y="553" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Servidor de correo SMTP</text>
+<rect x="1265.0" y="651" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
+<text x="1370" y="671" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
+<text x="1370" y="689" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Google Identity Services</text>
+</svg>
