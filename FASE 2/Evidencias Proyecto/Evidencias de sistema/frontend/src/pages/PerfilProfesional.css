@@ -1,0 +1,54 @@
+/* Mi perfil profesional: usa solo las variables y patrones de index.css (tarjetas, campos, botones). */
+.ficha-prof { max-width: 52rem; margin: 0 auto; padding-bottom: 3rem; }
+
+/* Misma cabecera con degradado celeste que el directorio de profesionales */
+.ficha-prof__cabecera {
+  padding: 1.4rem; margin: 0 0 1.25rem; border-radius: 20px;
+  background: linear-gradient(115deg, var(--color-info-fondo), var(--color-superficie-suave) 70%);
+  border: 1px solid #d9e6ef;
+}
+.ficha-prof__cabecera h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); margin: 0 0 0.35rem; }
+.ficha-prof__cabecera p { margin: 0; color: var(--color-texto-secundario); }
+
+.ficha-prof__tarjeta {
+  background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta);
+  padding: 1.25rem;
+}
+
+.ficha-prof__seccion { border: 0; padding: 0; margin: 0 0 1.75rem; min-width: 0; }
+.ficha-prof__seccion legend {
+  display: flex; align-items: center; gap: 0.6rem; padding: 0; margin-bottom: 1rem;
+  font-size: 1.1rem; font-weight: 600; color: var(--color-primario);
+}
+.ficha-prof__seccion legend .icono { color: var(--color-acento); }
+.ficha-prof__intro { margin: -0.4rem 0 1rem; font-size: 0.92rem; }
+
+.ficha-prof__texto { min-height: 8.5rem; resize: vertical; line-height: 1.5; }
+.ficha-prof__contador { align-self: flex-end; }
+
+.ficha-prof__ubicacion { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+.ficha-prof__mapa {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem;
+  min-height: 12.5rem; padding: 1rem; text-align: center;
+  color: var(--color-texto-secundario); background: var(--color-superficie-suave);
+  border: 1px dashed var(--color-borde); border-radius: var(--radio-control);
+}
+.ficha-prof__mapa .icono { color: var(--color-primario); }
+.ficha-prof__mapa p { margin: 0; font-size: 0.92rem; font-weight: 500; }
+
+.ficha-prof__acciones {
+  display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0.75rem;
+  padding-top: 1.25rem; border-top: 1px solid var(--color-borde);
+}
+.ficha-prof__acciones .boton-texto { justify-content: center; }
+.ficha-prof__acciones .boton--compacto { width: 100%; }
+
+@media (min-width: 640px) {
+  .ficha-prof__cabecera { padding: 2rem; }
+  .ficha-prof__tarjeta { padding: 2rem 2.25rem; }
+  .ficha-prof__acciones { flex-direction: row; align-items: center; justify-content: flex-end; gap: 1.25rem; }
+  .ficha-prof__acciones .boton--compacto { width: auto; }
+}
+@media (min-width: 900px) {
+  .ficha-prof__ubicacion { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: stretch; gap: 1.5rem; }
+}

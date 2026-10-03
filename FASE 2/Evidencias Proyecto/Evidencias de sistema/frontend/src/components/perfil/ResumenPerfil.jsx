@@ -29,9 +29,10 @@ function TarjetaResumen({ titulo, icono, paso, onEditar, filas, pie }) {
 }
 
 // Vista "Mi perfil" cuando el asistente está completo: resumen por sección con su botón "Editar".
-export default function ResumenPerfil({ datos, aviso, onEditar }) {
+export default function ResumenPerfil({ datos, ficha = null, aviso, onEditar }) {
   const { usuario, perfil, objetivos, salud, requerimientoCaloricoKcal } = datos;
   const tipoCuenta = OPCIONES_TIPO_CUENTA.find((opcion) => opcion.valor === usuario.rol);
+  const esProfesional = usuario.rol === 'profesional';
   return (
     <section className="resumen">
       <header className="resumen__cabecera">
@@ -48,6 +49,14 @@ export default function ResumenPerfil({ datos, aviso, onEditar }) {
           ['Uso de FitSearch', etiquetaDe(OPCIONES_TIPO_CUENTA, usuario.rol)],
           ['Descripción', tipoCuenta?.descripcion ?? '—'],
         ]} />
+        {esProfesional && (
+          <TarjetaResumen titulo="Ficha profesional" icono="medico" paso="ficha" onEditar={onEditar} filas={[
+            ['Especialidad', ficha?.especialidad ?? '—'],
+            ['Descripción', ficha?.descripcion || '—'],
+            ['Ubicación', ficha ? `${ficha.ubicacionLat}, ${ficha.ubicacionLng}` : '—'],
+          ]} />
+        )}
+        {!esProfesional && <>
         <TarjetaResumen titulo="Datos personales" icono="usuario" paso={1} onEditar={onEditar} filas={[
           ['Peso', numero(perfil.pesoKg, 'kg')], ['Altura', numero(perfil.alturaCm, 'cm')], ['Edad', numero(perfil.edad, 'años')],
           ['Sexo', etiquetaDe(opcionesSexo, perfil.sexo)], ['Actividad física', etiquetaDe(opcionesActividad, perfil.actividadFisica)],
@@ -62,6 +71,7 @@ export default function ResumenPerfil({ datos, aviso, onEditar }) {
           ['Medicamentos', salud?.tomaMedicamentos ? listado(catalogoSalud.medicamentos, salud.medicamentos) : 'No toma medicamentos'],
           ['Alergias', listado(catalogoSalud.alergias, salud?.alergias ?? [])],
         ]} pie={<p className="nota-privacidad nota-privacidad--compacta"><Icono nombre="candadoCerrado" tamano={16} /> Solo tú puedes ver esta información.</p>} />
+        </>}
       </div>
     </section>
   );
