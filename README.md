@@ -49,7 +49,7 @@ FitSearch/
 │   ├── Evidencias Individuales/
 │   ├── Evidencias Grupales/        # Guía 2.4 y planillas de evaluación
 │   └── Evidencias Proyecto/
-│       ├── Evidencias de documentación/   # DAS, DoD, diagramas, sprints (con sus capturas), plan de pruebas y control
+│       ├── Evidencias de documentación/   # DAS, DoD, diagramas, sprints (con sus capturas), plan de pruebas y control (matriz de cambios y EDT)
 │       └── Evidencias de sistema/         # Código de la aplicación
 │           ├── frontend/          # React + Vite
 │           │   └── src/
