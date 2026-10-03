@@ -1,0 +1,51 @@
+/* Ficha resumida de un profesional (Inicio, buscador y favoritos) y botón de favorito. Toda la tarjeta abre la ficha. */
+.tarjeta-profesional {
+  position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio);
+  box-shadow: 0 6px 18px rgb(11 79 128 / 7%); transition: box-shadow 0.15s, transform 0.15s; overflow-wrap: anywhere;
+}
+.tarjeta-profesional:hover { box-shadow: var(--sombra-tarjeta); transform: translateY(-2px); }
+.tarjeta-profesional:focus-within { box-shadow: 0 0 0 3px rgb(244 123 32 / 45%); }
+.tarjeta-profesional__portada {
+  position: relative; display: grid; place-items: center; height: 6.25rem;
+  background:
+    radial-gradient(circle at 85% 10%, rgb(247 147 30 / 25%), transparent 45%),
+    linear-gradient(140deg, #e6f0f8, #cfe2f0);
+}
+.tarjeta-profesional__iniciales {
+  display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 50%; border: 4px solid #fff;
+  color: #fff; font-size: 1.25rem; font-weight: 700; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+  box-shadow: 0 6px 16px rgb(11 79 128 / 25%);
+}
+.tarjeta-profesional .tarjeta-profesional__favorito { position: absolute; top: 0.6rem; right: 0.6rem; z-index: 2; }
+.tarjeta-profesional__cuerpo { display: flex; flex: 1; flex-direction: column; align-items: flex-start; gap: 0.35rem; padding: 0.9rem 1rem 1.1rem; }
+.tarjeta-profesional__especialidad { padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; color: var(--color-primario); background: var(--color-info-fondo); }
+.tarjeta-profesional__nombre { margin: 0.1rem 0 0; font-size: 1.02rem; line-height: 1.3; }
+.tarjeta-profesional__nombre a { color: var(--color-primario-oscuro); text-decoration: none; }
+.tarjeta-profesional__nombre a::after { content: ''; position: absolute; inset: 0; z-index: 1; }
+.tarjeta-profesional__nombre a:focus-visible { outline: none; }
+.tarjeta-profesional__lugar { display: flex; align-items: center; gap: 0.3rem; margin: 0; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.tarjeta-profesional__lugar .icono { color: var(--color-primario); }
+.tarjeta-profesional__modalidad { padding: 0.12rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 500; color: var(--color-exito); background: var(--color-exito-fondo); }
+.tarjeta-profesional__descripcion {
+  display: -webkit-box; margin: 0.35rem 0 0; overflow: hidden; font-size: 0.85rem; color: var(--color-texto-secundario);
+  -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical;
+}
+.tarjeta-profesional__ver { display: inline-flex; align-items: center; gap: 0.35rem; margin-top: auto; padding-top: 0.6rem; font-size: 0.85rem; font-weight: 600; color: var(--color-primario); }
+
+/* En el buscador la franja de portada es más baja para que quepan la modalidad y la descripción. */
+.tarjeta-profesional--completa .tarjeta-profesional__portada { height: 5.25rem; }
+.tarjeta-profesional--completa .tarjeta-profesional__iniciales { width: 3.5rem; height: 3.5rem; font-size: 1.1rem; }
+
+.favorito { position: relative; display: inline-flex; }
+.boton-favorito {
+  display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid var(--color-borde); border-radius: 50%;
+  color: var(--color-primario); background: rgb(255 255 255 / 92%); cursor: pointer; transition: color 0.15s, transform 0.15s;
+}
+.boton-favorito:hover { color: #e0435a; transform: scale(1.06); }
+.boton-favorito--activo { color: #e0435a; border-color: #f6c3cb; }
+.boton-favorito:disabled { cursor: wait; }
+.favorito__error {
+  position: absolute; top: calc(100% + 0.35rem); right: 0; z-index: 3; width: 13rem; padding: 0.45rem 0.6rem; border-radius: 8px;
+  font-size: 0.75rem; color: var(--color-error); background: var(--color-error-fondo); box-shadow: var(--sombra-tarjeta);
+}

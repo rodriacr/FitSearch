@@ -229,5 +229,81 @@
         "etiqueta": "Ambientales"
       }
     ]
+  },
+  "profesionales": {
+    "busqueda": {
+      "max": 100
+    },
+    "especialidad": {
+      "max": 100
+    },
+    "comuna": {
+      "max": 80
+    },
+    "porPagina": 12,
+    "modalidades": [
+      {
+        "valor": "presencial",
+        "etiqueta": "Presencial"
+      },
+      {
+        "valor": "online",
+        "etiqueta": "Online"
+      },
+      {
+        "valor": "ambas",
+        "etiqueta": "Presencial y online"
+      }
+    ],
+    "filtroModalidad": [
+      {
+        "valor": "presencial",
+        "etiqueta": "Presencial"
+      },
+      {
+        "valor": "online",
+        "etiqueta": "Online"
+      }
+    ],
+    "distanciasKm": [
+      2,
+      5,
+      10,
+      25
+    ],
+    "calificacionesMinimas": [
+      4,
+      3
+    ],
+    "ordenes": [
+      {
+        "valor": "nombre",
+        "etiqueta": "Nombre (A-Z)"
+      },
+      {
+        "valor": "cercania",
+        "etiqueta": "Más cercanos",
+        "requiereUbicacion": true
+      },
+      {
+        "valor": "calificacion",
+        "etiqueta": "Mejor calificados"
+      },
+      {
+        "valor": "resenas",
+        "etiqueta": "Más reseñas"
+      }
+    ]
+  },
+  "resena": {
+    "puntaje": {
+      "min": 1,
+      "max": 5
+    },
+    "comentario": {
+      "min": 10,
+      "max": 500
+    },
+    "porPagina": 5
   }
 }

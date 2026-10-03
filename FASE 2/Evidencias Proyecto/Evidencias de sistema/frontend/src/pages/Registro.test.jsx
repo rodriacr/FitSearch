@@ -22,7 +22,7 @@ describe('Registro (FS-HU-01 y FS-HU-17)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Registrarse' }));
 
     expect(await screen.findByText('Tu cuenta fue creada y la sesión está iniciada.')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
       nombre: 'Ana Pérez', correo: 'ana@correo.cl', password: 'ClaveSegura123' });
   });

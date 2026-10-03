@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { actualizarSesionGuardada, guardarSesion, leerSesionGuardada, registrarManejadorSesionExpirada } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
+import { olvidarUbicacion } from '../services/ubicacion.js';
 
 const SesionContext = createContext(null);
 
@@ -17,6 +18,7 @@ export function SesionProvider({ children }) {
   useEffect(() => {
     registrarManejadorSesionExpirada(() => {
       establecer(null);
+      olvidarUbicacion();
       setAviso({ tipo: 'info', texto: 'Tu sesión expiró. Inicia sesión nuevamente.' });
     });
   }, [establecer]);
@@ -29,7 +31,8 @@ export function SesionProvider({ children }) {
     limpiarAviso,
     registrar: async (datos) => {
       establecer(await authService.registrar(datos));
-      setAviso({ tipo: 'exito', texto: 'Tu cuenta fue creada y la sesión está iniciada.' });
+      // "destino": una cuenta nueva parte por el asistente de perfil (App lo usa al salir de las pantallas de acceso).
+      setAviso({ tipo: 'exito', texto: 'Tu cuenta fue creada y la sesión está iniciada.', destino: '/perfil' });
     },
     iniciarSesion: async (datos) => {
       const nuevaSesion = await authService.iniciarSesion(datos);
@@ -41,10 +44,12 @@ export function SesionProvider({ children }) {
       establecer({ token, usuario }, recordar);
       setAviso({
         tipo: 'exito',
+        ...(cuentaNueva ? { destino: '/perfil' } : {}),
         texto: cuentaNueva
           ? `Tu cuenta fue creada con Google y la sesión está iniciada como ${usuario.nombre}.`
           : `Sesión iniciada como ${usuario.nombre}.`,
       });
+      return { cuentaNueva };
     },
     // El rol viaja dentro del token: al confirmar el tipo de cuenta se reemplaza la sesión guardada.
     actualizarSesion: (nuevaSesion) => {
@@ -58,6 +63,7 @@ export function SesionProvider({ children }) {
         // El token se descarta igual en el cliente aunque el servidor no responda.
       }
       establecer(null);
+      olvidarUbicacion();
       // "cierre" le indica a RutaProtegida que la salida fue voluntaria y debe volver a la portada.
       setAviso({ tipo: 'exito', texto: 'Cerraste sesión correctamente.', origen: 'cierre' });
     },

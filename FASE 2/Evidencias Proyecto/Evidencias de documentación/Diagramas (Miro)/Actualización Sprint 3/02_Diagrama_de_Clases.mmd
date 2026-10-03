@@ -1,0 +1,119 @@
+classDiagram
+  direction LR
+  class Rol {
+    +int id
+    +string nombre
+  }
+  class Usuario {
+    +int id
+    +string nombre
+    +string correo
+    +string passwordHash [opcional]
+    +string googleId [opcional]
+    +bool rolConfirmado
+    +datetime fechaRegistro
+  }
+  class PerfilUsuario {
+    +int id
+    +decimal pesoKg
+    +decimal alturaCm
+    +int edad
+    +string sexo
+    +string actividadFisica
+    +string objetivoPrincipal
+    +int comidasDia
+    +string horasSueno
+    +requerimientoCalorico() int
+  }
+  class InformacionSalud {
+    +int id
+    +string[] condicionesMedicas
+    +bool tomaMedicamentos
+    +string[] medicamentos
+    +string[] alergias
+    +datetime fechaActualizacion
+  }
+  class TokenRecuperacion {
+    +int id
+    +string tokenHash
+    +datetime fechaExpiracion
+    +datetime fechaUso
+    +estaVigente() bool
+  }
+  class Profesional {
+    +int id
+    +string especialidad
+    +string descripcion
+    +bool verificado
+    +decimal ubicacionLat
+    +decimal ubicacionLng
+    +string comuna [opcional]
+    +Modalidad modalidad
+    +calificacionPromedio() decimal
+  }
+  class Favorito {
+    +int id
+    +datetime fechaCreacion
+  }
+  class Resena {
+    +int id
+    +int puntaje
+    +string comentario [opcional]
+    +datetime fechaCreacion
+    +datetime fechaActualizacion
+  }
+  class Establecimiento {
+    +int id
+    +string nombre
+    +string categoria
+    +string direccion
+    +decimal ubicacionLat
+    +decimal ubicacionLng
+  }
+  class Disponibilidad {
+    +int id
+    +date fecha
+    +time horaInicio
+    +time horaFin
+  }
+  class Reserva {
+    +int id
+    +string mensaje
+    +EstadoReserva estado
+    +datetime fechaCreacion
+  }
+  class Conversacion {
+    +int id
+    +datetime fechaInicio
+  }
+  class Mensaje {
+    +int id
+    +Remitente remitente
+    +string contenido
+    +datetime fecha
+  }
+  class RegistroComida {
+    +int id
+    +date fecha
+    +string descripcionAlimento
+    +int calorias
+    +decimal proteinasG
+    +decimal carbohidratosG
+    +decimal grasasG
+  }
+  Rol "1" <-- "0..*" Usuario : tiene
+  Usuario "1" *-- "1" PerfilUsuario : perfil
+  Usuario "1" *-- "0..1" InformacionSalud : salud
+  Usuario "1" *-- "0..*" TokenRecuperacion : recuperación
+  Usuario "1" -- "0..1" Profesional : ficha profesional
+  Establecimiento "0..1" o-- "0..*" Profesional : agrupa
+  Profesional "1" *-- "0..*" Disponibilidad : publica
+  Disponibilidad "1" -- "0..*" Reserva : se reserva en
+  Usuario "1" -- "0..*" Reserva : realiza
+  Usuario "1" *-- "0..*" Conversacion : inicia
+  Conversacion "1" *-- "1..*" Mensaje : contiene
+  Usuario "1" *-- "0..*" RegistroComida : registra
+  Usuario "1" *-- "0..*" Favorito : guarda
+  Favorito "0..*" --> "1" Profesional : marca
+  Usuario "1" *-- "0..*" Resena : escribe
+  Profesional "1" -- "0..*" Resena : recibe
