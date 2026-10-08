@@ -1,0 +1,33 @@
+sequenceDiagram
+  autonumber
+  actor P as Persona
+  participant F as Frontend (React)
+  participant B as Backend (Express)
+  participant D as MySQL
+  P->>F: Crea su cuenta (registro o primer ingreso con Google)
+  F-->>P: "¿Cómo quieres usar FitSearch?" en /elegir-perfil (sin opción marcada, fuera del asistente)
+  P->>F: "Continuar como usuario" o "Continuar como profesional"
+  F->>B: PUT /api/perfil/tipo-cuenta (Bearer JWT)
+  B->>D: UPDATE usuarios SET rol_id, rol_confirmado = true WHERE id = ? AND rol_confirmado = false
+  alt la cuenta ya había elegido su perfil
+    B-->>F: 409 "Ya elegiste cómo usar FitSearch"
+    F-->>P: Va a su Inicio con el aviso (cambiarlo lo hace el administrador)
+  else eligió "Profesional"
+    B-->>F: Token nuevo con el rol profesional (mismo vencimiento)
+    F-->>P: /profesional/inicio con "¡Listo!": sin datos personales, objetivos ni salud
+  else eligió "Usuario"
+    B-->>F: Token nuevo con el rol usuario (mismo vencimiento)
+    F->>B: GET /api/perfil
+    B-->>F: perfil, pasos pendientes y kcal/día
+    P->>F: Paso 1: peso, altura, edad, sexo y actividad física
+    F->>B: PUT /api/perfil (solo rol usuario)
+    B->>D: Guardar datos básicos
+    P->>F: Paso 2: objetivo, comidas al día y horas de sueño
+    F->>B: PUT /api/perfil/objetivos
+    B->>D: Guardar objetivos en perfiles_usuario
+    P->>F: Paso 3: condiciones, medicamentos y alergias
+    F->>B: PUT /api/perfil/salud
+    B->>B: Validar valores contra shared/reglas.json ("Ninguna" excluyente)
+    B->>D: Guardar en informacion_salud
+    F-->>P: Paso 4: "¡Información guardada!" + kcal/día, y luego el resumen con "Editar" por sección
+  end
