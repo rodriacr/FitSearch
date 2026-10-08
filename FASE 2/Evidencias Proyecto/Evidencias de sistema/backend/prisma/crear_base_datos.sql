@@ -13,5 +13,3 @@ ALTER USER 'fitsearch'@'localhost' IDENTIFIED WITH caching_sha2_password BY 'CAM
 GRANT ALL PRIVILEGES ON fitsearch.* TO 'fitsearch'@'localhost';
 GRANT ALL PRIVILEGES ON fitsearch_shadow.* TO 'fitsearch'@'localhost';
 FLUSH PRIVILEGES;
-
-

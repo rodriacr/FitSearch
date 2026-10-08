@@ -93,40 +93,16 @@ async function filtros() {
   return { especialidades: especialidades.map((fila) => fila.especialidad), comunas: comunas.map((fila) => fila.comuna) };
 }
 
-// ==========================================
-// FUNCIONES DE CLAUDE (GESTIÓN DE FICHA PROPIA)
-// ==========================================
-async function obtenerPorUsuario(usuarioId) {
-  return prisma.profesional.findFirst({
-    where: { usuarioId: Number(usuarioId) }
-  });
+// Ficha propia del profesional (FS-HU-04). La fila de "profesionales" no existe hasta que la completa por primera vez.
+const seleccionFicha = { especialidad: true, descripcion: true, comuna: true, modalidad: true, ubicacionLat: true, ubicacionLng: true };
+
+function obtenerPorUsuario(usuarioId) {
+  return prisma.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });
 }
 
-async function guardarFicha(usuarioId, datos) {
-  const registro = await prisma.profesional.findFirst({ where: { usuarioId: Number(usuarioId) } });
-  
-  if (!registro) {
-    throw new Error('No se encontró el registro del profesional asociado a este usuario.');
-  }
-
-  // Actualizamos usando el ID real del registro para evitar conflictos de Prisma
-  return prisma.profesional.update({
-    where: { id: registro.id },
-    data: {
-      especialidad: datos.especialidad,
-      descripcion: datos.descripcion,
-      ubicacionLat: datos.ubicacionLat,
-      ubicacionLng: datos.ubicacionLng,
-    }
-  });
+// Crea o actualiza la ficha: una cuenta tiene como máximo una (usuario_id es único).
+function guardarFicha(usuarioId, datos) {
+  return prisma.profesional.upsert({ where: { usuarioId }, update: datos, create: { usuarioId, ...datos }, select: seleccionFicha });
 }
 
-module.exports = { 
-  listar, 
-  buscarPorId, 
-  existe, 
-  filtros, 
-  escaparLike,
-  obtenerPorUsuario,
-  guardarFicha
-};
+module.exports = { listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha };

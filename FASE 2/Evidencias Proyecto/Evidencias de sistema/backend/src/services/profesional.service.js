@@ -27,12 +27,7 @@ function formatearFicha(fila) {
 }
 
 async function listar({ limite = reglas.porPagina, pagina = 1, ...filtros }) {
-  const resultado = await modelo.listar({ ...filtros, pagina, limite });
-  
-  // Protección por si modelo.listar devuelve un array directo o un objeto vacío
-  const filas = Array.isArray(resultado) ? resultado : (resultado?.filas || []);
-  const total = Number(resultado?.total || filas.length);
-
+  const { filas, total } = await modelo.listar({ ...filtros, pagina, limite });
   return {
     profesionales: filas.map(formatearFicha),
     pagina,
@@ -85,32 +80,19 @@ async function ficha(id, usuario) {
 
 const filtros = () => modelo.filtros();
 
-// ==========================================
-// FUNCIONES DE CLAUDE (GESTIÓN DE FICHA PROPIA)
-// ==========================================
-const formatearFichaSimple = (fila) => fila && {
+// Ficha propia del profesional (FS-HU-04): null mientras no la complete.
+const formatearMiFicha = (fila) => fila && {
   especialidad: fila.especialidad,
   descripcion: fila.descripcion ?? '',
+  comuna: fila.comuna ?? '',
+  modalidad: fila.modalidad,
   ubicacionLat: Number(fila.ubicacionLat),
   ubicacionLng: Number(fila.ubicacionLng),
 };
 
-async function obtenerMiFicha(usuarioId) {
-  return { ficha: formatearFichaSimple(await modelo.obtenerPorUsuario(usuarioId)) };
-}
+async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
+async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
 
-async function guardarMiFicha(usuarioId, datos) {
-  return { ficha: formatearFichaSimple(await modelo.guardarFicha(usuarioId, datos)) };
-}
-
-module.exports = { 
-  listar, 
-  ficha, 
-  filtros, 
-  formatearFicha, 
-  resumirResenas, 
-  nombrePublico, 
-  formatearResena,
-  obtenerMiFicha,
-  guardarMiFicha
+module.exports = {
+  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha,
 };

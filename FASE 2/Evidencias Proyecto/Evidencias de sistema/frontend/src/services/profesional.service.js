@@ -25,6 +25,6 @@ export const obtenerProfesional = (id) => solicitar(`/profesionales/${id}`);
 export const listarResenas = (id, pagina = 1) => solicitar(`/profesionales/${id}/resenas?pagina=${pagina}`);
 export const guardarResena = (id, datos) => solicitar(`/profesionales/${id}/resenas`, { metodo: 'PUT', cuerpo: datos });
 export const eliminarResena = (id) => solicitar(`/profesionales/${id}/resenas`, { metodo: 'DELETE' });
-// Funciones de la nueva integración para la ficha del profesional
+// Ficha propia del profesional (FS-HU-04).
 export const obtenerMiFicha = () => solicitar('/profesionales/mi-ficha');
 export const guardarMiFicha = (ficha) => solicitar('/profesionales/mi-ficha', { metodo: 'PUT', cuerpo: ficha });

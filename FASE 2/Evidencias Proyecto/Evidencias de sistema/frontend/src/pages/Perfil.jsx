@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import AsistentePerfil from '../components/perfil/AsistentePerfil.jsx';
@@ -18,7 +19,7 @@ const FINAL = 4;
 // Primer paso pendiente del asistente, o null si el perfil está completo.
 function pasoPendiente({ usuario, pasos }) {
   if (!pasos.tipoCuenta) return 0;
-  // Un profesional no completa datos personales, objetivos ni salud: tras elegir el tipo de cuenta sigue su ficha pública.
+  // Un profesional no completa datos personales, objetivos ni salud: tras elegir el tipo de cuenta sigue su ficha (FS-HU-04).
   if (usuario.rol === 'profesional') return null;
   const orden = [pasos.tipoCuenta, pasos.datosPersonales, pasos.objetivos, pasos.salud];
   const indice = orden.indexOf(false);
@@ -26,9 +27,10 @@ function pasoPendiente({ usuario, pasos }) {
 }
 
 // "Mi perfil": asistente de 5 pasos mientras falten datos (FS-HU-02, FS-HU-18, FS-HU-19) y luego el resumen con "Editar".
+// Una cuenta profesional solo elige su tipo de cuenta y completa su ficha profesional (FS-HU-04).
 export default function Perfil() {
-  const { aviso, limpiarAviso, actualizarSesion } = useSesion();
-  const [avisoInicial] = useState(aviso);
+  const { actualizarSesion } = useSesion();
+  const { descartarAviso } = useOutletContext() || {};
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
   const [datos, setDatos] = useState(null);
@@ -36,7 +38,7 @@ export default function Perfil() {
   const [ficha, setFicha] = useState(null);
   // Paso en el que se abrió el asistente: ahí se muestra el saludo de bienvenida.
   const [pasoInicial, setPasoInicial] = useState(null);
-  // vista: { tipo: 'asistente', paso, edicion } | { tipo: 'resumen' }
+  // vista: { tipo: 'asistente', paso, edicion } | { tipo: 'ficha', edicion } | { tipo: 'resumen' }
   const [vista, setVista] = useState(null);
   const [mensaje, setMensaje] = useState('');
 
@@ -59,25 +61,21 @@ export default function Perfil() {
     return () => { activo = false; };
   }, []);
 
-  // El aviso de sesión iniciada o de cuenta creada se muestra una sola vez al llegar al perfil.
-  useEffect(() => {
-    if (avisoInicial) limpiarAviso();
-  }, [avisoInicial, limpiarAviso]);
-
   if (cargando) return <p className="texto-secundario">Cargando tu perfil…</p>;
   if (error) return <Alerta>{error}</Alerta>;
 
-  const avisos = (
-    <>
-      {avisoInicial && <Alerta tipo={avisoInicial.tipo}>{avisoInicial.texto}</Alerta>}
-      <Alerta tipo="exito">{mensaje}</Alerta>
-    </>
-  );
+  // El aviso de sesión iniciada o de cuenta creada lo muestra el diseño común de la aplicación (DisenoAplicacion).
+  const avisos = <Alerta tipo="exito">{mensaje}</Alerta>;
 
   if (vista.tipo === 'ficha') {
+    const alGuardarFicha = (nueva) => {
+      descartarAviso?.();
+      setFicha(nueva);
+      setMensaje('Tu ficha profesional se guardó correctamente.');
+      setVista({ tipo: 'resumen' });
+    };
     return (
-      <PerfilProfesional ficha={ficha} edicion={vista.edicion}
-        onGuardado={(nueva) => { setFicha(nueva); setMensaje('Tu ficha profesional se guardó correctamente.'); setVista({ tipo: 'resumen' }); }}
+      <PerfilProfesional ficha={ficha} edicion={vista.edicion} onGuardado={alGuardarFicha}
         onCancelar={() => setVista(vista.edicion ? { tipo: 'resumen' } : { tipo: 'asistente', paso: 0, edicion: false })} />
     );
   }
@@ -94,13 +92,24 @@ export default function Perfil() {
 
   const { paso, edicion } = vista;
   const alGuardar = (respuesta) => {
+    // Al guardar un paso, el aviso de cuenta creada o de sesión iniciada ya cumplió su función.
+    descartarAviso?.();
     setDatos(respuesta);
     // El paso del tipo de cuenta devuelve un token nuevo: el rol cambió y viaja dentro del token.
     if (respuesta.token) actualizarSesion({ token: respuesta.token, usuario: respuesta.usuario });
-    // Quien elige "profesional" pasa directo a su ficha pública (o al resumen si ya la tenía).
-    if (paso === 0 && respuesta.usuario.rol === 'profesional') {
-      setVista(ficha ? { tipo: 'resumen' } : { tipo: 'ficha', edicion: false });
-      return;
+    if (paso === 0) {
+      // Quien elige "profesional" pasa a su ficha (o al resumen si ya la tenía). Quien cambia a "usuario"
+      // sigue con los pasos que le falten antes de volver al resumen.
+      const pendiente = pasoPendiente(respuesta);
+      if (respuesta.usuario.rol === 'profesional') {
+        setVista(ficha ? { tipo: 'resumen' } : { tipo: 'ficha', edicion: false });
+        if (edicion && ficha) setMensaje('Tus cambios se guardaron correctamente.');
+        return;
+      }
+      if (pendiente !== null) {
+        setVista({ tipo: 'asistente', paso: pendiente, edicion: false });
+        return;
+      }
     }
     if (edicion) {
       setMensaje('Tus cambios se guardaron correctamente.');

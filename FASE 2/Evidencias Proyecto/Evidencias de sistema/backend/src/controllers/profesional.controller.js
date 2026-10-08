@@ -22,37 +22,19 @@ function filtrosDesdeConsulta(query) {
   };
 }
 
-// ==========================================
-// FUNCIONES DEL EQUIPO (GITHUB)
-// ==========================================
 async function listar(req, res) {
   res.json(await servicio.listar({ ...filtrosDesdeConsulta(req.query), usuarioId: req.usuario.id }));
 }
 async function ficha(req, res) { res.json(await servicio.ficha(Number(req.params.id), req.usuario)); }
 async function filtros(req, res) { res.json(await servicio.filtros()); }
 
-// ==========================================
-// FUNCIONES DE CLAUDE (INTEGRACIÓN)
-// ==========================================
-async function obtenerMiFicha(req, res) { 
-  res.json(await servicio.obtenerMiFicha(req.usuario.id)); 
-}
+// Ficha propia del profesional (FS-HU-04): solo se toman los campos permitidos del cuerpo ya validado.
+async function obtenerMiFicha(req, res) { res.json(await servicio.obtenerMiFicha(req.usuario.id)); }
 async function guardarMiFicha(req, res) {
-  const { especialidad, descripcion, ubicacionLat, ubicacionLng } = req.body;
-  res.json(await servicio.guardarMiFicha(req.usuario.id, { 
-    especialidad, 
-    descripcion: descripcion || null, 
-    ubicacionLat, 
-    ubicacionLng 
+  const { especialidad, descripcion, comuna, modalidad, ubicacionLat, ubicacionLng } = req.body;
+  res.json(await servicio.guardarMiFicha(req.usuario.id, {
+    especialidad, descripcion: descripcion || null, comuna, modalidad, ubicacionLat, ubicacionLng,
   }));
 }
 
-// Exportamos la mezcla de ambos mundos
-module.exports = { 
-  listar, 
-  ficha, 
-  filtros, 
-  filtrosDesdeConsulta, 
-  obtenerMiFicha, 
-  guardarMiFicha 
-};
+module.exports = { listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha };
