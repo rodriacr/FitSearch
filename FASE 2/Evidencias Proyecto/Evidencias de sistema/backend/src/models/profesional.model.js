@@ -94,7 +94,7 @@ async function filtros() {
 }
 
 // Ficha propia del profesional (FS-HU-04). La fila de "profesionales" no existe hasta que la completa por primera vez.
-const seleccionFicha = { especialidad: true, descripcion: true, comuna: true, modalidad: true, ubicacionLat: true, ubicacionLng: true };
+const seleccionFicha = { id: true, especialidad: true, descripcion: true, comuna: true, modalidad: true, ubicacionLat: true, ubicacionLng: true };
 
 function obtenerPorUsuario(usuarioId) {
   return prisma.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });

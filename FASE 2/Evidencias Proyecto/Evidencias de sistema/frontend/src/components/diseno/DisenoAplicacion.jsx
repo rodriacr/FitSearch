@@ -8,7 +8,8 @@ import MenuLateral from './MenuLateral.jsx';
 import './DisenoAplicacion.css';
 
 // Estructura común de las pantallas con sesión: encabezado, menú lateral, contenido y barra inferior (DAS, D22).
-export default function DisenoAplicacion() {
+// "espacio" elige el menú del usuario o el del profesional (DAS, D25).
+export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const { aviso: avisoSesion, limpiarAviso } = useSesion();
   const { pathname } = useLocation();
   const tipoNavegacion = useNavigationType();
@@ -29,18 +30,18 @@ export default function DisenoAplicacion() {
   const cerrarMenu = useCallback(() => setMenuAbierto(false), []);
 
   return (
-    <div className="app">
+    <div className={`app app--${espacio}`}>
       <a className="app__saltar" href="#contenido">Saltar al contenido</a>
       <Encabezado menuAbierto={menuAbierto} onAlternarMenu={() => setMenuAbierto(!menuAbierto)} />
       <div className="app__cuerpo">
-        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} />
+        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} />
         <main id="contenido" className="app__contenido" tabIndex={-1}>
           {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
           {/* Las pantallas pueden descartar el aviso cuando la persona avanza (por ejemplo, en el asistente de perfil). */}
           <Outlet context={{ descartarAviso: () => setAviso(null) }} />
         </main>
       </div>
-      <BarraInferior />
+      <BarraInferior espacio={espacio} />
     </div>
   );
 }

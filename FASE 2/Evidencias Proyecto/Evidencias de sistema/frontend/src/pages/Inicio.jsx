@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Alerta from '../components/Alerta.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
 import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
+import { useSesion } from '../context/SesionContext.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { obtenerPerfil } from '../services/perfil.service.js';
 import { buscarProfesionales } from '../services/profesional.service.js';
@@ -17,7 +18,6 @@ const CATEGORIAS_HERO = [
   { icono: 'profesional', nombre: 'Profesionales', detalle: 'de la salud y deporte' },
   { icono: 'hospital', nombre: 'Centros de salud', detalle: 'y clínicas' },
   { icono: 'mancuerna', nombre: 'Gimnasios', detalle: 'y centros deportivos' },
-  { icono: 'pastilla', nombre: 'Farmacias', detalle: 'y más' },
 ];
 
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
@@ -93,6 +93,7 @@ function TarjetaCitas() {
 // lo que aún no existe se muestra como estado vacío o "Próximamente".
 export default function Inicio() {
   const navegar = useNavigate();
+  const { marcarRolPendiente } = useSesion();
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
   const [destacados, setDestacados] = useState(null);
@@ -115,8 +116,12 @@ export default function Inicio() {
     return () => { activo = false; };
   }, [intento]);
 
-  // El tipo de cuenta define las pantallas: sin confirmarlo, primero se completa ese paso del asistente.
-  if (perfil?.datos && !perfil.datos.pasos.tipoCuenta) return <Navigate to="/perfil" replace />;
+  // El tipo de cuenta define las pantallas: sin elegirlo, RutaProtegida lleva a "Elegir perfil" (DAS, D25).
+  const rolPendiente = perfil?.datos?.pasos.tipoCuenta === false;
+  useEffect(() => {
+    if (rolPendiente) marcarRolPendiente();
+  }, [rolPendiente, marcarRolPendiente]);
+  if (rolPendiente) return null;
 
   const buscar = (evento) => {
     evento.preventDefault();
@@ -125,7 +130,9 @@ export default function Inicio() {
   };
   const cargandoPerfil = perfil?.intento !== intento;
   const cargandoDestacados = destacados?.intento !== intento;
-  const pendientes = perfil?.datos ? Object.values(perfil.datos.pasos).filter((hecho) => !hecho).length : 0;
+  // Pasos pendientes del asistente del usuario (el tipo de cuenta no es parte de él).
+  const pendientes = perfil?.datos
+    ? [perfil.datos.pasos.datosPersonales, perfil.datos.pasos.objetivos, perfil.datos.pasos.salud].filter((hecho) => !hecho).length : 0;
 
   return (
     <div className="inicio">
@@ -140,7 +147,7 @@ export default function Inicio() {
       <section className="inicio__hero" aria-labelledby="titulo-inicio">
         <div className="inicio__hero-texto">
           <h1 id="titulo-inicio">Tu salud y bienestar, en un solo lugar</h1>
-          <p>Encuentra profesionales, centros de salud, gimnasios, farmacias y más, cerca de ti.</p>
+          <p>Encuentra profesionales, centros de salud, gimnasios y más, cerca de ti.</p>
           <form className="buscador-hero" role="search" onSubmit={buscar}>
             <label htmlFor="busqueda-inicio" className="solo-lector">¿Qué necesitas hoy?</label>
             <Icono nombre="buscar" tamano={20} />

@@ -28,9 +28,11 @@ describe('Inicio con datos', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Tu salud y bienestar, en un solo lugar' })).toBeInTheDocument();
     const accesos = screen.getByRole('heading', { name: 'Tus accesos rápidos' }).closest('section');
-    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Farmacias', '/farmacias'], ['Asistente IA', '/asistente']]) {
+    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
     }
+    // Farmacias salió del alcance (decisión del PO del 05-10-2026) y Comidas llega como "Próximamente".
+    expect(within(accesos).queryByRole('link', { name: /Farmacias/ })).not.toBeInTheDocument();
     expect(within(accesos).getAllByText('Próximamente')).toHaveLength(4);
 
     expect(await screen.findByText('Bajar de peso')).toBeInTheDocument();
@@ -98,10 +100,10 @@ describe('Inicio sin datos', () => {
     expect(screen.getByRole('link', { name: 'Completar mi perfil' })).toHaveAttribute('href', '/perfil');
   });
 
-  test('con el tipo de cuenta pendiente lleva al asistente de perfil', async () => {
+  test('con el tipo de cuenta pendiente lleva a "Elegir perfil" (sesiones guardadas antes del cambio)', async () => {
     simular({ perfil: respuestaPerfil({ tipoCuenta: false }) });
     renderizarApp('/inicio');
-    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '¿Cómo quieres usar FitSearch?' })).toBeInTheDocument();
   });
 
   test('si falla la carga del perfil, permite reintentar', async () => {

@@ -1,0 +1,49 @@
+/* "Perfil profesional" (mockup del PO del 04-10-2026). */
+.perfil-prof { max-width: 72rem; margin: 0 auto; }
+.perfil-prof__aviso {
+  display: flex; align-items: center; gap: 0.6rem; max-width: 52rem; margin: 0 auto 1rem; padding: 0.85rem 1rem; border-radius: var(--radio-control);
+  background: #fff4ea; color: var(--color-acento-oscuro); font-weight: 500;
+}
+.perfil-prof__grilla { display: grid; gap: 1.25rem; }
+.perfil-prof__tarjeta { padding: 1.5rem 1.25rem; border-radius: var(--radio); background: var(--color-superficie); box-shadow: var(--sombra-tarjeta); }
+
+.perfil-prof__identidad { display: grid; justify-items: center; gap: 0.5rem; text-align: center; align-content: start; }
+.perfil-prof__avatar {
+  display: grid; place-items: center; width: 6rem; height: 6rem; border-radius: 50%; font-size: 1.9rem; font-weight: 700; color: #fff;
+  background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario)); box-shadow: 0 8px 20px rgb(11 79 128 / 25%);
+}
+.perfil-prof__identidad h1 { margin: 0.4rem 0 0; font-size: 1.35rem; color: var(--color-primario); }
+.perfil-prof__especialidad { margin: 0; color: var(--color-texto-secundario); }
+.perfil-prof__verificado, .perfil-prof__sin-verificar {
+  display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.7rem; border-radius: 999px; font-size: 0.78rem; font-weight: 600;
+}
+.perfil-prof__verificado { color: var(--color-exito); background: var(--color-exito-fondo); }
+.perfil-prof__sin-verificar { color: var(--color-texto-secundario); background: var(--color-superficie-suave); border: 1px solid var(--color-borde); }
+.perfil-prof__lugar { display: inline-flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.88rem; color: var(--color-texto-secundario); }
+.perfil-prof__especialidades { justify-self: stretch; margin-top: 0.75rem; padding-top: 1rem; border-top: 1px solid var(--color-borde); text-align: left; }
+.perfil-prof__especialidades h2 { margin: 0 0 0.6rem; font-size: 0.95rem; color: var(--color-primario); }
+.perfil-prof__especialidades ul { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.perfil-prof__especialidades li { padding: 0.3rem 0.75rem; border-radius: 999px; font-size: 0.8rem; color: var(--color-primario); background: var(--color-info-fondo); }
+
+.perfil-prof__detalle { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.perfil-prof__pestanas { display: flex; gap: 0.25rem; overflow-x: auto; border-bottom: 1px solid var(--color-borde); }
+.perfil-prof__pestana {
+  flex: none; padding: 0.7rem 0.9rem; border: 0; border-bottom: 3px solid transparent; background: none; font: inherit; font-size: 0.9rem;
+  color: var(--color-texto-secundario); cursor: pointer;
+}
+.perfil-prof__pestana:hover { color: var(--color-primario); }
+.perfil-prof__pestana--activa { color: var(--color-primario); font-weight: 600; border-bottom-color: var(--color-primario); }
+.perfil-prof__panel { display: grid; gap: 1.25rem; }
+.perfil-prof__bloque h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--color-primario); }
+.perfil-prof__bloque p { margin: 0; line-height: 1.6; color: var(--color-texto); white-space: pre-line; }
+.perfil-prof__datos { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; font-size: 0.92rem; }
+.perfil-prof__datos li { display: flex; align-items: center; gap: 0.6rem; }
+.perfil-prof__datos .icono { color: var(--color-primario); }
+.perfil-prof__proximamente { display: grid; justify-items: start; gap: 0.6rem; padding: 1rem; border-radius: var(--radio-control); background: var(--color-superficie-suave); }
+.perfil-prof__proximamente p { margin: 0; color: var(--color-texto-secundario); }
+.perfil-prof__publico { align-self: flex-end; margin-top: auto; }
+
+@media (min-width: 56rem) {
+  .perfil-prof__grilla { grid-template-columns: 19rem minmax(0, 1fr); align-items: start; }
+  .perfil-prof__tarjeta { padding: 1.75rem; }
+}

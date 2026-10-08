@@ -2,7 +2,8 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
 import {
-  listado, llamadasA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION, simularApi,
+  CLIMA, listado, llamadasA, MI_FICHA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION,
+  SESION_NUEVA, SESION_PROFESIONAL, simularApi,
 } from '../tests/utilidades.jsx';
 
 const API_CON_SESION = {
@@ -105,13 +106,33 @@ describe('Inicio de sesión (FS-HU-01)', () => {
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?').at(-1)[0])).toMatchObject({ q: 'nutri', modalidad: 'online' });
   });
 
-  test('si aún no elige su tipo de cuenta, el Inicio lo lleva al asistente sin perder el aviso de sesión', async () => {
-    simularApi({ ...API_CON_SESION, '/api/perfil': respuestaPerfil({ tipoCuenta: false }) });
+  test('si aún no elige cómo usar FitSearch, va a "Elegir perfil" sin perder el aviso de sesión', async () => {
+    simularApi({ ...API_CON_SESION, '/api/auth/login': SESION_NUEVA, '/api/perfil': respuestaPerfil({ tipoCuenta: false }) });
     renderizarApp('/iniciar-sesion');
 
     await ingresar();
 
-    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '¿Cómo quieres usar FitSearch?' })).toBeInTheDocument();
     expect(screen.getByText('Sesión iniciada como Ana Pérez.')).toBeInTheDocument();
+  });
+
+  test('una cuenta profesional entra a su propio Inicio (DAS, D25)', async () => {
+    simularApi({ '/api/auth/login': SESION_PROFESIONAL, '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA });
+    renderizarApp('/iniciar-sesion');
+
+    await ingresar();
+
+    expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
+    expect(screen.getByText('Sesión iniciada como Matías Rojas.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', TITULO_INICIO)).not.toBeInTheDocument();
+  });
+
+  test('un profesional que había pedido una página del usuario entra igual a su Inicio', async () => {
+    simularApi({ '/api/auth/login': SESION_PROFESIONAL, '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA });
+    renderizarApp('/favoritos');
+
+    await ingresar();
+
+    expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
   });
 });

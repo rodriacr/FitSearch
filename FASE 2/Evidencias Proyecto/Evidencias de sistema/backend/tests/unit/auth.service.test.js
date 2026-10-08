@@ -20,7 +20,7 @@ describe('auth.service', () => {
       expect(datosCreacion.passwordHash).not.toBe(PASSWORD);
       expect(await bcrypt.compare(PASSWORD, datosCreacion.passwordHash)).toBe(true);
       expect(datosCreacion.rolNombre).toBe('usuario');
-      expect(resultado.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario' });
+      expect(resultado.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario', rolConfirmado: false });
       expect(resultado.usuario).not.toHaveProperty('passwordHash');
       const token = jwt.verify(resultado.token, process.env.JWT_SECRET);
       expect(token.sub).toBe('1');

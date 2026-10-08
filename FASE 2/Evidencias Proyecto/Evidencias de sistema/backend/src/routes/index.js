@@ -9,5 +9,6 @@ router.use('/auth', authRoutes);
 router.use('/perfil', perfilRoutes);
 router.use('/profesionales', require('./profesional.routes'));
 router.use('/favoritos', require('./favorito.routes'));
+router.use('/clima', require('./clima.routes'));
 
 module.exports = router;

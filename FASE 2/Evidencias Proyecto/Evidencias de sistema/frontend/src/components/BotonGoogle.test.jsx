@@ -2,7 +2,7 @@
 // en las pruebas, así que se define window.google y se invoca el callback como lo haría Google tras elegir la cuenta.
 import { screen } from '@testing-library/react';
 import { describe, expect, test, vi } from 'vitest';
-import { renderizarApp, respuestaJson, respuestaPerfil, SESION } from '../tests/utilidades.jsx';
+import { renderizarApp, respuestaJson, respuestaPerfil, SESION_NUEVA } from '../tests/utilidades.jsx';
 
 const CLIENTE_ID = '420482881439-pruebas.apps.googleusercontent.com';
 
@@ -41,22 +41,22 @@ describe('FS-HU-16: continuar con Google', () => {
     expect(screen.queryByRole('button', { name: 'Continuar con Google' })).not.toBeInTheDocument();
   });
 
-  test('escenario 1: una cuenta nueva de Google entra al asistente de perfil', async () => {
+  test('escenario 1: una cuenta nueva de Google pasa a elegir cómo usar FitSearch', async () => {
     vi.stubEnv('VITE_GOOGLE_CLIENT_ID', CLIENTE_ID);
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => (url === '/api/auth/google'
-      ? respuestaJson(200, { ...SESION, cuentaNueva: true })
+      ? respuestaJson(200, { ...SESION_NUEVA, cuentaNueva: true })
       : respuestaJson(200, respuestaPerfil({ tipoCuenta: false }))));
     const { elegirCuenta } = simularGoogle();
     renderizarApp('/iniciar-sesion');
     await elegirCuenta();
 
     expect(await screen.findByText(/Tu cuenta fue creada con Google/)).toBeInTheDocument();
-    // El tipo de cuenta no lo decide Google: lo elige la persona en el asistente (cambio de flujo del 24-09-2026).
-    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    // El tipo de cuenta no lo decide Google: lo elige la persona en "Elegir perfil" (DAS, D25).
+    expect(await screen.findByRole('heading', { name: '¿Cómo quieres usar FitSearch?' })).toBeInTheDocument();
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({ credencial: 'token-de-google', recordar: false });
     // Sin "Recordarme" la sesión no debe sobrevivir al cierre del navegador.
     expect(localStorage.getItem('fitsearch_sesion')).toBeNull();
-    expect(JSON.parse(sessionStorage.getItem('fitsearch_sesion'))).toEqual(SESION);
+    expect(JSON.parse(sessionStorage.getItem('fitsearch_sesion'))).toEqual(SESION_NUEVA);
   });
 
   test('escenario 2: si el backend rechaza la credencial, muestra el mensaje y no inicia sesión', async () => {

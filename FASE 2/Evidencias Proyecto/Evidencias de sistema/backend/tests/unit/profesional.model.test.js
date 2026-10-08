@@ -20,5 +20,5 @@ test('la ficha propia se busca por la cuenta y devuelve solo sus campos', async 
   await obtenerPorUsuario(7);
   const [{ where, select }] = prisma.profesional.findUnique.mock.calls[0];
   expect(where).toEqual({ usuarioId: 7 });
-  expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'especialidad', 'modalidad', 'ubicacionLat', 'ubicacionLng']);
+  expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'especialidad', 'id', 'modalidad', 'ubicacionLat', 'ubicacionLng']);
 });

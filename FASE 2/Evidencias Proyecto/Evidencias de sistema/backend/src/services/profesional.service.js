@@ -82,6 +82,7 @@ const filtros = () => modelo.filtros();
 
 // Ficha propia del profesional (FS-HU-04): null mientras no la complete.
 const formatearMiFicha = (fila) => fila && {
+  id: fila.id,
   especialidad: fila.especialidad,
   descripcion: fila.descripcion ?? '',
   comuna: fila.comuna ?? '',

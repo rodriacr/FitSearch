@@ -6,6 +6,7 @@ import CampoFormulario from '../components/CampoFormulario.jsx';
 import Icono from '../components/Icono.jsx';
 import PantallaAcceso from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
+import { ELEGIR_PERFIL } from '../services/navegacion.js';
 import { validarRegistro } from '../services/validaciones.js';
 
 export default function Registro() {
@@ -29,7 +30,7 @@ export default function Registro() {
     try {
       const { nombre, correo, password } = datos;
       await registrar({ nombre, correo, password });
-      navegar('/perfil', { replace: true });
+      navegar(ELEGIR_PERFIL, { replace: true });
     } catch (error) {
       setErrores(error.detalles || {});
       setMensaje(error.message);

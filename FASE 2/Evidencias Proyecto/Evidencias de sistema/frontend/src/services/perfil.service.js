@@ -4,7 +4,7 @@ export function obtenerPerfil() {
   return solicitar('/perfil');
 }
 
-// Paso 1 del asistente: devuelve el perfil y un token nuevo con el rol confirmado (FS-HU-02).
+// "Elegir perfil" (DAS, D25): devuelve el perfil y un token nuevo con el rol confirmado. Se elige una sola vez.
 export function actualizarTipoCuenta({ rol }) {
   return solicitar('/perfil/tipo-cuenta', { metodo: 'PUT', cuerpo: { rol } });
 }

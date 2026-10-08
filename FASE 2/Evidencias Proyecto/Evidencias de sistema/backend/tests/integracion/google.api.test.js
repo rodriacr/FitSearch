@@ -37,7 +37,7 @@ describe('FS-HU-16: continuar con Google', () => {
 
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.cuentaNueva).toBe(true);
-    expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario' });
+    expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario', rolConfirmado: false });
     expect(usuarioModel.crearConPerfil).toHaveBeenCalledWith({
       nombre: 'Ana Pérez', correo: 'ana@correo.cl', googleId: CUENTA_GOOGLE.googleId, rolNombre: 'usuario' });
     expect(jwt.verify(respuesta.body.token, process.env.JWT_SECRET).sub).toBe('1');

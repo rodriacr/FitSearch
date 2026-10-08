@@ -1,0 +1,72 @@
+/* Inicio del profesional (mockup del PO del 04-10-2026). */
+.inicio-prof { display: grid; gap: 1.25rem; max-width: 72rem; margin: 0 auto; }
+
+/* ---------- Saludo con paisaje y clima ---------- */
+.inicio-prof__hero {
+  position: relative; display: grid; gap: 1rem; overflow: hidden; min-height: 14rem; padding: 1.5rem 1.25rem 4.5rem; border-radius: 20px; color: #fff;
+  background:
+    radial-gradient(circle at 82% 78%, rgb(255 196 120 / 75%), transparent 34%),
+    linear-gradient(105deg, #06263f 0%, #0b4f80 42%, #6a5a6e 70%, #e0823a 100%);
+  box-shadow: var(--sombra-tarjeta);
+}
+.inicio-prof__paisaje { position: absolute; inset: auto 0 0; width: 100%; height: 72%; pointer-events: none; }
+.paisaje__sol { fill: rgb(255 214 150 / 55%); }
+.paisaje__cerro--lejos { fill: rgb(6 38 63 / 45%); }
+.paisaje__cerro--cerca { fill: rgb(6 38 63 / 80%); }
+.inicio-prof__saludo { position: relative; max-width: 34rem; }
+.inicio-prof__hero h1 { margin: 0 0 0.5rem; font-size: clamp(1.5rem, 4vw, 2.1rem); color: #fff; }
+.inicio-prof__saludo p { margin: 0; color: rgb(255 255 255 / 88%); line-height: 1.55; }
+.inicio-prof__saludo .inicio-prof__frase { display: inline-flex; align-items: center; gap: 0.45rem; margin-top: 0.9rem; font-style: italic; font-size: 0.92rem; }
+.inicio-prof__frase .icono { color: var(--color-acento-claro); }
+
+.clima {
+  position: relative; display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.25rem 0.85rem; justify-self: start;
+  min-width: 11rem; padding: 0.8rem 1rem; border-radius: 16px; background: rgb(6 38 63 / 38%); border: 1px solid rgb(255 255 255 / 22%);
+  backdrop-filter: blur(6px);
+}
+.clima p { margin: 0; }
+.clima__icono { color: #ffd27a; }
+.clima--noche .clima__icono { color: #dbe7f3; }
+.clima__lugar { font-size: 0.8rem; color: rgb(255 255 255 / 85%); }
+.clima__temperatura { font-size: 1.6rem; font-weight: 700; line-height: 1.1; }
+.clima__descripcion { font-size: 0.8rem; color: rgb(255 255 255 / 85%); }
+.clima__fuente { grid-column: 1 / -1; font-size: 0.68rem; color: rgb(255 255 255 / 70%); }
+
+/* ---------- Tareas y accesos ---------- */
+.inicio-prof__grilla { display: grid; gap: 1.25rem; }
+.tareas { display: grid; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
+.tarea { display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--color-borde); }
+.tarea:last-child { border-bottom: 0; }
+.tarea__icono { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: 12px; color: var(--color-primario); background: var(--color-info-fondo); }
+.tarea__texto { display: grid; gap: 0.1rem; flex: 1; min-width: 0; font-size: 0.9rem; }
+.tarea__texto strong { color: var(--color-primario); font-weight: 600; }
+.tarea__texto span { color: var(--color-texto-secundario); font-size: 0.82rem; }
+.tarea__accion { display: inline-flex; align-items: center; gap: 0.3rem; flex: none; font-size: 0.85rem; font-weight: 600; color: var(--color-acento-oscuro); text-decoration: none; }
+.tarea__accion:hover { text-decoration: underline; }
+
+.accesos-prof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.acceso-prof {
+  display: grid; justify-items: center; align-content: center; gap: 0.45rem; height: 100%; min-height: 6.5rem; padding: 0.9rem 0.6rem;
+  border-radius: 14px; border: 1px solid var(--color-borde); background: var(--color-superficie-suave);
+  color: var(--color-primario); font-size: 0.85rem; font-weight: 600; text-align: center; text-decoration: none;
+}
+.acceso-prof:hover { border-color: var(--color-primario); background: var(--color-info-fondo); }
+.acceso-prof .icono { color: var(--color-primario); }
+
+/* ---------- Resumen semanal (se activa con las reservas) ---------- */
+.resumen-semanal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.resumen-semanal li { display: grid; gap: 0.35rem; padding: 0.9rem 1rem; border-radius: 14px; border: 1px solid var(--color-borde); }
+.resumen-semanal span { font-size: 0.8rem; color: var(--color-texto-secundario); }
+.resumen-semanal strong { font-size: 1.4rem; color: var(--color-primario); }
+.resumen-semanal__nota { margin: 0.75rem 0 0; font-size: 0.85rem; }
+.panel-tarjeta__titulo .etiqueta-proximamente { margin-left: auto; }
+
+@media (min-width: 40rem) {
+  .inicio-prof__hero { grid-template-columns: 1fr auto; align-items: start; padding: 2rem 2rem 4.5rem; min-height: 15rem; }
+  .clima { justify-self: end; }
+  .accesos-prof, .resumen-semanal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (min-width: 64rem) {
+  .inicio-prof__grilla { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .inicio-prof__grilla .accesos-prof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

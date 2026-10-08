@@ -56,16 +56,11 @@
 .acceso-rapido__icono { display: grid; place-items: center; width: 3.1rem; height: 3.1rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
 .acceso-rapido--centros .acceso-rapido__icono { color: #0f8a7e; background: #e3f6f4; }
 .acceso-rapido--gimnasios .acceso-rapido__icono { color: var(--color-acento-oscuro); background: #fff1e6; }
-.acceso-rapido--farmacias .acceso-rapido__icono { color: #6b4fd8; background: #efeafd; }
+.acceso-rapido--comidas .acceso-rapido__icono { color: #6b4fd8; background: #efeafd; }
 .acceso-rapido--asistente .acceso-rapido__icono { color: var(--color-exito); background: var(--color-exito-fondo); }
 
 /* Columna derecha: objetivo, progreso y citas */
 .inicio__panel { grid-area: panel; display: grid; gap: 1rem; align-content: start; }
-.panel-tarjeta { margin: 0; padding: 1.15rem 1.25rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
-.panel-tarjeta__cabecera { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
-.inicio .panel-tarjeta__titulo { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.75rem; font-size: 1rem; }
-.panel-tarjeta__cabecera .panel-tarjeta__titulo { margin-bottom: 0; }
-.panel-tarjeta__icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
 .enlace-panel { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.85rem; font-weight: 600; text-decoration: none; }
 .enlace-panel:hover { text-decoration: underline; }
 .objetivo__nombre { margin: 0 0 0.6rem; font-weight: 600; color: var(--color-primario-oscuro); }

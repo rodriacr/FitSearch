@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
-import { fichaProfesional, FILTROS, listado, llamadasA, renderizarApp, SESION, simularApi } from '../tests/utilidades.jsx';
+import { fichaProfesional, FILTROS, listado, llamadasA, MI_FICHA, renderizarApp, SESION, SESION_PROFESIONAL, simularApi } from '../tests/utilidades.jsx';
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
@@ -21,6 +21,7 @@ function simular({ ficha = fichaApi(), resenas = [resenaDe(), resenaDe({ id: 10,
     },
     '/api/profesionales/1': () => (ficha.estado ? [ficha.estado, { error: 'No encontramos este profesional' }] : [200, ficha]),
     '/api/profesionales/filtros': FILTROS,
+    '/api/profesionales/mi-ficha': { ficha: { ...MI_FICHA, id: 1 } },
     '/api/profesionales': listado(),
   });
 }
@@ -108,11 +109,15 @@ describe('Calificar (FS-HU-24)', () => {
     expect(await screen.findByRole('heading', { name: 'Califica a Ana Demo' })).toBeInTheDocument();
   });
 
-  test('una cuenta profesional ve las reseñas pero no puede calificar', async () => {
-    sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, rol: 'profesional' } }));
-    simular({ ficha: fichaApi({ puedeResenar: false }) }); renderizarApp('/profesionales/1');
+  test('en la vista previa de su propia ficha, el profesional ve las reseñas pero no puede calificar ni guardarse en favoritos', async () => {
+    sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL));
+    simular({ ficha: fichaApi({ puedeResenar: false }) });
+    renderizarApp('/profesional/perfil/publico');
     expect(await screen.findByText('Solo las cuentas de usuario pueden calificar a profesionales.')).toBeInTheDocument();
+    expect(screen.getByText('Así ven tu ficha las personas que buscan profesionales en FitSearch.')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Publicar reseña' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /favoritos/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Volver a mi perfil/ })).toHaveAttribute('href', '/profesional/perfil');
     await waitFor(() => expect(screen.getByText('Valeria D.')).toBeInTheDocument());
   });
 

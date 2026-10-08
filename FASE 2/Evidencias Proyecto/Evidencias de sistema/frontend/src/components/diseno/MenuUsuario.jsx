@@ -4,12 +4,13 @@ import { iniciales, primerNombre } from '../../services/formato.js';
 import Icono from '../Icono.jsx';
 import useDesplegable from './useDesplegable.js';
 
-// "Hola, {nombre}" y el avatar abren el menú de la cuenta: Mi perfil y Cerrar sesión.
+// "Hola, {nombre}" y el avatar abren el menú de la cuenta: su perfil (el del usuario o el profesional) y Cerrar sesión.
 // No hay pantalla de configuración todavía, por eso no se ofrece.
 export default function MenuUsuario() {
   const { sesion, cerrarSesion } = useSesion();
   const { abierto, setAbierto, contenedor, boton } = useDesplegable();
-  const { nombre, correo } = sesion.usuario;
+  const { nombre, correo, rol } = sesion.usuario;
+  const perfil = rol === 'profesional' ? { ruta: '/profesional/perfil', nombre: 'Perfil profesional' } : { ruta: '/perfil', nombre: 'Mi perfil' };
   const saludo = `Hola, ${primerNombre(nombre)}`;
 
   return (
@@ -23,8 +24,8 @@ export default function MenuUsuario() {
       {abierto && (
         <div id="menu-cuenta" className="desplegable__panel menu-usuario__panel">
           <p className="menu-usuario__identidad"><strong>{nombre}</strong><span>{correo}</span></p>
-          <Link to="/perfil" className="desplegable__opcion" onClick={() => setAbierto(false)}>
-            <Icono nombre="usuario" tamano={18} /> Mi perfil
+          <Link to={perfil.ruta} className="desplegable__opcion" onClick={() => setAbierto(false)}>
+            <Icono nombre="usuario" tamano={18} /> {perfil.nombre}
           </Link>
           <button type="button" className="desplegable__opcion" onClick={cerrarSesion}>
             <Icono nombre="salir" tamano={18} /> Cerrar sesión

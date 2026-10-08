@@ -2,7 +2,6 @@ import iconoLogo from '../../assets/logo-fitsearch-icono.png';
 import Icono from '../Icono.jsx';
 
 const PASOS = [
-  { nombre: 'Tipo de cuenta', titulo: 'Tipo de cuenta', subtitulo: 'Cuéntanos cómo vas a usar FitSearch para mostrarte lo que te corresponde.' },
   { nombre: 'Datos personales', titulo: 'Datos personales', subtitulo: 'Cuéntanos un poco sobre ti para personalizar tu experiencia.' },
   { nombre: 'Objetivos y estilo de vida', titulo: 'Objetivos y estilo de vida', subtitulo: 'Cuéntanos qué buscas lograr y cómo es tu rutina diaria.' },
   { nombre: 'Información de salud', titulo: 'Información de salud', subtitulo: 'Esta información nos ayudará a entregarte recomendaciones más seguras y precisas.' },
@@ -11,9 +10,6 @@ const PASOS = [
 
 // Mensaje y beneficios del panel lateral (degradado de la marca, sin fotografías).
 const PANELES = [
-  { mensaje: 'Tu cuenta, a tu medida.', beneficios: [
-    ['persona', 'Una experiencia según cómo uses FitSearch'], ['maletin', 'Herramientas propias para profesionales'], ['lapiz', 'Puedes cambiarlo cuando quieras'],
-  ] },
   { mensaje: 'Tu bienestar comienza con tu perfil.', beneficios: [
     ['estrella', 'Recomendaciones personalizadas'], ['corazon', 'Mejores resultados en tu salud y rendimiento'], ['persona', 'Una experiencia hecha para ti'],
   ] },
@@ -45,7 +41,8 @@ function IndicadorPasos({ actual }) {
   );
 }
 
-// Contenedor del asistente de 5 pasos del perfil: indicador, título, contenido del paso y panel lateral.
+// Contenedor del asistente de 4 pasos del perfil del usuario: indicador, título, contenido del paso y panel lateral.
+// El tipo de cuenta ya no es un paso: se elige antes, en "Elegir perfil" (DAS, D25).
 export default function AsistentePerfil({ paso, children, aviso }) {
   const { titulo, subtitulo } = PASOS[paso];
   const panel = PANELES[paso];

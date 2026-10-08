@@ -54,9 +54,9 @@ export default function BotonGoogle({
       setError('');
       setEntrando(true);
       try {
-        const { cuentaNueva } = await iniciarSesionConGoogle({ credencial: credential, recordar });
-        // Una cuenta nueva parte por el asistente de perfil; si ya existía, vuelve a lo que pidió o al Inicio.
-        navegar(cuentaNueva ? '/perfil' : destinoTrasIngreso(state), { replace: true });
+        const { usuario } = await iniciarSesionConGoogle({ credencial: credential, recordar });
+        // Una cuenta que aún no elige su perfil va a "Elegir perfil"; si ya existía, vuelve a lo que pidió o a su Inicio.
+        navegar(destinoTrasIngreso(state, usuario), { replace: true });
       } catch (fallo) {
         setError(fallo.message);
         setEntrando(false);

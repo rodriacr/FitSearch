@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { renderizarApp, respuestaJson, respuestaPerfil, SESION } from '../tests/utilidades.jsx';
+import { renderizarApp, respuestaJson, respuestaPerfil, SESION_NUEVA } from '../tests/utilidades.jsx';
 
 async function completarFormulario({ confirmacion = 'ClaveSegura123' } = {}) {
   await userEvent.type(screen.getByLabelText('Nombre completo'), 'Ana Pérez');
@@ -11,10 +11,10 @@ async function completarFormulario({ confirmacion = 'ClaveSegura123' } = {}) {
 }
 
 describe('Registro (FS-HU-01 y FS-HU-17)', () => {
-  // Desde el 24-09-2026 el registro no pregunta el rol: el tipo de cuenta se elige en el asistente de perfil.
-  test('FS-HU-17 escenario 1: registra la cuenta y lleva al primer paso del asistente', async () => {
+  // El registro no pregunta el rol: se elige justo después, en "Elegir perfil" (DAS, D25).
+  test('FS-HU-17 escenario 1: registra la cuenta y lleva a elegir cómo usar FitSearch', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => (url === '/api/auth/registro'
-      ? respuestaJson(201, SESION)
+      ? respuestaJson(201, SESION_NUEVA)
       : respuestaJson(200, respuestaPerfil({ tipoCuenta: false }))));
     renderizarApp('/registro');
 
@@ -22,7 +22,7 @@ describe('Registro (FS-HU-01 y FS-HU-17)', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Registrarse' }));
 
     expect(await screen.findByText('Tu cuenta fue creada y la sesión está iniciada.')).toBeInTheDocument();
-    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '¿Cómo quieres usar FitSearch?' })).toBeInTheDocument();
     expect(JSON.parse(fetch.mock.calls[0][1].body)).toEqual({
       nombre: 'Ana Pérez', correo: 'ana@correo.cl', password: 'ClaveSegura123' });
   });

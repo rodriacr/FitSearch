@@ -86,6 +86,25 @@
 .tarjeta-recomendacion__boton:hover { background: #fff7f0; }
 .tarjeta-recomendacion .etiqueta-proximamente { position: absolute; top: 1rem; right: 1rem; }
 
+/* ---------- Espacio del profesional: menú lateral azul con el lema de la marca (mockup del PO del 04-10-2026) ---------- */
+.menu-lateral__lema { display: grid; justify-items: start; gap: 0.6rem; margin-top: auto; padding: 1rem 0.75rem 0.25rem; }
+.menu-lateral__lema img { width: 3.5rem; height: auto; }
+.menu-lateral__lema p { margin: 0; font-size: 0.82rem; line-height: 1.45; }
+.app--profesional .menu-lateral { background: linear-gradient(180deg, var(--color-primario) 0%, var(--color-primario-oscuro) 100%); color: #fff; }
+.app--profesional .menu-lateral__cabecera { margin: -1rem -1rem 0.5rem; padding: 0.75rem 1rem; background: var(--color-superficie); }
+.app--profesional .menu-lateral__enlace,
+.app--profesional .menu-lateral__enlace .icono { color: rgb(255 255 255 / 86%); }
+.app--profesional .menu-lateral__enlace:hover { background: rgb(255 255 255 / 10%); color: #fff; }
+.app--profesional .menu-lateral__enlace.active { background: rgb(255 255 255 / 16%); color: #fff; box-shadow: inset 3px 0 0 var(--color-acento); }
+.app--profesional .menu-lateral__enlace.active .icono { color: #fff; }
+.app--profesional .menu-lateral__enlace { min-width: 0; }
+/* En el menú del profesional "Próximamente" se ve como un punto naranja (el texto sigue para lectores de pantalla y en el título). */
+.app--profesional .menu-lateral .menu-lateral__lista .etiqueta-proximamente {
+  width: 0.5rem; height: 0.5rem; padding: 0; overflow: hidden; font-size: 0; background: var(--color-acento-claro);
+}
+.app--profesional .menu-lateral__lema { color: rgb(255 255 255 / 80%); }
+.app--profesional .menu-lateral__lema img { filter: brightness(0) invert(1); opacity: 0.4; }
+
 /* ---------- Barra inferior (celular y tableta) ---------- */
 .barra-inferior {
   position: fixed; right: 0; bottom: 0; left: 0; z-index: 30; display: grid; grid-template-columns: repeat(4, 1fr);

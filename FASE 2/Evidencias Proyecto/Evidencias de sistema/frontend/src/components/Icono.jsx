@@ -47,6 +47,18 @@ const TRAZOS = {
   fuego: <path d="M12 21c-3.9 0-7-2.7-7-6.5 0-3 2-5.2 3.5-6.5.3 2 1.2 3 2.5 3.5C11 8 12 5 14 3c1 3 5 5.5 5 11 0 4-3.1 7-7 7Z" />,
   gota: <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z" />,
   pasos: <><path d="M8 3C6.3 3 5 4.8 5 7.5S6 12 6 12h4s1-2 1-4.5S9.7 3 8 3Z" /><path d="M6 14.5h4V16a2 2 0 0 1-4 0Z" /><path d="M16 7c1.7 0 3 1.8 3 4.5S18 16 18 16h-4s-1-2-1-4.5S14.3 7 16 7Z" /><path d="M14 18.5h4V20a2 2 0 0 1-4 0Z" /></>,
+  comida: <><path d="M7 3v8a2 2 0 0 0 4 0V3M9 3v18" /><path d="M17 3c-1.7 1.3-2.5 3.5-2.5 6.5V13H17v8" /></>,
+  grupo: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2" /></>,
+  ajustes: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
+  // Clima del Inicio del profesional.
+  sol: <><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></>,
+  luna: <path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />,
+  nube: <path d="M7 18h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 18Z" />,
+  nubeSol: <><path d="M8 4V2.5M3.5 8.5H2M4.8 5.3l-1-1M12.2 5.3l1-1" /><path d="M5.3 11A3.5 3.5 0 0 1 11.6 7" /><path d="M9 20h8.5a3.5 3.5 0 0 0 .3-7 5 5 0 0 0-9.6 1.2A2.9 2.9 0 0 0 9 20Z" /></>,
+  lluvia: <><path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 15Z" /><path d="m8 18-1 3M12 18l-1 3M16 18l-1 3" /></>,
+  nieve: <><path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 15Z" /><path d="M8 19h.01M12 20h.01M16 19h.01M10 22h.01M14 22h.01" /></>,
+  tormenta: <><path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 15Z" /><path d="m13 15-2.5 4h3L11 23" /></>,
+  niebla: <><path d="M8 5h9M4 9h14M3 13h18M6 17h12M9 21h7" /></>,
 };
 
 // "relleno" pinta el interior del ícono (estrella de la calificación, corazón de un favorito guardado).

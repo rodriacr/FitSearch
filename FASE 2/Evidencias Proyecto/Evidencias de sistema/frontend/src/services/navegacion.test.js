@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { destinoTrasIngreso } from './navegacion.js';
+import { destinoTrasIngreso, inicioDe } from './navegacion.js';
 import { formatearKm, formatearNumero, iniciales, primerNombre } from './formato.js';
 
 test('después de iniciar sesión vuelve a la ruta interna pedida o va al Inicio', () => {
@@ -9,6 +9,25 @@ test('después de iniciar sesión vuelve a la ruta interna pedida o va al Inicio
   // Nunca redirige fuera de FitSearch.
   expect(destinoTrasIngreso({ desde: '//sitio-externo.example' })).toBe('/inicio');
   expect(destinoTrasIngreso({ desde: 'https://sitio-externo.example' })).toBe('/inicio');
+});
+
+test('cada rol tiene su propio Inicio y una cuenta sin rol elegido va primero a "Elegir perfil" (DAS, D25)', () => {
+  expect(inicioDe({ rol: 'usuario', rolConfirmado: true })).toBe('/inicio');
+  expect(inicioDe({ rol: 'profesional', rolConfirmado: true })).toBe('/profesional/inicio');
+  expect(inicioDe({ rol: 'usuario', rolConfirmado: false })).toBe('/elegir-perfil');
+  // Las sesiones guardadas antes del cambio no traen rolConfirmado: se consideran confirmadas.
+  expect(inicioDe({ rol: 'profesional' })).toBe('/profesional/inicio');
+});
+
+test('después de iniciar sesión solo vuelve a una página del espacio de su rol', () => {
+  const profesional = { rol: 'profesional', rolConfirmado: true };
+  const usuario = { rol: 'usuario', rolConfirmado: true };
+  expect(destinoTrasIngreso({ desde: '/profesional/perfil' }, profesional)).toBe('/profesional/perfil');
+  expect(destinoTrasIngreso({ desde: '/favoritos' }, profesional)).toBe('/profesional/inicio');
+  expect(destinoTrasIngreso({ desde: '/profesional/agenda' }, usuario)).toBe('/inicio');
+  // "/profesionales" (el buscador del usuario) no es parte del espacio del profesional.
+  expect(destinoTrasIngreso({ desde: '/profesionales?q=nutri' }, usuario)).toBe('/profesionales?q=nutri');
+  expect(destinoTrasIngreso({ desde: '/favoritos' }, { rol: 'usuario', rolConfirmado: false })).toBe('/elegir-perfil');
 });
 
 test('los números se muestran con el formato de Chile', () => {

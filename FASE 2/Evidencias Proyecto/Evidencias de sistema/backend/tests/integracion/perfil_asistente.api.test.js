@@ -45,7 +45,7 @@ describe('Asistente de perfil: pasos pendientes', () => {
   });
 });
 
-describe('PUT /api/perfil/tipo-cuenta (FS-HU-02): tipo de cuenta elegido en el perfil', () => {
+describe('PUT /api/perfil/tipo-cuenta: pantalla "Elegir perfil" (DAS, D25)', () => {
   beforeEach(() => jest.resetAllMocks());
 
   const comoProfesional = (sobrescribir = {}) =>
@@ -59,12 +59,22 @@ describe('PUT /api/perfil/tipo-cuenta (FS-HU-02): tipo de cuenta elegido en el p
 
     expect(respuesta.status).toBe(200);
     expect(usuarioModel.confirmarRol).toHaveBeenCalledWith(1, 'profesional');
-    expect(respuesta.body.usuario.rol).toBe('profesional');
+    expect(respuesta.body.usuario).toMatchObject({ rol: 'profesional', rolConfirmado: true });
     expect(respuesta.body.pasos.tipoCuenta).toBe(true);
     // El rol viaja dentro del token: el nuevo lo trae actualizado y mantiene la duración de la sesión.
     const nuevo = jwt.verify(respuesta.body.token, process.env.JWT_SECRET);
     expect(nuevo.rol).toBe('profesional');
     expect(nuevo.exp).toBe(jwt.decode(token).exp);
+  });
+
+  test('el tipo de cuenta se elige una sola vez: si ya estaba elegido responde 409 y no cambia nada', async () => {
+    usuarioModel.confirmarRol.mockResolvedValue(null);
+
+    const respuesta = await conSesion(request(app).put('/api/perfil/tipo-cuenta')).send({ rol: 'profesional' });
+
+    expect(respuesta.status).toBe(409);
+    expect(respuesta.body.error).toMatch(/Ya elegiste cómo usar FitSearch/);
+    expect(respuesta.body.token).toBeUndefined();
   });
 
   test('nunca se puede elegir el rol administrador', async () => {
