@@ -28,4 +28,13 @@ async function listar(req, res) {
 async function ficha(req, res) { res.json(await servicio.ficha(Number(req.params.id), req.usuario)); }
 async function filtros(req, res) { res.json(await servicio.filtros()); }
 
-module.exports = { listar, ficha, filtros, filtrosDesdeConsulta };
+// Ficha propia del profesional (FS-HU-04): solo se toman los campos permitidos del cuerpo ya validado.
+async function obtenerMiFicha(req, res) { res.json(await servicio.obtenerMiFicha(req.usuario.id)); }
+async function guardarMiFicha(req, res) {
+  const { especialidad, descripcion, comuna, modalidad, ubicacionLat, ubicacionLng } = req.body;
+  res.json(await servicio.guardarMiFicha(req.usuario.id, {
+    especialidad, descripcion: descripcion || null, comuna, modalidad, ubicacionLat, ubicacionLng,
+  }));
+}
+
+module.exports = { listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha };

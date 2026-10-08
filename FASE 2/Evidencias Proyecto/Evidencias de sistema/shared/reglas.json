@@ -237,6 +237,16 @@
     "especialidad": {
       "max": 100
     },
+    "especialidades": [
+      "Entrenamiento personal",
+      "Kinesiología",
+      "Medicina deportiva",
+      "Nutrición",
+      "Psicología deportiva"
+    ],
+    "descripcion": {
+      "max": 500
+    },
     "comuna": {
       "max": 80
     },

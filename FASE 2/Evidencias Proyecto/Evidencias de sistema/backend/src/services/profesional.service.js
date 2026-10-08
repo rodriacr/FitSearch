@@ -80,4 +80,19 @@ async function ficha(id, usuario) {
 
 const filtros = () => modelo.filtros();
 
-module.exports = { listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena };
+// Ficha propia del profesional (FS-HU-04): null mientras no la complete.
+const formatearMiFicha = (fila) => fila && {
+  especialidad: fila.especialidad,
+  descripcion: fila.descripcion ?? '',
+  comuna: fila.comuna ?? '',
+  modalidad: fila.modalidad,
+  ubicacionLat: Number(fila.ubicacionLat),
+  ubicacionLng: Number(fila.ubicacionLng),
+};
+
+async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
+async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
+
+module.exports = {
+  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha,
+};

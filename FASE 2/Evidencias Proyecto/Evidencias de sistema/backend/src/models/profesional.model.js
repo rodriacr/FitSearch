@@ -93,4 +93,16 @@ async function filtros() {
   return { especialidades: especialidades.map((fila) => fila.especialidad), comunas: comunas.map((fila) => fila.comuna) };
 }
 
-module.exports = { listar, buscarPorId, existe, filtros, escaparLike };
+// Ficha propia del profesional (FS-HU-04). La fila de "profesionales" no existe hasta que la completa por primera vez.
+const seleccionFicha = { especialidad: true, descripcion: true, comuna: true, modalidad: true, ubicacionLat: true, ubicacionLng: true };
+
+function obtenerPorUsuario(usuarioId) {
+  return prisma.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });
+}
+
+// Crea o actualiza la ficha: una cuenta tiene como máximo una (usuario_id es único).
+function guardarFicha(usuarioId, datos) {
+  return prisma.profesional.upsert({ where: { usuarioId }, update: datos, create: { usuarioId, ...datos }, select: seleccionFicha });
+}
+
+module.exports = { listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha };
