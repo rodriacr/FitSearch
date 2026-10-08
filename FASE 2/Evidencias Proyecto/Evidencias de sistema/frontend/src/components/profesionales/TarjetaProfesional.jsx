@@ -24,7 +24,10 @@ export default function TarjetaProfesional({ profesional, variante = 'completa',
         <Titulo className="tarjeta-profesional__nombre">
           <Link to={`/profesionales/${id}`} state={desde ? { desde } : undefined}>{nombre}</Link>
         </Titulo>
-        <Calificacion promedio={calificacion.promedio} total={calificacion.total} />
+        
+        {/* CORRECCIÓN: Si calificacion no existe, pasa 0 de forma segura en lugar de colapsar */}
+        <Calificacion promedio={calificacion?.promedio || 0} total={calificacion?.total || 0} />
+        
         <p className="tarjeta-profesional__lugar"><Icono nombre="pin" tamano={15} /> {lugar}</p>
         {variante === 'completa' && (
           <>
