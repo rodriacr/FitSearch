@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import reglas from '@shared/reglas.json';
-import Alerta from '../components/Alerta.jsx';
-import CampoFormulario from '../components/CampoFormulario.jsx';
-import Icono from '../components/Icono.jsx';
-import { guardarMiFicha } from '../services/profesional.service.js';
-import './PerfilProfesional.css';
+import Alerta from '../Alerta.jsx';
+import CampoFormulario from '../CampoFormulario.jsx';
+import Icono from '../Icono.jsx';
+import { guardarMiFicha } from '../../services/profesional.service.js';
+import './FormularioFicha.css';
 
 const { especialidades, modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA } } = reglas.profesionales;
 
@@ -30,9 +30,10 @@ const desdeFicha = (ficha) => ({
   ubicacionLng: ficha ? String(ficha.ubicacionLng) : '',
 });
 
-// Ficha pública del profesional (FS-HU-04). Se muestra justo después de elegir el tipo de cuenta "profesional"
-// y desde "Editar" en Mi perfil. `ficha` es null la primera vez.
-export default function PerfilProfesional({ ficha, edicion = false, onGuardado, onCancelar }) {
+// Formulario de la ficha pública del profesional (FS-HU-04), dentro de "Perfil profesional": la primera vez
+// (`ficha` en null) y desde "Editar perfil". Sin `onCancelar` no se ofrece volver (la ficha aún no existe).
+export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
+  const edicion = Boolean(ficha);
   const [datos, setDatos] = useState(() => desdeFicha(ficha));
   const [errores, setErrores] = useState({});
   const [mensaje, setMensaje] = useState('');
@@ -68,7 +69,7 @@ export default function PerfilProfesional({ ficha, edicion = false, onGuardado, 
   return (
     <section className="ficha-prof">
       <header className="ficha-prof__cabecera">
-        <h1>Configura tu perfil profesional</h1>
+        <h1>{edicion ? 'Editar perfil profesional' : 'Configura tu perfil profesional'}</h1>
         <p>Completa estos datos para que los usuarios puedan encontrarte y agendar contigo.</p>
       </header>
 
@@ -128,9 +129,7 @@ export default function PerfilProfesional({ ficha, edicion = false, onGuardado, 
         </fieldset>
 
         <div className="ficha-prof__acciones">
-          <button type="button" className="boton-texto" onClick={onCancelar}>
-            {edicion ? 'Cancelar' : 'Volver'}
-          </button>
+          {onCancelar && <button type="button" className="boton-texto" onClick={onCancelar}>Cancelar</button>}
           <button type="submit" className="boton boton--principal boton--compacto" disabled={enviando}>
             {enviando ? 'Guardando…' : <>Guardar perfil <Icono nombre="check" tamano={18} /></>}
           </button>

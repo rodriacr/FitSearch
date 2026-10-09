@@ -69,10 +69,10 @@ test('devuelve ficha null si el profesional aún no la completa', async () => {
   expect(res.body).toEqual({ ficha: null });
 });
 
-test('devuelve la ficha guardada con las coordenadas como número', async () => {
-  modelo.obtenerPorUsuario.mockResolvedValue(fila);
+test('devuelve la ficha guardada con su id y las coordenadas como número', async () => {
+  modelo.obtenerPorUsuario.mockResolvedValue({ id: 5, ...fila });
   const res = await obtener('profesional');
-  expect(res.body).toEqual({ ficha: valido });
+  expect(res.body).toEqual({ ficha: { id: 5, ...valido } });
 });
 
 test('"mi-ficha" no se confunde con la ficha pública de un profesional por id', async () => {

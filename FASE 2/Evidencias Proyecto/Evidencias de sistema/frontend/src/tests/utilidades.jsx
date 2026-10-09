@@ -27,8 +27,20 @@ export function respuestaJson(estado, cuerpo) {
 
 export const SESION = {
   token: 'token-de-prueba',
-  usuario: { id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario' },
+  usuario: { id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario', rolConfirmado: true },
 };
+// Cuenta recién creada que todavía no elige cómo usar FitSearch (DAS, D25).
+export const SESION_NUEVA = { ...SESION, usuario: { ...SESION.usuario, rolConfirmado: false } };
+export const SESION_PROFESIONAL = {
+  token: 'token-de-profesional',
+  usuario: { id: 7, nombre: 'Matías Rojas', correo: 'matias@correo.cl', rol: 'profesional', rolConfirmado: true },
+};
+// Ficha propia que devuelve GET /api/profesionales/mi-ficha (FS-HU-04).
+export const MI_FICHA = {
+  id: 3, especialidad: 'Entrenamiento personal', descripcion: 'Entrenamiento funcional y de fuerza.', comuna: 'Providencia',
+  modalidad: 'ambas', ubicacionLat: -33.4263, ubicacionLng: -70.6116,
+};
+export const CLIMA = { lugar: 'Providencia', temperatura: 18, estado: 'despejado', descripcion: 'Despejado', esDeDia: true, fuente: 'Open-Meteo' };
 
 // Respuesta de GET /api/perfil con la forma completa (pasos del asistente incluidos).
 // tipoCuenta llega en true por omisión: la mayoría de las pruebas trabajan con una cuenta que ya eligió su tipo.

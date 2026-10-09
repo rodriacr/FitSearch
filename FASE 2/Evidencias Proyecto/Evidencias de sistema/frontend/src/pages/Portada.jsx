@@ -10,7 +10,6 @@ const CATEGORIAS = [
   { icono: 'profesional', nombre: 'Profesionales', detalle: 'de la salud y el deporte' },
   { icono: 'hospital', nombre: 'Centros de salud', detalle: 'y clínicas' },
   { icono: 'mancuerna', nombre: 'Gimnasios', detalle: 'y centros deportivos' },
-  { icono: 'pastilla', nombre: 'Farmacias', detalle: 'y más' },
 ];
 
 const AREAS = [
@@ -23,7 +22,7 @@ const OFERTA = [
   { icono: 'profesional', nombre: 'Profesionales', texto: 'Busca nutricionistas, kinesiólogos, entrenadores y más. Filtra por comuna, modalidad, distancia y calificación, y lee las reseñas de otras personas.', disponible: true },
   { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
   { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
-  { icono: 'pastilla', nombre: 'Farmacias', texto: 'Ubica farmacias cercanas cuando las necesites.' },
+  { icono: 'comida', nombre: 'Comidas', texto: 'Anota lo que comes y sigue tus calorías y macronutrientes del día, la semana y el mes.' },
   { icono: 'chispa', nombre: 'Asistente IA', texto: 'Un asistente que te orienta y te recomienda qué tipo de profesional buscar.' },
 ];
 
@@ -60,7 +59,7 @@ export default function Portada() {
               {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
               <p className="portada__antetitulo"><span /> SALUD · DEPORTE · BIENESTAR</p>
               <h1 id="titulo-portada">Tu salud y bienestar, <span>en un solo lugar</span></h1>
-              <p className="portada__introduccion">Encuentra profesionales de la salud y el deporte cerca de ti. Muy pronto también centros de salud, gimnasios, farmacias y un asistente con inteligencia artificial.</p>
+              <p className="portada__introduccion">Encuentra profesionales de la salud y el deporte cerca de ti. Muy pronto también centros de salud, gimnasios, un registro de comidas y un asistente con inteligencia artificial.</p>
               <div className="portada__acciones">
                 <Link to="/registro" className="boton boton--principal boton--compacto">Registrarse <Icono nombre="flecha" /></Link>
                 <Link to="/iniciar-sesion" className="boton boton--compacto portada__boton-claro">Iniciar sesión</Link>

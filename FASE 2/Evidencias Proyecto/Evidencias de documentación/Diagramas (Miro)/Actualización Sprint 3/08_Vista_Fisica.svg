@@ -1,0 +1,131 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1640" height="1000" viewBox="0 0 1640 1000" font-family="Poppins, Arial, sans-serif">
+<rect width="1640" height="1000" fill="#ffffff"/>
+<polygon points="40,300 56,284 386,284 370,300" fill="#f7fafc" stroke="#5f6f80" stroke-width="1.8"/>
+<polygon points="370,300 386,284 386,584 370,600" fill="#f7fafc" stroke="#5f6f80" stroke-width="1.8"/>
+<rect x="40" y="300" width="330" height="300" fill="#f7fafc" stroke="#5f6f80" stroke-width="1.8"/>
+<text x="52" y="320" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="52" y="339" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Dispositivo del usuario</text>
+<text x="52" y="357" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">celular o computador</text>
+<polygon points="60,390 76,374 366,374 350,390" fill="#ffffff" stroke="#5f6f80" stroke-width="1.8"/>
+<polygon points="350,390 366,374 366,564 350,580" fill="#ffffff" stroke="#5f6f80" stroke-width="1.8"/>
+<rect x="60" y="390" width="290" height="190" fill="#ffffff" stroke="#5f6f80" stroke-width="1.8"/>
+<text x="72" y="410" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
+<text x="72" y="429" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Navegador web</text>
+<rect x="78" y="480" width="254" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M308 488 h10 l6 6 v14 h-16 z M318 488 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="88" y="498" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="88" y="515" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">SPA de React</text>
+<text x="88" y="530" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">index.html y assets JS/CSS</text>
+<polygon points="460,110 476,94 1056,94 1040,110" fill="#e6f0f8" stroke="#0b4f80" stroke-width="2.2"/>
+<polygon points="1040,110 1056,94 1056,814 1040,830" fill="#e6f0f8" stroke="#0b4f80" stroke-width="2.2"/>
+<rect x="460" y="110" width="580" height="720" fill="#e6f0f8" stroke="#0b4f80" stroke-width="2.2"/>
+<text x="472" y="130" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="472" y="149" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Servidor (Docker host)</text>
+<text x="472" y="167" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">docker-compose, red interna de Docker</text>
+<polygon points="490,200 506,184 1026,184 1010,200" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<polygon points="1010,200 1026,184 1026,364 1010,380" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<rect x="490" y="200" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<text x="502" y="220" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
+<text x="502" y="239" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor frontend: Nginx</text>
+<text x="502" y="257" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 80 / 443 (expuesto)</text>
+<rect x="506" y="300" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M720 308 h10 l6 6 v14 h-16 z M730 308 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="516" y="318" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="516" y="335" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">frontend/dist</text>
+<text x="516" y="350" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">build de React servido por Nginx</text>
+<rect x="758" y="300" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M972 308 h10 l6 6 v14 h-16 z M982 308 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="768" y="318" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="768" y="335" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">nginx.conf</text>
+<text x="768" y="350" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">proxy inverso de /api al backend</text>
+<polygon points="490,410 506,394 1026,394 1010,410" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<polygon points="1010,410 1026,394 1026,574 1010,590" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<rect x="490" y="410" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<text x="502" y="430" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
+<text x="502" y="449" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor backend: Node.js LTS</text>
+<text x="502" y="467" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 3000 (solo red interna)</text>
+<rect x="506" y="510" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M720 518 h10 l6 6 v14 h-16 z M730 518 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="516" y="528" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="516" y="545" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">API FitSearch</text>
+<text x="516" y="560" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">backend/src (Express, Prisma Client)</text>
+<rect x="758" y="510" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M972 518 h10 l6 6 v14 h-16 z M982 518 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="768" y="528" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="768" y="545" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">.env</text>
+<text x="768" y="560" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">secretos: JWT, SMTP, Google</text>
+<polygon points="490,620 506,604 1026,604 1010,620" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<polygon points="1010,620 1026,604 1026,784 1010,800" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<rect x="490" y="620" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
+<text x="502" y="640" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
+<text x="502" y="659" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor base de datos: MySQL 8</text>
+<text x="502" y="677" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 3306 (solo red interna)</text>
+<rect x="506" y="720" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M720 728 h10 l6 6 v14 h-16 z M730 728 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="516" y="738" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«schema»</text>
+<text x="516" y="755" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">fitsearch</text>
+<text x="516" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">14 tablas, utf8mb4 (migraciones Prisma)</text>
+<rect x="758" y="720" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
+<path d="M972 728 h10 l6 6 v14 h-16 z M982 728 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
+<text x="768" y="738" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
+<text x="768" y="755" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">volumen Docker</text>
+<text x="768" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">persistencia de los datos</text>
+<polygon points="1260,170 1276,154 1576,154 1560,170" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<polygon points="1560,170 1576,154 1576,250 1560,266" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<rect x="1260" y="170" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<text x="1272" y="190" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="1272" y="209" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Google Maps Platform</text>
+<text x="1272" y="227" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">Maps JavaScript, Geocoding, Places</text>
+<polygon points="1260,340 1276,324 1576,324 1560,340" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<polygon points="1560,340 1576,324 1576,420 1560,436" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<rect x="1260" y="340" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<text x="1272" y="360" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="1272" y="379" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Google Identity Services</text>
+<text x="1272" y="397" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">emite y verifica el ID token (FS-HU-16)</text>
+<polygon points="1260,510 1276,494 1576,494 1560,510" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<polygon points="1560,510 1576,494 1576,590 1560,606" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<rect x="1260" y="510" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<text x="1272" y="530" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="1272" y="549" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">API de Claude (Anthropic)</text>
+<text x="1272" y="567" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">asistente de IA con function calling</text>
+<polygon points="1260,680 1276,664 1576,664 1560,680" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<polygon points="1560,680 1576,664 1576,760 1560,776" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<rect x="1260" y="680" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
+<text x="1272" y="700" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="1272" y="719" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Servidor SMTP (Gmail)</text>
+<text x="1272" y="737" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">correos de recuperación (FS-HU-15)</text>
+<polygon points="1260,850 1276,834 1576,834 1560,850" fill="#fff1e6" stroke="#f47b20" stroke-width="2.6"/>
+<polygon points="1560,850 1576,834 1576,930 1560,946" fill="#fff1e6" stroke="#f47b20" stroke-width="2.6"/>
+<rect x="1260" y="850" width="300" height="96" fill="#fff1e6" stroke="#f47b20" stroke-width="2.6"/>
+<text x="1272" y="870" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
+<text x="1272" y="889" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Open-Meteo</text>
+<text x="1272" y="907" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">clima del Inicio del profesional (D26)</text>
+<text x="1272" y="923" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">sin clave; caché de 30 minutos</text>
+<polyline points="370,450 490,450 490,290 490,290" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="389.85" y="429" width="60.300000000000004" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="420" y="442" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS»</text>
+<polyline points="750.0,380 750.0,410" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="810.0" y="387" width="87.9" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="816.0" y="400" text-anchor="start" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTP» /api</text>
+<polyline points="750.0,590 750.0,620" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="810.0" y="597" width="101.7" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="816.0" y="610" text-anchor="start" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«TCP/IP» 3306</text>
+<polyline points="1010,500 1110,500 1110,218 1260,218" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="1154.85" y="197" width="60.300000000000004" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="1185" y="210" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS»</text>
+<polyline points="1010,500 1110,500 1110,388 1260,388" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="1154.85" y="367" width="60.300000000000004" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="1185" y="380" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS»</text>
+<polyline points="1010,500 1110,500 1110,558 1260,558" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="1154.85" y="537" width="60.300000000000004" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="1185" y="550" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS»</text>
+<polyline points="1010,500 1110,500 1110,728 1260,728" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="1144.5" y="707" width="81.0" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="1185" y="720" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«SMTP/TLS»</text>
+<polyline points="1010,500 1110,500 1110,898 1260,898" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<text x="1185" y="890" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS»</text>
+<polyline points="205,284 205,60 1610,60 1610,218 1576,218" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+<rect x="481.45" y="41" width="557.1" height="18" fill="#ffffff" opacity="0.95"/>
+<text x="760" y="54" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS» desde el navegador: mapa (Maps JavaScript) y botón de Google (ID token)</text>
+<polyline points="1610,218 1610,388 1576,388" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
+</svg>

@@ -14,13 +14,12 @@ function vincularGoogle(id, googleId) {
   return prisma.usuario.update({ where: { id }, data: { googleId }, include: { rol: true } });
 }
 
-// Confirma el tipo de cuenta que la persona eligió en el asistente de perfil (FS-HU-02).
-function confirmarRol(id, rolNombre) {
-  return prisma.usuario.update({
-    where: { id },
-    data: { rol: { connect: { nombre: rolNombre } }, rolConfirmado: true },
-    include: { rol: true },
-  });
+// Confirma el tipo de cuenta elegido en "Elegir perfil". Se elige una sola vez (DAS, D25): si la cuenta ya lo
+// había confirmado no cambia nada y devuelve null. La condición va en la misma sentencia para evitar carreras.
+async function confirmarRol(id, rolNombre) {
+  const rol = await prisma.rol.findUniqueOrThrow({ where: { nombre: rolNombre } });
+  const { count } = await prisma.usuario.updateMany({ where: { id, rolConfirmado: false }, data: { rolId: rol.id, rolConfirmado: true } });
+  return count ? prisma.usuario.findUnique({ where: { id }, include: { rol: true } }) : null;
 }
 
 function buscarPorIdConPerfil(id) {

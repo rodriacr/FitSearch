@@ -97,11 +97,6 @@ a { color: var(--color-primario); }
 .selector-rol__opcion:has(input:focus-visible) { outline: 3px solid rgb(244 123 32 / 45%); outline-offset: 2px; }
 .selector-rol__opcion--activa { background: linear-gradient(180deg, var(--color-primario-claro), var(--color-primario)); border-color: var(--color-primario); color: #fff; }
 /* Variante en tarjetas para el tipo de cuenta del asistente de perfil (FS-HU-02) */
-.selector-rol--tarjetas .selector-rol__opcion { flex-direction: column; gap: 0.3rem; min-height: 8.5rem; padding: 1.1rem 0.9rem; }
-.selector-rol__etiqueta { font-weight: 600; font-size: 1rem; }
-.selector-rol__descripcion { font-weight: 400; font-size: 0.8rem; line-height: 1.3; color: var(--color-texto-secundario); }
-.selector-rol__opcion--activa .selector-rol__descripcion { color: rgb(255 255 255 / 85%); }
-.nota-tipo-cuenta { display: flex; align-items: center; gap: 0.4rem; margin: 0 0 1.25rem; font-size: 0.85rem; }
 
 /* ---------- Campos de formulario ---------- */
 .campo { display: flex; flex-direction: column; margin-bottom: 1rem; }
@@ -166,6 +161,12 @@ a { color: var(--color-primario); }
 select.campo__control { cursor: pointer; }
 
 /* ---------- Piezas compartidas de las pantallas con sesión ---------- */
+/* Tarjeta de panel (Inicio del usuario e Inicio del profesional). El título usa dos clases para ganarle a los h2 de las páginas. */
+.panel-tarjeta { margin: 0; padding: 1.15rem 1.25rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
+.panel-tarjeta__cabecera { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.panel-tarjeta .panel-tarjeta__titulo { display: flex; align-items: center; gap: 0.6rem; margin: 0 0 0.75rem; font-size: 1rem; }
+.panel-tarjeta__cabecera .panel-tarjeta__titulo { margin-bottom: 0; }
+.panel-tarjeta__icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
 .etiqueta-proximamente {
   display: inline-block; flex-shrink: 0; margin-left: auto; padding: 0.12rem 0.5rem; border-radius: 999px; white-space: nowrap;
   font-size: 0.64rem; font-weight: 600; letter-spacing: 0.01em; color: var(--color-acento-oscuro); background: #fff1e6;

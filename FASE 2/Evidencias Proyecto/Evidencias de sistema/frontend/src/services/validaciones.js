@@ -14,22 +14,6 @@ export const catalogoSalud = reglas.salud;
 // Etiqueta legible de un valor de catálogo (para el resumen del perfil).
 export const etiquetaDe = (opciones, valor) => opciones.find((opcion) => opcion.valor === valor)?.etiqueta ?? '—';
 
-// Tipo de cuenta del paso 1 del asistente de perfil (FS-HU-02); ya no se elige en el registro.
-export const OPCIONES_TIPO_CUENTA = [
-  {
-    valor: 'usuario',
-    etiqueta: 'Usuario',
-    icono: 'usuario',
-    descripcion: 'Quiero cuidar mi salud, mi alimentación y mi rendimiento.',
-  },
-  {
-    valor: 'profesional',
-    etiqueta: 'Profesional',
-    icono: 'maletin',
-    descripcion: 'Ofrezco servicios de salud, deporte o nutrición.',
-  },
-];
-
 function validarPasswordNueva(password, confirmacion) {
   const errores = {};
   const { min, max } = reglas.usuario.password;

@@ -35,7 +35,7 @@ describe('API /api/perfil', () => {
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.completo).toBe(false);
     expect(respuesta.body.requerimientoCaloricoKcal).toBeNull();
-    expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario' });
+    expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario', rolConfirmado: false });
     expect(usuarioModel.buscarPorIdConPerfil).toHaveBeenCalledWith(1);
   });
 

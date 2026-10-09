@@ -4,205 +4,53 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { PERFIL_COMPLETO, renderizarApp, respuestaJson, respuestaPerfil, SESION } from '../tests/utilidades.jsx';
 
 // Servidor simulado: guarda lo que recibe cada PUT y responde el perfil actualizado, como la API real.
-// La ficha del profesional (FS-HU-04) vive en /api/profesionales/mi-ficha y es null hasta que se guarda.
 function simularServidor(inicial = {}) {
-  const estado = { ficha: null, ...inicial };
+  const estado = { ...inicial };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones) => {
     const cuerpo = opciones.body ? JSON.parse(opciones.body) : null;
-    if (url === '/api/profesionales/mi-ficha') {
-      if (opciones.method === 'PUT') estado.ficha = cuerpo;
-      return respuestaJson(200, { ficha: estado.ficha });
-    }
-    if (url === '/api/auth/registro') return respuestaJson(201, SESION);
-    if (opciones.method === 'PUT' && url === '/api/perfil/tipo-cuenta') {
-      estado.tipoCuenta = true;
-      estado.usuario = { ...SESION.usuario, rol: cuerpo.rol };
-    }
     if (opciones.method === 'PUT' && url === '/api/perfil') estado.perfil = cuerpo;
     if (opciones.method === 'PUT' && url === '/api/perfil/objetivos') estado.objetivos = cuerpo;
     if (opciones.method === 'PUT' && url === '/api/perfil/salud') estado.salud = cuerpo;
     const completo = estado.perfil && Object.values(estado.perfil).every((valor) => valor !== null);
     const respuesta = respuestaPerfil({ ...estado, requerimientoCaloricoKcal: completo ? 2556 : null });
-    // Al confirmar el tipo de cuenta la API devuelve un token nuevo, porque el rol viaja dentro del token.
-    if (url === '/api/perfil/tipo-cuenta') respuesta.token = 'token-con-rol-nuevo';
     return respuestaJson(200, respuesta);
   });
 }
 const cuerpoDe = (fetch, url) => JSON.parse(fetch.mock.calls.find(([u, o]) => u === url && o.method === 'PUT')[1].body);
 const huboPut = (fetch) => fetch.mock.calls.some(([, opciones]) => opciones.method === 'PUT');
 const siguiente = () => userEvent.click(screen.getByRole('button', { name: 'Siguiente' }));
-const PROFESIONAL = { ...SESION.usuario, rol: 'profesional' };
-const FICHA = {
-  especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Providencia', modalidad: 'ambas',
-  ubicacionLat: -33.4372, ubicacionLng: -70.6506,
-};
-async function completarFicha() {
-  await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
-  await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
-  await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), 'ambas');
-  await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Providencia');
-  await userEvent.type(screen.getByLabelText('Latitud'), '-33.4372');
-  await userEvent.type(screen.getByLabelText('Longitud'), '-70.6506');
-}
 
-describe('Asistente de perfil: paso 1, tipo de cuenta (FS-HU-02)', () => {
+describe('Asistente de perfil del usuario: 4 pasos, sin el tipo de cuenta (DAS, D25)', () => {
   beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
-  test('una cuenta nueva elige "Usuario" y recién entonces pasa a los datos personales', async () => {
-    const fetch = simularServidor({ tipoCuenta: false });
+  test('el asistente ya no pregunta el tipo de cuenta: parte en los datos personales', async () => {
+    simularServidor();
     renderizarApp('/perfil');
-
-    expect(await screen.findByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
-    // Nada viene marcado: la elección tiene que ser explícita.
-    expect(screen.getByRole('radio', { name: /Usuario/ })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: /Profesional/ })).not.toBeChecked();
-    await userEvent.click(screen.getByRole('radio', { name: /Usuario/ }));
-    await siguiente();
 
     expect(await screen.findByRole('heading', { name: 'Datos personales' })).toBeInTheDocument();
-    expect(cuerpoDe(fetch, '/api/perfil/tipo-cuenta')).toEqual({ rol: 'usuario' });
-    // La sesión guardada queda con el token nuevo.
-    expect(JSON.parse(localStorage.getItem('fitsearch_sesion')).token).toBe('token-con-rol-nuevo');
+    const pasos = screen.getByRole('list', { name: 'Pasos para completar tu perfil' });
+    expect(within(pasos).getAllByRole('listitem').map((paso) => paso.textContent))
+      .toEqual(['1Datos personales', '2Objetivos y estilo de vida', '3Información de salud', '4Finalizar']);
+    expect(screen.queryByText('Tipo de cuenta')).not.toBeInTheDocument();
   });
 
-  test('FS-HU-04: una cuenta nueva elige "Profesional" y pasa a su ficha, sin datos personales ni de salud', async () => {
-    const fetch = simularServidor({ tipoCuenta: false });
-    renderizarApp('/perfil');
-
-    await userEvent.click(await screen.findByRole('radio', { name: /Profesional/ }));
-    await siguiente();
-
-    expect(await screen.findByRole('heading', { name: 'Configura tu perfil profesional' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: 'Datos personales' })).not.toBeInTheDocument();
-    expect(cuerpoDe(fetch, '/api/perfil/tipo-cuenta')).toEqual({ rol: 'profesional' });
-    // La sesión guardada queda con el token nuevo y el rol actualizado.
-    const guardada = JSON.parse(localStorage.getItem('fitsearch_sesion'));
-    expect(guardada.token).toBe('token-con-rol-nuevo');
-    expect(guardada.usuario.rol).toBe('profesional');
-
-    await completarFicha();
-    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
-
-    expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
-    expect(cuerpoDe(fetch, '/api/profesionales/mi-ficha')).toEqual(FICHA);
-    const tarjeta = within(screen.getByRole('heading', { name: /Ficha profesional/ }).closest('article'));
-    expect(tarjeta.getByText('Providencia')).toBeInTheDocument();
-    expect(tarjeta.getByText('Presencial y online')).toBeInTheDocument();
-    // El resumen de un profesional no muestra datos personales, objetivos ni salud.
-    expect(screen.queryByRole('heading', { name: /Datos personales/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /Información de salud/ })).not.toBeInTheDocument();
-  });
-
-  test('sin elegir el tipo de cuenta no guarda ni avanza', async () => {
-    const fetch = simularServidor({ tipoCuenta: false });
-    renderizarApp('/perfil');
-
-    await screen.findByRole('heading', { name: 'Tipo de cuenta' });
-    await siguiente();
-
-    expect(screen.getByText('Selecciona el tipo de cuenta')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
-    expect(huboPut(fetch)).toBe(false);
-  });
-
-  test('desde el resumen se puede corregir el tipo de cuenta', async () => {
-    const fetch = simularServidor(PERFIL_COMPLETO);
-    renderizarApp('/perfil');
-
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Editar tipo de cuenta' }));
-
-    expect(screen.getByRole('heading', { name: 'Tipo de cuenta' })).toBeInTheDocument();
-    // Al editar sí viene marcado lo que la persona eligió antes.
-    expect(screen.getByRole('radio', { name: /Usuario/ })).toBeChecked();
-    await userEvent.click(screen.getByRole('radio', { name: /Profesional/ }));
-    await userEvent.click(screen.getByRole('button', { name: 'Guardar cambios' }));
-
-    // Al pasar a profesional sin ficha, se le pide completarla antes de volver al resumen (FS-HU-04).
-    expect(await screen.findByRole('heading', { name: 'Configura tu perfil profesional' })).toBeInTheDocument();
-    expect(cuerpoDe(fetch, '/api/perfil/tipo-cuenta')).toEqual({ rol: 'profesional' });
-    await completarFicha();
-    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
-
-    expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
-    // Queda actualizado en la etiqueta del encabezado y en la tarjeta del resumen.
-    expect(screen.getAllByText('Profesional')).toHaveLength(2);
-  });
-});
-
-describe('Ficha del profesional (FS-HU-04)', () => {
-  beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: PROFESIONAL })));
-
-  test('sin completar los campos obligatorios no guarda y señala cada uno', async () => {
-    const fetch = simularServidor({ usuario: PROFESIONAL });
-    renderizarApp('/perfil');
-
-    await userEvent.click(await screen.findByRole('button', { name: /Guardar perfil/ }));
-
-    // Los mensajes de error se anuncian como alertas (el texto de la especialidad también es la opción inicial del selector).
-    expect(screen.getAllByRole('alert').map((alerta) => alerta.textContent)).toEqual(expect.arrayContaining([
-      'Selecciona tu especialidad', 'Selecciona cómo atiendes', 'Ingresa la comuna donde atiendes',
-      'La latitud debe estar entre -90 y 90', 'La longitud debe estar entre -180 y 180',
-    ]));
-    expect(huboPut(fetch)).toBe(false);
-  });
-
-  test('con la ficha completa muestra el resumen, y "Editar" abre la ficha con sus datos', async () => {
-    const fetch = simularServidor({ usuario: PROFESIONAL, ficha: FICHA });
-    renderizarApp('/perfil');
-
-    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
-    expect(screen.getByText('Atención nutricional')).toBeInTheDocument();
-    // Un profesional no tiene estimación calórica en su resumen.
-    expect(screen.queryByText(/kcal/)).not.toBeInTheDocument();
-    await userEvent.click(screen.getByRole('button', { name: 'Editar ficha profesional' }));
-
-    expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
-    expect(screen.getByLabelText('Especialidad (obligatorio)')).toHaveValue('Nutrición');
-    await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
-    expect(screen.getByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
-    expect(huboPut(fetch)).toBe(false);
-  });
-
-  test('los errores de la API se muestran en su campo', async () => {
-    vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones) => {
-      if (url === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
-        return respuestaJson(400, { error: 'Revisa los datos ingresados', detalles: { comuna: 'La comuna admite hasta 80 caracteres' } });
-      }
-      return respuestaJson(200, url === '/api/profesionales/mi-ficha' ? { ficha: null } : respuestaPerfil({ usuario: PROFESIONAL }));
-    });
-    renderizarApp('/perfil');
-
-    await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
-    await completarFicha();
-    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
-
-    expect(await screen.findByText('La comuna admite hasta 80 caracteres')).toBeInTheDocument();
-    expect(screen.getByText('Revisa los datos ingresados')).toBeInTheDocument();
-  });
-
-  test('el aviso de cuenta creada aparece una sola vez y se descarta al avanzar', async () => {
-    localStorage.clear();
+  test('si la cuenta todavía no elige cómo usar FitSearch, primero va a "Elegir perfil"', async () => {
     simularServidor({ tipoCuenta: false });
-    renderizarApp('/registro');
+    renderizarApp('/perfil');
 
-    await userEvent.type(screen.getByLabelText('Nombre completo'), 'Ana Pérez');
-    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
-    await userEvent.type(screen.getByLabelText('Contraseña (mínimo 8 caracteres)'), 'ClaveSegura123');
-    await userEvent.type(screen.getByLabelText('Confirmar contraseña'), 'ClaveSegura123');
-    await userEvent.click(screen.getByRole('button', { name: 'Registrarse' }));
+    expect(await screen.findByRole('heading', { name: '¿Cómo quieres usar FitSearch?' })).toBeInTheDocument();
+  });
 
-    await screen.findByRole('heading', { name: 'Tipo de cuenta' });
-    expect(screen.getAllByText('Tu cuenta fue creada y la sesión está iniciada.')).toHaveLength(1);
-    await userEvent.click(screen.getByRole('radio', { name: /Profesional/ }));
-    await siguiente();
+  test('el resumen no ofrece cambiar el tipo de cuenta', async () => {
+    simularServidor(PERFIL_COMPLETO);
+    renderizarApp('/perfil');
 
-    expect(await screen.findByRole('heading', { name: 'Configura tu perfil profesional' })).toBeInTheDocument();
-    expect(screen.queryByText('Tu cuenta fue creada y la sesión está iniciada.')).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Editar tipo de cuenta' })).not.toBeInTheDocument();
   });
 });
 
-describe('Asistente de perfil: paso 2, datos personales (FS-HU-02)', () => {
+describe('Asistente de perfil: paso 1, datos personales (FS-HU-02)', () => {
   beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
   test('escenario 1: un usuario nuevo completa sus datos básicos y avanza al paso siguiente', async () => {
@@ -247,7 +95,7 @@ describe('Asistente de perfil: paso 2, datos personales (FS-HU-02)', () => {
   });
 });
 
-describe('Asistente de perfil: paso 3, objetivos y estilo de vida (FS-HU-18)', () => {
+describe('Asistente de perfil: paso 2, objetivos y estilo de vida (FS-HU-18)', () => {
   beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
   test('escenario 1: elige el objetivo, las comidas y el sueño, y avanza al paso de salud', async () => {
@@ -280,7 +128,7 @@ describe('Asistente de perfil: paso 3, objetivos y estilo de vida (FS-HU-18)', (
   });
 });
 
-describe('Asistente de perfil: paso 4, información de salud (FS-HU-19), y resumen', () => {
+describe('Asistente de perfil: paso 3, información de salud (FS-HU-19), y resumen', () => {
   beforeEach(() => localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
   test('escenario 1: guarda la información de salud, muestra la estimación y el resumen del perfil', async () => {

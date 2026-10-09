@@ -1,3 +1,18 @@
+# Diagramas del DAS v1.15: cambios del 08-10-2026
+
+Preparado el 08-10-2026 para **Luis Méndez**.
+
+El 08-10-2026 el tipo de cuenta salió del asistente de perfil: se elige una sola vez en la pantalla "Elegir perfil" y el profesional tiene su propio espacio con un Inicio que muestra el clima (DAS, decisiones D25 y D26). Cambiaron dos diagramas más:
+
+| Diagrama | Qué cambió | Ilustración del DAS |
+|---|---|---|
+| 06 Secuencia: elegir perfil y asistente | Reemplaza al asistente de 5 pasos: primero "Elegir perfil" (PUT /api/perfil/tipo-cuenta, una sola vez, 409 si ya se eligió); el profesional va directo a su Inicio y el usuario sigue con un asistente de 4 pasos. Archivo nuevo: `06_Secuencia_Elegir_Perfil_y_Asistente` (PNG, SVG y MMD). | Ilustración 6 |
+| 08 Vista física | Nodo nuevo Open-Meteo (HTTPS desde el backend, sin clave, caché de 30 minutos) y la base de datos pasa a 14 tablas. | Ilustración 10 |
+
+**Tarea:** en el tablero **FitSearch Architecture**, actualizar el marco 06 (se puede pegar el código MMD) y agregar el nodo Open-Meteo al marco 08. Exportar ambos como PNG y avisar a Rodrigo si quedó alguna diferencia.
+
+---
+
 # Diagramas del DAS v1.14: cambios para pasar a Miro
 
 Preparado el 03-10-2026 para **Luis Méndez**.

@@ -74,6 +74,10 @@
 .ficha__datos > span { display: inline-flex; align-items: center; gap: 0.3rem; }
 .ficha__verificado { color: var(--color-exito); font-weight: 600; }
 .ficha .ficha__favorito { position: absolute; top: 1rem; right: 1rem; }
+.ficha__vista-previa {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem; padding: 0.75rem 1rem; border-radius: var(--radio-control);
+  background: var(--color-info-fondo); color: var(--color-primario); font-size: 0.9rem;
+}
 .ficha__grilla { display: grid; gap: 1.25rem; }
 .ficha__seccion { padding: 1.25rem 1.4rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
 .ficha__seccion > h2 { margin: 0 0 0.75rem; }

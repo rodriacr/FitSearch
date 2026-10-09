@@ -21,7 +21,7 @@ describe('API /api/auth', () => {
 
       expect(respuesta.status).toBe(201);
       expect(respuesta.body.token).toEqual(expect.any(String));
-      expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario' });
+      expect(respuesta.body.usuario).toEqual({ id: 1, nombre: 'Ana Pérez', correo: 'ana@correo.cl', rol: 'usuario', rolConfirmado: false });
       expect(usuarioModel.crearConPerfil.mock.calls[0][0].correo).toBe('ana@correo.cl');
     });
 

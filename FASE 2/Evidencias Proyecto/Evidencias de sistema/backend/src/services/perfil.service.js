@@ -1,5 +1,5 @@
-// Lógica de negocio del perfil: tipo de cuenta y datos básicos (FS-HU-02), objetivos y estilo de vida (FS-HU-18)
-// e información de salud (FS-HU-19).
+// Lógica de negocio del perfil: tipo de cuenta (pantalla "Elegir perfil"; DAS, D25), datos básicos (FS-HU-02),
+// objetivos y estilo de vida (FS-HU-18) e información de salud (FS-HU-19).
 const usuarioModel = require('../models/usuario.model');
 const { ROLES_CUENTA, refirmarToken } = require('./auth.service');
 const perfilModel = require('../models/perfil.model');
@@ -52,11 +52,11 @@ async function obtener(usuarioId) {
   const objetivos = formatearObjetivos(usuario.perfil);
   const salud = formatearSalud(usuario.informacionSalud);
   return {
-    usuario: { id: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol.nombre },
+    usuario: { id: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol.nombre, rolConfirmado: usuario.rolConfirmado === true },
     ...basico,
     objetivos,
     salud,
-    // Pasos del asistente de perfil: se muestra mientras alguno esté pendiente.
+    // Pasos del perfil: tipoCuenta se resuelve en "Elegir perfil" y los otros tres en el asistente del usuario.
     pasos: {
       tipoCuenta: usuario.rolConfirmado === true,
       datosPersonales: basico.completo,
@@ -66,13 +66,16 @@ async function obtener(usuarioId) {
   };
 }
 
-// Primer paso del asistente (FS-HU-02): la persona indica si usa FitSearch como usuario o como profesional.
-// Antes se elegía en el registro, donde era fácil equivocarse al entrar con Google.
+// "Elegir perfil" (DAS, D25): la persona indica una sola vez si usa FitSearch como usuario o como profesional.
+// Para cambiarlo después hay que pedírselo al administrador (CU-07).
 async function actualizarTipoCuenta(usuarioId, { rol }, vencimientoToken) {
   if (!ROLES_CUENTA.includes(rol)) {
     throw new ErrorHttp(400, 'Los datos enviados no son válidos', { rol: 'Selecciona el tipo de cuenta' });
   }
   const usuario = await usuarioModel.confirmarRol(usuarioId, rol);
+  if (!usuario) {
+    throw new ErrorHttp(409, 'Ya elegiste cómo usar FitSearch. Si necesitas cambiarlo, el administrador de FitSearch puede hacerlo.');
+  }
   // Se devuelve un token nuevo porque el rol viaja dentro del token.
   return { ...(await obtener(usuarioId)), token: refirmarToken(usuario, vencimientoToken) };
 }

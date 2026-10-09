@@ -12,8 +12,9 @@ const MENSAJE_OTRA_CUENTA_GOOGLE = 'Este correo ya está vinculado a otra cuenta
 // Hash de referencia para comparar cuando el correo no existe y así no revelar, por tiempo de respuesta, si la cuenta existe.
 const HASH_FICTICIO = bcrypt.hashSync('contrasena-ficticia-fitsearch', config.bcryptCosto);
 
+// rolConfirmado indica si la cuenta ya eligió cómo usar FitSearch (pantalla "Elegir perfil"; DAS, D25).
 function aUsuarioPublico(usuario) {
-  return { id: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol.nombre };
+  return { id: usuario.id, nombre: usuario.nombre, correo: usuario.correo, rol: usuario.rol.nombre, rolConfirmado: usuario.rolConfirmado === true };
 }
 
 // Con "Recordarme" la sesión dura más (DAS, D17).
@@ -26,8 +27,8 @@ function firmarToken(usuario, recordar = false) {
 
 // Tipos de cuenta que puede tener una persona; el administrador nunca se crea ni se elige desde la aplicación.
 const ROLES_CUENTA = ['usuario', 'profesional'];
-// Toda cuenta nueva parte como "usuario" y la persona confirma su tipo de cuenta en el asistente de perfil
-// (FS-HU-02, cambio de flujo del 24-09-2026): antes se elegía en el registro y con Google se podía equivocar.
+// Toda cuenta nueva parte como "usuario" y la persona elige una sola vez si es usuario o profesional en la
+// pantalla "Elegir perfil", fuera del asistente de perfil (DAS, D25; reemplaza a D21 desde el 08-10-2026).
 const ROL_INICIAL = 'usuario';
 
 async function registrar({ nombre, correo, password }) {

@@ -16,11 +16,12 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     renderizarApp();
 
     expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
-    for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Farmacias', 'Asistente IA']) {
+    for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Comidas', 'Asistente IA']) {
       expect(screen.getByRole('heading', { level: 3, name: oferta })).toBeInTheDocument();
     }
     // Solo el directorio de profesionales está disponible; el resto se anuncia sin simular resultados.
     expect(screen.getAllByText('Próximamente')).toHaveLength(4);
+    expect(screen.queryByText('Farmacias')).not.toBeInTheDocument();
     expect(screen.getByText('Disponible')).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /Registrarse/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();

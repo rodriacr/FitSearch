@@ -11,11 +11,14 @@ import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
 
 // Ficha de un profesional con sus datos públicos, favorito y reseñas (FS-HU-23, FS-HU-24).
-export default function FichaProfesional() {
-  const { id } = useParams();
+// Con "vistaPrevia" la ve el propio profesional desde su perfil: sin favorito y volviendo a su perfil (DAS, D25).
+export default function FichaProfesional({ idProfesional, vistaPrevia = false }) {
+  const { id: idRuta } = useParams();
+  const id = idProfesional ?? idRuta;
   const { state } = useLocation();
   // "Volver" regresa a la misma búsqueda desde la que se abrió la ficha.
-  const volverA = typeof state?.desde === 'string' && state.desde.startsWith('/profesionales') ? state.desde : '/profesionales';
+  const volverA = vistaPrevia ? '/profesional/perfil'
+    : typeof state?.desde === 'string' && state.desde.startsWith('/profesionales') ? state.desde : '/profesionales';
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState(null);
   const clave = `${id}-${intento}`;
@@ -29,7 +32,11 @@ export default function FichaProfesional() {
     return () => { activo = false; };
   }, [clave, id]);
 
-  const volver = <Link className="volver" to={volverA}><Icono nombre="flechaIzquierda" tamano={18} /> Volver a profesionales</Link>;
+  const volver = (
+    <Link className="volver" to={volverA}>
+      <Icono nombre="flechaIzquierda" tamano={18} /> {vistaPrevia ? 'Volver a mi perfil' : 'Volver a profesionales'}
+    </Link>
+  );
   if (cargando) return <>{volver}<p className="texto-secundario" role="status">Cargando ficha…</p></>;
   if (datos.error) {
     return (
@@ -60,6 +67,9 @@ export default function FichaProfesional() {
   return (
     <article className="ficha">
       {volver}
+      {vistaPrevia && (
+        <p className="ficha__vista-previa"><Icono nombre="ojo" tamano={18} /> Así ven tu ficha las personas que buscan profesionales en FitSearch.</p>
+      )}
       <header className="ficha__cabecera">
         <span className="ficha__avatar" aria-hidden="true">{iniciales(nombre)}</span>
         <div className="ficha__identidad">
@@ -72,7 +82,7 @@ export default function FichaProfesional() {
             {verificado && <span className="ficha__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>}
           </div>
         </div>
-        <BotonFavorito profesional={profesional} className="ficha__favorito" />
+        {!vistaPrevia && <BotonFavorito profesional={profesional} className="ficha__favorito" />}
       </header>
 
       <div className="ficha__grilla">

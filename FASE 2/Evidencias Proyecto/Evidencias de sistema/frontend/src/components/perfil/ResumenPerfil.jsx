@@ -1,8 +1,6 @@
-import reglas from '@shared/reglas.json';
 import Icono from '../Icono.jsx';
 import {
   catalogoSalud, etiquetaDe, opcionesActividad, opcionesComidas, opcionesObjetivo, opcionesSexo, opcionesSueno,
-  OPCIONES_TIPO_CUENTA,
 } from '../../services/validaciones.js';
 import { TarjetaEstimacion } from './piezas.jsx';
 
@@ -29,53 +27,35 @@ function TarjetaResumen({ titulo, icono, paso, onEditar, filas, pie }) {
   );
 }
 
-// Vista "Mi perfil" cuando el asistente está completo: resumen por sección con su botón "Editar".
-// Una cuenta profesional ve su tipo de cuenta y su ficha profesional (FS-HU-04), sin datos personales ni de salud.
-export default function ResumenPerfil({ datos, ficha = null, aviso, onEditar }) {
+// Vista "Mi perfil" del usuario cuando el asistente está completo: resumen por sección con su botón "Editar".
+export default function ResumenPerfil({ datos, aviso, onEditar }) {
   const { usuario, perfil, objetivos, salud, requerimientoCaloricoKcal } = datos;
-  const tipoCuenta = OPCIONES_TIPO_CUENTA.find((opcion) => opcion.valor === usuario.rol);
-  const esProfesional = usuario.rol === 'profesional';
   return (
     <section className="resumen">
       <header className="resumen__cabecera">
         <span className="avatar avatar--grande" aria-hidden="true">{iniciales(usuario.nombre)}</span>
         <div>
           <h1>Hola, {usuario.nombre}</h1>
-          <p className="texto-secundario">{usuario.correo} · <span className="etiqueta-rol">{usuario.rol === 'profesional' ? 'Profesional' : 'Usuario'}</span></p>
+          <p className="texto-secundario">{usuario.correo} · <span className="etiqueta-rol">Usuario</span></p>
         </div>
       </header>
       {aviso}
-      {!esProfesional && <TarjetaEstimacion kcal={requerimientoCaloricoKcal} />}
+      <TarjetaEstimacion kcal={requerimientoCaloricoKcal} />
       <div className="resumen__grilla">
-        <TarjetaResumen titulo="Tipo de cuenta" icono="maletin" paso={0} onEditar={onEditar} filas={[
-          ['Uso de FitSearch', etiquetaDe(OPCIONES_TIPO_CUENTA, usuario.rol)],
-          ['Descripción', tipoCuenta?.descripcion ?? '—'],
+        <TarjetaResumen titulo="Datos personales" icono="usuario" paso={0} onEditar={onEditar} filas={[
+          ['Peso', numero(perfil.pesoKg, 'kg')], ['Altura', numero(perfil.alturaCm, 'cm')], ['Edad', numero(perfil.edad, 'años')],
+          ['Sexo', etiquetaDe(opcionesSexo, perfil.sexo)], ['Actividad física', etiquetaDe(opcionesActividad, perfil.actividadFisica)],
         ]} />
-        {esProfesional && (
-          <TarjetaResumen titulo="Ficha profesional" icono="medico" paso="ficha" onEditar={onEditar} filas={[
-            ['Especialidad', ficha?.especialidad ?? '—'],
-            ['Descripción', ficha?.descripcion || '—'],
-            ['Comuna', ficha?.comuna || '—'],
-            ['Modalidad', etiquetaDe(reglas.profesionales.modalidades, ficha?.modalidad)],
-            ['Ubicación', ficha ? `${ficha.ubicacionLat}, ${ficha.ubicacionLng}` : '—'],
-          ]} />
-        )}
-        {!esProfesional && <>
-          <TarjetaResumen titulo="Datos personales" icono="usuario" paso={1} onEditar={onEditar} filas={[
-            ['Peso', numero(perfil.pesoKg, 'kg')], ['Altura', numero(perfil.alturaCm, 'cm')], ['Edad', numero(perfil.edad, 'años')],
-            ['Sexo', etiquetaDe(opcionesSexo, perfil.sexo)], ['Actividad física', etiquetaDe(opcionesActividad, perfil.actividadFisica)],
-          ]} />
-          <TarjetaResumen titulo="Objetivos y estilo de vida" icono="objetivoBajar" paso={2} onEditar={onEditar} filas={[
-            ['Objetivo principal', etiquetaDe(opcionesObjetivo, objetivos.objetivoPrincipal)],
-            ['Comidas al día', etiquetaDe(opcionesComidas, objetivos.comidasDia)],
-            ['Horas de sueño', etiquetaDe(opcionesSueno, objetivos.horasSueno)],
-          ]} />
-          <TarjetaResumen titulo="Información de salud" icono="corazon" paso={3} onEditar={onEditar} filas={[
-            ['Condiciones médicas', listado(catalogoSalud.condicionesMedicas, salud?.condicionesMedicas ?? [])],
-            ['Medicamentos', salud?.tomaMedicamentos ? listado(catalogoSalud.medicamentos, salud.medicamentos) : 'No toma medicamentos'],
-            ['Alergias', listado(catalogoSalud.alergias, salud?.alergias ?? [])],
-          ]} pie={<p className="nota-privacidad nota-privacidad--compacta"><Icono nombre="candadoCerrado" tamano={16} /> Solo tú puedes ver esta información.</p>} />
-        </>}
+        <TarjetaResumen titulo="Objetivos y estilo de vida" icono="objetivoBajar" paso={1} onEditar={onEditar} filas={[
+          ['Objetivo principal', etiquetaDe(opcionesObjetivo, objetivos.objetivoPrincipal)],
+          ['Comidas al día', etiquetaDe(opcionesComidas, objetivos.comidasDia)],
+          ['Horas de sueño', etiquetaDe(opcionesSueno, objetivos.horasSueno)],
+        ]} />
+        <TarjetaResumen titulo="Información de salud" icono="corazon" paso={2} onEditar={onEditar} filas={[
+          ['Condiciones médicas', listado(catalogoSalud.condicionesMedicas, salud?.condicionesMedicas ?? [])],
+          ['Medicamentos', salud?.tomaMedicamentos ? listado(catalogoSalud.medicamentos, salud.medicamentos) : 'No toma medicamentos'],
+          ['Alergias', listado(catalogoSalud.alergias, salud?.alergias ?? [])],
+        ]} pie={<p className="nota-privacidad nota-privacidad--compacta"><Icono nombre="candadoCerrado" tamano={16} /> Solo tú puedes ver esta información.</p>} />
       </div>
     </section>
   );

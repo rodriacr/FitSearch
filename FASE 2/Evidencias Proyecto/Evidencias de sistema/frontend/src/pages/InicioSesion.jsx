@@ -33,8 +33,8 @@ export default function InicioSesion() {
 
     setEnviando(true);
     try {
-      await iniciarSesion(datos);
-      navegar(destinoTrasIngreso(state), { replace: true });
+      const { usuario } = await iniciarSesion(datos);
+      navegar(destinoTrasIngreso(state, usuario), { replace: true });
     } catch (error) {
       setMensaje(error.message);
       setEnviando(false);
