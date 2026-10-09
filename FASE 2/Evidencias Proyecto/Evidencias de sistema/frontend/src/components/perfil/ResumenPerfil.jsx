@@ -40,7 +40,14 @@ export default function ResumenPerfil({ datos, ficha = null, aviso, onEditar }) 
       <header className="resumen__cabecera">
         <span className="avatar avatar--grande" aria-hidden="true">{iniciales(usuario.nombre)}</span>
         <div>
-          <h1>Hola, {usuario.nombre}</h1>
+          <h1>
+            Hola, {usuario.nombre}{' '}
+            {ficha?.verificado && (
+              <span title="Profesional Verificado" aria-label="Profesional Verificado">
+                <Icono nombre="check" tamano={24} /> 
+              </span>
+            )}
+          </h1>
           <p className="texto-secundario">{usuario.correo} · <span className="etiqueta-rol">{usuario.rol === 'profesional' ? 'Profesional' : 'Usuario'}</span></p>
         </div>
       </header>
@@ -53,6 +60,7 @@ export default function ResumenPerfil({ datos, ficha = null, aviso, onEditar }) 
         ]} />
         {esProfesional && (
           <TarjetaResumen titulo="Ficha profesional" icono="medico" paso="ficha" onEditar={onEditar} filas={[
+            ['Estado', ficha?.verificado ? '✅ Perfil Verificado' : '⏳ Pendiente de verificación'],
             ['Especialidad', ficha?.especialidad ?? '—'],
             ['Descripción', ficha?.descripcion || '—'],
             ['Comuna', ficha?.comuna || '—'],

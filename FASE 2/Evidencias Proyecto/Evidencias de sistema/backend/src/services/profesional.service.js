@@ -1,4 +1,7 @@
 // Directorio de profesionales: listado con búsqueda y filtros (FS-HU-03, FS-HU-05, FS-HU-22) y ficha individual.
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+
 const modelo = require('../models/profesional.model');
 const resenaModel = require('../models/resena.model');
 const ErrorHttp = require('../utils/ErrorHttp');
@@ -81,11 +84,13 @@ async function ficha(id, usuario) {
 const filtros = () => modelo.filtros();
 
 // Ficha propia del profesional (FS-HU-04): null mientras no la complete.
+// Ficha propia del profesional (FS-HU-04): null mientras no la complete.
 const formatearMiFicha = (fila) => fila && {
   especialidad: fila.especialidad,
   descripcion: fila.descripcion ?? '',
   comuna: fila.comuna ?? '',
   modalidad: fila.modalidad,
+  verificado: Boolean(Number(fila.verificado)), // <-- ¡ESTA ES LA LÍNEA MÁGICA QUE FALTABA!
   ubicacionLat: Number(fila.ubicacionLat),
   ubicacionLng: Number(fila.ubicacionLng),
 };
@@ -93,6 +98,14 @@ const formatearMiFicha = (fila) => fila && {
 async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
 async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
 
+// FS-HU-12: Administrador verifica un perfil profesional
+async function verificarPerfil(id) {
+  return await prisma.profesional.update({
+    where: { id: Number(id) },
+    data: { verificado: true }
+  });
+}
+
 module.exports = {
-  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha,
+  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil
 };
