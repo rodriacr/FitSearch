@@ -20,6 +20,6 @@ Los diagramas 07 y 08 no se pudieron exportar por errores del editor de Miro en 
 
 Los marcos anteriores se conservan como historial. La arquitectura futura no equivale a funciones implementadas.
 
-El DAS 1.17 contiene las imágenes locales actualizadas de 06, 07 y 08. Falta revisar visualmente su paginación en Word; la revisión de 1.16 no cubre estas nuevas imágenes.
+El DAS 1.17 contiene las imágenes locales actualizadas de 06, 07 y 08. Se revisó su exportación con Microsoft Word: 44 páginas, índice actualizado, sin la página vacía previa al índice y D28 en una sola fila. La ilustración 6 se dividió en tres partes con etiquetas envueltas y participantes repetidos, conservando la numeración del flujo. El resumen, la vista física y la tabla de reutilización distinguen las capacidades actuales de las previstas. Las versiones integrales de Miro y las fuentes del repositorio se conservan; la división es una adaptación de presentación para el DAS.
 
 Drive: la actualización del MMD existente devolvió 403 por permisos insuficientes. La carga de un archivo nuevo requiere confirmar la carpeta compartida de destino. No se ha sincronizado Drive.
