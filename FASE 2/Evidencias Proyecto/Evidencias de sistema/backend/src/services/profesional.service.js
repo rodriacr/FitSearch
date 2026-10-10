@@ -96,9 +96,9 @@ async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(awai
 async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
 
 // FS-HU-12: Administrador verifica un perfil profesional
-async function verificarPerfil(id) {
+async function verificarPerfil(id, administradorId) {
   if (!await modelo.existe(id)) throw new ErrorHttp(404, 'No encontramos este profesional');
-  const ficha = await modelo.verificarPerfil(id);
+  const ficha = await modelo.verificarPerfil(id, administradorId);
   return { id: ficha.id, verificado: ficha.verificado };
 }
 

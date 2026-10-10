@@ -14,6 +14,7 @@ function manejoErrores(error, req, res, next) {
   if (error.type === 'entity.parse.failed') {
     return res.status(400).json({ error: 'El cuerpo de la petición no es un JSON válido' });
   }
+  if (error.type === 'entity.too.large') return res.status(413).json({ error: 'El archivo supera el tamaño permitido' });
   console.error(error);
   return res.status(500).json({ error: 'Ocurrió un error inesperado. Intenta nuevamente más tarde' });
 }

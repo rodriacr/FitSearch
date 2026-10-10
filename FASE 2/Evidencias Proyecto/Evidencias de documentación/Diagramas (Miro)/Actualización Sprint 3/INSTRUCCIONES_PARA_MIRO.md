@@ -1,4 +1,26 @@
-# Diagramas actuales del Sprint 3 · 10-10-2026
+# Diagramas de FitSearch
+
+## Versión vigente: DAS 1.18 · panel administrativo · 10-10-2026
+
+La ampliación del PR #17 incorpora Dashboard, Profesionales, Verificaciones, Usuarios y Reportes. Configuración y Contenido quedan fuera del alcance autorizado. Revisión/fusión del PR y aceptación de FS-HU-12 siguen pendientes del PO; la planificación del backlog conserva Sprint 5.
+
+Se actualizaron 01–04, 07 y 08 y se añadió 11. El modelo completo comprende 15 tablas: 10 implementadas en esta rama y 5 previstas. Se documentan cuenta activa y versión de sesión, documentos privados y metadatos, RUT, historial y revisión concurrente, rechazo/reenvío/revocación y reportes con datos existentes. El flujo 06 se conserva sin cambios.
+
+Los nuevos marcos se crearon en Miro conservando los anteriores como historial. Los PNG/SVG locales se renderizaron desde las fuentes actualizadas; no son exportaciones nativas de los nuevos marcos de Miro. Se contrastaron las entidades y conexiones del tablero mediante su SVG. Exportar los nuevos marcos desde Miro es opcional para conservar además su disposición visual nativa.
+
+- [DAS 1.18 · 01 Casos de uso](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777496)
+- [DAS 1.18 · 02 Clases del dominio](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777497)
+- [DAS 1.18 · 03 DER completo: 15 tablas](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777498)
+- [DAS 1.18 · 04 DER implementado: 10 tablas](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777499)
+- [DAS 1.18 · 07 Vista de desarrollo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777500)
+- [DAS 1.18 · 08 Vista física](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777501)
+- [DAS 1.18 · 11 Verificación administrativa](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777502)
+- [06 Elección de perfil y asistente: se conserva](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989749)
+
+El DAS incluye vistas resumidas de asociaciones de clases y relaciones de tablas para facilitar la lectura en Word. Los campos completos permanecen en el diccionario y en las fuentes integrales 02/04. Las adaptaciones de presentación se conservan en `Presentacion_DAS/`. Las fuentes y las imágenes actualizadas se sincronizan en la carpeta existente de Drive; se conservan los IDs de los archivos que ya existían.
+
+## Historial: colección del DAS 1.17
+
 
 En Miro hay siete marcos nuevos titulados **Sprint 3 · 01/02/03/04/06/07/08 · … · 10-10-2026**. Exportar esos siete marcos como PNG, preferiblemente a máxima resolución. Los anteriores se conservan como historial.
 

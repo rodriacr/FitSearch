@@ -23,6 +23,10 @@ const entrarConGoogle = (cuerpo = { credencial: CREDENCIAL }) =>
   request(app).post('/api/auth/google').send(cuerpo);
 
 describe('FS-HU-16: continuar con Google', () => {
+  test('bloquea una cuenta Google desactivada', async () => {
+    usuarioModel.buscarPorGoogleId.mockResolvedValue(usuarioDeGoogle({ activo: false }));
+    expect((await entrarConGoogle()).status).toBe(403);
+  });
   beforeEach(() => {
     jest.resetAllMocks();
     googleService.verificarCredencial.mockResolvedValue(CUENTA_GOOGLE);

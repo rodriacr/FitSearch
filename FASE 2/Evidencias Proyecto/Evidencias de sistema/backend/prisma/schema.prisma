@@ -34,6 +34,8 @@ model Usuario {
   // en el primer paso del asistente de perfil (FS-HU-02).
   rolConfirmado      Boolean             @default(false) @map("rol_confirmado")
   fechaRegistro      DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
+  activo             Boolean             @default(true)
+  versionSesion      Int                 @default(0) @map("version_sesion")
   rol                Rol                 @relation(fields: [rolId], references: [id], onDelete: Restrict)
   perfil             PerfilUsuario?
   tokensRecuperacion TokenRecuperacion[]
@@ -55,6 +57,12 @@ model Profesional {
   especialidad      String           @db.VarChar(100)
   descripcion       String?          @db.Text
   verificado        Boolean          @default(false)
+  estadoVerificacion String          @default("pendiente") @map("estado_verificacion") @db.VarChar(20)
+  motivoRechazo     String?          @map("motivo_rechazo") @db.VarChar(500)
+  historialVerificacion Json?       @map("historial_verificacion")
+  revisionVerificacion Int          @default(0) @map("revision_verificacion")
+  rut               String?         @db.VarChar(12)
+  telefono          String?         @db.VarChar(20)
   ubicacionLat      Decimal          @map("ubicacion_lat") @db.Decimal(10, 7)
   ubicacionLng      Decimal          @map("ubicacion_lng") @db.Decimal(10, 7)
   comuna            String?          @db.VarChar(80)
@@ -63,10 +71,26 @@ model Profesional {
   establecimiento   Establecimiento? @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)
   favoritos         Favorito[]
   resenas           Resena[]
+  documentos        DocumentoProfesional[]
 
   @@index([especialidad])
   @@index([comuna])
   @@map("profesionales")
+}
+
+model DocumentoProfesional {
+  id                Int         @id @default(autoincrement())
+  profesionalId     Int         @map("profesional_id")
+  tipo              String      @db.VarChar(30)
+  nombre            String      @db.VarChar(150)
+  clave             String      @unique @db.VarChar(50)
+  mime              String      @db.VarChar(40)
+  tamano            Int
+  fechaCreacion     DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  profesional       Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@index([profesionalId])
+  @@map("documentos_profesionales")
 }
 
 // Profesionales que cada usuario guarda para volver a encontrarlos (FS-HU-23).

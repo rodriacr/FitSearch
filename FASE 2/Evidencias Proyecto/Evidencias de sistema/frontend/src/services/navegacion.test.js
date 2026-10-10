@@ -38,10 +38,12 @@ test('los números se muestran con el formato de Chile', () => {
   expect(primerNombre('  Ana Pérez')).toBe('Ana');
 });
 
-test('una cuenta administrativa vuelve al aviso aunque antes haya pedido una ruta del usuario', () => {
+test('una cuenta administrativa entra a su dashboard y solo vuelve a rutas administrativas', () => {
   const administrador = { rol: 'administrador', rolConfirmado: true };
-  expect(inicioDe(administrador)).toBe(ACCESO_NO_DISPONIBLE);
-  expect(destinoTrasIngreso({ desde: '/favoritos' }, administrador)).toBe(ACCESO_NO_DISPONIBLE);
+  expect(inicioDe(administrador)).toBe('/admin/dashboard');
+  expect(destinoTrasIngreso({ desde: '/favoritos' }, administrador)).toBe('/admin/dashboard');
+  expect(destinoTrasIngreso({ desde: '/admin/verificaciones?pagina=2' }, administrador)).toBe('/admin/verificaciones?pagina=2');
+  expect(destinoTrasIngreso({ desde: '/admin/usuarios' }, { rol: 'usuario' })).toBe('/inicio');
 });
 
 test.each(['usuario', 'profesional'])('el rol %s no vuelve al aviso después de iniciar sesión', (rol) => {
