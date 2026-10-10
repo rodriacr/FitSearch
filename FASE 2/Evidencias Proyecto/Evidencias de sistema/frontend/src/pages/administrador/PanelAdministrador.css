@@ -26,6 +26,8 @@
 .admin__metricas strong { font-size: 30px; }
 .admin .admin__boton, .admin button[aria-pressed=true] { background: #08627b; color: white; border-color: #08627b; }
 .admin__filtros { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0; }
+.admin__estado-cuenta { display: grid; gap: 8px; width: 220px; max-width: 100%; margin-bottom: 20px; }
+.admin__estado-cuenta select { width: 100%; min-height: 44px; }
 .admin__busqueda { display: grid; gap: 8px; }
 .admin__busqueda > div { display: flex; gap: 8px; }
 .admin__busqueda input { flex: 1; }

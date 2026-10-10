@@ -124,7 +124,7 @@ export function ListadoAdministrador({ tipo }) {
     <h1>{usuarios ? 'Usuarios' : verificaciones ? 'Verificaciones' : 'Profesionales'}</h1>
     <p>{usuarios ? 'Consulta las cuentas registradas en FitSearch.' : 'Revisa las fichas profesionales y su verificación.'}</p>
     <div className="admin__filtros" aria-label="Filtrar resultados">{opciones.map(([valor, nombre]) => <button type="button" key={valor} aria-pressed={filtro === valor} onClick={() => { setFiltro(valor); setPagina(1); }}>{nombre}</button>)}</div>
-    {usuarios && <label>Estado de cuenta<select value={estadoCuenta} onChange={(e) => { setEstadoCuenta(e.target.value); setPagina(1); }}><option value="">Todos</option><option value="activos">Activos</option><option value="inactivos">Inactivos</option></select></label>}
+    {usuarios && <label className="admin__estado-cuenta">Estado de cuenta<select value={estadoCuenta} onChange={(e) => { setEstadoCuenta(e.target.value); setPagina(1); }}><option value="">Todos</option><option value="activos">Activos</option><option value="inactivos">Inactivos</option></select></label>}
     {error && <p role="alert">{error}</p>}
     {confirmacion && <div className="admin__tarjeta"><p>¿Deseas {confirmacion.activo ? 'desactivar' : 'reactivar'} la cuenta de {confirmacion.nombre}? {confirmacion.activo && 'Sus sesiones abiertas dejarán de funcionar.'}</p><button disabled={guardando} onClick={cambiarEstado}>Confirmar cambio</button><button disabled={guardando} onClick={() => setConfirmacion(null)}>Cancelar</button></div>}
     <form className="admin__busqueda" onSubmit={(e) => { e.preventDefault(); setQ(busqueda.trim()); setPagina(1); }}>
