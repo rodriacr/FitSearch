@@ -11,8 +11,19 @@ const seleccion = {
 function buscarPorUsuario(usuarioId) { return prisma.profesional.findUnique({ where: { usuarioId }, select: seleccion }); }
 function buscarPorId(id) { return prisma.profesional.findUnique({ where: { id }, select: seleccion }); }
 function buscarDocumento(id) { return prisma.documentoProfesional.findUnique({ where: { id }, include: { profesional: { select: { usuarioId: true } } } }); }
+function documentosActuales(ficha) {
+  const reinicio = Math.max(0, ...(ficha.historialVerificacion || []).filter((evento) => ['rechazar', 'revocar'].includes(evento.accion)).map((evento) => Date.parse(evento.fecha) || 0));
+  const ordenados = [...(ficha.documentos || [])].filter((documento) => !reinicio || new Date(documento.fechaCreacion).getTime() > reinicio)
+    .sort((a, b) => (new Date(b.fechaCreacion).getTime() || 0) - (new Date(a.fechaCreacion).getTime() || 0) || b.id - a.id);
+  const tipos = new Set();
+  return ordenados.filter((documento) => {
+    if (tipos.has(documento.tipo)) return false;
+    tipos.add(documento.tipo);
+    return true;
+  });
+}
 function exigirDocumentos(ficha) {
-  if (!['identidad', 'titulo'].every((tipo) => ficha.documentos.some((d) => d.tipo === tipo))) {
+  if (!['identidad', 'titulo'].every((tipo) => documentosActuales(ficha).some((d) => d.tipo === tipo))) {
     throw new ErrorHttp(409, 'Faltan el documento de identidad y/o el título profesional');
   }
   if (!ficha.rut) throw new ErrorHttp(409, 'El profesional debe completar su RUT y enviar su solicitud');
@@ -63,4 +74,4 @@ async function enviarSolicitud(usuarioId, { rut, telefono }) {
     return { estado: 'pendiente' };
   });
 }
-module.exports = { buscarPorUsuario, buscarPorId, buscarDocumento, decidir, guardarDocumento, enviarSolicitud, documentoPublico };
+module.exports = { buscarPorUsuario, buscarPorId, buscarDocumento, decidir, guardarDocumento, enviarSolicitud, documentoPublico, documentosActuales };

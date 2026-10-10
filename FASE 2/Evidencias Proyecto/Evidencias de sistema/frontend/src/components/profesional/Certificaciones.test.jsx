@@ -92,7 +92,7 @@ test('cada documento sube con su propio tipo y conserva la selección de los otr
   expect(subidas.map(([, opciones]) => opciones.body)).toEqual([archivoTitulo, archivoIdentidad]);
 });
 
-test('muestra la última versión y deja los archivos anteriores en un historial cerrado', async () => {
+test('muestra solo el último archivo sin ofrecer versiones anteriores', () => {
   render(<Documentos documentos={[
     { id: 1, tipo: 'identidad', nombre: 'anterior.png', fechaCreacion: '2026-10-09T12:00:00Z' },
     { id: 3, tipo: 'identidad', nombre: 'nuevo.png', fechaCreacion: '2026-10-10T12:00:00Z' },
@@ -100,20 +100,16 @@ test('muestra la última versión y deja los archivos anteriores en un historial
   ]} onError={() => {}} />);
   expect(screen.getByRole('button', { name: 'identidad: nuevo.png' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'titulo: titulo.pdf' })).toBeInTheDocument();
-  const historial = screen.getByText('Versiones anteriores de documento de identidad (1)').closest('details');
-  expect(historial).not.toHaveAttribute('open');
-  expect(screen.getByRole('button', { name: 'identidad: anterior.png' }).closest('details')).toBe(historial);
-  await userEvent.click(screen.getByText('Versiones anteriores de documento de identidad (1)'));
-  expect(historial).toHaveAttribute('open');
-  expect(screen.getByRole('button', { name: 'identidad: anterior.png' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'identidad: anterior.png' })).not.toBeInTheDocument();
+  expect(screen.queryByText(/Versiones anteriores/)).not.toBeInTheDocument();
 });
 
-test('una solicitud rechazada conserva el documento y explica cómo reemplazarlo', async () => {
+test('una solicitud rechazada sin archivos actuales solicita adjuntarlos nuevamente', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
-  simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'rechazado', motivo: 'Título ilegible', rut: '', telefono: '', documentos: [{ id: 3, tipo: 'titulo', nombre: 'titulo.pdf' }], historial: [] } } });
+  simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'rechazado', motivo: 'Título ilegible', rut: '', telefono: '', documentos: [], historial: [] } } });
   render(<Certificaciones />);
-  expect(await screen.findByRole('button', { name: 'titulo: titulo.pdf' })).toBeInTheDocument();
-  expect(screen.getByText(/Conservamos tus documentos anteriores/)).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Reemplazar documento: Título profesional' })).toBeDisabled();
+  expect(await screen.findByText(/Adjunta nuevamente el documento de identidad/)).toBeInTheDocument();
+  expect(screen.getAllByText('Sin adjuntar')).toHaveLength(3);
+  expect(screen.getByRole('button', { name: 'Adjuntar documento: Título profesional' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Adjuntar documento: Documento de identidad' })).toBeDisabled();
 });

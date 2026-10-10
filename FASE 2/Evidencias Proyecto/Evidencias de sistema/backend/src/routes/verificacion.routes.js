@@ -18,7 +18,7 @@ const router = Router();
 router.use(autenticar);
 router.get('/mi-solicitud', autorizarRoles('profesional'), async (req, res) => {
   const fila = await modelo.buscarPorUsuario(req.usuario.id);
-  res.json({ solicitud: fila && { id: fila.id, estado: fila.estadoVerificacion, motivo: fila.motivoRechazo, rut: fila.rut, telefono: fila.telefono, documentos: fila.documentos, historial: fila.historialVerificacion || [] } });
+  res.json({ solicitud: fila && { id: fila.id, estado: fila.estadoVerificacion, motivo: fila.motivoRechazo, rut: fila.rut, telefono: fila.telefono, documentos: modelo.documentosActuales(fila), historial: fila.historialVerificacion || [] } });
 });
 router.post('/mi-solicitud', autorizarRoles('profesional'),
   body('rut').isString().bail().trim().customSanitizer((v) => v.replace(/\./g, '').toUpperCase()).custom(rutValido).withMessage('Ingresa un RUT válido, con guion y dígito verificador'),

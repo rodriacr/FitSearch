@@ -1,4 +1,5 @@
 const modelo = require('../models/administrador.model');
+const { documentosActuales } = require('../models/verificacion.model');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 function usuario(fila) {
@@ -22,7 +23,7 @@ const listarProfesionales = (parametros) => listado(modelo.listarProfesionales, 
 async function detalleProfesional(id) {
   const fila = await modelo.detalleProfesional(id);
   if (!fila) throw new ErrorHttp(404, 'No encontramos este profesional');
-  return { profesional: { ...profesional(fila), documentos: fila.documentos || [], historial: fila.historialVerificacion || [] } };
+  return { profesional: { ...profesional(fila), documentos: documentosActuales(fila), historial: fila.historialVerificacion || [] } };
 }
 async function resumen(dias, ahora = new Date()) {
   const hasta = new Date(Date.UTC(ahora.getUTCFullYear(), ahora.getUTCMonth(), ahora.getUTCDate() + 1));

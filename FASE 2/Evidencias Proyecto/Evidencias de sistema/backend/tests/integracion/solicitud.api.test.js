@@ -8,6 +8,20 @@ const documentos = require('../../src/services/documento.service');
 const token = (rol) => jwt.sign({ rol }, process.env.JWT_SECRET, { subject: '7' });
 const enviar = (rol, cuerpo) => request(app).post('/api/verificaciones/mi-solicitud').set('Authorization', `Bearer ${token(rol)}`).send(cuerpo);
 beforeEach(() => jest.resetAllMocks());
+
+test('al recargar una solicitud rechazada devuelve solo los documentos posteriores al rechazo', async () => {
+  modelo.documentosActuales.mockImplementation(jest.requireActual('../../src/models/verificacion.model').documentosActuales);
+  const fila = { id: 2, estadoVerificacion: 'rechazado', historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00Z' }], documentos: [{ id: 1, tipo: 'identidad', fechaCreacion: new Date('2026-10-10T10:00:00Z') }] };
+  modelo.buscarPorUsuario.mockResolvedValue(fila);
+  const recargar = () => request(app).get('/api/verificaciones/mi-solicitud').set('Authorization', `Bearer ${token('profesional')}`);
+  expect((await recargar()).body.solicitud.documentos).toEqual([]);
+  fila.documentos.push({ id: 2, tipo: 'identidad', fechaCreacion: new Date('2026-10-10T12:00:00Z') });
+  for (let intento = 0; intento < 2; intento++) {
+    const respuesta = await recargar();
+    expect(respuesta.status).toBe(200);
+    expect(respuesta.body.solicitud.documentos.map((d) => d.id)).toEqual([2]);
+  }
+});
 test('solo un profesional envía su propia solicitud, con RUT válido normalizado', async () => {
   modelo.enviarSolicitud.mockResolvedValue({ estado: 'pendiente' });
   expect((await enviar('usuario', { rut: '12.345.678-5' })).status).toBe(403);
