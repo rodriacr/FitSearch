@@ -22,7 +22,7 @@ La planilla de casos de prueba contiene CP-061 a CP-068: aprobación administrat
 
 Verificación ejecutada el 10-10-2026 en `codex/actualizar-diagramas-y-revision`, desde main con el PR #15 fusionado:
 
-- Backend: `npm test -- --runInBand`, 19 suites y 166 pruebas aprobadas.
+- Backend: `npm test`, 19 suites y 166 pruebas aprobadas.
 - Frontend: `npm test`, 19 archivos y 144 pruebas aprobadas. El PR #15 terminó con 139; esta revisión añade cinco pruebas de navegación.
 - Backend y frontend: `npm run lint`, sin errores.
 - Frontend: `npm run build`, compilación correcta.

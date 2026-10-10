@@ -6,9 +6,9 @@ Desde main con el PR #15 fusionado (merge `20c3ea3`), se corrigieron 06, 07 y 08
 
 En Miro se crearon siete marcos del Sprint 3 (01–04, 06–08), conservando las versiones anteriores. Se distinguen las nueve tablas implementadas de las catorce del modelo completo; Docker/Nginx, Maps, IA y reservas se identifican como objetivos pendientes. La versión de cuatro pasos del ZIP describe solo el asistente del usuario; 06 conserva además la elección previa, el espacio profesional, la reanudación y la edición.
 
-Pendientes de cierre: exportar/revisar los siete marcos; revisar visualmente la paginación del DAS 1.17; sincronizar Drive con permisos adecuados; revisión del nuevo PR por el PO. La actualización del archivo MMD en Drive devolvió 403 por permisos insuficientes. La carga de un archivo nuevo fue bloqueada por revisión automática hasta confirmar expresamente la carpeta de destino. No se reemplazaron documentos de Drive.
+Pendientes de cierre: exportar/revisar los siete marcos; revisar visualmente la paginación del DAS 1.17; sincronizar Drive con permisos adecuados; revisión del PR #16 por el PO. La actualización del archivo MMD en Drive devolvió 403 por permisos insuficientes. No se reemplazaron documentos de Drive.
 
-El renderizador DOCX no pudo producir páginas porque `soffice.exe` no está disponible. El contenido e imágenes del DAS están preparados, pero esa revisión visual no se declara completada. No se amplió el alcance administrativo de FS-HU-12.
+El contenido e imágenes del DAS están preparados; la revisión visual de la nueva paginación permanece pendiente. No se amplió el alcance administrativo de FS-HU-12.
 
 ## Diagnóstico previo a los cambios
 
