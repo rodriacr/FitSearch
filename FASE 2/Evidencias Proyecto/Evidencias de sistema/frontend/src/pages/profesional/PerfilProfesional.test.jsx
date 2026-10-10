@@ -88,6 +88,13 @@ describe('Sin ficha', () => {
 });
 
 describe('Con ficha', () => {
+  test('muestra la verificación en el espacio profesional creado por el PR #13', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
+    renderizarApp('/profesional/perfil');
+    expect(await screen.findByText('Verificado')).toBeInTheDocument();
+    expect(screen.queryByText('Sin verificar')).not.toBeInTheDocument();
+  });
+
   test('muestra su ficha pública: especialidad, calificación, verificación, comuna y "Sobre mí"', async () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');

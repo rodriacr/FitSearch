@@ -189,6 +189,7 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | GET | `/api/profesionales` | Bearer JWT | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
 | GET | `/api/profesionales/filtros` | Bearer JWT | Especialidades y comunas disponibles para los filtros |
 | GET | `/api/profesionales/:id` | Bearer JWT | Ficha pública, resumen de calificaciones, reseña propia y si la persona puede calificar |
+| PATCH | `/api/profesionales/:id/verificar` | Bearer JWT (rol administrador) | Marca una ficha profesional existente como verificada (FS-HU-12); devuelve 404 si no existe |
 | GET | `/api/profesionales/:id/resenas` | Bearer JWT | Reseñas paginadas (5 por página) con el autor abreviado |
 | PUT | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Crea o reemplaza la reseña propia: `puntaje` de 1 a 5 y `comentario` opcional de 10 a 500 caracteres (FS-HU-24) |
 | DELETE | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Elimina la reseña propia |

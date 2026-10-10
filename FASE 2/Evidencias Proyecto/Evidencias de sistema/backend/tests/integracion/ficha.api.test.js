@@ -20,7 +20,7 @@ test('un profesional guarda su ficha (se crea la primera vez y luego se actualiz
   modelo.guardarFicha.mockResolvedValue(fila);
   const res = await enviar('profesional', valido);
   expect(res.status).toBe(200);
-  expect(res.body.ficha).toEqual(valido);
+  expect(res.body.ficha).toEqual({ ...valido, verificado: false });
   expect(modelo.guardarFicha).toHaveBeenCalledWith(7, valido);
 });
 
@@ -72,7 +72,13 @@ test('devuelve ficha null si el profesional aún no la completa', async () => {
 test('devuelve la ficha guardada con su id y las coordenadas como número', async () => {
   modelo.obtenerPorUsuario.mockResolvedValue({ id: 5, ...fila });
   const res = await obtener('profesional');
-  expect(res.body).toEqual({ ficha: { id: 5, ...valido } });
+  expect(res.body).toEqual({ ficha: { id: 5, ...valido, verificado: false } });
+});
+
+test('la ficha propia muestra la verificación aprobada por el administrador', async () => {
+  modelo.obtenerPorUsuario.mockResolvedValue({ id: 5, ...fila, verificado: true });
+  const res = await obtener('profesional');
+  expect(res.body.ficha).toMatchObject({ id: 5, verificado: true });
 });
 
 test('"mi-ficha" no se confunde con la ficha pública de un profesional por id', async () => {
