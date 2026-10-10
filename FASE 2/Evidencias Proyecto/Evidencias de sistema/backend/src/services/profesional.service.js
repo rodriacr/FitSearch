@@ -98,7 +98,8 @@ async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFic
 // FS-HU-12: Administrador verifica un perfil profesional
 async function verificarPerfil(id) {
   if (!await modelo.existe(id)) throw new ErrorHttp(404, 'No encontramos este profesional');
-  return formatearMiFicha(await modelo.verificarPerfil(id));
+  const ficha = await modelo.verificarPerfil(id);
+  return { id: ficha.id, verificado: ficha.verificado };
 }
 
 module.exports = {

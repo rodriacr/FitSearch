@@ -17,7 +17,7 @@ test('solo el administrador verifica una ficha profesional existente', async () 
   modelo.verificarPerfil.mockResolvedValue({ id: 5, verificado: true, ubicacionLat: '-33.43', ubicacionLng: '-70.65' });
   const res = await verificar('administrador');
   expect(res.status).toBe(200);
-  expect(res.body).toMatchObject({ id: 5, verificado: true, ubicacionLat: -33.43 });
+  expect(res.body).toEqual({ id: 5, verificado: true });
   expect(modelo.verificarPerfil).toHaveBeenCalledWith(5);
 });
 

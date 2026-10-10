@@ -189,7 +189,7 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | GET | `/api/profesionales` | Bearer JWT | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
 | GET | `/api/profesionales/filtros` | Bearer JWT | Especialidades y comunas disponibles para los filtros |
 | GET | `/api/profesionales/:id` | Bearer JWT | Ficha pública, resumen de calificaciones, reseña propia y si la persona puede calificar |
-| PATCH | `/api/profesionales/:id/verificar` | Bearer JWT (rol administrador) | Marca una ficha profesional existente como verificada (FS-HU-12); devuelve 404 si no existe |
+| PATCH | `/api/profesionales/:id/verificar` | Bearer JWT (rol administrador) | Marca una ficha profesional existente como verificada (FS-HU-12); responde `{ id, verificado: true }` o 404 si no existe |
 | GET | `/api/profesionales/:id/resenas` | Bearer JWT | Reseñas paginadas (5 por página) con el autor abreviado |
 | PUT | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Crea o reemplaza la reseña propia: `puntaje` de 1 a 5 y `comentario` opcional de 10 a 500 caracteres (FS-HU-24) |
 | DELETE | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Elimina la reseña propia |
@@ -198,6 +198,12 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | DELETE | `/api/favoritos/:profesionalId` | Bearer JWT | Quita un favorito (idempotente) |
 
 Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "mensaje" } }`.
+
+### Verificación básica de profesionales — FS-HU-12
+
+Avance técnico en revisión, previsto para Sprint 5 si hay capacidad y sujeto al alcance del Product Owner. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
+
+La pantalla de revisión, el listado de pendientes y el mecanismo de creación de cuentas de administrador siguen pendientes de definición del PO. La historia no se considera completada. Detalle y evidencia automatizada: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
 ## Ejecución con Docker
 

@@ -109,7 +109,7 @@ function verificarPerfil(id) {
   return prisma.profesional.update({
     where: { id },
     data: { verificado: true },
-    select: seleccionFicha,
+    select: { id: true, verificado: true },
   });
 }
 

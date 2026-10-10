@@ -23,10 +23,10 @@ test('la ficha propia se busca por la cuenta y devuelve solo sus campos', async 
   expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'especialidad', 'id', 'modalidad', 'ubicacionLat', 'ubicacionLng', 'verificado']);
 });
 
-test('verificar actualiza solamente el estado y devuelve los campos públicos de la ficha', async () => {
+test('verificar actualiza solamente el estado y devuelve id y verificado', async () => {
   await verificarPerfil(5);
   expect(prisma.profesional.update).toHaveBeenCalledWith({
     where: { id: 5 }, data: { verificado: true },
-    select: expect.objectContaining({ id: true, verificado: true }),
+    select: { id: true, verificado: true },
   });
 });
