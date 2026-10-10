@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect } from 'vitest';
-import Certificaciones from './Certificaciones.jsx';
+import Certificaciones, { Documentos } from './Certificaciones.jsx';
 import { simularApi, SESION } from '../../tests/utilidades.jsx';
 
 test('permite corregir y reenviar una solicitud rechazada con los documentos existentes', async () => {
@@ -83,11 +83,37 @@ test('cada documento sube con su propio tipo y conserva la selección de los otr
   fireEvent.submit(titulo.closest('form'));
   await screen.findByRole('button', { name: 'titulo: titulo.pdf' });
   expect(identidad.files[0]).toBe(archivoIdentidad);
-  expect(screen.getByRole('button', { name: 'Adjuntar documento: Título profesional' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Reemplazar documento: Título profesional' })).toBeDisabled();
   await waitFor(() => expect(screen.getByRole('button', { name: 'Adjuntar documento: Documento de identidad' })).toBeEnabled());
   fireEvent.submit(identidad.closest('form'));
   await screen.findByRole('button', { name: 'identidad: identidad.png' });
   const subidas = fetch.mock.calls.filter(([url]) => url.startsWith('/api/verificaciones/documentos'));
   expect(subidas.map(([url]) => new URL(url, 'http://localhost').searchParams.get('tipo'))).toEqual(['titulo', 'identidad']);
   expect(subidas.map(([, opciones]) => opciones.body)).toEqual([archivoTitulo, archivoIdentidad]);
+});
+
+test('muestra la última versión y deja los archivos anteriores en un historial cerrado', async () => {
+  render(<Documentos documentos={[
+    { id: 1, tipo: 'identidad', nombre: 'anterior.png', fechaCreacion: '2026-10-09T12:00:00Z' },
+    { id: 3, tipo: 'identidad', nombre: 'nuevo.png', fechaCreacion: '2026-10-10T12:00:00Z' },
+    { id: 2, tipo: 'titulo', nombre: 'titulo.pdf', fechaCreacion: '2026-10-09T12:00:00Z' },
+  ]} onError={() => {}} />);
+  expect(screen.getByRole('button', { name: 'identidad: nuevo.png' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'titulo: titulo.pdf' })).toBeInTheDocument();
+  const historial = screen.getByText('Versiones anteriores de documento de identidad (1)').closest('details');
+  expect(historial).not.toHaveAttribute('open');
+  expect(screen.getByRole('button', { name: 'identidad: anterior.png' }).closest('details')).toBe(historial);
+  await userEvent.click(screen.getByText('Versiones anteriores de documento de identidad (1)'));
+  expect(historial).toHaveAttribute('open');
+  expect(screen.getByRole('button', { name: 'identidad: anterior.png' })).toBeInTheDocument();
+});
+
+test('una solicitud rechazada conserva el documento y explica cómo reemplazarlo', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'rechazado', motivo: 'Título ilegible', rut: '', telefono: '', documentos: [{ id: 3, tipo: 'titulo', nombre: 'titulo.pdf' }], historial: [] } } });
+  render(<Certificaciones />);
+  expect(await screen.findByRole('button', { name: 'titulo: titulo.pdf' })).toBeInTheDocument();
+  expect(screen.getByText(/Conservamos tus documentos anteriores/)).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Reemplazar documento: Título profesional' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Adjuntar documento: Documento de identidad' })).toBeDisabled();
 });

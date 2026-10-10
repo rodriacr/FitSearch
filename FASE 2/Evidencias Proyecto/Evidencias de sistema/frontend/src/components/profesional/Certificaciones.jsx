@@ -13,7 +13,16 @@ function formatearRut(valor) {
   return limpio.length > 1 ? `${limpio.slice(0, -1)}-${limpio.slice(-1)}` : limpio;
 }
 export function Documentos({ documentos, onError }) {
-  return <ul>{documentos.map((d) => <li key={d.id}><button type="button" onClick={() => descargarDocumento(d).catch((e) => onError(e.message))}>{d.tipo}: {d.nombre}</button></li>)}</ul>;
+  function lista(versiones) {
+    return <ul>{versiones.map((d) => <li key={d.id}><button type="button" onClick={() => descargarDocumento(d).catch((e) => onError(e.message))}>{d.tipo}: {d.nombre}</button></li>)}</ul>;
+  }
+  return <div className="documentos-versiones">{TIPOS_DOCUMENTO.map(({ tipo, nombre }) => {
+    const versiones = documentos.filter((d) => d.tipo === tipo).sort((a, b) => (Date.parse(b.fechaCreacion) || 0) - (Date.parse(a.fechaCreacion) || 0) || b.id - a.id);
+    if (!versiones.length) return null;
+    return <div key={tipo}><p className="documentos-versiones__actual">Último documento adjuntado</p>{lista(versiones.slice(0, 1))}
+      {versiones.length > 1 && <details><summary>Versiones anteriores de {nombre.toLowerCase()} ({versiones.length - 1})</summary>{lista(versiones.slice(1))}</details>}
+    </div>;
+  })}</div>;
 }
 export default function Certificaciones() {
   const [solicitud, setSolicitud] = useState(null);
@@ -56,17 +65,18 @@ export default function Certificaciones() {
   return <section className="certificaciones"><div className="certificaciones__encabezado"><span className="certificaciones__icono"><Icono nombre="escudo" tamano={24} /></span><div><h3>Verificación profesional</h3><p>Completa tus documentos y envía tu solicitud a revisión.</p></div></div>
     {error && <div role="alert"><p>{error}</p>{Object.keys(detalles).length > 0 && <ul>{Object.entries(detalles).map(([campo, mensaje]) => <li key={campo}>{mensaje}</li>)}</ul>}</div>}{aviso && <p role="status">{aviso}</p>}
     {solicitud && <><div className="certificaciones__resumen"><p>Estado: <strong>{solicitud.estado}</strong></p>{solicitud.motivo && <p>Motivo: {solicitud.motivo}</p>}</div>
+      {solicitud.estado === 'rechazado' && <p className="certificaciones__correccion">Conservamos tus documentos anteriores. Reemplaza los que debas corregir según el motivo y vuelve a enviar la solicitud. Los archivos anteriores quedan disponibles en el historial de versiones.</p>}
       <p className="certificaciones__privacidad"><Icono nombre="candado" tamano={18} /> Los documentos son privados: solo tú y el administrador pueden descargarlos.</p>
-      <div className="certificaciones__documentos">{TIPOS_DOCUMENTO.map(({ tipo, nombre, obligatorio }) => {
+      <div className="certificaciones__documentos">{TIPOS_DOCUMENTO.map(({ tipo, nombre, obligatorio }, indice) => {
         const adjuntados = solicitud.documentos.filter((documento) => documento.tipo === tipo);
         return <section className="certificaciones__documento" key={tipo} aria-labelledby={`titulo-documento-${tipo}`}>
-          <div className="certificaciones__titulo-documento"><h4 id={`titulo-documento-${tipo}`}>{nombre}</h4><span>{obligatorio ? 'Obligatorio' : 'Opcional'}</span></div>
+          <div className="certificaciones__titulo-documento"><h4 id={`titulo-documento-${tipo}`}><span className="certificaciones__numero" aria-hidden="true">{indice + 1}</span>{nombre}</h4><span>{obligatorio ? 'Obligatorio' : 'Opcional'}</span></div>
           <p className={`certificaciones__indicador${adjuntados.length ? ' certificaciones__indicador--adjuntado' : ''}`}><Icono nombre={adjuntados.length ? 'check' : 'info'} tamano={16} />{adjuntados.length ? 'Adjuntado' : 'Sin adjuntar'}</p>
           <Documentos documentos={adjuntados} onError={setError} />
           {solicitud.estado !== 'verificado' && <form onSubmit={(e) => enviar(e, tipo)}>
             <label htmlFor={`archivo-${tipo}`}>Archivo PDF, JPG o PNG (máximo 5 MB)</label><input id={`archivo-${tipo}`} aria-label={`Seleccionar archivo: ${nombre}`} type="file" accept=".pdf,.jpg,.jpeg,.png" required disabled={guardando} onChange={(e) => setArchivos((anteriores) => ({ ...anteriores, [tipo]: e.target.files[0] }))} />
-            {archivos[tipo] && <p className="certificaciones__ayuda">Archivo seleccionado. Pulsa «Adjuntar documento» para subirlo.</p>}
-            <button disabled={guardando || !archivos[tipo]} aria-label={`Adjuntar documento: ${nombre}`}>Adjuntar documento</button>
+            {archivos[tipo] && <p className="certificaciones__ayuda">Archivo seleccionado. Pulsa «{adjuntados.length ? 'Reemplazar documento' : 'Adjuntar documento'}» para subirlo.{adjuntados.length > 0 && ' El archivo anterior se conservará en el historial de versiones.'}</p>}
+            <button disabled={guardando || !archivos[tipo]} aria-label={`${adjuntados.length ? 'Reemplazar documento' : 'Adjuntar documento'}: ${nombre}`}>{adjuntados.length ? 'Reemplazar documento' : 'Adjuntar documento'}</button>
           </form>}
         </section>;
       })}</div>
