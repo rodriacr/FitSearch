@@ -22,4 +22,4 @@ Los marcos anteriores se conservan como historial. La arquitectura futura no equ
 
 El DAS 1.17 contiene las imágenes locales actualizadas de 06, 07 y 08. Se revisó su exportación con Microsoft Word: 44 páginas, índice actualizado, sin la página vacía previa al índice y D28 en una sola fila. La ilustración 6 se dividió en tres partes con etiquetas envueltas y participantes repetidos, conservando la numeración del flujo. El resumen, la vista física y la tabla de reutilización distinguen las capacidades actuales de las previstas. Las versiones integrales de Miro y las fuentes del repositorio se conservan; la división es una adaptación de presentación para el DAS.
 
-Drive: la actualización del MMD existente devolvió 403 por permisos insuficientes. La carga de un archivo nuevo requiere confirmar la carpeta compartida de destino. No se ha sincronizado Drive.
+Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el DAS 1.17 y las instrucciones de Miro. Conservé los enlaces existentes y las versiones históricas. La sincronización documental está completada.

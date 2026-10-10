@@ -6,7 +6,7 @@ Desde main con el PR #15 fusionado (merge `20c3ea3`), se corrigieron 06, 07 y 08
 
 En Miro se crearon siete marcos del Sprint 3 (01–04, 06–08), conservando las versiones anteriores. Se distinguen las nueve tablas implementadas de las catorce del modelo completo; Docker/Nginx, Maps, IA y reservas se identifican como objetivos pendientes. La versión de cuatro pasos del ZIP describe solo el asistente del usuario; 06 conserva además la elección previa, el espacio profesional, la reanudación y la edición.
 
-Los siete marcos actuales están exportados y revisados en su contenido. Pendientes de cierre: sincronizar Drive con permisos adecuados y obtener la revisión del PR #16 por el PO. La actualización del archivo MMD en Drive devolvió 403 por permisos insuficientes. No se reemplazaron documentos de Drive.
+Los siete marcos actuales están exportados y revisados en su contenido. Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el DAS 1.17 y las instrucciones de Miro. Conservé los enlaces existentes y las versiones históricas. La sincronización documental está completada. Falta la revisión y fusión del PR #16.
 
 Se exportó el DAS 1.17 con Microsoft Word y se revisaron las 44 páginas. Se eliminó la página vacía previa al índice, se actualizó la tabla de contenidos, se evitó la división de D28 y se presentó la secuencia 06 en tres partes legibles. Se aclararon los componentes previstos en resumen, modelo de datos, vista física y reutilización. No se amplió el alcance administrativo de FS-HU-12.
 
