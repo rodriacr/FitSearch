@@ -1,7 +1,8 @@
 .certificaciones form { display: grid; gap: 16px; padding: 20px 0; border-top: 1px solid #dceaf0; }
 .certificaciones label { display: grid; gap: 8px; }
 .certificaciones input, .certificaciones select { width: 100%; min-width: 0; padding: 10px; border: 1px solid #bdd1da; border-radius: 8px; }
-.certificaciones button { padding: 10px 16px; border: 1px solid #086b90; border-radius: 8px; background: #fff; color: #086b90; cursor: pointer; overflow-wrap: anywhere; }
+.certificaciones button { padding: 10px 16px; border: 1px solid var(--color-primario); border-radius: 8px; background: var(--color-primario); color: #fff; cursor: pointer; overflow-wrap: anywhere; font-weight: 600; }
+.certificaciones button:hover:not(:disabled) { background: var(--color-primario-oscuro); }
 .certificaciones ul { padding-left: 22px; }
 .certificaciones li { margin-bottom: 10px; overflow-wrap: anywhere; }
 .certificaciones [role=alert] { color: #8a2525; }
@@ -23,11 +24,12 @@
 .certificaciones__indicador--adjuntado { color: #197054; }
 .certificaciones__documento form { border: 0; padding: 0; gap: 10px; }
 .certificaciones input[type=file] { background: #f7fafc; font: inherit; }
-.certificaciones input[type=file]::file-selector-button { border: 0; border-radius: 6px; background: #e2eff7; color: #124f78; padding: 9px 12px; margin-right: 10px; font: inherit; cursor: pointer; }
+.certificaciones input[type=file]::file-selector-button { border: 0; border-radius: 6px; background: var(--color-primario); color: #fff; padding: 9px 12px; margin-right: 10px; font: inherit; cursor: pointer; }
 .certificaciones__documento button { max-width: 100%; }
 .certificaciones button:disabled { opacity: .55; cursor: default; }
 .certificaciones button:focus-visible, .certificaciones input:focus-visible { outline: 3px solid #efa936; outline-offset: 3px; }
 .certificaciones__ayuda, #ayuda-rut-verificacion { margin: 0; color: #526a7b; font-size: 13px; }
 .certificaciones__solicitud h4 { margin: 0; }
-.certificaciones .certificaciones__enviar { background: #0e5682; color: white; display: flex; justify-content: center; align-items: center; gap: 10px; }
+.certificaciones .certificaciones__enviar { background: var(--degradado-acento); border: 0; border-radius: var(--radio-control); color: white; display: flex; justify-content: center; align-items: center; gap: 10px; padding: 15px 20px; font-weight: 700; box-shadow: 0 8px 20px rgb(244 123 32 / 22%); }
+.certificaciones .certificaciones__enviar:hover:not(:disabled) { background: var(--degradado-acento); box-shadow: 0 10px 24px rgb(244 123 32 / 32%); }
 @media (max-width: 480px) { .certificaciones__documento { padding: 14px; } .certificaciones input[type=file]::file-selector-button { display: block; margin-bottom: 8px; } }
