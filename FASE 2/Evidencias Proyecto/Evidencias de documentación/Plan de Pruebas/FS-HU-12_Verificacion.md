@@ -27,12 +27,12 @@ Verificación ejecutada el 10-10-2026 en la rama `codex/integrar-pr14-sobre-pr13
 - Backend y frontend: `npm run lint`, sin errores.
 - Frontend: `npm run build`, compilación correcta.
 
-Los tests de API usan modelos simulados y los del frontend usan respuestas simuladas. No se ha realizado en esta entrega un recorrido contra MySQL real ni una validación visual de las pantallas en navegador. Las pruebas automatizadas no equivalen a la aceptación de la historia por el PO.
+Los tests de API usan modelos simulados y los del frontend usan respuestas simuladas. Después de esas pruebas se realizó un recorrido manual guiado con Luis contra MySQL local: verificación administrativa de la ficha 2, respuesta `{ id: 2, verificado: true }`, insignias confirmadas en perfil y listado, 401 sin sesión, 403 con usuario y con profesional, 400 con ID `abc` y 404 con ID `999999` («No encontramos este profesional»). Los resultados se registraron en Trello a partir de las capturas y confirmaciones de Luis. La prueba de intentar alterar `verificado` mediante edición propia sigue cubierta por tests automatizados; no se ejecutó manualmente en ese recorrido. Las pruebas no equivalen a aceptación por el PO.
 
 ## Documentación y pendientes
 
 El DAS pasa de 1.15 a 1.16 e incorpora el flujo y la decisión D28. La planilla añade los ocho casos y recalcula los totales. El Product Backlog conserva «Planificada», Sprint 5, prioridad baja y 3 puntos; se actualiza el comentario de avance sin declarar aceptación.
 
-La revisión visual del DOCX queda pendiente porque el equipo no dispone de LibreOffice ni Word para renderizarlo. El contenido se ha actualizado; su maquetación debe revisarse antes de dar por cerrado el entregable documental.
+Luis confirmó la revisión visual del DAS; se marcó completada en Trello. El renderizador automático no estaba disponible en el equipo.
 
-Quedan pendientes la definición del PO de la pantalla administrativa y la provisión de cuentas, su implementación cuando se confirme el alcance, la validación contra la base real y la aceptación del PO. No se habilita registro público como administrador. Trello: [FS-HU-12](https://trello.com/c/4CaN8UAs).
+Quedan pendientes la definición del PO de la pantalla administrativa y la provisión de cuentas, su implementación cuando se confirme el alcance y la aceptación del PO. Se detectó un bucle de navegación al ingresar como administrador y se corrigió con una página de acceso no disponible que permite cerrar sesión; no es una pantalla administrativa de verificación. No se habilita registro público como administrador. Trello: [FS-HU-12](https://trello.com/c/4CaN8UAs).

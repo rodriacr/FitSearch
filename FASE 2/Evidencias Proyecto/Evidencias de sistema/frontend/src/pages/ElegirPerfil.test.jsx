@@ -72,19 +72,28 @@ describe('Elegir perfil', () => {
     expect(within(menu).queryByRole('link', { name: /Favoritos/ })).not.toBeInTheDocument();
   });
 
-  test('si ya lo había elegido (por ejemplo, en otra pestaña), lo lleva a su Inicio con un aviso', async () => {
-    simularApi({
+  test('si otra pestaña confirmó el perfil, descarta el token anterior y pide iniciar sesión otra vez', async () => {
+    const fetch = simularApi({
       '/api/perfil/tipo-cuenta': () => [409, { error: 'Ya elegiste cómo usar FitSearch. Si necesitas cambiarlo, el administrador de FitSearch puede hacerlo.' }],
       '/api/perfil': respuestaPerfil({ usuario: PROFESIONAL_CONFIRMADO }),
-      '/api/profesionales/mi-ficha': { ficha: null },
+      '/api/auth/login': { token: 'token-profesional-actualizado', usuario: PROFESIONAL_CONFIRMADO },
+      '/api/profesionales/mi-ficha': (_, { headers }) => headers.Authorization === 'Bearer token-profesional-actualizado'
+        ? [200, { ficha: null }] : [403, { error: 'No tienes permisos para realizar esta acción' }],
       '/api/clima': CLIMA,
     });
     renderizarApp('/elegir-perfil');
     await userEvent.click(screen.getByRole('button', { name: /Continuar como usuario/ }));
 
+    expect(await screen.findByRole('heading', { level: 1, name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByText(/Tu perfil ya fue elegido. Inicia sesión nuevamente/)).toBeInTheDocument();
+    expect(sesionGuardada()).toBeNull();
+    expect(fetch.mock.calls.some(([url]) => url === '/api/profesionales/mi-ficha')).toBe(false);
+
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), SESION.usuario.correo);
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveDePrueba123!');
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
     expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Ana!' })).toBeInTheDocument();
-    expect(screen.getByText(/Ya elegiste cómo usar FitSearch/)).toBeInTheDocument();
-    expect(sesionGuardada().usuario).toEqual(PROFESIONAL_CONFIRMADO);
+    expect(sesionGuardada()).toEqual({ token: 'token-profesional-actualizado', usuario: PROFESIONAL_CONFIRMADO });
   });
 
   test('si falla al guardar, muestra el error y permite intentarlo de nuevo', async () => {
