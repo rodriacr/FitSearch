@@ -1,22 +1,22 @@
 flowchart LR
   subgraph SPA[Frontend React y Vite]
-    P[Acceso y Elegir perfil; Inicio, Perfil y espacio profesional]
-    C[Componentes; tarjetas, asistente de usuario e iconos]
-    S[SesionContext; sesión, JWT y navegación por rol]
-    A[Cliente API; auth, perfil, profesionales, favoritos, reseñas y clima]
+    P["Acceso y Elegir perfil, Inicio, Perfil y espacio profesional"]
+    C["Componentes, tarjetas, asistente de usuario e iconos"]
+    S["SesionContext, sesión, JWT y navegación por rol"]
+    A["Cliente API, auth, perfil, profesionales, favoritos, reseñas y clima"]
     P --> C --> S --> A
   end
   subgraph API[Backend Express]
-    R[Rutas: auth, perfil, profesionales, favoritos y clima]
-    M[JWT, autorización de roles y validadores]
-    K[Controladores]
-    V[Servicios; profesional verifica y clima usa Open-Meteo]
-    D[Modelos: usuario, perfil, salud, profesional, favorito, resena y establecimiento]
+    R["Rutas: auth, perfil, profesionales, favoritos y clima"]
+    M["JWT, autorización de roles y validadores"]
+    K["Controladores"]
+    V["Servicios, profesional verifica y clima usa Open-Meteo"]
+    D["Modelos: usuario, perfil, salud, profesional, favorito, resena y establecimiento"]
     R --> M --> K --> V --> D
   end
-  A -->|HTTP JSON y Bearer JWT| R
-  D --> PR[models/prisma.js; conexión compartida]
-  PR --> DB[(MySQL; 9 tablas de dominio)]
-  V --> G[shared/reglas.json y nutrición]
-  V --> O[Open-Meteo; HTTPS, caché 30 minutos]
-  N[Verificación: PATCH profesionales/:id/verificar; solo administrador. Sin pantalla administrativa]
+  A -->|"HTTP JSON y Bearer JWT"| R
+  D --> PR["models/prisma.js, conexión compartida"]
+  PR --> DB[("MySQL, 9 tablas de dominio")]
+  V --> G["shared/reglas.json y nutrición"]
+  V --> O["Open-Meteo, HTTPS, caché 30 minutos"]
+  N["Verificación: PATCH profesionales/:id/verificar, solo administrador. Sin pantalla administrativa"]

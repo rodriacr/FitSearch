@@ -12,6 +12,10 @@ El contenido e imágenes del DAS están preparados; la revisión visual de la nu
 
 ## Diagnóstico previo a los cambios
 
+### Comprobación de exportaciones
+
+Se contrastaron cinco JPG exportados de Miro (01, 02, 03, 04 y 06). El contenido de clases, datos y secuencia coincide con las actualizaciones. Se corrigió el recorrido de las asociaciones de actores en 01 para evitar que atravesaran los casos de uso. Los marcos 07/08 mostraban errores en el editor: se simplificaron las etiquetas y se comprobaron con parseo y renderizado local de Mermaid. Ambos widgets se actualizaron en Miro; se solicita exportar nuevamente 01/07/08 para contrastar el resultado final. Las imágenes recibidas no sustituyeron todavía las del DAS.
+
 Revisión sobre el commit `53d773f` y el DAS v1.16. Los apartados siguientes conservan los hallazgos iniciales; las correcciones efectuadas se resumen arriba.
 
 ## Resultado
