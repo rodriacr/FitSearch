@@ -1,0 +1,69 @@
+.admin { min-height: 100dvh; background: #f4f9fb; color: #15374a; }
+.admin__cabecera { height: 78px; padding: 16px 30px; display: flex; align-items: center; justify-content: space-between; background: white; border-bottom: 1px solid #deebf0; }
+.admin__cabecera a { text-decoration: none; }
+.admin__cabecera .logo { display: block; width: 210px; max-width: 60vw; height: auto; }
+.admin button, .admin input, .admin select { font: inherit; }
+.admin button, .admin__boton { cursor: pointer; border: 1px solid #c8dfe8; border-radius: 8px; padding: 10px 15px; background: white; color: #164c60; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.admin button:disabled { opacity: .55; cursor: default; }
+.admin button:focus-visible, .admin a:focus-visible, .admin input:focus-visible, .admin select:focus-visible { outline: 3px solid #eaa128; outline-offset: 3px; }
+.admin__cabecera button { display: none; }
+.admin__menu { position: fixed; top: 78px; bottom: 0; width: 240px; background: #06364b; color: white; padding: 24px 16px; display: flex; flex-direction: column; z-index: 30; overflow-y: auto; }
+.admin__identidad { display: grid; gap: 6px; margin: 0 0 28px; overflow-wrap: anywhere; }
+.admin__identidad small { color: #c0deea; }
+.admin__menu nav { display: grid; gap: 8px; }
+.admin__menu nav a { color: #e7f7fc; padding: 14px 12px; display: flex; align-items: center; gap: 12px; border-radius: 8px; text-decoration: none; }
+.admin__menu nav a.active { background: #0b6b86; color: white; }
+.admin .admin__salir { margin-top: auto; background: transparent; border-color: #558193; color: white; }
+.admin__contenido { margin-left: 240px; padding: 32px; max-width: 1500px; }
+.admin h1 { font-size: 28px; margin: 0 0 8px; }
+.admin h2 { font-size: 19px; }
+.admin__periodo { display: grid; gap: 8px; max-width: 230px; margin: 24px 0; }
+.admin select, .admin input { border: 1px solid #bfd5df; border-radius: 8px; background: white; padding: 11px; color: #15374a; min-width: 0; }
+.admin__nota { font-size: 14px; color: #476779; }
+.admin__metricas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin: 22px 0; }
+.admin__tarjeta { background: white; border: 1px solid #dceaf0; border-radius: 12px; padding: 22px; margin: 18px 0; box-shadow: 0 4px 14px #123d4e05; }
+.admin__metricas .admin__tarjeta { margin: 0; display: grid; gap: 12px; }
+.admin__metricas strong { font-size: 30px; }
+.admin .admin__boton, .admin button[aria-pressed=true] { background: #08627b; color: white; border-color: #08627b; }
+.admin__filtros { display: flex; gap: 8px; flex-wrap: wrap; margin: 24px 0; }
+.admin__busqueda { display: grid; gap: 8px; }
+.admin__busqueda > div { display: flex; gap: 8px; }
+.admin__busqueda input { flex: 1; }
+.admin__lista { padding: 0; list-style: none; }
+.admin__fila { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+.admin__fila h2, .admin__fila p { margin: 0 0 6px; }
+.admin__fila > div { flex: 1; min-width: 140px; overflow-wrap: anywhere; }
+.admin__avatar { display: grid; place-items: center; width: 46px; height: 46px; border-radius: 50%; background: #e3f4f8; font-size: 23px; }
+.admin__estado { display: inline-flex; align-items: center; gap: 6px; background: #fff3d8; color: #735517; border-radius: 20px; padding: 5px 10px; font-size: 14px; }
+.admin__estado--verificado { background: #dcf5ec; color: #176347; }
+.admin__paginacion { display: flex; align-items: center; justify-content: center; gap: 15px; }
+.admin__tabla { overflow-x: auto; }
+.admin__grafico svg { display: block; width: 100%; max-height: 310px; font-size: 13px; fill: #476779; }
+.admin__grafico > p { display: flex; flex-wrap: wrap; gap: 18px; font-size: 14px; }
+.admin__leyenda::before { content: ''; display: inline-block; width: 10px; height: 10px; background: #086b90; border-radius: 50%; margin-right: 7px; }
+.admin__leyenda--profesionales::before { background: #18a997; }
+.admin table { border-collapse: collapse; width: 100%; text-align: left; }
+.admin th, .admin td { padding: 12px; border-bottom: 1px solid #dfebf0; }
+.admin caption { text-align: left; padding-bottom: 12px; }
+.admin__volver { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 20px; color: #08627b; }
+.admin__datos { display: grid; gap: 20px; }
+.admin__datos dt { color: #536b77; margin-bottom: 4px; }
+.admin__datos dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
+.admin__acciones { border-top: 1px solid #dceaf0; margin-top: 28px; padding-top: 22px; }
+.admin__acciones button { margin: 0 8px 8px 0; }
+.admin__error, .admin__exito { padding: 15px; border-radius: 8px; }
+.admin__error { color: #8a2525; background: #ffeded; }
+.admin__exito { color: #14543c; background: #ddf5ea; }
+.admin__solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media (max-width: 800px) {
+  .admin__cabecera { padding: 14px 20px; }
+  .admin__cabecera button { display: inline-flex; }
+  .admin__contenido { margin-left: 0; padding: 24px 18px; }
+  .admin__menu { display: none; }
+  .admin__menu--abierto { display: flex; width: min(290px, 85vw); }
+  .admin .admin__fondo { position: fixed; inset: 78px 0 0; background: #001f3280; border: 0; border-radius: 0; z-index: 20; }
+  .admin__metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .admin__tarjeta { padding: 16px; }
+  .admin__filtros button { padding: 9px 10px; }
+  .admin__fila { gap: 12px; }
+}
