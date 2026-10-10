@@ -74,6 +74,12 @@ Luis indicó aproximadamente **7 horas** dedicadas al perfil profesional del PR 
 
 ## Fuentes y límites
 
+### Continuación del 10-10-2026 tras fusionar el PR #15
+
+Rodrigo aprobó el código y fusionó el PR #15 en main (`20c3ea3`). Los pendientes menores de su revisión se aplican en `codex/actualizar-diagramas-y-revision`: constante del aviso administrativo, retorno de usuario/profesional a su Inicio, retirada del mock sin uso, D25 y flujo 8, conteos de pruebas y limpieza documental. Resultado: 166 pruebas backend y 144 frontend, lint correcto y build frontend correcto.
+
+Se corrigieron 06/07/08 y sus imágenes del DAS 1.17; Miro tiene siete marcos actuales del Sprint 3. Quedan pendientes las exportaciones y la revisión visual de la nueva paginación. Drive rechazó la escritura del archivo existente por permisos; la carga de uno nuevo requiere confirmar la carpeta de destino. Se mantienen pendientes las asignaciones/estimaciones del equipo y la aceptación final de FS-HU-12, sin ampliar su alcance administrativo.
+
 - [Sprint Backlog 2](../Sprint%202/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx), hoja «Sprint Backlog», filas 6 a 31.
 - [Sprint Backlog 3](PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx), hoja «Sprint Backlog», filas 6 a 21.
 - Product Backlog del repositorio, hoja «Historias de Usuario», filas 8, 10, 17 y 18.

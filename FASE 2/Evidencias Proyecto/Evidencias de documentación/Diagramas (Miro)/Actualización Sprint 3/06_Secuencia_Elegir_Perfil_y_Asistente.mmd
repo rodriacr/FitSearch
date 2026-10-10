@@ -11,7 +11,12 @@ sequenceDiagram
   B->>D: UPDATE usuarios SET rol_id, rol_confirmado = true WHERE id = ? AND rol_confirmado = false
   alt la cuenta ya había elegido su perfil
     B-->>F: 409 "Ya elegiste cómo usar FitSearch"
-    F-->>P: Va a su Inicio con el aviso (cambiarlo lo hace el administrador)
+    F->>F: Descarta el JWT y la sesión anterior
+    F-->>P: /iniciar-sesion con aviso de volver a ingresar
+    P->>F: Inicia sesión nuevamente
+    F->>B: POST /api/auth/login
+    B-->>F: JWT nuevo y usuario con el rol confirmado
+    F-->>P: Inicio correspondiente al rol confirmado
   else eligió "Profesional"
     B-->>F: Token nuevo con el rol profesional (mismo vencimiento)
     F-->>P: /profesional/inicio con "¡Listo!": sin datos personales, objetivos ni salud
@@ -19,6 +24,7 @@ sequenceDiagram
     B-->>F: Token nuevo con el rol usuario (mismo vencimiento)
     F->>B: GET /api/perfil
     B-->>F: perfil, pasos pendientes y kcal/día
+    Note over P,F: Reanuda desde el primer paso pendiente
     P->>F: Paso 1: peso, altura, edad, sexo y actividad física
     F->>B: PUT /api/perfil (solo rol usuario)
     B->>D: Guardar datos básicos
@@ -31,3 +37,11 @@ sequenceDiagram
     B->>D: Guardar en informacion_salud
     F-->>P: Paso 4: "¡Información guardada!" + kcal/día, y luego el resumen con "Editar" por sección
   end
+  opt usuario con perfil completo edita una sección
+    P->>F: Editar datos, objetivos o salud y Guardar cambios
+    F->>B: PUT del paso correspondiente (JWT de usuario)
+    B->>D: Actualizar la sección
+    B-->>F: Perfil actualizado
+    F-->>P: Vuelve al resumen
+  end
+  Note over F,B: Sin sesión: 401. Rol no autorizado: 403.
