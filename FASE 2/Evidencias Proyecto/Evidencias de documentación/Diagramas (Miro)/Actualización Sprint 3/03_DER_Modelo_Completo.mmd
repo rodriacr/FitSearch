@@ -1,6 +1,6 @@
 erDiagram
   roles ||--o{ usuarios : "rol_id"
-  usuarios ||--|| perfiles_usuario : "usuario_id"
+  usuarios ||--o| perfiles_usuario : "usuario_id"
   usuarios ||--o| informacion_salud : "usuario_id"
   usuarios ||--o{ tokens_recuperacion : "usuario_id"
   usuarios ||--o| profesionales : "usuario_id"
@@ -26,6 +26,8 @@ erDiagram
     VARCHAR255 password_hash "NULL si usa Google"
     VARCHAR255 google_id UK "NULL"
     INT rol_id FK
+    BOOLEAN activo "DEFAULT true"
+    INT version_sesion "DEFAULT 0"
     BOOLEAN rol_confirmado "Sprint 2"
     DATETIME fecha_registro
   }
@@ -65,6 +67,12 @@ erDiagram
     VARCHAR100 especialidad
     TEXT descripcion
     BOOLEAN verificado
+    VARCHAR20 estado_verificacion "pendiente, verificado, rechazado"
+    VARCHAR500 motivo_rechazo "NULL"
+    JSON historial_verificacion "NULL"
+    INT revision_verificacion "DEFAULT 0"
+    VARCHAR12 rut "NULL"
+    VARCHAR20 telefono "NULL"
     DECIMAL ubicacion_lat
     DECIMAL ubicacion_lng
     VARCHAR80 comuna "Sprint 3, NULL"
@@ -129,4 +137,15 @@ erDiagram
     VARCHAR500 comentario "NULL"
     DATETIME fecha_creacion
     DATETIME fecha_actualizacion
+  }
+  profesionales ||--o{ documentos_profesionales : "profesional_id (CASCADE)"
+  documentos_profesionales {
+    INT id PK
+    INT profesional_id FK
+    VARCHAR30 tipo
+    VARCHAR150 nombre
+    VARCHAR50 clave UK
+    VARCHAR40 mime
+    INT tamano
+    DATETIME fecha_creacion
   }

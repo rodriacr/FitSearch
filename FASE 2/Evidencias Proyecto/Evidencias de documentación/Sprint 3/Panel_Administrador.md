@@ -69,7 +69,8 @@ flowchart TD
   A -->|Aprobar| V["Verificado: insignia en perfil y listado"]
   A -->|Rechazar con motivo| R["Rechazado: motivo visible al profesional"]
   R --> D
-  V -->|Revocar con motivo| R
+  V -->|Revocar con motivo| N["Pendiente: retira insignia y registra motivo"]
+  N --> D
   V -->|Cambiar especialidad| S
 ```
 
@@ -81,4 +82,4 @@ flowchart TD
 - MySQL local: 17 comprobaciones del flujo con cuentas y archivos temporales, eliminados al terminar. Cubrí documentos, permisos de descarga, rechazo/reenvío/aprobación, revisión obsoleta, desactivación, reactivación y protección del administrador.
 - Edge: cinco vistas en escritorio de 1440 px y móvil de 390 px, menú y aprobación con API simulada; sin errores de JavaScript ni desbordamiento horizontal. Estas capturas no son evidencia de datos de producción.
 
-El panel se entrega en un PR separado del #16 y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.17 y las siete exportaciones ya sincronizadas describen la base anterior a este panel; esta nota documenta el cambio administrativo, su contrato y modelo. La incorporación de esta ampliación a los diagramas consolidados y al DAS será una actualización posterior identificada, sin alterar la evidencia histórica del PR #16 ni declarar la HU aceptada. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.
+El panel está en el PR #17, apilado sobre el #16, y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.18 incorpora esta ampliación y los diagramas 01–04, 07, 08 y nuevo 11; los marcos anteriores y la documentación del DAS 1.17 se conservan como historial. Los enlaces vigentes están en Exportaciones_Miro.md. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.

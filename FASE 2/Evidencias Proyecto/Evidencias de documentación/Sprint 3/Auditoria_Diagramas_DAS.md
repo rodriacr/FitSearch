@@ -125,3 +125,25 @@ Comparé `Diagramas (Miro).zip` y `diagramas.zip`, aportados por Luis, con los a
 | Vista_Procesos_Secuencia_Comida.jpg | Flujo previsto de alimentación, sin evidencia de implementación actual. Mantener como diseño futuro; ajustar al desarrollar esa funcionalidad. |
 
 Las carpetas de Sprint 2 y Sprint 3 conservan entregas históricas. La versión vigente se elige por diagrama: 01–04, 06 y 08 del Sprint 3; 05, 09 y 10 conservan la versión del Sprint 2; 07 necesita una actualización. Los cuatro PNG de la raíz son versiones iniciales, no la colección vigente. El inventario debe explicitar esta selección y el estado de cada figura para evitar confundir fecha, ubicación o existencia de una exportación con una funcionalidad terminada.
+
+
+## Versión vigente: DAS 1.18 · panel administrativo · 10-10-2026
+
+La ampliación del PR #17 incorpora Dashboard, Profesionales, Verificaciones, Usuarios y Reportes. Configuración y Contenido quedan fuera del alcance autorizado. Revisión/fusión del PR y aceptación de FS-HU-12 siguen pendientes del PO; la planificación del backlog conserva Sprint 5.
+
+Se actualizaron 01–04, 07 y 08 y se añadió 11. El modelo completo comprende 15 tablas: 10 implementadas en esta rama y 5 previstas. Se documentan cuenta activa y versión de sesión, documentos privados y metadatos, RUT, historial y revisión concurrente, rechazo/reenvío/revocación y reportes con datos existentes. El flujo 06 se conserva sin cambios.
+
+Los nuevos marcos se crearon en Miro conservando los anteriores como historial. Los PNG/SVG locales se renderizaron desde las fuentes actualizadas; no son exportaciones nativas de los nuevos marcos de Miro. Se contrastaron las entidades y conexiones del tablero mediante su SVG. Exportar los nuevos marcos desde Miro es opcional para conservar además su disposición visual nativa.
+
+- [DAS 1.18 · 01 Casos de uso](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777496)
+- [DAS 1.18 · 02 Clases del dominio](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777497)
+- [DAS 1.18 · 03 DER completo: 15 tablas](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777498)
+- [DAS 1.18 · 04 DER implementado: 10 tablas](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777499)
+- [DAS 1.18 · 07 Vista de desarrollo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777500)
+- [DAS 1.18 · 08 Vista física](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777501)
+- [DAS 1.18 · 11 Verificación administrativa](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777502)
+- [06 Elección de perfil y asistente: se conserva](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989749)
+
+El DAS incluye vistas resumidas de asociaciones de clases y relaciones de tablas para facilitar la lectura en Word. Los campos completos permanecen en el diccionario y en las fuentes integrales 02/04. Las adaptaciones de presentación se conservan en `Presentacion_DAS/`. Las fuentes y las imágenes actualizadas se sincronizan en la carpeta existente de Drive; se conservan los IDs de los archivos que ya existían.
+
+El análisis anterior registra la base de los PR #15/#16. La versión vigente para la rama del panel es DAS 1.18; las referencias anteriores a nueve/catorce tablas y administración parcial son históricas.

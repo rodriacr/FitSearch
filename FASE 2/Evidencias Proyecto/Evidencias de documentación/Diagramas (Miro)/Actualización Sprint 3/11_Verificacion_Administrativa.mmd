@@ -1,0 +1,19 @@
+flowchart TD
+  P(["Profesional<br/>Perfil / Certificaciones"]) --> C["RUT válido<br/>Identidad y título<br/>Antecedentes opcionales"]
+  C --> U["Carga autenticada<br/>PDF, PNG o JPEG; firma real<br/>5 MB; máximo 20 documentos"]
+  U --> S["Archivos privados y metadatos<br/>Conserva versiones"]
+  S --> E["Enviar o reenviar solicitud<br/>Estado pendiente"]
+  E --> L["Administrador<br/>Pendientes y detalle"]
+  L --> D["Revisar información,<br/>documentos e historial"]
+  D --> R{"¿Cuenta activa<br/>y revisión vigente?"}
+  R -->|"No"| X["409; actualizar detalle<br/>Sin sobrescribir decisiones"]
+  R -->|"Sí"| V{"Decisión administrativa"}
+  V -->|"Aprobar"| A["verificado=true<br/>Estado verificado<br/>Insignia en perfil y listado"]
+  V -->|"Rechazar con motivo"| H["verificado=false<br/>Estado rechazado<br/>Motivo visible al profesional"]
+  H --> C
+  A --> J{"¿Revocación con motivo<br/>o cambio de especialidad?"}
+  J -->|"Sí"| N["Retirar insignia<br/>Estado pendiente<br/>Nueva revisión"]
+  N --> C
+  A --> T["Transacción<br/>Historial, fecha y administrador<br/>Revisión incrementada"]
+  H --> T
+  N --> T
