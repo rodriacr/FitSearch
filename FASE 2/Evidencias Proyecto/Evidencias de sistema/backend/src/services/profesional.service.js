@@ -87,6 +87,7 @@ const formatearMiFicha = (fila) => fila && {
   descripcion: fila.descripcion ?? '',
   comuna: fila.comuna ?? '',
   modalidad: fila.modalidad,
+  verificado: Boolean(Number(fila.verificado)),
   ubicacionLat: Number(fila.ubicacionLat),
   ubicacionLng: Number(fila.ubicacionLng),
 };
@@ -94,6 +95,13 @@ const formatearMiFicha = (fila) => fila && {
 async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
 async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
 
+// FS-HU-12: Administrador verifica un perfil profesional
+async function verificarPerfil(id) {
+  if (!await modelo.existe(id)) throw new ErrorHttp(404, 'No encontramos este profesional');
+  const ficha = await modelo.verificarPerfil(id);
+  return { id: ficha.id, verificado: ficha.verificado };
+}
+
 module.exports = {
-  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha,
+  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil,
 };

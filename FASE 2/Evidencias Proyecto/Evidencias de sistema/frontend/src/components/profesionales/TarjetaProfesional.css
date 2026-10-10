@@ -24,6 +24,7 @@
 .tarjeta-profesional__nombre a { color: var(--color-primario-oscuro); text-decoration: none; }
 .tarjeta-profesional__nombre a::after { content: ''; position: absolute; inset: 0; z-index: 1; }
 .tarjeta-profesional__nombre a:focus-visible { outline: none; }
+.tarjeta-profesional__verificado { display: inline-flex; align-items: center; gap: 0.3rem; font-size: 0.75rem; font-weight: 600; color: var(--color-exito); }
 .tarjeta-profesional__lugar { display: flex; align-items: center; gap: 0.3rem; margin: 0; font-size: 0.8rem; color: var(--color-texto-secundario); }
 .tarjeta-profesional__lugar .icono { color: var(--color-primario); }
 .tarjeta-profesional__modalidad { padding: 0.12rem 0.55rem; border-radius: 999px; font-size: 0.72rem; font-weight: 500; color: var(--color-exito); background: var(--color-exito-fondo); }

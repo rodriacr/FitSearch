@@ -8,7 +8,7 @@ import './TarjetaProfesional.css';
 // Ficha resumida de un profesional. "destacado" es la versión compacta del Inicio; "completa", la del buscador.
 // No hay fotos de perfil todavía (llegarán con FS-HU-04): se muestran las iniciales.
 export default function TarjetaProfesional({ profesional, variante = 'completa', nivelTitulo = 3, desde, onCambioFavorito }) {
-  const { id, nombre, especialidad, descripcion, comuna, modalidad, establecimiento, calificacion, distanciaKm } = profesional;
+  const { id, nombre, especialidad, descripcion, comuna, modalidad, establecimiento, calificacion, distanciaKm, verificado } = profesional;
   const Titulo = `h${nivelTitulo}`;
   const lugar = [comuna || establecimiento?.direccion || 'Ubicación por confirmar', distanciaKm != null && formatearKm(distanciaKm)]
     .filter(Boolean).join(' · ');
@@ -24,6 +24,9 @@ export default function TarjetaProfesional({ profesional, variante = 'completa',
         <Titulo className="tarjeta-profesional__nombre">
           <Link to={`/profesionales/${id}`} state={desde ? { desde } : undefined}>{nombre}</Link>
         </Titulo>
+        {verificado && (
+          <span className="tarjeta-profesional__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>
+        )}
         <Calificacion promedio={calificacion.promedio} total={calificacion.total} />
         <p className="tarjeta-profesional__lugar"><Icono nombre="pin" tamano={15} /> {lugar}</p>
         {variante === 'completa' && (

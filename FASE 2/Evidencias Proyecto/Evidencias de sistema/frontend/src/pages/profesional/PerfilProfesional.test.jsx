@@ -88,6 +88,13 @@ describe('Sin ficha', () => {
 });
 
 describe('Con ficha', () => {
+  test('muestra la verificación en el espacio profesional creado por el PR #13', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, verificado: true } });
+    renderizarApp('/profesional/perfil');
+    expect(await screen.findByText('Verificado')).toBeInTheDocument();
+    expect(screen.queryByText('Sin verificar')).not.toBeInTheDocument();
+  });
+
   test('muestra su ficha pública: especialidad, calificación, verificación, comuna y "Sobre mí"', async () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
@@ -110,6 +117,28 @@ describe('Con ficha', () => {
     const panel = screen.getByRole('tabpanel');
     expect(within(panel).getByText('Próximamente')).toBeInTheDocument();
     expect(within(panel).getByText(/desde la Agenda/)).toBeInTheDocument();
+  });
+
+  test('permite recorrer las pestañas con el teclado y mantiene foco y panel coordinados', async () => {
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    const informacion = await screen.findByRole('tab', { name: 'Información' });
+    informacion.focus();
+
+    await userEvent.keyboard('{ArrowRight}');
+    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveFocus();
+    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Horarios');
+
+    await userEvent.keyboard('{End}');
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
+    await userEvent.keyboard('{ArrowRight}');
+    expect(informacion).toHaveFocus();
+    await userEvent.keyboard('{ArrowLeft}');
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
+    await userEvent.keyboard('{Home}');
+    expect(informacion).toHaveFocus();
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Información');
   });
 
   test('"Editar perfil" abre el formulario con sus datos y "Cancelar" vuelve sin guardar', async () => {

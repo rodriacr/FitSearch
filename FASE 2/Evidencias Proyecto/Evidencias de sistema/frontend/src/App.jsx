@@ -4,6 +4,7 @@ import { SECCIONES, SECCIONES_PROFESIONAL, SECCIONES_PROXIMAMENTE, SECCIONES_PRO
 import RutaProtegida from './components/RutaProtegida.jsx';
 import { useSesion } from './context/SesionContext.jsx';
 import ElegirPerfil from './pages/ElegirPerfil.jsx';
+import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
 import Favoritos from './pages/Favoritos.jsx';
 import FichaProfesional from './pages/FichaProfesional.jsx';
 import Inicio from './pages/Inicio.jsx';
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="/recuperar-contrasena" element={soloInvitado(<RecuperarContrasena />)} />
       <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
       <Route element={<RutaProtegida />}>
+        <Route path="/acceso-no-disponible" element={<AccesoNoDisponible />} />
         <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
         {/* Espacio del usuario */}
         <Route element={<RutaProtegida rol="usuario" />}>

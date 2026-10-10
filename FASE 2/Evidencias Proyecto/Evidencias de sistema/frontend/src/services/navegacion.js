@@ -9,6 +9,7 @@ export const esRutaProfesional = (ruta) => ruta === '/profesional' || ruta.start
 // (las sesiones guardadas antes de este cambio no lo traen).
 export function inicioDe(usuario) {
   if (usuario?.rolConfirmado === false) return ELEGIR_PERFIL;
+  if (usuario?.rol && !INICIO_POR_ROL[usuario.rol]) return '/acceso-no-disponible';
   return INICIO_POR_ROL[usuario?.rol] ?? INICIO_POR_ROL.usuario;
 }
 

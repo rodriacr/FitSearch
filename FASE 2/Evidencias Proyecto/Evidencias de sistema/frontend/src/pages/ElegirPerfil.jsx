@@ -7,7 +7,7 @@ import Icono from '../components/Icono.jsx';
 import { Logo } from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
 import { inicioDe } from '../services/navegacion.js';
-import { actualizarTipoCuenta, obtenerPerfil } from '../services/perfil.service.js';
+import { actualizarTipoCuenta } from '../services/perfil.service.js';
 import './ElegirPerfil.css';
 
 const PERFILES = [
@@ -79,16 +79,11 @@ export default function ElegirPerfil() {
       navegar(rol === 'profesional' ? inicioDe(usuario) : '/perfil', { replace: true });
     } catch (error) {
       if (error.estado === 409) {
-        // Ya lo había elegido (por ejemplo, en otra pestaña): se actualiza la sesión y se va a su Inicio.
-        try {
-          const { usuario } = await obtenerPerfil();
-          mostrarAviso({ tipo: 'info', texto: error.message });
-          actualizarSesion({ token: sesion.token, usuario });
-          navegar(inicioDe(usuario), { replace: true });
-          return;
-        } catch {
-          // Si tampoco se puede leer el perfil, se muestra el mensaje del 409.
-        }
+        // Otra pestaña pudo confirmar un rol distinto al del JWT guardado.
+        await cerrarSesion();
+        mostrarAviso({ tipo: 'info', texto: 'Tu perfil ya fue elegido. Inicia sesión nuevamente para continuar.' });
+        navegar('/iniciar-sesion', { replace: true });
+        return;
       }
       setMensaje(error.message);
       setEnviando('');
