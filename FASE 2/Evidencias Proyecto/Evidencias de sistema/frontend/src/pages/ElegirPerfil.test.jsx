@@ -75,7 +75,6 @@ describe('Elegir perfil', () => {
   test('si otra pestaña confirmó el perfil, descarta el token anterior y pide iniciar sesión otra vez', async () => {
     const fetch = simularApi({
       '/api/perfil/tipo-cuenta': () => [409, { error: 'Ya elegiste cómo usar FitSearch. Si necesitas cambiarlo, el administrador de FitSearch puede hacerlo.' }],
-      '/api/perfil': respuestaPerfil({ usuario: PROFESIONAL_CONFIRMADO }),
       '/api/auth/login': { token: 'token-profesional-actualizado', usuario: PROFESIONAL_CONFIRMADO },
       '/api/profesionales/mi-ficha': (_, { headers }) => headers.Authorization === 'Bearer token-profesional-actualizado'
         ? [200, { ficha: null }] : [403, { error: 'No tienes permisos para realizar esta acción' }],
