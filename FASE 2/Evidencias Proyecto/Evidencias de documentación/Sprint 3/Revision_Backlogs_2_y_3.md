@@ -49,6 +49,29 @@ Validación: la prueba de regresión del conflicto entre pestañas falló antes 
 
 Quedan pendientes la revisión completa del PR #13, las horas reales y estimaciones del equipo, la asignación de las tres funcionalidades del Sprint 3 y las aceptaciones del PO. Las copias de Drive no se actualizaron.
 
+## Continuación de la revisión del PR #13
+
+Se amplió la revisión de código al backend de clima y autenticación, las restricciones de buscador/favoritos/asistente, los menús de ambos roles, el formulario de ficha, su vista previa, los cambios del asistente del usuario, los estilos y las pruebas modificadas. Se contrastó el merge `9c440a9` con su primer padre y con las correcciones de la rama del PR #15. GitHub todavía mostraba el PR #15 abierto, con `1e5e404` como último commit, antes de esta continuación. Trello no contenía nuevas asignaciones ni aceptación del PO en las dos tarjetas de seguimiento consultadas.
+
+### Hallazgo corregido: pestañas inaccesibles con teclado
+
+En `pages/profesional/PerfilProfesional.jsx`, las pestañas inactivas tenían `tabIndex=-1`, pero no había manejo de flechas. Solo «Información» era alcanzable con Tab; las demás exigían usar el ratón. Se añadió navegación con flechas izquierda/derecha, Inicio y Fin, coordinando el foco, `aria-selected` y el panel visible.
+
+La nueva prueba falló antes del cambio (el foco seguía en Información al pulsar flecha derecha) y pasó después. También verifica el recorrido circular y los extremos. Validación final: **139 pruebas en 19 archivos**, lint y build del frontend correctos. El backend no se modificó en esta continuación; su última validación registrada sigue siendo 166 pruebas.
+
+### Resultados y límites de esta revisión
+
+- La confirmación del rol sigue siendo condicional en una única escritura y no permite elegir administrador. Al elegir el perfil se emite un JWT con el rol actualizado y se conserva su vencimiento.
+- El clima usa un destino fijo, ubicación redondeada, tiempo de espera y caché limitada. Si falla, la interfaz conserva el Inicio sin la tarjeta; las pruebas simulan el proveedor y no verifican un servicio externo real.
+- La ficha propia se consulta por el usuario autenticado; el formulario envía únicamente los campos editables. La vista previa reutiliza la ficha pública y oculta favoritos. Las funciones aún no implementadas se presentan como Próximamente.
+- Las pruebas retiradas del antiguo selector/ficha en `Perfil.test.jsx` se corresponden con el traslado del flujo a ElegirPerfil y PerfilProfesional; se revisó su cobertura en los archivos nuevos.
+- **Documentación pendiente de sincronización:** el diagrama 06 (MMD y exportaciones PNG/SVG) todavía dice que, ante 409, se va al Inicio. La corrección del PR #15 exige cerrar la sesión anterior y volver a ingresar. Deben actualizarse las versiones del diagrama y contrastar su ilustración en el DAS/Miro antes de dar por cerrada toda la revisión documental. No se editaron ni publicaron estos diagramas en esta continuación.
+- La revisión de estilos fue de código; no sustituye una nueva comprobación visual de todos los tamaños de pantalla. Las capturas históricas del PR #13 no prueban las correcciones nuevas.
+
+El avance técnico queda registrado con tres fallos corregidos (administrador, conflicto entre pestañas y navegación por teclado). **No se declara aceptada la historia ni cerrado DoD-04** mientras se concilia la documentación y el equipo revisa las correcciones del PR #15. Siguen pendientes las copias de Drive, las asignaciones/estimaciones del equipo y la aceptación del PO.
+
+Luis indicó aproximadamente **7 horas** dedicadas al perfil profesional del PR #12. Se registró como total retrospectivo aproximado en Trello; no se distribuyó por fechas o tareas sin ese desglose, ni se reemplazaron las 2 horas ya registradas para la revisión de PR #9/#10.
+
 ## Fuentes y límites
 
 - [Sprint Backlog 2](../Sprint%202/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx), hoja «Sprint Backlog», filas 6 a 31.

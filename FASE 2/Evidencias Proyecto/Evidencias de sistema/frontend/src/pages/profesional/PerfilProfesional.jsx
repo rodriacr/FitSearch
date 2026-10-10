@@ -17,12 +17,27 @@ const PESTANAS = [
 ];
 
 function Pestanas({ activa, onCambiar }) {
+  const alTeclear = (evento, indice) => {
+    const destinos = {
+      ArrowRight: (indice + 1) % PESTANAS.length,
+      ArrowLeft: (indice + PESTANAS.length - 1) % PESTANAS.length,
+      Home: 0,
+      End: PESTANAS.length - 1,
+    };
+    const destino = destinos[evento.key];
+    if (destino === undefined) return;
+    evento.preventDefault();
+    onCambiar(PESTANAS[destino].clave);
+    evento.currentTarget.parentElement.querySelectorAll('[role="tab"]')[destino].focus();
+  };
+
   return (
     <div className="perfil-prof__pestanas" role="tablist" aria-label="Secciones de tu perfil profesional">
-      {PESTANAS.map(({ clave, nombre }) => (
+      {PESTANAS.map(({ clave, nombre }, indice) => (
         <button key={clave} type="button" role="tab" id={`pestana-${clave}`} aria-controls={`panel-${clave}`}
           aria-selected={activa === clave} tabIndex={activa === clave ? 0 : -1}
-          className={`perfil-prof__pestana${activa === clave ? ' perfil-prof__pestana--activa' : ''}`} onClick={() => onCambiar(clave)}>
+          className={`perfil-prof__pestana${activa === clave ? ' perfil-prof__pestana--activa' : ''}`}
+          onClick={() => onCambiar(clave)} onKeyDown={(evento) => alTeclear(evento, indice)}>
           {nombre}
         </button>
       ))}
