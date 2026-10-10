@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test } from 'vitest';
 import { renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
 
-const ficha = { id: 2, nombre: 'Ana Demo', correo: 'ana@example.test', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'online', verificado: false };
+const ficha = { id: 2, revision: 1, activo: true, documentos: [], historial: [], nombre: 'Ana Demo', correo: 'ana@example.test', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'online', verificado: false };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, rol: 'administrador' } })));
 
 test('muestra pendientes y abre la revisión de una ficha real', async () => {
@@ -19,18 +19,18 @@ test('solicita confirmación antes de verificar y refleja la respuesta persistid
   let verificado = false;
   const fetch = simularApi({
     '/api/administrador/profesionales/2': () => [200, { profesional: { ...ficha, verificado } }],
-    '/api/profesionales/2/verificar': () => { verificado = true; return [200, { id: 2, verificado: true }]; },
+    '/api/administrador/profesionales/2/decision': () => { verificado = true; return [200, { id: 2, verificado: true }]; },
   });
   renderizarApp('/admin/verificaciones/2');
   await userEvent.click(await screen.findByRole('button', { name: 'Aprobar verificación' }));
-  expect(fetch.mock.calls.some(([, opciones]) => opciones.method === 'PATCH')).toBe(false);
+  expect(fetch.mock.calls.some(([, opciones]) => opciones.method === 'POST')).toBe(false);
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar verificación' }));
   expect(await screen.findByText('El perfil fue verificado correctamente.')).toBeInTheDocument();
   expect(await screen.findByText('Verificado')).toBeInTheDocument();
-  expect(fetch.mock.calls.find(([, opciones]) => opciones.method === 'PATCH')[0]).toBe('/api/profesionales/2/verificar');
+  expect(fetch.mock.calls.find(([, opciones]) => opciones.method === 'POST')[0]).toBe('/api/administrador/profesionales/2/decision');
 });
 test('conserva la posibilidad de revisar cuando la aprobación falla', async () => {
-  simularApi({ '/api/administrador/profesionales/2': { profesional: ficha }, '/api/profesionales/2/verificar': () => [500, { error: 'No fue posible verificar' }] });
+  simularApi({ '/api/administrador/profesionales/2': { profesional: ficha }, '/api/administrador/profesionales/2/decision': () => [500, { error: 'No fue posible verificar' }] });
   renderizarApp('/admin/verificaciones/2');
   await userEvent.click(await screen.findByRole('button', { name: 'Aprobar verificación' }));
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar verificación' }));
@@ -52,4 +52,25 @@ test('los reportes muestran datos del servidor y cambian el período', async () 
   expect(await screen.findByRole('table')).toBeInTheDocument();
   await userEvent.selectOptions(screen.getByLabelText('Período'), '7');
   expect(fetch.mock.calls.some(([url]) => url.endsWith('dias=7'))).toBe(true);
+});
+
+test('el rechazo exige motivo y envía la revisión de la ficha abierta', async () => {
+  const fetch = simularApi({ '/api/administrador/profesionales/2': { profesional: ficha }, '/api/administrador/profesionales/2/decision': [200, { id: 2, verificado: false }] });
+  renderizarApp('/admin/verificaciones/2');
+  await userEvent.click(await screen.findByRole('button', { name: 'Rechazar solicitud' }));
+  expect(screen.getByRole('button', { name: 'Confirmar decisión' })).toBeDisabled();
+  await userEvent.type(screen.getByLabelText('Motivo obligatorio'), 'El título no es legible');
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar decisión' }));
+  const [, opciones] = fetch.mock.calls.find(([, o]) => o.method === 'POST');
+  expect(JSON.parse(opciones.body)).toEqual({ accion: 'rechazar', motivo: 'El título no es legible', revision: 1 });
+});
+test('desactiva una cuenta solo después de confirmar y protege a los administradores', async () => {
+  const fetch = simularApi({ '/api/administrador/usuarios': { resultados: [{ id: 7, nombre: 'Profesional Demo', correo: 'demo@example.test', rol: 'profesional', activo: true }, { id: 1, nombre: 'Administrador Demo', correo: 'admin@example.test', rol: 'administrador', activo: true }], total: 2, pagina: 1, totalPaginas: 1 }, '/api/administrador/usuarios/7/estado': [200, { id: 7, activo: false }] });
+  renderizarApp('/admin/usuarios');
+  await userEvent.click(await screen.findByRole('button', { name: 'Desactivar' }));
+  expect(fetch.mock.calls.some(([, o]) => o.method === 'PATCH')).toBe(false);
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar cambio' }));
+  const [url, opciones] = fetch.mock.calls.find(([, o]) => o.method === 'PATCH');
+  expect(url).toBe('/api/administrador/usuarios/7/estado');
+  expect(JSON.parse(opciones.body)).toEqual({ activo: false });
 });

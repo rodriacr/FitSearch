@@ -1,15 +1,17 @@
 const prisma = require('./prisma');
 
-const seleccionUsuario = { id: true, nombre: true, correo: true, fechaRegistro: true, rol: { select: { nombre: true } } };
+const seleccionUsuario = { id: true, nombre: true, correo: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } };
 const seleccionProfesional = {
   id: true, especialidad: true, descripcion: true, comuna: true, modalidad: true, verificado: true,
+  estadoVerificacion: true, motivoRechazo: true, revisionVerificacion: true, rut: true, telefono: true,
   usuario: { select: seleccionUsuario },
 };
 const profesionalVigente = { usuario: { rol: { nombre: 'profesional' } } };
 
-async function listarUsuarios({ q, rol, pagina, limite }) {
+async function listarUsuarios({ q, rol, estadoCuenta, pagina, limite }) {
   const where = {
     ...(rol && { rol: { nombre: rol } }),
+    ...(estadoCuenta && { activo: estadoCuenta === 'activos' }),
     ...(q && { OR: [{ nombre: { contains: q } }, { correo: { contains: q } }] }),
   };
   const [filas, total] = await Promise.all([
@@ -22,7 +24,7 @@ async function listarUsuarios({ q, rol, pagina, limite }) {
 async function listarProfesionales({ q, estado, pagina, limite }) {
   const where = {
     ...profesionalVigente,
-    ...(estado && { verificado: estado === 'verificados' }),
+    ...(estado && { estadoVerificacion: { pendientes: 'pendiente', verificados: 'verificado', rechazados: 'rechazado' }[estado] }),
     ...(q && { OR: [{ usuario: { nombre: { contains: q } } }, { especialidad: { contains: q } }, { comuna: { contains: q } }] }),
   };
   const [filas, total] = await Promise.all([
@@ -33,7 +35,18 @@ async function listarProfesionales({ q, estado, pagina, limite }) {
 }
 
 function detalleProfesional(id) {
-  return prisma.profesional.findFirst({ where: { ...profesionalVigente, id }, select: seleccionProfesional });
+  return prisma.profesional.findFirst({ where: { ...profesionalVigente, id }, select: { ...seleccionProfesional, historialVerificacion: true, documentos: { select: require('./verificacion.model').documentoPublico, orderBy: [{ fechaCreacion: 'desc' }, { id: 'desc' }] } } });
+}
+
+async function cambiarEstadoUsuario(id, activo) {
+  const ErrorHttp = require('../utils/ErrorHttp');
+  return prisma.$transaction(async (tx) => {
+    const cuenta = await tx.usuario.findUnique({ where: { id }, select: seleccionUsuario });
+    if (!cuenta) throw new ErrorHttp(404, 'No encontramos esta cuenta');
+    if (cuenta.rol.nombre === 'administrador') throw new ErrorHttp(409, 'Las cuentas administrativas no se desactivan desde este panel');
+    if (cuenta.activo !== activo) await tx.usuario.update({ where: { id }, data: { activo, versionSesion: { increment: 1 } } });
+    return { id, activo };
+  });
 }
 
 async function resumen(desde, hasta) {
@@ -41,7 +54,7 @@ async function resumen(desde, hasta) {
   const [usuarios, profesionales, pendientes, verificados, nuevosUsuarios, nuevosProfesionales, registros] = await Promise.all([
     prisma.usuario.count(),
     prisma.usuario.count({ where: { rol: { nombre: 'profesional' } } }),
-    prisma.profesional.count({ where: { ...profesionalVigente, verificado: false } }),
+    prisma.profesional.count({ where: { ...profesionalVigente, estadoVerificacion: 'pendiente' } }),
     prisma.profesional.count({ where: { ...profesionalVigente, verificado: true } }),
     prisma.usuario.count({ where: periodo }),
     prisma.usuario.count({ where: { ...periodo, rol: { nombre: 'profesional' } } }),
@@ -53,4 +66,4 @@ async function resumen(desde, hasta) {
   return { usuarios, profesionales, pendientes, verificados, nuevosUsuarios, nuevosProfesionales, registros };
 }
 
-module.exports = { listarUsuarios, listarProfesionales, detalleProfesional, resumen };
+module.exports = { listarUsuarios, listarProfesionales, detalleProfesional, resumen, cambiarEstadoUsuario };

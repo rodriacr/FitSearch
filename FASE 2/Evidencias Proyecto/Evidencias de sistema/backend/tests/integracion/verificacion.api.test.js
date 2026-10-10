@@ -18,7 +18,7 @@ test('solo el administrador verifica una ficha profesional existente', async () 
   const res = await verificar('administrador');
   expect(res.status).toBe(200);
   expect(res.body).toEqual({ id: 5, verificado: true });
-  expect(modelo.verificarPerfil).toHaveBeenCalledWith(5);
+  expect(modelo.verificarPerfil).toHaveBeenCalledWith(5, 7);
 });
 
 test.each(['usuario', 'profesional'])('una cuenta de %s no puede verificar ni su propia ficha', async (rol) => {

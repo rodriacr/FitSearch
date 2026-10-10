@@ -22,7 +22,7 @@ test('lista usuarios con filtros y paginación sin datos de autenticación o sal
   expect(res.status).toBe(200);
   expect(res.body).toMatchObject({ total: 13, pagina: 2, totalPaginas: 2, resultados: [{ id: 5, correo: 'ana@example.test', rol: 'profesional' }] });
   expect(JSON.stringify(res.body)).not.toContain('no-exponer');
-  expect(modelo.listarUsuarios).toHaveBeenCalledWith({ q: 'Ana', rol: 'profesional', pagina: 2, limite: 12 });
+  expect(modelo.listarUsuarios).toHaveBeenCalledWith({ q: 'Ana', rol: 'profesional', estadoCuenta: '', pagina: 2, limite: 12 });
 });
 test('consulta las fichas pendientes y el detalle sin exponer la fila de usuario', async () => {
   modelo.listarProfesionales.mockResolvedValue({ filas: [ficha], total: 1 });
@@ -38,7 +38,7 @@ test('distingue un profesional inexistente de un id inválido', async () => {
   expect((await consultar('/api/administrador/profesionales/999999')).status).toBe(404);
   expect((await consultar('/api/administrador/profesionales/abc')).status).toBe(400);
 });
-test.each(['pagina=0', 'pagina=1.5', 'limite=51', 'q=a&q=b', 'estado=rechazados'])('rechaza filtros inválidos: %s', async (query) => {
+test.each(['pagina=0', 'pagina=1.5', 'limite=51', 'q=a&q=b', 'estado=desconocido'])('rechaza filtros inválidos: %s', async (query) => {
   expect((await consultar(`/api/administrador/profesionales?${query}`)).status).toBe(400);
   expect(modelo.listarProfesionales).not.toHaveBeenCalled();
 });

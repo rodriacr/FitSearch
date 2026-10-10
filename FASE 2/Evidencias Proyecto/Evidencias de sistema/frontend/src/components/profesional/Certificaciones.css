@@ -1,0 +1,8 @@
+.certificaciones form { display: grid; gap: 16px; padding: 20px 0; border-top: 1px solid #dceaf0; }
+.certificaciones label { display: grid; gap: 8px; }
+.certificaciones input, .certificaciones select { width: 100%; min-width: 0; padding: 10px; border: 1px solid #bdd1da; border-radius: 8px; }
+.certificaciones button { padding: 10px 16px; border: 1px solid #086b90; border-radius: 8px; background: #fff; color: #086b90; cursor: pointer; overflow-wrap: anywhere; }
+.certificaciones ul { padding-left: 22px; }
+.certificaciones li { margin-bottom: 10px; overflow-wrap: anywhere; }
+.certificaciones [role=alert] { color: #8a2525; }
+.certificaciones [role=status] { color: #14543c; }

@@ -4,6 +4,7 @@ import { Logo } from '../../components/PantallaAcceso.jsx';
 import Icono from '../../components/Icono.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { solicitar } from '../../services/api.js';
+import { Documentos } from '../../components/profesional/Certificaciones.jsx';
 import './PanelAdministrador.css';
 
 const secciones = [
@@ -75,20 +76,23 @@ function GraficoRegistros({ datos }) {
 
 export function ResumenAdministrador({ reporte = false }) {
   const [dias, setDias] = useState('30');
+  const [tipoReporte, setTipoReporte] = useState('');
   const resultado = useDatos(`/administrador/resumen?dias=${dias}`);
   const { datos } = resultado;
+  const registros = datos && { ...datos, registros: datos.registros.filter((r) => !tipoReporte || r.rol === tipoReporte) };
   return <section>
     <h1>{reporte ? 'Reportes' : 'Dashboard'}</h1>
     <p>{reporte ? 'Registros y profesionales de la plataforma.' : 'Resumen de la plataforma y verificaciones pendientes.'}</p>
     <label className="admin__periodo">Período<select value={dias} onChange={(e) => setDias(e.target.value)}>{['7', '30', '90'].map((d) => <option key={d} value={d}>Últimos {d} días</option>)}</select></label>
+    {reporte && <div className="admin__filtros">{[['', 'General'], ['usuario', 'Usuarios'], ['profesional', 'Profesionales']].map(([valor, nombre]) => <button key={valor} aria-pressed={tipoReporte === valor} onClick={() => setTipoReporte(valor)}>{nombre}</button>)}</div>}
     <EstadoCarga {...resultado} />
     {datos && <>
       <p className="admin__nota">Registros del {datos.desde} al {datos.hasta} (UTC). Los totales muestran el estado actual.</p>
       <div className="admin__metricas">{[['Usuarios nuevos', datos.nuevosUsuarios], ['Profesionales nuevos', datos.nuevosProfesionales], ['Usuarios totales', datos.usuarios], ['Cuentas profesionales', datos.profesionales], ['Fichas pendientes', datos.pendientes], ['Fichas verificadas', datos.verificados]].map(([nombre, valor]) => <article key={nombre} className="admin__tarjeta"><span>{nombre}</span><strong>{numero(valor)}</strong></article>)}</div>
       {!reporte && <Link className="admin__boton" to="/admin/verificaciones">Revisar profesionales pendientes <Icono nombre="flecha" /></Link>}
       <div className="admin__tarjeta"><h2>Registro de usuarios</h2>
-        {datos.registros.length > 0 && <GraficoRegistros datos={datos} />}
-        {!datos.registros.length ? <p>No hubo registros en este período.</p> : <div className="admin__tabla"><table><caption>Registros diarios por tipo de cuenta</caption><thead><tr><th>Fecha</th><th>Tipo de cuenta</th><th>Registros</th></tr></thead><tbody>{datos.registros.map((r) => <tr key={`${r.fecha}-${r.rol}`}><td>{r.fecha}</td><td>{r.rol}</td><td>{numero(r.cantidad)}</td></tr>)}</tbody></table></div>}
+        {registros.registros.length > 0 && <GraficoRegistros datos={registros} />}
+        {!registros.registros.length ? <p>No hubo registros para este filtro en el período.</p> : <div className="admin__tabla"><table><caption>Registros diarios por tipo de cuenta</caption><thead><tr><th>Fecha</th><th>Tipo de cuenta</th><th>Registros</th></tr></thead><tbody>{registros.registros.map((r) => <tr key={`${r.fecha}-${r.rol}`}><td>{r.fecha}</td><td>{r.rol}</td><td>{numero(r.cantidad)}</td></tr>)}</tbody></table></div>}
       </div>
     </>}
   </section>;
@@ -101,14 +105,28 @@ export function ListadoAdministrador({ tipo }) {
   const [busqueda, setBusqueda] = useState('');
   const [q, setQ] = useState('');
   const [pagina, setPagina] = useState(1);
-  const parametros = new URLSearchParams({ q, pagina: String(pagina), [usuarios ? 'rol' : 'estado']: filtro });
-  const resultado = useDatos(`/administrador/${usuarios ? 'usuarios' : 'profesionales'}?${parametros}`);
+  const [estadoCuenta, setEstadoCuenta] = useState('');
+  const [revision, setRevision] = useState(0);
+  const [confirmacion, setConfirmacion] = useState(null);
+  const [guardando, setGuardando] = useState(false);
+  const [error, setError] = useState('');
+  const parametros = new URLSearchParams({ q, pagina: String(pagina), estadoCuenta, [usuarios ? 'rol' : 'estado']: filtro });
+  const resultado = useDatos(`/administrador/${usuarios ? 'usuarios' : 'profesionales'}?${parametros}`, revision);
   const { datos } = resultado;
-  const opciones = usuarios ? [['', 'Todos'], ['usuario', 'Usuarios'], ['profesional', 'Profesionales'], ['administrador', 'Administradores']] : [['', 'Todos'], ['pendientes', 'Pendientes'], ['verificados', 'Verificados']];
+  const opciones = usuarios ? [['', 'Todos'], ['usuario', 'Usuarios'], ['profesional', 'Profesionales'], ['administrador', 'Administradores']] : [['', 'Todos'], ['pendientes', 'Pendientes'], ['verificados', 'Verificados'], ['rechazados', 'Rechazados']];
+  async function cambiarEstado() {
+    setGuardando(true); setError('');
+    try { await solicitar(`/administrador/usuarios/${confirmacion.id}/estado`, { metodo: 'PATCH', cuerpo: { activo: !confirmacion.activo } }); setConfirmacion(null); setRevision((r) => r + 1); }
+    catch (e) { setError(e.message); }
+    finally { setGuardando(false); }
+  }
   return <section>
     <h1>{usuarios ? 'Usuarios' : verificaciones ? 'Verificaciones' : 'Profesionales'}</h1>
     <p>{usuarios ? 'Consulta las cuentas registradas en FitSearch.' : 'Revisa las fichas profesionales y su verificación.'}</p>
     <div className="admin__filtros" aria-label="Filtrar resultados">{opciones.map(([valor, nombre]) => <button type="button" key={valor} aria-pressed={filtro === valor} onClick={() => { setFiltro(valor); setPagina(1); }}>{nombre}</button>)}</div>
+    {usuarios && <label>Estado de cuenta<select value={estadoCuenta} onChange={(e) => { setEstadoCuenta(e.target.value); setPagina(1); }}><option value="">Todos</option><option value="activos">Activos</option><option value="inactivos">Inactivos</option></select></label>}
+    {error && <p role="alert">{error}</p>}
+    {confirmacion && <div className="admin__tarjeta"><p>¿Deseas {confirmacion.activo ? 'desactivar' : 'reactivar'} la cuenta de {confirmacion.nombre}? {confirmacion.activo && 'Sus sesiones abiertas dejarán de funcionar.'}</p><button disabled={guardando} onClick={cambiarEstado}>Confirmar cambio</button><button disabled={guardando} onClick={() => setConfirmacion(null)}>Cancelar</button></div>}
     <form className="admin__busqueda" onSubmit={(e) => { e.preventDefault(); setQ(busqueda.trim()); setPagina(1); }}>
       <label htmlFor="busqueda-admin">{usuarios ? 'Buscar por nombre o correo' : 'Buscar por nombre, especialidad o comuna'}</label>
       <div><input id="busqueda-admin" value={busqueda} maxLength={100} onChange={(e) => setBusqueda(e.target.value)} /><button type="submit"><Icono nombre="buscar" />Buscar</button></div>
@@ -120,7 +138,7 @@ export function ListadoAdministrador({ tipo }) {
       <ul className="admin__lista">{datos.resultados.map((fila) => <li key={fila.id} className="admin__tarjeta admin__fila">
         <span className="admin__avatar" aria-hidden="true">{fila.nombre.slice(0, 1)}</span>
         <div><h2>{fila.nombre}</h2><p>{usuarios ? fila.correo : fila.especialidad}</p><small>{usuarios ? fila.rol : fila.comuna || 'Sin comuna'}</small></div>
-        {!usuarios && <><span className={`admin__estado${fila.verificado ? ' admin__estado--verificado' : ''}`}><Icono nombre="escudo" />{fila.verificado ? 'Verificado' : 'Pendiente'}</span><Link className="admin__boton" aria-label={`Revisar a ${fila.nombre}`} to={`/admin/verificaciones/${fila.id}`}>Revisar</Link></>}
+        {usuarios ? <><span className="admin__estado">{fila.activo === false ? 'Inactivo' : 'Activo'}</span>{fila.rol !== 'administrador' && <button onClick={() => { setError(''); setConfirmacion(fila); }}>{fila.activo === false ? 'Reactivar' : 'Desactivar'}</button>}</> : <><span className={`admin__estado${fila.verificado ? ' admin__estado--verificado' : ''}`}><Icono nombre="escudo" />{fila.verificado ? 'Verificado' : fila.estado === 'rechazado' ? 'Rechazado' : 'Pendiente'}</span><Link className="admin__boton" aria-label={`Revisar a ${fila.nombre}`} to={`/admin/verificaciones/${fila.id}`}>Revisar</Link></>}
       </li>)}</ul>
       {datos.totalPaginas > 1 && <nav className="admin__paginacion" aria-label="Páginas de resultados"><button type="button" disabled={pagina === 1} onClick={() => setPagina(pagina - 1)}>Anterior</button><span>Página {pagina} de {datos.totalPaginas}</span><button type="button" disabled={pagina >= datos.totalPaginas} onClick={() => setPagina(pagina + 1)}>Siguiente</button></nav>}
     </>}
@@ -134,13 +152,16 @@ export function DetalleVerificacion() {
   const [guardando, setGuardando] = useState(false);
   const [aviso, setAviso] = useState('');
   const [error, setError] = useState('');
+  const [pestana, setPestana] = useState('informacion');
+  const [accion, setAccion] = useState('aprobar');
+  const [motivo, setMotivo] = useState('');
   const resultado = useDatos(`/administrador/profesionales/${id}`, revision);
   const ficha = resultado.datos?.profesional;
   async function aprobar() {
     setGuardando(true); setError('');
     try {
-      await solicitar(`/profesionales/${id}/verificar`, { metodo: 'PATCH' });
-      setAviso('El perfil fue verificado correctamente.'); setConfirmar(false); setRevision((r) => r + 1);
+      await solicitar(`/administrador/profesionales/${id}/decision`, { metodo: 'POST', cuerpo: { accion, motivo, revision: ficha.revision } });
+      setAviso(accion === 'aprobar' ? 'El perfil fue verificado correctamente.' : 'La decisión fue registrada.'); setConfirmar(false); setRevision((r) => r + 1);
     } catch (e) { setError(e.message); }
     finally { setGuardando(false); }
   }
@@ -151,12 +172,15 @@ export function DetalleVerificacion() {
     {aviso && <p role="status" className="admin__exito">{aviso}</p>}
     {error && <p role="alert" className="admin__error">{error}</p>}
     {ficha && <article className="admin__tarjeta">
-      <h2>{ficha.nombre}</h2><p className={`admin__estado${ficha.verificado ? ' admin__estado--verificado' : ''}`}><Icono nombre="escudo" />{ficha.verificado ? 'Verificado' : 'Pendiente de revisión'}</p>
-      <h3>Información del profesional</h3>
-      <dl className="admin__datos">{[['Correo', ficha.correo], ['Especialidad', ficha.especialidad], ['Comuna', ficha.comuna], ['Modalidad', ficha.modalidad], ['Descripción', ficha.descripcion]].map(([nombre, valor]) => <div key={nombre}><dt>{nombre}</dt><dd>{valor || 'No informado'}</dd></div>)}</dl>
-      {!ficha.verificado && <div className="admin__acciones">
-        {confirmar ? <><p>¿Confirmas que revisaste la ficha de {ficha.nombre} y deseas verificar este perfil?</p><button type="button" className="admin__boton" disabled={guardando} onClick={aprobar}>{guardando ? 'Verificando…' : 'Confirmar verificación'}</button><button type="button" disabled={guardando} onClick={() => setConfirmar(false)}>Cancelar</button></> : <button type="button" className="admin__boton" onClick={() => setConfirmar(true)}>Aprobar verificación</button>}
-      </div>}
+      <h2>{ficha.nombre}</h2><p className={`admin__estado${ficha.verificado ? ' admin__estado--verificado' : ''}`}><Icono nombre="escudo" />{ficha.verificado ? 'Verificado' : ficha.estado === 'rechazado' ? 'Rechazado' : 'Pendiente de revisión'}</p>
+      {ficha.motivoRechazo && <p>Motivo: {ficha.motivoRechazo}</p>}
+      <div className="admin__filtros">{[['informacion', 'Información'], ['documentos', 'Documentos'], ['historial', 'Historial']].map(([clave, nombre]) => <button key={clave} aria-pressed={pestana === clave} onClick={() => setPestana(clave)}>{nombre}</button>)}</div>
+      {pestana === 'informacion' && <><h3>Información del profesional</h3><dl className="admin__datos">{[['Correo', ficha.correo], ['RUT', ficha.rut], ['Teléfono', ficha.telefono], ['Especialidad', ficha.especialidad], ['Comuna', ficha.comuna], ['Modalidad', ficha.modalidad], ['Descripción', ficha.descripcion]].map(([nombre, valor]) => <div key={nombre}><dt>{nombre}</dt><dd>{valor || 'No informado'}</dd></div>)}</dl></>}
+      {pestana === 'documentos' && <><h3>Documentos adjuntos</h3><Documentos documentos={ficha.documentos || []} onError={setError} />{!ficha.documentos?.length && <p>El profesional todavía no adjunta documentos.</p>}</>}
+      {pestana === 'historial' && <><h3>Historial de verificación</h3><ul>{(ficha.historial || []).map((h, i) => <li key={i}>{new Date(h.fecha).toLocaleString('es-CL')}: {h.accion}{h.motivo && ` — ${h.motivo}`}</li>)}</ul></>}
+      <div className="admin__acciones">
+        {confirmar ? <><p>Confirma la decisión «{accion}» para {ficha.nombre} después de revisar su ficha y documentos.</p>{accion !== 'aprobar' && <label>Motivo obligatorio<textarea value={motivo} minLength={5} maxLength={500} onChange={(e) => setMotivo(e.target.value)} /></label>}<button type="button" className="admin__boton" disabled={guardando || (accion !== 'aprobar' && motivo.trim().length < 5)} onClick={aprobar}>{guardando ? 'Guardando…' : accion === 'aprobar' ? 'Confirmar verificación' : 'Confirmar decisión'}</button><button type="button" disabled={guardando} onClick={() => setConfirmar(false)}>Cancelar</button></> : <>{(ficha.verificado ? [['revocar', 'Revocar verificación']] : [['aprobar', 'Aprobar verificación'], ['rechazar', 'Rechazar solicitud']]).map(([valor, nombre]) => <button type="button" key={valor} className="admin__boton" disabled={ficha.activo === false} onClick={() => { setAccion(valor); setMotivo(''); setConfirmar(true); }}>{nombre}</button>)}</>}
+      </div>
     </article>}
   </section>;
 }

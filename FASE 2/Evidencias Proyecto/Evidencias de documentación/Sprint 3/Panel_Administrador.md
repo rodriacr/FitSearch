@@ -1,38 +1,84 @@
-# Panel del administrador · avance del 10-10-2026
+# Panel del administrador
 
-Rodrigo autorizó la vista administrativa. El alcance confirmado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; excluye Configuración y Contenido. El mockup recibido se conserva en `Mockups del Product Owner/mockup_administrador_10-10-2026.jpg`.
+Implementación del 10-10-2026, rama `codex/panel-administrador`. Rodri autorizó Dashboard, Profesionales, Verificaciones, Usuarios y Reportes, usando su mockup como referencia; quedan fuera Configuración y Contenido. Delegó la definición de las reglas de documentos, rechazo y desactivación. El mockup está en `Mockups del Product Owner/mockup_administrador_10-10-2026.jpg`.
 
-## Implementación actual
+## Funciones y reglas
 
-Preparé una rama separada, `codex/panel-administrador`, a partir de los cambios del PR #16, todavía pendiente de fusión. No añadí el panel al PR #16.
+- El administrador entra a `/admin/dashboard`, con navegación propia, menú móvil y cierre de sesión.
+- Dashboard y reportes consultan registros reales de los últimos 7, 30 o 90 días, con gráfico, tabla y filtros General/Usuarios/Profesionales. El período usa UTC; los totales son el estado actual y los roles son los actuales de las cuentas. No hay fuente de cobros ni contactos en FitSearch: esos indicadores del mockup no se presentan como cifras reales.
+- Profesionales y verificaciones tienen búsqueda, paginación y filtros Pendientes/Verificados/Rechazados. Una ficha pendiente puede estar todavía sin documentos; su aprobación se bloquea hasta completar los requisitos.
+- El detalle administrativo tiene Información, Documentos e Historial. Requiere RUT con dígito verificador válido, documento de identidad y título profesional para aprobar. Teléfono y certificado de antecedentes son opcionales. No se consulta un registro externo de títulos: el administrador debe comprobar el contenido.
+- Rechazar o revocar requiere un motivo de 5 a 500 caracteres. El profesional ve el motivo en Certificaciones, puede adjuntar la corrección y reenviar la solicitud. La revocación retira inmediatamente la insignia. Cada decisión registra acción, fecha y administrador en el historial.
+- Cambiar la especialidad de una ficha verificada retira la insignia y devuelve la ficha a pendiente. Cualquier edición o documento incrementa la revisión: una decisión tomada sobre una versión anterior recibe 409 y exige revisar la ficha actualizada.
+- En Usuarios se puede buscar y filtrar por rol o estado, desactivar y reactivar con confirmación. Desactivar conserva los datos, bloquea el inicio de sesión y la siguiente petición de sesiones abiertas. Reactivar exige una sesión nueva: los tokens anteriores continúan inválidos. Las cuentas administrativas no se desactivan desde el panel.
+- Los profesionales desactivados quedan fuera del directorio público; el administrador conserva acceso a su ficha. No se puede aprobar una cuenta desactivada.
 
-- Entrada del administrador a `/admin/dashboard`, navegación propia, menú móvil y cierre de sesión.
-- Dashboard con totales actuales, registros de los últimos 7, 30 o 90 días, gráfico y tabla de registros diarios. El período está expresado en UTC.
-- Listado paginado de profesionales con búsqueda por nombre, especialidad y comuna; filtros de pendientes y verificados.
-- Detalle de la ficha con correo, especialidad, comuna, modalidad y descripción. La aprobación pide confirmación y usa el endpoint administrativo existente; el resultado se vuelve a consultar al servidor.
-- Listado paginado de usuarios con búsqueda por nombre/correo y filtro por rol.
-- Reportes de registros con período seleccionable, gráfico y tabla. Los totales actuales están diferenciados de los registros del período.
-- Consultas en `/api/administrador` protegidas con autenticación y rol administrador. Uso Prisma compartido y selecciono explícitamente los datos necesarios; no devuelvo contraseñas, identificadores de Google ni información de salud.
+## Documentos privados
 
-Las cifras del mockup son ilustrativas. No las incorporé como datos de la plataforma. Los registros cuentan la creación de cuentas y su rol actual; las fichas sin verificar no equivalen a solicitudes documentales con fecha de envío.
+Acepto PDF, JPG y PNG de hasta 5 MB, con comprobación de firma del formato y un máximo de 20 archivos por ficha. Conservo las versiones adjuntadas para la revisión. Los archivos se almacenan con nombres UUID, fuera de las carpetas públicas y de Git; MySQL guarda sus metadatos. No se publican rutas internas.
 
-## Reglas pendientes de confirmar
+Solo el propietario profesional y el administrador pueden descargar un documento, con sesión vigente. Se descarga como archivo adjunto, con `nosniff` y sin caché compartida. Esta validación de formato no sustituye un antivirus ni acredita el documento: la revisión administrativa es manual. La aplicación no incluye análisis antivirus ni correo automático de rechazo; el estado y motivo se consultan dentro del perfil.
 
-El mockup muestra acciones y datos que el modelo actual no contempla. Consulté cómo debe funcionar:
+En un despliegue, `VERIFICATION_STORAGE_DIR` debe apuntar a un directorio persistente de acceso restringido. Hay que respaldarlo junto con MySQL y configurar HTTPS. No conviene almacenar documentos reales en una instancia temporal. El borrado de cuentas y la política institucional de conservación no forman parte de esta entrega; no se borra documentación desde el panel.
 
-1. **Rechazo:** motivo obligatorio o no, si puede volver a solicitarse, efecto sobre una ficha ya verificada y comunicación al profesional.
-2. **Documentos/RUT:** qué se solicita, dónde lo carga el profesional, quién puede acceder y cómo se conserva el historial de revisión.
-3. **Usuarios activos/inactivos:** efecto de desactivar una cuenta, tratamiento de sesiones existentes y posibilidad de reactivación.
-4. **Reportes de ingresos/contactos:** no existen cobros ni registros de contactos en el sistema actual; falta definir la fuente de esos indicadores.
+## Instalación y cuenta administrativa
 
-No implementé cambios de estado ni documentos simulados. La consulta de usuarios funciona; la desactivación y el rechazo siguen pendientes. Esta entrega todavía no completa todo el mockup ni la aceptación final de FS-HU-12.
+Desde la carpeta backend, después de traer la rama:
 
-## Validación del avance
+```powershell
+npm run db:generate
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-- Backend: 179 pruebas en 20 suites aprobadas; lint correcto.
-- Frontend: 149 pruebas en 20 archivos aprobadas; lint y build correctos.
-- Navegador: cinco vistas en escritorio (1440 px) y móvil (390 px), menú móvil y aprobación comprobados con API simulada; sin errores de JavaScript ni desbordamiento horizontal. Corregí el tamaño del logo en móvil.
-- MySQL local: consultas reales de resumen, listado de usuarios y filtro de profesionales pendientes ejecutadas sin modificar datos. En esa base había 4 usuarios y ninguna ficha pendiente. No ejecuté una aprobación real en esta continuación.
-- Pruebas cubren 401/403 para las nuevas consultas, filtros inválidos, paginación, datos excluidos de las respuestas, 400/404 de detalle, confirmación de aprobación y recuperación tras error.
+Si Prisma no puede sustituir su DLL en Windows, detener primero la API y volver a ejecutar `db:generate`. La migración `20261010203000_panel_administrativo` añade campos y una tabla; mantiene los datos y las verificaciones anteriores. El esquema pasa de 9 a 10 tablas de dominio implementadas.
 
-La revisión de permisos de sesión y aprobación existentes se mantiene; no hay una ruta pública para asignar el rol administrador.
+Para preparar un administrador, el responsable de la base registra una cuenta independiente y ejecuta localmente, con su correo real:
+
+```powershell
+npm run admin:promover -- --correo correo-de-la-cuenta --confirmar
+```
+
+La herramienta exige una cuenta existente y activa, rechaza convertir una cuenta profesional y revoca sus sesiones anteriores. No pide ni imprime la contraseña. La asignación administrativa no se expone por registro público ni por la API. Después hay que iniciar sesión de nuevo.
+
+## Contrato y arquitectura
+
+Uso el Prisma compartido de `models/prisma.js`. Las rutas administrativas requieren rol `administrador`; la carga y solicitud requieren `profesional`. La sesión se contrasta en cada petición con `usuarios.activo` y `usuarios.version_sesion`.
+
+| Ruta | Uso |
+| --- | --- |
+| GET `/api/administrador/resumen` | Totales y registros agrupados; días 7/30/90 |
+| GET `/api/administrador/usuarios` | Búsqueda, rol, estado de cuenta y paginación |
+| PATCH `/api/administrador/usuarios/:id/estado` | Activar/desactivar; cuerpo `activo` booleano |
+| GET `/api/administrador/profesionales` | Búsqueda, estado y paginación |
+| GET `/api/administrador/profesionales/:id` | Ficha, documentos e historial |
+| POST `/api/administrador/profesionales/:id/decision` | Aprobar/rechazar/revocar; revisión y motivo |
+| GET/POST `/api/verificaciones/mi-solicitud` | Consultar y reenviar la solicitud propia |
+| POST `/api/verificaciones/documentos` | Archivo binario; tipo y nombre en query |
+| GET `/api/verificaciones/documentos/:id` | Descarga privada autenticada |
+| PATCH `/api/profesionales/:id/verificar` | Compatibilidad con el PR #15; aplica los mismos requisitos documentales e historial |
+
+Datos añadidos: `usuarios.activo/version_sesion`; `profesionales.estado_verificacion/motivo_rechazo/historial_verificacion/revision_verificacion/rut/telefono`; tabla `documentos_profesionales` relacionada con la ficha. La respuesta de aprobación conserva `{ id, verificado }`.
+
+```mermaid
+flowchart TD
+  P["Profesional: Certificaciones"] --> D["Adjunta identidad y título privados"]
+  D --> S["Envía RUT y solicitud"]
+  S --> A["Administrador revisa información y documentos"]
+  A -->|Aprobar| V["Verificado: insignia en perfil y listado"]
+  A -->|Rechazar con motivo| R["Rechazado: motivo visible al profesional"]
+  R --> D
+  V -->|Revocar con motivo| R
+  V -->|Cambiar especialidad| S
+```
+
+## Validación y seguimiento
+
+- Backend: 202 pruebas en 25 suites aprobadas.
+- Frontend: 152 pruebas en 21 archivos aprobadas.
+- Lint en ambas capas y build frontend correctos.
+- MySQL local: 17 comprobaciones del flujo con cuentas y archivos temporales, eliminados al terminar. Cubrí documentos, permisos de descarga, rechazo/reenvío/aprobación, revisión obsoleta, desactivación, reactivación y protección del administrador.
+- Edge: cinco vistas en escritorio de 1440 px y móvil de 390 px, menú y aprobación con API simulada; sin errores de JavaScript ni desbordamiento horizontal. Estas capturas no son evidencia de datos de producción.
+
+El panel se entrega en un PR separado del #16 y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.17 y las siete exportaciones ya sincronizadas describen la base anterior a este panel; esta nota documenta el cambio administrativo, su contrato y modelo. La incorporación de esta ampliación a los diagramas consolidados y al DAS será una actualización posterior identificada, sin alterar la evidencia histórica del PR #16 ni declarar la HU aceptada. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.

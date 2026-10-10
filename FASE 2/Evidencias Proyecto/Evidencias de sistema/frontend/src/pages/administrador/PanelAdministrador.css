@@ -51,6 +51,8 @@
 .admin__datos dd { margin: 0; overflow-wrap: anywhere; white-space: pre-wrap; }
 .admin__acciones { border-top: 1px solid #dceaf0; margin-top: 28px; padding-top: 22px; }
 .admin__acciones button { margin: 0 8px 8px 0; }
+.admin__acciones label { display: grid; gap: 8px; margin-bottom: 15px; }
+.admin textarea { min-height: 100px; width: 100%; padding: 12px; border: 1px solid #bdd1da; border-radius: 8px; }
 .admin__error, .admin__exito { padding: 15px; border-radius: 8px; }
 .admin__error { color: #8a2525; background: #ffeded; }
 .admin__exito { color: #14543c; background: #ddf5ea; }

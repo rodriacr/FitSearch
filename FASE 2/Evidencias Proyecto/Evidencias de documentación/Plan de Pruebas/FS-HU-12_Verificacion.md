@@ -1,4 +1,29 @@
-# Verificación básica de perfiles profesionales
+# Verificación de perfiles profesionales
+
+## Ampliación administrativa del 10-10-2026
+
+Implementé el panel autorizado por Rodri (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes) y las reglas cuya definición delegó. El contrato, instalación y decisiones están en [Panel_Administrador.md](../Sprint%203/Panel_Administrador.md). Esta entrega requiere la migración `20261010203000_panel_administrativo`; la ruta anterior de aprobación aplica ahora los requisitos documentales y registra historial. Para una ficha nueva, disponer solo de su ID ya no basta para aprobarla.
+
+| Caso nuevo | Resultado comprobado |
+| --- | --- |
+| Documentos obligatorios o RUT ausentes | 409, sin aprobación |
+| Solicitud con RUT válido / inválido | 200 / 400 |
+| Archivo ejecutable, vacío o mayor de 5 MB | Se rechaza, sin archivo persistido |
+| Descarga del dueño / administrador / otro profesional | 200 / 200 / 403 |
+| Rechazo sin motivo / con motivo válido | 400 / 200; historial y motivo |
+| Reenvío tras rechazo | Pendiente, conserva historial |
+| Decisión sobre revisión anterior | 409, sin sobrescribir cambios |
+| Aprobación documentada | 200; insignia persistida |
+| Cambio de especialidad de perfil verificado | Retira verificación y vuelve a pendiente |
+| Desactivación y reactivación | Los tokens anteriores permanecen inválidos; sesión nueva permitida |
+| Login de cuenta desactivada, contraseña o Google | 403 |
+| Desactivación de administrador | 409, sin cambios |
+
+Validación: 202 pruebas backend en 25 suites, 152 frontend en 21 archivos, lint y build correctos. Ejecuté 17 comprobaciones contra MySQL local con datos temporales y limpieza final; las pruebas automatizadas también simulan modelos y API para cubrir errores y concurrencia. Revisé las cinco vistas en escritorio y móvil. La revisión y aceptación del PO siguen pendientes.
+
+## Evidencia anterior del PR 15 y revisión del PR 16
+
+Las secciones siguientes conservan el comportamiento y las pruebas de la entrega anterior al panel. No describen los nuevos requisitos documentales ni su migración.
 
 Actualización del 10-10-2026. El avance técnico de FS-HU-12 fue aprobado y fusionado en el [PR #15](https://github.com/rodriacr/FitSearch/pull/15), que reemplazó al PR #14 sobre el PR #13. La historia permanece parcial y prevista para Sprint 5, con prioridad baja y 3 puntos, si hay capacidad y con alcance final definido por el Product Owner.
 

@@ -45,13 +45,17 @@ describe('auth.service', () => {
   });
 
   describe('iniciarSesion', () => {
+    test('no emite una sesión a una cuenta desactivada aunque tenga la contraseña correcta', async () => {
+      usuarioModel.buscarPorCorreo.mockResolvedValue(usuarioDePrueba({ activo: false }));
+      await expect(authService.iniciarSesion({ correo: 'ana@correo.cl', password: PASSWORD })).rejects.toMatchObject({ estado: 403 });
+    });
     test('devuelve token y usuario con credenciales correctas', async () => {
       usuarioModel.buscarPorCorreo.mockResolvedValue(usuarioDePrueba());
 
       const resultado = await authService.iniciarSesion({ correo: 'ana@correo.cl', password: PASSWORD });
 
       expect(resultado.usuario.correo).toBe('ana@correo.cl');
-      expect(authService.verificarToken(resultado.token)).toEqual({ id: 1, rol: 'usuario', vencimiento: expect.any(Number) });
+      expect(authService.verificarToken(resultado.token)).toEqual({ id: 1, rol: 'usuario', versionSesion: 0, vencimiento: expect.any(Number) });
     });
 
     test('con contraseña incorrecta responde 401 con mensaje genérico', async () => {

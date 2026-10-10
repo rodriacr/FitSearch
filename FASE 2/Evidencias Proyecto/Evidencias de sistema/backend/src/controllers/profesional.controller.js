@@ -39,7 +39,7 @@ async function guardarMiFicha(req, res) {
 
 // FS-HU-12: Administrador verifica un perfil profesional
 async function verificarPerfil(req, res) {
-  res.json(await servicio.verificarPerfil(Number(req.params.id)));
+  res.json(await servicio.verificarPerfil(Number(req.params.id), req.usuario.id));
 }
 
 module.exports = { listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha, verificarPerfil };
