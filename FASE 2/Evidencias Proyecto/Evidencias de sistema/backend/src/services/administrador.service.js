@@ -1,5 +1,5 @@
 const modelo = require('../models/administrador.model');
-const { documentosActuales } = require('../models/verificacion.model');
+const { documentosActuales, decidir } = require('../models/verificacion.model');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 function usuario(fila) {
@@ -10,7 +10,7 @@ function profesional(fila) {
     id: fila.id, nombre: fila.usuario.nombre, correo: fila.usuario.correo,
     especialidad: fila.especialidad, descripcion: fila.descripcion, comuna: fila.comuna,
     modalidad: fila.modalidad, verificado: fila.verificado,
-    estado: fila.estadoVerificacion || (fila.verificado ? 'verificado' : 'pendiente'), activo: fila.usuario.activo,
+    estado: fila.estadoVerificacion || (fila.verificado ? 'verificado' : 'sin_solicitud'), activo: fila.usuario.activo,
     motivoRechazo: fila.motivoRechazo, revision: fila.revisionVerificacion, rut: fila.rut, telefono: fila.telefono,
   };
 }
@@ -34,4 +34,6 @@ async function resumen(dias, ahora = new Date()) {
     registros: registros.map((fila) => ({ fecha: new Date(fila.fecha).toISOString().slice(0, 10), rol: fila.rol, cantidad: Number(fila.cantidad) })),
   };
 }
-module.exports = { listarUsuarios, listarProfesionales, detalleProfesional, resumen, cambiarEstadoUsuario: modelo.cambiarEstadoUsuario };
+const decidirVerificacion = (id, datos) => decidir(id, datos);
+
+module.exports = { decidirVerificacion, listarUsuarios, listarProfesionales, detalleProfesional, resumen, cambiarEstadoUsuario: modelo.cambiarEstadoUsuario };

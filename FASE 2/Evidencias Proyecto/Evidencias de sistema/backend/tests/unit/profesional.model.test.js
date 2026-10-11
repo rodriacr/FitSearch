@@ -19,7 +19,7 @@ test('cambiar la especialidad retira la insignia y protege frente a una edición
   prisma.profesional.findUnique.mockResolvedValue({ id: 2, especialidad: 'Kinesiología', verificado: true, revisionVerificacion: 3 });
   prisma.profesional.updateMany.mockResolvedValue({ count: 1 });
   await guardarFicha(7, datos);
-  expect(prisma.profesional.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 2, revisionVerificacion: 3 }, data: expect.objectContaining({ verificado: false, estadoVerificacion: 'pendiente' }) }));
+  expect(prisma.profesional.updateMany).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 2, revisionVerificacion: 3 }, data: expect.objectContaining({ verificado: false, estadoVerificacion: 'rechazado' }) }));
   prisma.profesional.updateMany.mockResolvedValue({ count: 0 });
   await expect(guardarFicha(7, datos)).rejects.toMatchObject({ estado: 409 });
 });

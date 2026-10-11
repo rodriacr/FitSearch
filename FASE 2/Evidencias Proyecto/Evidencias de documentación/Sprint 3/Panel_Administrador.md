@@ -1,31 +1,32 @@
 # Panel del administrador
 
-Implementación del 10-10-2026, rama `codex/panel-administrador`. Rodri autorizó Dashboard, Profesionales, Verificaciones, Usuarios y Reportes, usando su mockup como referencia; quedan fuera Configuración y Contenido. Delegó la definición de las reglas de documentos, rechazo y desactivación. El mockup está en `Mockups del Product Owner/mockup_administrador_10-10-2026.jpg`.
+Entrega del PR #19, rama `codex/panel-administrador`, revisada el 11-10-2026. Rodrigo autorizó Dashboard, Profesionales, Verificaciones, Usuarios y Reportes y delegó las reglas de documentos, rechazo y desactivación. Configuración y Contenido quedan fuera. La aprobación técnica y la aceptación de FS-HU-12 siguen pendientes; su planificación conserva Sprint 5. El mockup se conserva en `Mockups del Product Owner/`.
 
-## Funciones y reglas
+## Solicitud y decisiones
 
-- El administrador entra a `/admin/dashboard`, con navegación propia, menú móvil y cierre de sesión.
-- Dashboard y reportes consultan registros reales de los últimos 7, 30 o 90 días, con gráfico, tabla y filtros General/Usuarios/Profesionales. El período usa UTC; los totales son el estado actual y los roles son los actuales de las cuentas. No hay fuente de cobros ni contactos en FitSearch: esos indicadores del mockup no se presentan como cifras reales.
-- Profesionales y verificaciones tienen búsqueda, paginación y filtros Pendientes/Verificados/Rechazados. Una ficha pendiente puede estar todavía sin documentos; su aprobación se bloquea hasta completar los requisitos.
-- El detalle administrativo tiene Información, Documentos e Historial. Requiere RUT con dígito verificador válido, documento de identidad y título profesional para aprobar. Teléfono y certificado de antecedentes son opcionales. No se consulta un registro externo de títulos: el administrador debe comprobar el contenido.
-- Rechazar o revocar requiere un motivo de 5 a 500 caracteres. El profesional ve el motivo en Certificaciones, puede adjuntar la corrección y reenviar la solicitud. La revocación retira inmediatamente la insignia. Cada decisión registra acción, fecha y administrador en el historial.
-- Cambiar la especialidad de una ficha verificada retira la insignia y devuelve la ficha a pendiente. Cualquier edición o documento incrementa la revisión: una decisión tomada sobre una versión anterior recibe 409 y exige revisar la ficha actualizada.
-- En Usuarios se puede buscar y filtrar por rol o estado, desactivar y reactivar con confirmación. Desactivar conserva los datos, bloquea el inicio de sesión y la siguiente petición de sesiones abiertas. Reactivar exige una sesión nueva: los tokens anteriores continúan inválidos. Las cuentas administrativas no se desactivan desde el panel.
-- Los profesionales desactivados quedan fuera del directorio público; el administrador conserva acceso a su ficha. No se puede aprobar una cuenta desactivada.
+Una ficha nueva comienza en `sin_solicitud`: no aparece en Pendientes ni incrementa su contador. Adjuntar documentos tampoco envía una solicitud. Solo «Enviar solicitud a revisión», con RUT válido y los documentos obligatorios, cambia el estado a `pendiente`.
 
-## Documentos privados
+La aprobación requiere solicitud pendiente, cuenta activa, revisión vigente, identidad y título actuales. Rechazar o revocar exige un motivo de 5 a 500 caracteres y cierra el trámite. Se retira la insignia y los documentos del ciclo anterior dejan de contar. El administrador no puede aprobar ni rechazar nuevamente hasta otro envío explícito del profesional. Cambiar la especialidad invalida los documentos anteriores; si estaba verificado o pendiente, cierra la solicitud como una revocación y exige documentos de la nueva especialidad.
 
-Acepto PDF, JPG y PNG de hasta 5 MB, con comprobación de firma del formato y un máximo de 20 archivos por ficha. Tras rechazar o revocar, los documentos anteriores dejan de contar para la solicitud y se requieren nuevas subidas de identidad y título. La API y las pantallas solo presentan el último archivo de cada tipo posterior a esa decisión, sin versiones anteriores; las la API conserva las subidas actuales, pero la pantalla sin verificar reinicia sus apartados al recargar. Los archivos previos se conservan en almacenamiento privado, sin borrado automático. Los archivos se almacenan con nombres UUID, fuera de las carpetas públicas y de Git; MySQL guarda sus metadatos. No se publican rutas internas.
+Cada edición, carga o decisión incrementa la revisión. Una decisión sobre una versión anterior recibe 409. Las decisiones registran acción, fecha y administrador; el cambio de especialidad queda identificado en el historial. No hay acreditación externa automática de títulos.
 
-En Certificaciones, mientras la solicitud no está verificada, recargar o volver a abrir la pantalla reinicia los indicadores y los selectores: todos muestran «Sin adjuntar». Cada documento se adjunta con su botón azul y solo entonces muestra «Adjuntado». El envío naranjo exige identidad y título adjuntados en esa pantalla. Este reinicio visual no elimina archivos privados ya almacenados. El RUT agrega el guion antes del dígito verificador automáticamente y sigue sujeto a validación.
+## Certificaciones y documentos privados
 
-Solo el propietario profesional y el administrador pueden descargar un documento, con sesión vigente. Se descarga como archivo adjunto, con `nosniff` y sin caché compartida. Esta validación de formato no sustituye un antivirus ni acredita el documento: la revisión administrativa es manual. La aplicación no incluye análisis antivirus ni correo automático de rechazo; el estado y motivo se consultan dentro del perfil.
+La pantalla presenta bloques independientes para identidad y título obligatorios y antecedentes opcionales. Los botones de carga son azules y el envío final es naranjo. Seleccionar un archivo no lo sube: se utiliza «Adjuntar documento». Se admiten PDF, JPG y PNG válidos de hasta 5 MB, con comprobación de firma. El RUT agrega el guion antes del dígito verificador y mantiene su validación.
 
-En un despliegue, `VERIFICATION_STORAGE_DIR` debe apuntar a un directorio persistente de acceso restringido. Hay que respaldarlo junto con MySQL y configurar HTTPS. No conviene almacenar documentos reales en una instancia temporal. El borrado de cuentas y la política institucional de conservación no forman parte de esta entrega; no se borra documentación desde el panel.
+Recargar conserva los documentos vigentes y muestra únicamente el último de cada tipo. Reemplazar uno no acumula versiones en pantalla. Tras rechazo, revocación o cambio de especialidad, los apartados no muestran los archivos anteriores y exigen nuevas subidas. Las versiones históricas privadas no consumen cupos del trámite actual: desaparece el bloqueo global de veinte archivos. El historial conserva los eventos, pero no se ofrece una lista de versiones antiguas.
 
-## Instalación y cuenta administrativa
+Solo el propietario y el administrador pueden descargar documentos con sesión vigente. Los archivos usan UUID fuera de carpetas públicas y de Git; MySQL guarda metadatos. Las respuestas no publican rutas internas, usan descarga adjunta y `nosniff`, sin caché compartida. No se incluyen antivirus, correo automático ni borrado documental desde el panel. En despliegue, `VERIFICATION_STORAGE_DIR` debe apuntar a almacenamiento persistente restringido, con respaldo junto a MySQL y HTTPS.
 
-Desde la carpeta backend, después de traer la rama:
+## Panel y cuentas
+
+El administrador entra a `/admin/dashboard`. El encabezado permanece visible al desplazar y el menú móvil permite cierre con Escape. Dashboard y Reportes muestran datos existentes de los últimos 7, 30 o 90 días: registros, profesionales y verificaciones. El período usa UTC y los roles actuales. No se presentan cobros ni contactos ficticios.
+
+Profesionales y Verificaciones permiten búsqueda, paginación, filtros y detalle con Información, Documentos e Historial. Usuarios permite búsqueda por rol/estado y desactivación reversible con confirmación. Desactivar bloquea el ingreso y las sesiones anteriores; reactivar exige nuevo ingreso. Los profesionales desactivados salen del directorio público. Las cuentas administrativas están protegidas de desactivación desde el panel.
+
+## Instalación
+
+Desde backend:
 
 ```powershell
 npm run db:generate
@@ -34,68 +35,35 @@ npm run db:seed
 npm run dev
 ```
 
-Si Prisma no puede sustituir su DLL en Windows, detener primero la API y volver a ejecutar `db:generate`. La migración `20261010203000_panel_administrativo` añade campos y una tabla; mantiene los datos y las verificaciones anteriores. El esquema pasa de 9 a 10 tablas de dominio implementadas.
+En Windows se detiene primero la API si Prisma no puede sustituir su DLL. La migración `20261010203000_panel_administrativo` añade los datos administrativos. La nueva `20261011010000_solicitud_verificacion_explicita` cambia el valor por defecto y corrige pendientes sin envío válido, conservando fichas verificadas y solicitudes realmente enviadas. Se aplicó correctamente en MySQL local; hay once migraciones.
 
-Para preparar un administrador, el responsable de la base registra una cuenta independiente y ejecuta localmente, con su correo real:
+Para promover una cuenta existente, activa e independiente del rol profesional:
 
 ```powershell
 npm run admin:promover -- --correo correo-de-la-cuenta --confirmar
 ```
 
-La herramienta exige una cuenta existente y activa, rechaza convertir una cuenta profesional y revoca sus sesiones anteriores. No pide ni imprime la contraseña. La asignación administrativa no se expone por registro público ni por la API. Después hay que iniciar sesión de nuevo.
+La herramienta invalida sesiones anteriores y no imprime contraseñas. El registro público no permite elegir administrador.
 
 ## Contrato y arquitectura
 
-Uso el Prisma compartido de `models/prisma.js`. Las rutas administrativas requieren rol `administrador`; la carga y solicitud requieren `profesional`. La sesión se contrasta en cada petición con `usuarios.activo` y `usuarios.version_sesion`.
+Las rutas delegan en servicios y estos en modelos con Prisma compartido. La sesión contrasta cuenta activa y versión de sesión en cada petición.
 
 | Ruta | Uso |
 | --- | --- |
-| GET `/api/administrador/resumen` | Totales y registros agrupados; días 7/30/90 |
-| GET `/api/administrador/usuarios` | Búsqueda, rol, estado de cuenta y paginación |
-| PATCH `/api/administrador/usuarios/:id/estado` | Activar/desactivar; cuerpo `activo` booleano |
+| GET `/api/administrador/resumen` | Totales y registros; días 7/30/90 |
+| GET `/api/administrador/usuarios` | Búsqueda, rol, estado y paginación |
+| PATCH `/api/administrador/usuarios/:id/estado` | Activación reversible |
 | GET `/api/administrador/profesionales` | Búsqueda, estado y paginación |
-| GET `/api/administrador/profesionales/:id` | Ficha, documentos e historial |
+| GET `/api/administrador/profesionales/:id` | Información, documentos actuales e historial |
 | POST `/api/administrador/profesionales/:id/decision` | Aprobar/rechazar/revocar; revisión y motivo |
-| GET/POST `/api/verificaciones/mi-solicitud` | Consultar y reenviar la solicitud propia |
-| POST `/api/verificaciones/documentos` | Archivo binario; tipo y nombre en query |
+| GET/POST `/api/verificaciones/mi-solicitud` | Consultar y enviar solicitud propia |
+| POST `/api/verificaciones/documentos` | Binario privado; tipo y nombre en query |
 | GET `/api/verificaciones/documentos/:id` | Descarga privada autenticada |
-| PATCH `/api/profesionales/:id/verificar` | Compatibilidad con el PR #15; aplica los mismos requisitos documentales e historial |
+| PATCH `/api/profesionales/:id/verificar` | Compatibilidad: requiere solicitud pendiente y documentos actuales; respuesta `{ id, verificado: true }` |
 
-Datos añadidos: `usuarios.activo/version_sesion`; `profesionales.estado_verificacion/motivo_rechazo/historial_verificacion/revision_verificacion/rut/telefono`; tabla `documentos_profesionales` relacionada con la ficha. La respuesta de aprobación conserva `{ id, verificado }`.
+## Validación y publicación
 
-```mermaid
-flowchart TD
-  P["Profesional: Certificaciones"] --> D["Adjunta identidad y título privados"]
-  D --> S["Envía RUT y solicitud"]
-  S --> A["Administrador revisa información y documentos"]
-  A -->|Aprobar| V["Verificado: insignia en perfil y listado"]
-  A -->|Rechazar con motivo| R["Rechazado: motivo visible al profesional"]
-  R --> D
-  V -->|Revocar con motivo| N["Rechazado: retira insignia y exige documentos nuevos"]
-  N --> D
-  V -->|Cambiar especialidad| S
-```
+213 pruebas backend en 25 suites y 165 frontend en 21 archivos aprobadas. La regresión adicional sobre Express y MySQL reales completó 49 comprobaciones, incluidas 22 cargas sucesivas del título, recarga, rechazo, reenvío, cambio de especialidad y endpoint compatible. Las cuentas y archivos temporales se eliminaron al terminar. Los casos y límites están en [FS-HU-12_Verificacion.md](../Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
-## Validación y seguimiento
-
-- Backend: 206 pruebas en 25 suites aprobadas.
-- Frontend: 161 pruebas en 21 archivos aprobadas.
-- Lint en ambas capas y build frontend correctos.
-- MySQL local: 17 comprobaciones del flujo con cuentas y archivos temporales, eliminados al terminar. Cubrí documentos, permisos de descarga, rechazo/reenvío/aprobación, revisión obsoleta, desactivación, reactivación y protección del administrador.
-- Edge: cinco vistas en escritorio de 1440 px y móvil de 390 px, menú y aprobación con API simulada; sin errores de JavaScript ni desbordamiento horizontal. Estas capturas no son evidencia de datos de producción.
-- Encabezado al desplazarse: corregí su posición para conservar el logo y el acceso al menú. Comprobé un desplazamiento de 650 px en escritorio (1440 × 720) y móvil (390 × 844): encabezado a 0 px, barra lateral a 78 px, sin desbordamiento ni errores de JavaScript. El menú móvil abre y cierra con el botón y Escape. Lint y build frontend correctos después del ajuste.
-- Certificaciones: el formulario muestra el detalle de validación recibido de la API (por ejemplo, RUT sin guion o dígito verificador incorrecto), conserva los datos para corregirlos y distingue archivos seleccionados de documentos adjuntados. Tres pruebas del componente aprobadas, incluidas corrección/reenvío después de un error y selección sin subida automática; lint y build correctos.
-- Mejora del formulario: sustituí el selector de tipo por tres bloques independientes (identidad y título obligatorios; antecedentes opcionales), con archivo, botón y estado de adjunto propios. El RUT se formatea al perder el foco y antes de enviar: elimina puntos y espacios, agrega el guion antes del último carácter y convierte K a mayúscula, conservando la validación de la API. Siete pruebas del componente aprobadas; revisión en Edge a 390 y 1440 px, incluidas subida con botón, conservación del otro archivo y formato del RUT, sin desbordamiento ni errores de JavaScript. Lint y build correctos.
-- Documentos de la nueva solicitud: corregí la persistencia de «Adjuntado» tras rechazar o revocar. La API filtra los archivos anteriores a la última decisión y exige nuevas subidas para reenviar o aprobar. Solo se muestra el último archivo actual por tipo, sin acceso a versiones anteriores en las pantallas. Comprobé el reinicio, la recarga con documentos nuevos y el bloqueo de reenvío/aprobación con archivos antiguos: 206 pruebas backend en 25 suites y 16 pruebas frontend de Certificaciones y administración aprobadas; lint en ambas capas y build correctos. Los apartados conservan numeración, fondo y borde azul.
-
-El panel está en el PR #17, apilado sobre el #16, y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.18 incorpora esta ampliación y los diagramas 01–04, 07, 08 y nuevo 11; los marcos anteriores y la documentación del DAS 1.17 se conservan como historial. Los enlaces vigentes están en Exportaciones_Miro.md. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.
-
-- Validación final: 161 pruebas frontend en 21 archivos; 17 de Certificaciones y administración. Recargar o reabrir un perfil sin verificar deja todos los apartados vacíos y exige adjuntar identidad y título en esa pantalla antes de enviar. Lint y build correctos.
-
-## Solicitudes cerradas
-
-Después de rechazar o revocar, la solicitud queda cerrada: el administrador no ve Aprobar/Rechazar y la API responde 409 a ambas decisiones. Adjuntar archivos no reabre la revisión; solo enviar una nueva solicitud desde Certificaciones la devuelve a pendiente. Comprobé rechazo, revocación, recarga y reenvío: 208 pruebas backend y 163 frontend aprobadas.
-
-## Validación manual final
-
-Completé correctamente los seis recorridos manuales propuestos: reenvío, aprobación e insignias, rechazo y cierre, validaciones de documentos/RUT, desactivación/reactivación y filtros/reportes/navegación móvil. El detalle y el origen de esta confirmación están en Plan de Pruebas/FS-HU-12_Verificacion.md. Este resultado no modifica la arquitectura: DAS 1.18 y diagramas vigentes se conservan. Revisión, fusión y aceptación del PO pendientes.
+El PR #16 está fusionado. El #17 quedó cerrado sin fusionar al desaparecer su rama base; la entrega continúa en el [PR #19](https://github.com/rodriacr/FitSearch/pull/19), dirigido a main. El DAS local 1.19 y flujo 11 reflejan estas correcciones. Drive y Miro conservan la publicación anterior; su sincronización se realizará después de fusionar el PR, conforme a la revisión de Rodrigo.

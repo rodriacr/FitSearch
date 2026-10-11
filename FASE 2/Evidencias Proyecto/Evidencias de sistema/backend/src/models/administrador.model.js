@@ -1,4 +1,6 @@
 const prisma = require('./prisma');
+const ErrorHttp = require('../utils/ErrorHttp');
+const { documentoPublico } = require('./verificacion.model');
 
 const seleccionUsuario = { id: true, nombre: true, correo: true, activo: true, fechaRegistro: true, rol: { select: { nombre: true } } };
 const seleccionProfesional = {
@@ -35,11 +37,10 @@ async function listarProfesionales({ q, estado, pagina, limite }) {
 }
 
 function detalleProfesional(id) {
-  return prisma.profesional.findFirst({ where: { ...profesionalVigente, id }, select: { ...seleccionProfesional, historialVerificacion: true, documentos: { select: require('./verificacion.model').documentoPublico, orderBy: [{ fechaCreacion: 'desc' }, { id: 'desc' }] } } });
+  return prisma.profesional.findFirst({ where: { ...profesionalVigente, id }, select: { ...seleccionProfesional, historialVerificacion: true, documentos: { select: documentoPublico, orderBy: [{ fechaCreacion: 'desc' }, { id: 'desc' }] } } });
 }
 
 async function cambiarEstadoUsuario(id, activo) {
-  const ErrorHttp = require('../utils/ErrorHttp');
   return prisma.$transaction(async (tx) => {
     const cuenta = await tx.usuario.findUnique({ where: { id }, select: seleccionUsuario });
     if (!cuenta) throw new ErrorHttp(404, 'No encontramos esta cuenta');

@@ -24,5 +24,5 @@ router.patch('/usuarios/:id/estado', param('id').isInt({ min: 1 }).toInt(), body
 router.post('/profesionales/:id/decision', param('id').isInt({ min: 1 }).toInt(),
   body('accion').isIn(['aprobar', 'rechazar', 'revocar']), body('revision').isInt({ min: 0 }).toInt(),
   body('motivo').default('').isString().bail().trim().isLength({ max: 500 }).custom((v, { req }) => req.body.accion === 'aprobar' || v.length >= 5), validar,
-  async (req, res) => { const { id, ...datos } = matchedData(req); res.json(await require('../models/verificacion.model').decidir(id, { ...datos, administradorId: req.usuario.id })); });
+  async (req, res) => { const { id, ...datos } = matchedData(req); res.json(await servicio.decidirVerificacion(id, { ...datos, administradorId: req.usuario.id })); });
 module.exports = router;

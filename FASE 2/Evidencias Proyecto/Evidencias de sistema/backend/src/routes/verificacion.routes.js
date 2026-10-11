@@ -2,7 +2,7 @@ const { Router, raw } = require('express');
 const { body, param, query, matchedData } = require('express-validator');
 const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
 const validar = require('../middlewares/validar');
-const modelo = require('../models/verificacion.model');
+const servicio = require('../services/verificacion.service');
 const documentos = require('../services/documento.service');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -17,13 +17,12 @@ function rutValido(valor) {
 const router = Router();
 router.use(autenticar);
 router.get('/mi-solicitud', autorizarRoles('profesional'), async (req, res) => {
-  const fila = await modelo.buscarPorUsuario(req.usuario.id);
-  res.json({ solicitud: fila && { id: fila.id, estado: fila.estadoVerificacion, motivo: fila.motivoRechazo, rut: fila.rut, telefono: fila.telefono, documentos: modelo.documentosActuales(fila), historial: fila.historialVerificacion || [] } });
+  res.json(await servicio.obtenerSolicitud(req.usuario.id));
 });
 router.post('/mi-solicitud', autorizarRoles('profesional'),
   body('rut').isString().bail().trim().customSanitizer((v) => v.replace(/\./g, '').toUpperCase()).custom(rutValido).withMessage('Ingresa un RUT válido, con guion y dígito verificador'),
   body('telefono').optional({ values: 'falsy' }).isString().bail().trim().matches(/^\+?[\d\s-]{8,20}$/).withMessage('Ingresa un teléfono válido'), validar,
-  async (req, res) => res.json(await modelo.enviarSolicitud(req.usuario.id, { telefono: null, ...matchedData(req) })));
+  async (req, res) => res.json(await servicio.enviarSolicitud(req.usuario.id, { telefono: null, ...matchedData(req) })));
 router.post('/documentos', autorizarRoles('profesional'),
   query('tipo').isIn(['identidad', 'titulo', 'antecedentes']), query('nombre').isString().bail().trim().isLength({ min: 1, max: 150 }), validar,
   raw({ type: ['application/pdf', 'image/jpeg', 'image/png', 'application/octet-stream'], limit: '5mb' }),

@@ -18,9 +18,9 @@ async function adjuntarObligatorios() {
   }
 }
 
-test('permite corregir y reenviar una solicitud rechazada con los documentos existentes', async () => {
+test('permite corregir y reenviar una solicitud rechazada con documentos nuevos', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
-  const fetch = simularApi({ '/api/verificaciones/mi-solicitud': (_url, opciones) => opciones.method === 'POST' ? [200, { estado: 'pendiente' }] : [200, { solicitud: { estado: 'rechazado', motivo: 'Documento ilegible', rut: '12345678-5', telefono: '', documentos: [{ id: 3, tipo: 'titulo', nombre: 'titulo.pdf' }], historial: [] } }] });
+  const fetch = simularApi({ '/api/verificaciones/mi-solicitud': (_url, opciones) => opciones.method === 'POST' ? [200, { estado: 'pendiente' }] : [200, { solicitud: { estado: 'rechazado', motivo: 'Documento ilegible', rut: '12345678-5', telefono: '', documentos: [], historial: [] } }] });
   render(<Certificaciones />);
   expect(await screen.findByText('Motivo: Documento ilegible')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'titulo: titulo.pdf' })).not.toBeInTheDocument();
@@ -99,6 +99,7 @@ test('cada documento sube con su propio tipo y conserva la selección de los otr
   expect(titulo.files[0]).toBe(archivoTitulo);
   fireEvent.submit(titulo.closest('form'));
   await screen.findByRole('button', { name: 'titulo: titulo.pdf' });
+  expect(screen.getByText('Sin solicitud enviada')).toBeInTheDocument();
   expect(identidad.files[0]).toBe(archivoIdentidad);
   expect(screen.getByRole('button', { name: 'Reemplazar documento: Título profesional' })).toBeDisabled();
   await waitFor(() => expect(screen.getByRole('button', { name: 'Adjuntar documento: Documento de identidad' })).toBeEnabled());
@@ -131,19 +132,28 @@ test('una solicitud rechazada sin archivos actuales solicita adjuntarlos nuevame
   expect(screen.getByRole('button', { name: 'Adjuntar documento: Documento de identidad' })).toBeDisabled();
 });
 
-test('al recargar deja ambos apartados vacíos aunque la API conserve un adjunto y bloquea el envío incompleto', async () => {
+test('recargar conserva los documentos actuales y permite enviar sin volver a subirlos', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
-  const fetch = simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'rechazado', motivo: 'Corregir documentos', rut: '12345678-5', telefono: '', documentos: [{ id: 8, tipo: 'identidad', nombre: 'guardado.png' }], historial: [] } } });
+  const solicitud = { estado: 'sin_solicitud', rut: '12345678-5', telefono: '', documentos: [{ id: 8, tipo: 'identidad', nombre: 'guardado.png' }, { id: 9, tipo: 'titulo', nombre: 'titulo.pdf' }], historial: [] };
+  const fetch = simularApi({ '/api/verificaciones/mi-solicitud': (_url, opciones) => opciones.method === 'POST' ? [200, { estado: 'pendiente' }] : [200, { solicitud }] });
   const vista = render(<Certificaciones />);
-  await screen.findByRole('textbox', { name: 'RUT' });
-  await adjuntarObligatorios();
+  expect(await screen.findByText('Sin solicitud enviada')).toBeInTheDocument();
   expect(screen.getAllByText('Adjuntado')).toHaveLength(2);
   vista.unmount();
   render(<Certificaciones />);
+  expect(await screen.findByRole('button', { name: 'identidad: guardado.png' })).toBeInTheDocument();
+  expect(screen.getAllByText('Adjuntado')).toHaveLength(2);
+  await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud a revisión' }));
+  expect(await screen.findByText('Solicitud enviada para revisión.')).toBeInTheDocument();
+  expect(fetch.mock.calls.some(([url]) => url.startsWith('/api/verificaciones/documentos'))).toBe(false);
+});
+
+test('bloquea el envío si la API no contiene ambos documentos actuales', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  const fetch = simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'sin_solicitud', rut: '12345678-5', documentos: [{ id: 8, tipo: 'identidad', nombre: 'guardado.png' }], historial: [] } } });
+  render(<Certificaciones />);
   await screen.findByRole('textbox', { name: 'RUT' });
-  expect(screen.getAllByText('Sin adjuntar')).toHaveLength(3);
-  expect(screen.queryByRole('button', { name: 'identidad: guardado.png' })).not.toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud a revisión' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('Adjunta el documento de identidad y el título profesional');
-  expect(fetch.mock.calls.some(([url, opciones]) => url === '/api/verificaciones/mi-solicitud' && opciones.method === 'POST')).toBe(false);
+  expect(fetch.mock.calls.some(([, opciones]) => opciones.method === 'POST')).toBe(false);
 });

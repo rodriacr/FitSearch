@@ -57,7 +57,7 @@ model Profesional {
   especialidad      String           @db.VarChar(100)
   descripcion       String?          @db.Text
   verificado        Boolean          @default(false)
-  estadoVerificacion String          @default("pendiente") @map("estado_verificacion") @db.VarChar(20)
+  estadoVerificacion String          @default("sin_solicitud") @map("estado_verificacion") @db.VarChar(20)
   motivoRechazo     String?          @map("motivo_rechazo") @db.VarChar(500)
   historialVerificacion Json?       @map("historial_verificacion")
   revisionVerificacion Int          @default(0) @map("revision_verificacion")

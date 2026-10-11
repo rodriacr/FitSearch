@@ -1,5 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
+const ErrorHttp = require('../utils/ErrorHttp');
+const verificacion = require('./verificacion.model');
 
 // Solo datos de la ficha pública. Nunca incluir correo de acceso, contraseña ni salud.
 // La búsqueda usa SQL parametrizado ($queryRaw) porque combina texto, filtros, la distancia calculada
@@ -105,19 +107,24 @@ function guardarFicha(usuarioId, datos) {
   return prisma.$transaction(async (tx) => {
     const ficha = await tx.profesional.findUnique({ where: { usuarioId } });
     if (!ficha) return tx.profesional.create({ data: { usuarioId, ...datos }, select: seleccionFicha });
-    const retirar = ficha.verificado && datos.especialidad !== ficha.especialidad;
+    const especialidadCambio = datos.especialidad !== ficha.especialidad;
+    const teniaSolicitud = ficha.verificado || ficha.estadoVerificacion === 'pendiente';
     const historial = Array.isArray(ficha.historialVerificacion) ? ficha.historialVerificacion : [];
     const cambio = await tx.profesional.updateMany({ where: { id: ficha.id, revisionVerificacion: ficha.revisionVerificacion }, data: {
       ...datos, revisionVerificacion: { increment: 1 },
-      ...(retirar && { verificado: false, estadoVerificacion: 'pendiente', motivoRechazo: null, historialVerificacion: [...historial, { accion: 'cambio_especialidad', fecha: new Date().toISOString() }] }),
+      ...(especialidadCambio && {
+        verificado: false, estadoVerificacion: teniaSolicitud ? 'rechazado' : 'sin_solicitud',
+        motivoRechazo: 'La especialidad cambió. Adjunta documentos de la nueva especialidad y envía otra solicitud.',
+        historialVerificacion: [...historial, { accion: 'cambio_especialidad', fecha: new Date().toISOString() }],
+      }),
     } });
-    if (!cambio.count) throw new (require('../utils/ErrorHttp'))(409, 'Tu ficha cambió. Actualiza la pantalla antes de guardar');
+    if (!cambio.count) throw new ErrorHttp(409, 'Tu ficha cambió. Actualiza la pantalla antes de guardar');
     return tx.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });
   });
 }
 
 function verificarPerfil(id, administradorId) {
-  return require('./verificacion.model').decidir(id, { accion: 'aprobar', administradorId });
+  return verificacion.decidir(id, { accion: 'aprobar', administradorId });
 }
 
 module.exports = { listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha, verificarPerfil };

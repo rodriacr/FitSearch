@@ -12,9 +12,19 @@ function buscarPorUsuario(usuarioId) { return prisma.profesional.findUnique({ wh
 function buscarPorId(id) { return prisma.profesional.findUnique({ where: { id }, select: seleccion }); }
 function buscarDocumento(id) { return prisma.documentoProfesional.findUnique({ where: { id }, include: { profesional: { select: { usuarioId: true } } } }); }
 function documentosActuales(ficha) {
-  const reinicio = Math.max(0, ...(ficha.historialVerificacion || []).filter((evento) => ['rechazar', 'revocar'].includes(evento.accion)).map((evento) => Date.parse(evento.fecha) || 0));
-  const ordenados = [...(ficha.documentos || [])].filter((documento) => !reinicio || new Date(documento.fechaCreacion).getTime() > reinicio)
-    .sort((a, b) => (new Date(b.fechaCreacion).getTime() || 0) - (new Date(a.fechaCreacion).getTime() || 0) || b.id - a.id);
+  const eventos = ficha.historialVerificacion || [];
+  const cierres = ['rechazar', 'revocar', 'cambio_especialidad'];
+  const ultimoCierre = eventos.findLastIndex((evento) => cierres.includes(evento.accion));
+  const subidas = eventos.slice(ultimoCierre + 1).filter((evento) => evento.accion === 'documento');
+  const idsActuales = new Set(subidas.map((evento) => evento.documentoId));
+  const reinicio = ultimoCierre >= 0 ? Date.parse(eventos[ultimoCierre].fecha) || 0 : 0;
+  const ordenados = [...(ficha.documentos || [])].filter((documento) => {
+    if (ultimoCierre < 0) return true;
+    // Los eventos identifican nuevas subidas incluso con fechas MySQL de precisión de un segundo.
+    if (idsActuales.has(documento.id)) return true;
+    return new Date(documento.fechaCreacion).getTime() > reinicio;
+  }).sort((a, b) => (new Date(b.fechaCreacion).getTime() || 0)
+    - (new Date(a.fechaCreacion).getTime() || 0) || b.id - a.id);
   const tipos = new Set();
   return ordenados.filter((documento) => {
     if (tipos.has(documento.tipo)) return false;
@@ -58,10 +68,12 @@ async function guardarDocumento(usuarioId, datos) {
     const ficha = await tx.profesional.findUnique({ where: { usuarioId }, select: seleccion });
     if (!ficha) throw new ErrorHttp(409, 'Completa tu ficha profesional antes de adjuntar documentos');
     if (ficha.verificado) throw new ErrorHttp(409, 'La ficha ya está verificada; contacta al administrador si debes corregir documentos');
-    const total = await tx.documentoProfesional.count({ where: { profesionalId: ficha.id } });
-    if (total >= 20) throw new ErrorHttp(409, 'Alcanzaste el límite de documentos. Contacta al administrador');
+    // Solo hay tres tipos admitidos; las versiones antiguas no consumen cupos del trámite actual.
     const documento = await tx.documentoProfesional.create({ data: { ...datos, profesionalId: ficha.id }, select: documentoPublico });
-    await actualizar(tx, ficha, { historialVerificacion: historial(ficha, { accion: 'documento', tipo: datos.tipo, documentoId: documento.id }) });
+    await actualizar(tx, ficha, {
+      ...(ficha.estadoVerificacion === 'pendiente' && { estadoVerificacion: 'sin_solicitud' }),
+      historialVerificacion: historial(ficha, { accion: 'documento', tipo: datos.tipo, documentoId: documento.id }),
+    });
     return documento;
   });
 }

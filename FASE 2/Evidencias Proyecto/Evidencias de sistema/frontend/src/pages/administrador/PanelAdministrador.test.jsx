@@ -99,3 +99,12 @@ test.each(['rechazar', 'revocar'])('oculta decisiones después de %s y al recarg
   expect(await screen.findByRole('button', { name: 'Aprobar verificación' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Rechazar solicitud' })).toBeInTheDocument();
 });
+
+
+test('una ficha sin solicitud enviada no ofrece decisiones administrativas', async () => {
+  simularApi({ '/api/administrador/profesionales/2': { profesional: { ...ficha, estado: 'sin_solicitud' } } });
+  renderizarApp('/admin/verificaciones/2');
+  expect(await screen.findByText('Sin solicitud enviada')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Aprobar verificación' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rechazar solicitud' })).not.toBeInTheDocument();
+});

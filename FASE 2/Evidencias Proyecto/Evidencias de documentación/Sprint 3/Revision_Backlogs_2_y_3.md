@@ -1,6 +1,6 @@
 # Revisión de Sprint Backlogs 2 y 3
 
-Revisión del 10-10-2026, sobre la copia local de FitSearch, commit `5fcbf8e`. Se contrastaron las dos planillas de Sprint Backlog, el Product Backlog, las tarjetas de Trello y el código. Es una revisión de seguimiento; no constituye aceptación de historias por el Product Owner ni una nueva asignación de trabajo.
+Estado documental al 11-10-2026. Los hallazgos de las planillas proceden de la revisión del 10-10-2026 sobre el commit 5fcbf8e; las decisiones posteriores de los PR se distinguen más abajo. No se asignan responsables ni se aceptan historias sin acuerdo del equipo.
 
 ## Hallazgos iniciales
 
@@ -17,68 +17,27 @@ Revisión del 10-10-2026, sobre la copia local de FitSearch, commit `5fcbf8e`. S
 
 Las fórmulas de seguimiento se conservan. No se observaron errores Excel en los valores almacenados de las dos planillas; esto no demuestra recálculo en Excel. Con estimaciones ausentes, los resultados de horas restantes no permiten evaluar el avance real.
 
-## Orden de trabajo
+## Correcciones de la revisión del PR 13
 
-1. Corregir el seguimiento de FS-HU-04 y conciliar la replanificación de FS-HU-13, manteniendo pendientes las aceptaciones que faltan.
-2. Revisar específicamente el PR #13 y registrar hallazgos y resultado.
-3. Confirmar responsables, estimaciones, horas reales y aceptación de las cinco historias ya implementadas.
-4. Desarrollar FS-HU-13 antes de FS-HU-14. FS-HU-06 puede avanzar en paralelo si el equipo asigna un responsable.
+Se corrigieron la navegación administrativa sin bucles, el descarte del JWT anterior ante 409 en otra pestaña y la navegación por teclado en las pestañas profesionales. Los ajustes y diagramas fueron integrados mediante los PR #15 y #16. Las planillas locales registran FS-HU-04 implementada con aceptación pendiente y el arrastre de FS-HU-13 al Sprint 3, sin inventar estimaciones.
 
-FS-HU-12 (verificación) sigue prevista para Sprint 5 y en revisión del PO mediante PR #15. Las pruebas manuales de API y de insignias se registraron en su tarjeta; no se agrega esta historia al Sprint 3.
+Luis indicó aproximadamente siete horas para el perfil profesional del PR #12. Se conserva como total retrospectivo, sin desglose por fecha/tarea y sin sustituir las dos horas de la revisión del PR #9/#10.
 
-## Revisión inicial del PR #13
+## Orden de trabajo pendiente
 
-Se contrastó el merge `9c440a9` con su primer padre y se revisaron elección de rol, protección de rutas, sesión y lectura del perfil profesional. El PR cambia 96 archivos, incluidos documentos y evidencias; este apartado cubre esos flujos y no aprueba la totalidad del PR.
+1. Confirmar aceptación de FS-HU-04 y las historias implementadas, así como responsables, estimaciones y horas del equipo.
+2. Revisar el panel y las correcciones del PR #19, y sincronizar Drive después de fusionar.
+3. Resolver disponibilidad FS-HU-13 antes de reservas FS-HU-14. FS-HU-06 puede avanzar cuando se asigne responsable.
 
-1. **Inicio del administrador: redirección a la misma ruta.** `inicioDe({ rol: 'administrador', rolConfirmado: true })` devuelve `/inicio`. Esa ruta exige rol `usuario`; `RutaProtegida` rechaza al administrador y lo redirige nuevamente a `/inicio`. Se comprobó la función real con Node y se contrastó con las rutas de App. Coincide con la pantalla blanca observada durante las pruebas manuales. Debe resolverse la navegación de este rol; no requiere asumir un panel administrativo completo.
-2. **Recuperación de elección de perfil en otra pestaña: token anterior.** Ante 409 en `ElegirPerfil`, el cliente lee el usuario actualizado y conserva `sesion.token`. Si otra pestaña eligió «Profesional», el JWT anterior conserva el rol «usuario», aunque la interfaz navega al espacio profesional. `autenticar`/`autorizarRoles` usan el rol del JWT, por lo que la ficha propia puede recibir 403. El caso se identificó por análisis del código; falta reproducirlo y cubrirlo con una prueba antes de resolverlo y aprobar la revisión.
+## Estado posterior a la revisión
 
-La confirmación de rol del modelo sí usa `updateMany` con la condición `rolConfirmado: false`, lo que evita que una segunda elección sobrescriba la primera. La selección de ficha propia incorpora el ID que necesita la vista pública.
+El PR #15 fue fusionado en main (`20c3ea3`) y el PR #16 también está fusionado (`d56e244`). Los ajustes de navegación, flujo 06 y DAS 1.17 de esa etapa fueron sincronizados con Drive. Por tanto, los pendientes de Drive descritos en los antecedentes no siguen abiertos como tareas de esa versión.
 
-Estos hallazgos motivaron las correcciones descritas a continuación; DoD-04 sigue en revisión.
+Rodrigo entregó el mockup y autorizó Dashboard, Profesionales, Verificaciones, Usuarios y Reportes, excluyendo Configuración y Contenido. El panel se implementó y continúa en revisión mediante el PR #19 contra main; sustituye al #17 cerrado sin fusionar tras eliminarse su rama base. Esta autorización no cambia por sí sola el Sprint 5 del Product Backlog ni declara la historia aceptada.
 
-## Correcciones realizadas después de la revisión
-
-- Sprint 2: FS-HU-04 figura implementada por Luis, con ajustes de Rodrigo y aceptación del PO pendiente. Las tres tareas de disponibilidad registran su replanificación al Sprint 3, conservando su historial.
-- Sprint 3: se agregaron las tres tareas de FS-HU-13 en las filas 22 a 24 y el seguimiento de la revisión posterior del PR #13 en la fila 25. No se asignó responsable de desarrollo ni se inventaron estimaciones.
-- Product Backlog: FS-HU-04 pasa a «En Proceso», con nota de implementación y aceptación pendiente; FS-HU-13 pasa a Sprint 3 según la replanificación de Trello.
-- Elección del perfil: el 409 de otra pestaña descarta la sesión anterior y solicita un nuevo ingreso. La prueba comprueba que no se consulta la ficha con el token viejo y que el nuevo ingreso usa el token del profesional.
-- Administrador: la navegación va a una página de acceso no disponible con opción de cerrar sesión, evitando la redirección repetida a `/inicio`. No se implementa un panel administrativo ni se modifica el permiso de acceso a las páginas del usuario o profesional.
-
-Validación: la prueba de regresión del conflicto entre pestañas falló antes de la corrección y pasó después. Frontend: 19 archivos, 138 pruebas aprobadas; lint y build sin errores. Después se amplió la misma prueba para verificar el nuevo ingreso, y las ocho pruebas de ElegirPerfil volvieron a pasar. Las planillas se recalcularon y renderizaron con la herramienta de hojas de cálculo; se verificó la conservación de fórmulas, valores y estilos fuera de las celdas autorizadas. No se verificó su recálculo en Excel.
-
-Quedan pendientes la revisión completa del PR #13, las horas reales y estimaciones del equipo, la asignación de las tres funcionalidades del Sprint 3 y las aceptaciones del PO. Las copias de Drive no se actualizaron.
-
-## Continuación de la revisión del PR #13
-
-Se amplió la revisión de código al backend de clima y autenticación, las restricciones de buscador/favoritos/asistente, los menús de ambos roles, el formulario de ficha, su vista previa, los cambios del asistente del usuario, los estilos y las pruebas modificadas. Se contrastó el merge `9c440a9` con su primer padre y con las correcciones de la rama del PR #15. GitHub todavía mostraba el PR #15 abierto, con `1e5e404` como último commit, antes de esta continuación. Trello no contenía nuevas asignaciones ni aceptación del PO en las dos tarjetas de seguimiento consultadas.
-
-### Hallazgo corregido: pestañas inaccesibles con teclado
-
-En `pages/profesional/PerfilProfesional.jsx`, las pestañas inactivas tenían `tabIndex=-1`, pero no había manejo de flechas. Solo «Información» era alcanzable con Tab; las demás exigían usar el ratón. Se añadió navegación con flechas izquierda/derecha, Inicio y Fin, coordinando el foco, `aria-selected` y el panel visible.
-
-La nueva prueba falló antes del cambio (el foco seguía en Información al pulsar flecha derecha) y pasó después. También verifica el recorrido circular y los extremos. Validación final: **139 pruebas en 19 archivos**, lint y build del frontend correctos. El backend no se modificó en esta continuación; su última validación registrada sigue siendo 166 pruebas.
-
-### Resultados y límites de esta revisión
-
-- La confirmación del rol sigue siendo condicional en una única escritura y no permite elegir administrador. Al elegir el perfil se emite un JWT con el rol actualizado y se conserva su vencimiento.
-- El clima usa un destino fijo, ubicación redondeada, tiempo de espera y caché limitada. Si falla, la interfaz conserva el Inicio sin la tarjeta; las pruebas simulan el proveedor y no verifican un servicio externo real.
-- La ficha propia se consulta por el usuario autenticado; el formulario envía únicamente los campos editables. La vista previa reutiliza la ficha pública y oculta favoritos. Las funciones aún no implementadas se presentan como Próximamente.
-- Las pruebas retiradas del antiguo selector/ficha en `Perfil.test.jsx` se corresponden con el traslado del flujo a ElegirPerfil y PerfilProfesional; se revisó su cobertura en los archivos nuevos.
-- **Documentación pendiente de sincronización:** el diagrama 06 (MMD y exportaciones PNG/SVG) todavía dice que, ante 409, se va al Inicio. La corrección del PR #15 exige cerrar la sesión anterior y volver a ingresar. Deben actualizarse las versiones del diagrama y contrastar su ilustración en el DAS/Miro antes de dar por cerrada toda la revisión documental. No se editaron ni publicaron estos diagramas en esta continuación.
-- La revisión de estilos fue de código; no sustituye una nueva comprobación visual de todos los tamaños de pantalla. Las capturas históricas del PR #13 no prueban las correcciones nuevas.
-
-El avance técnico queda registrado con tres fallos corregidos (administrador, conflicto entre pestañas y navegación por teclado). **No se declara aceptada la historia ni cerrado DoD-04** mientras se concilia la documentación y el equipo revisa las correcciones del PR #15. Siguen pendientes las copias de Drive, las asignaciones/estimaciones del equipo y la aceptación del PO.
-
-Luis indicó aproximadamente **7 horas** dedicadas al perfil profesional del PR #12. Se registró como total retrospectivo aproximado en Trello; no se distribuyó por fechas o tareas sin ese desglose, ni se reemplazaron las 2 horas ya registradas para la revisión de PR #9/#10.
+La revisión del 11-10-2026 corrige las fichas pendientes sin envío, la conservación de adjuntos vigentes, el bloqueo por versiones históricas y el cambio de especialidad. DAS local 1.19 y flujo 11 preparados. Drive y Miro conservan la publicación anterior hasta fusionar el PR, conforme a Rodrigo. Siguen pendientes las asignaciones, estimaciones, desglose de horas y aceptaciones del equipo; no se inventan datos ni se confunden con la revisión técnica.
 
 ## Fuentes y límites
-
-### Continuación del 10-10-2026 tras fusionar el PR #15
-
-Rodrigo aprobó el código y fusionó el PR #15 en main (`20c3ea3`). Los pendientes menores de su revisión se aplican en `codex/actualizar-diagramas-y-revision`: constante del aviso administrativo, retorno de usuario/profesional a su Inicio, retirada del mock sin uso, D25 y flujo 8, conteos de pruebas y limpieza documental. Resultado: 166 pruebas backend y 144 frontend, lint correcto y build frontend correcto.
-
-Se corrigieron 06/07/08 y sus imágenes del DAS 1.17; Miro tiene siete marcos actuales del Sprint 3. Se recibieron y revisaron las siete exportaciones. El DAS 1.17 se corrigió y se revisó visualmente con Word (44 páginas); la secuencia 06 se presenta en tres partes y D28 permanece en una sola fila. El PR #16 queda pendiente de revisión del PO. Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el DAS 1.17 y las instrucciones de Miro. Conservé los enlaces existentes y las versiones históricas. La sincronización documental está completada. Se mantienen pendientes las asignaciones/estimaciones del equipo y la aceptación final de FS-HU-12. Rodrigo autorizó avanzar con la vista del administrador; falta recibir su mockup para concretar la implementación. La vista todavía no está implementada.
 
 - [Sprint Backlog 2](../Sprint%202/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx), hoja «Sprint Backlog», filas 6 a 31.
 - [Sprint Backlog 3](PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx), hoja «Sprint Backlog», filas 6 a 21.
@@ -87,4 +46,4 @@ Se corrigieron 06/07/08 y sus imágenes del DAS 1.17; Miro tiene siete marcos ac
 - [FS-HU-04](https://trello.com/c/NRpHvcg0), [FS-HU-06](https://trello.com/c/H2XV5ORS), [FS-HU-13](https://trello.com/c/Wie6El3W), [FS-HU-14](https://trello.com/c/xxQfnJVB) y [revisión del PR #13](https://trello.com/c/wjtYViPS).
 - Código: esquema Prisma, rutas del backend, navegación y pantallas de agenda/mapas del frontend.
 
-Las copias de Drive no se descargaron ni modificaron. Las planillas locales se actualizaron después de esta revisión. Las asignaciones y la aceptación del PO se describen según la evidencia disponible, no como decisiones nuevas.
+Las observaciones de las planillas corresponden a las filas y evidencias de la revisión inicial. La autorización administrativa posterior y sus correcciones no asignan disponibilidad, reservas ni mapa/lista a un integrante. Las aproximadamente siete horas de Luis son un total retrospectivo sin desglose diario.
