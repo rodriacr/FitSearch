@@ -1,25 +1,24 @@
-# Exportaciones y revisión de Miro
+# Diagramas y exportaciones de Miro
 
-Marcos actuales creados el 10-10-2026. Exportar cada marco como PNG a máxima resolución y enviar los archivos para contrastar su disposición con las imágenes locales. Conservar SVG si está disponible.
+DAS local 1.19 preparado para el PR #19 al 11-10-2026. Los enlaces siguientes corresponden a los marcos publicados previamente en Miro; no incluyen todavía la corrección del flujo 11. Drive y Miro se sincronizarán después de fusionar el PR, conservando enlaces y versiones históricas.
 
-## Revisión de exportaciones recibidas
+| Número | Marco publicado | Estado frente al PR #19 |
+| --- | --- | --- |
+| 01 | [Casos de uso](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777496) | Estructura vigente; sin cambios en esta corrección |
+| 02 | [Clases del dominio](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777497) | Estructura vigente; sin cambios en esta corrección |
+| 03 | [DER completo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777498) | Estructura vigente; sin cambios en esta corrección |
+| 04 | [DER implementado](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777499) | Estructura vigente; sin cambios en esta corrección |
+| 06 | [Elección de perfil y asistente](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989749) | Estructura vigente; sin cambios en esta corrección |
+| 07 | [Vista de desarrollo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777500) | Estructura vigente; sin cambios en esta corrección |
+| 08 | [Vista física](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777501) | Estructura vigente; sin cambios en esta corrección |
+| 11 | [Verificación administrativa](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777502) | Corrección local preparada; publicación pendiente de fusión |
 
-Se recibieron JPG de 01, 02, 03, 04 y 06. El 02 incluye rolConfirmado, Favorito y Resena; el 03 representa las catorce tablas del modelo completo; el 04 contiene las nueve implementadas; el 06 muestra el nuevo ingreso tras 409, reanudación y edición del perfil. El 01 tenía conexiones que atravesaban los casos de uso: se fijaron los extremos al lado derecho del actor y al izquierdo del caso, y se identificaron los actores con el estereotipo UML.
+## Archivos y cambios
 
-Los diagramas 07 y 08 no se pudieron exportar por errores del editor de Miro en etiquetas con punto y coma. Se sustituyeron por etiquetas entre comillas sin esos separadores, conservando el contenido. Ambos pasan parseo y renderizado local con Mermaid; se actualizaron los mismos widgets de Miro.
+Las fuentes MMD y exportaciones SVG/PNG están en `Diagramas (Miro)/Actualización Sprint 3/`. Se generan desde la misma fuente; son exportaciones locales, no capturas nativas de Miro. Las adaptaciones legibles para Word se conservan en `Presentacion_DAS/`.
 
-**Los siete marcos actuales ya están exportados y revisados en su contenido.** Se recibieron nuevamente 01, 07 y 08: el 01 ya no atraviesa los casos de uso con sus conexiones; 07 y 08 se renderizan sin el error del editor. El 07 muestra la conexión Prisma compartida, Open-Meteo y el endpoint administrativo sin pantalla; el 08 distingue las nueve tablas actuales, las cinco previstas y el despliegue objetivo. Antes de insertar exportaciones en el DAS se comprobará la legibilidad al tamaño final. La exportación de 06 tiene 707 píxeles de ancho; conviene conservar también PNG/SVG de mayor resolución si Miro permite obtenerlos.
+El flujo 11 documenta `sin_solicitud` antes de enviar, preservación de adjuntos actuales al recargar, último archivo por tipo y documentos nuevos tras rechazo, revocación o cambio de especialidad. Solo enviar entra a Pendientes. Los documentos históricos no bloquean nuevas cargas por el antiguo límite global de veinte.
 
-- [Sprint 3 · 01 Casos de uso · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686731138738)
-- [Sprint 3 · 02 Clases del dominio · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989746)
-- [Sprint 3 · 03 DER completo · 14 tablas (9 actuales, 5 previstas) · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989747)
-- [Sprint 3 · 04 DER implementado · 9 tablas · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989748)
-- [Sprint 3 · 06 Elegir perfil y asistente · 409 y nuevo ingreso · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989749)
-- [Sprint 3 · 07 Vista de desarrollo · componentes actuales · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989750)
-- [Sprint 3 · 08 Vista física · estado local y despliegue objetivo · 10-10-2026](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989751)
+01–04, 07 y 08 conservan el panel autorizado y las diez tablas implementadas de un modelo completo de quince; las cinco restantes son previstas. 06 conserva el nuevo ingreso tras 409. Los diagramas 05, 09 y 10 permanecen en Sprint 2; reservas y sus estados son diseño previsto. Las exportaciones antiguas de nueve tablas y panel parcial se conservan únicamente como historial.
 
-Los marcos anteriores se conservan como historial. La arquitectura futura no equivale a funciones implementadas.
-
-El DAS 1.17 contiene las imágenes locales actualizadas de 06, 07 y 08. Se revisó su exportación con Microsoft Word: 44 páginas, índice actualizado, sin la página vacía previa al índice y D28 en una sola fila. La ilustración 6 se dividió en tres partes con etiquetas envueltas y participantes repetidos, conservando la numeración del flujo. El resumen, la vista física y la tabla de reutilización distinguen las capacidades actuales de las previstas. Las versiones integrales de Miro y las fuentes del repositorio se conservan; la división es una adaptación de presentación para el DAS.
-
-Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el DAS 1.17 y las instrucciones de Miro. Conservé los enlaces existentes y las versiones históricas. La sincronización documental está completada.
+Tras la fusión: actualizar el marco 11, conservar su enlace, sincronizar MMD/SVG/PNG y DAS en Drive y contrastar los archivos publicados. La aceptación de FS-HU-12 corresponde al PO.

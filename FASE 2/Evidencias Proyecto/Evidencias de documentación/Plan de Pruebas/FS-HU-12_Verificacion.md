@@ -1,36 +1,37 @@
-# Verificación básica de perfiles profesionales
+# Pruebas de verificación de profesionales
 
-Actualización del 10-10-2026. El avance técnico de FS-HU-12 fue aprobado y fusionado en el [PR #15](https://github.com/rodriacr/FitSearch/pull/15), que reemplazó al PR #14 sobre el PR #13. La historia permanece parcial y prevista para Sprint 5, con prioridad baja y 3 puntos, si hay capacidad y con alcance final definido por el Product Owner.
+Revisión del PR #19 al 11-10-2026. Incluye el panel autorizado por Rodrigo y las correcciones de su revisión. La aceptación final de FS-HU-12 sigue pendiente del PO. Contrato e instalación: [Panel_Administrador.md](../Sprint%203/Panel_Administrador.md).
 
-## Comportamiento implementado
+## Resultado automatizado
 
-`PATCH /api/profesionales/:id/verificar` requiere sesión y rol `administrador`. Valida el identificador y comprueba la existencia de una ficha asociada a un profesional con `modelo.existe(id)`. El modelo usa la conexión compartida de `models/prisma.js`, actualiza solo `verificado` y selecciona únicamente `id` y `verificado` para la respuesta. No requiere migraciones.
+Backend: **213 pruebas en 25 suites aprobadas**. Frontend: **165 pruebas en 21 archivos aprobadas**. Las suites de componentes usan API simulada y las unitarias del backend usan modelos/Prisma simulados; sus resultados no equivalen a ejecución sobre MySQL. El frontend conserva avisos de React `act` en pruebas existentes, sin pruebas fallidas.
 
-| Condición | Respuesta |
+## Regresión sobre MySQL y Express reales
+
+La migración correctiva se aplicó mediante `prisma migrate deploy` en MySQL local, con once migraciones en total. Se ejecutaron **49 comprobaciones de API** usando Express, Prisma y almacenamiento reales, sin simular modelos. Se crearon cuentas temporales y se eliminaron exclusivamente sus cuentas y archivos al terminar. No se consultaron servicios externos de acreditación.
+
+| Caso | Resultado esperado y observado |
 | --- | --- |
-| Administrador y ficha existente | 200, `{ "id": 5, "verificado": true }` para el id 5 |
-| Usuario o profesional | 403, sin modificar la ficha |
-| Sin sesión | 401 |
-| Identificador inválido | 400, antes de consultar datos |
-| Ficha inexistente o cuenta que ya no es profesional | 404, «No encontramos este profesional» |
+| Ficha nueva | `sin_solicitud`, fuera de Pendientes y sin aumentar el contador |
+| Aprobar/rechazar sin envío | 409; no se abre una solicitud por crear la ficha o adjuntar |
+| Más de veinte versiones | 22 cargas de título aceptadas; solo último título e identidad actuales visibles |
+| Recarga | Dos consultas conservan los mismos adjuntos actuales; no exige repetir cargas |
+| Envío explícito | Con RUT e identidad/título actuales, pasa a `pendiente` |
+| Rechazo | Cierra el trámite; no permite aprobar de inmediato ni reutilizar documentos antiguos |
+| Nueva carga tras rechazo | No abre Pendientes hasta un nuevo envío; después permite aprobación |
+| Cambio Nutrición a Kinesiología | Retira verificación, cierra solicitud e invalida documentos de la especialidad anterior |
+| Nueva especialidad | Exige documentos nuevos y envío explícito antes de aprobar |
+| Revocación | Retira insignia y bloquea aprobar/rechazar hasta otra solicitud |
+| PATCH compatible | Requiere solicitud enviada y documentos actuales; no aprueba una revocación cerrada |
 
-El profesional no puede verificarse mediante la edición de su ficha: el controlador excluye `verificado` y `usuarioId` del cuerpo enviado al modelo. La API permite leer el estado en la ficha propia. `PerfilProfesional` y `FichaProfesional` conservan las insignias del PR #13. `TarjetaProfesional` añade el ícono `escudo` y el texto «Verificado» en el listado y el Inicio solo cuando la API devuelve el estado aprobado. `ResumenPerfil` conserva la versión de main para el usuario.
+Los eventos identifican las nuevas cargas por ID, incluyendo cargas y cierres en el mismo segundo de MySQL. La cobertura unitaria comprueba además revisión concurrente, cuenta desactivada y permisos. La cobertura de componentes comprueba adjuntos persistentes al reabrir, solicitud incompleta bloqueada, bloques separados, formato del RUT y ausencia de decisiones sobre `sin_solicitud`.
 
-## Casos y evidencia
+## Comprobaciones de permisos y revisión manual
 
-La planilla de casos de prueba contiene CP-061 a CP-068: aprobación administrativa y respuesta mínima, denegación de usuario y profesional, ausencia de sesión, identificador inválido, ficha inexistente, exclusión de verificación desde la ficha propia e insignias en tarjetas y perfil profesional.
+Se conservan los resultados manuales informados por Luis antes de esta revisión: 200 al verificar como administrador, 401 sin sesión, 403 con usuario/profesional, 400 con ID inválido y 404 con profesional inexistente; insignias visibles en perfil y listado. Posteriormente se confirmó manualmente rechazo, revocación y reenvío. El endpoint original ahora exige trámite y documentos; los ejemplos antiguos de aprobación por ID sin esos requisitos quedan sustituidos por el contrato actual.
 
-Verificación ejecutada el 10-10-2026 en `codex/actualizar-diagramas-y-revision`, desde main con el PR #15 fusionado:
+Las comprobaciones visuales previas cubrieron escritorio de 1440 px, móvil de 390 px, encabezado fijo, menú y formularios. No prueban un despliegue de producción ni aceptación del PO. Para otra revisión manual: crear ficha sin enviar, adjuntar y recargar, enviar, rechazar, subir documentos nuevos, reenviar, aprobar, cambiar especialidad y comprobar el retiro de la insignia y el bloqueo hasta nuevo envío.
 
-- Backend: `npm test`, 19 suites y 166 pruebas aprobadas.
-- Frontend: `npm test`, 19 archivos y 144 pruebas aprobadas. El PR #15 terminó con 139; esta revisión añade cinco pruebas de navegación.
-- Backend y frontend: `npm run lint`, sin errores.
-- Frontend: `npm run build`, compilación correcta.
+## Seguimiento
 
-Los tests de API usan modelos simulados y los del frontend usan respuestas simuladas. Probé contra MySQL local la verificación administrativa de la ficha 2: recibí `{ id: 2, verificado: true }` y comprobé las insignias en el perfil y el listado. También comprobé 401 sin sesión, 403 con usuario y con profesional, 400 con ID `abc` y 404 con ID `999999` («No encontramos este profesional»). La exclusión de `verificado` en la edición de la ficha propia está cubierta por pruebas automatizadas; no la probé manualmente. Estas pruebas no equivalen a la aceptación completa de la HU por el PO.
-
-## Documentación y pendientes
-
-El DAS 1.16 incorporó el flujo y la decisión D28. La revisión 1.17 actualiza D25, el flujo 8 y los diagramas 06, 07 y 08. La planilla contiene los ocho casos. El Product Backlog conserva «Planificada», Sprint 5, prioridad baja y 3 puntos; el avance técnico no declara completada la HU.
-
-Quedan pendientes la definición del PO de la pantalla administrativa y la provisión de cuentas, su implementación cuando se confirme el alcance y la aceptación del PO. Se detectó un bucle de navegación al ingresar como administrador y se corrigió con una página de acceso no disponible que permite cerrar sesión; no es una pantalla administrativa de verificación. No se habilita registro público como administrador. Trello: [FS-HU-12](https://trello.com/c/4CaN8UAs).
+El PR #19 continúa en revisión contra main; el #16 está fusionado y el #17 cerrado sin fusionar. DAS 1.19 y flujo 11 preparados localmente. Drive se sincroniza solo después de la fusión, conforme a la indicación del revisor. No se marca la historia aceptada por resultados de pruebas.

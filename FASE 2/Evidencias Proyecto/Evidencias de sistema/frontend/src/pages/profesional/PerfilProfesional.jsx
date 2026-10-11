@@ -4,6 +4,7 @@ import Alerta from '../../components/Alerta.jsx';
 import { Calificacion } from '../../components/Calificacion.jsx';
 import Icono from '../../components/Icono.jsx';
 import FormularioFicha from '../../components/profesional/FormularioFicha.jsx';
+import Certificaciones from '../../components/profesional/Certificaciones.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { etiquetaModalidad, iniciales } from '../../services/formato.js';
 import { obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
@@ -13,7 +14,7 @@ const PESTANAS = [
   { clave: 'informacion', nombre: 'Información' },
   { clave: 'horarios', nombre: 'Horarios', proximamente: 'Publicarás tus horarios disponibles desde la Agenda, y aquí verás un resumen de tu semana.' },
   { clave: 'experiencia', nombre: 'Experiencia', proximamente: 'Pronto podrás contar tus años de experiencia y tu formación.' },
-  { clave: 'certificaciones', nombre: 'Certificaciones', proximamente: 'Pronto podrás agregar tus certificaciones para que el equipo de FitSearch verifique tu ficha.' },
+  { clave: 'certificaciones', nombre: 'Certificaciones' },
 ];
 
 function Pestanas({ activa, onCambiar }) {
@@ -152,7 +153,7 @@ export default function PerfilProfesional() {
         <section className="perfil-prof__tarjeta perfil-prof__detalle" aria-label="Detalle de tu perfil">
           <Pestanas activa={pestana} onCambiar={setPestana} />
           <div id={`panel-${activa.clave}`} role="tabpanel" aria-labelledby={`pestana-${activa.clave}`} className="perfil-prof__panel">
-            {activa.proximamente ? (
+            {activa.clave === 'certificaciones' ? <Certificaciones /> : activa.proximamente ? (
               <div className="perfil-prof__proximamente">
                 <span className="etiqueta-proximamente">Próximamente</span>
                 <p>{activa.proximamente}</p>

@@ -37,9 +37,10 @@ export function registrarManejadorSesionExpirada(manejador) {
   alExpirarSesion = manejador;
 }
 
-export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true } = {}) {
+export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true, archivo, descargar = false } = {}) {
   const cabeceras = { Accept: 'application/json' };
   if (cuerpo !== undefined) cabeceras['Content-Type'] = 'application/json';
+  if (archivo) cabeceras['Content-Type'] = 'application/octet-stream';
   const token = leerSesionGuardada()?.token;
   if (conSesion && token) cabeceras.Authorization = `Bearer ${token}`;
 
@@ -48,13 +49,14 @@ export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true
     respuesta = await fetch(`/api${ruta}`, {
       method: metodo,
       headers: cabeceras,
-      body: cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined,
+      body: archivo || (cuerpo !== undefined ? JSON.stringify(cuerpo) : undefined),
     });
   } catch {
     throw new ErrorApi(0, 'No fue posible conectar con el servidor. Revisa tu conexión e intenta nuevamente');
   }
 
   if (respuesta.status === 204) return null;
+  if (respuesta.ok && descargar) return respuesta.blob();
   const datos = await respuesta.json().catch(() => ({}));
 
   if (!respuesta.ok) {

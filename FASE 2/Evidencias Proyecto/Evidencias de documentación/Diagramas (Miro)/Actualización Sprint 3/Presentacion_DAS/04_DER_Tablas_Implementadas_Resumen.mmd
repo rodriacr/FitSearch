@@ -1,0 +1,42 @@
+erDiagram
+  roles ||--o{ usuarios : relacion
+  usuarios ||--o| perfiles_usuario : relacion
+  usuarios ||--o| informacion_salud : relacion
+  usuarios ||--o{ tokens_recuperacion : relacion
+  usuarios ||--o| profesionales : relacion
+  establecimientos |o--o{ profesionales : relacion
+  usuarios ||--o{ favoritos : relacion
+  profesionales ||--o{ favoritos : relacion
+  usuarios ||--o{ resenas : relacion
+  profesionales ||--o{ resenas : relacion
+  roles {
+    INT id PK
+  }
+  usuarios {
+    INT id PK
+  }
+  perfiles_usuario {
+    INT id PK
+  }
+  informacion_salud {
+    INT id PK
+  }
+  tokens_recuperacion {
+    INT id PK
+  }
+  profesionales {
+    INT id PK
+  }
+  establecimientos {
+    INT id PK
+  }
+  favoritos {
+    INT id PK
+  }
+  resenas {
+    INT id PK
+  }
+  profesionales ||--o{ documentos_profesionales : relacion
+  documentos_profesionales {
+    INT id PK
+  }

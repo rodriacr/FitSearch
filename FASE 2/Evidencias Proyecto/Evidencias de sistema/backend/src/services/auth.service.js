@@ -19,7 +19,7 @@ function aUsuarioPublico(usuario) {
 
 // Con "Recordarme" la sesión dura más (DAS, D17).
 function firmarToken(usuario, recordar = false) {
-  return jwt.sign({ rol: usuario.rol.nombre }, config.jwtSecreto, {
+  return jwt.sign({ rol: usuario.rol.nombre, versionSesion: usuario.versionSesion || 0 }, config.jwtSecreto, {
     subject: String(usuario.id),
     expiresIn: recordar ? config.jwtExpiracionRecordar : config.jwtExpiracion,
   });
@@ -62,10 +62,12 @@ async function iniciarSesion({ correo, password, recordar = false }) {
   if (!usuario || !usuario.passwordHash || !coincide) {
     throw new ErrorHttp(401, MENSAJE_CREDENCIALES);
   }
+  if (usuario.activo === false) throw new ErrorHttp(403, 'Tu cuenta está desactivada. Contacta al administrador de FitSearch');
   return { token: firmarToken(usuario, recordar), usuario: aUsuarioPublico(usuario) };
 }
 
 function sesion(usuario, recordar, cuentaNueva) {
+  if (usuario.activo === false) throw new ErrorHttp(403, 'Tu cuenta está desactivada. Contacta al administrador de FitSearch');
   return { token: firmarToken(usuario, recordar), usuario: aUsuarioPublico(usuario), cuentaNueva };
 }
 
@@ -80,6 +82,7 @@ async function iniciarSesionConGoogle({ credencial, recordar = false }) {
   // Si el correo ya tiene cuenta en FitSearch se vincula con Google en vez de crear otra, para no duplicar cuentas.
   const existente = await usuarioModel.buscarPorCorreo(correo);
   if (existente) {
+    if (existente.activo === false) throw new ErrorHttp(403, 'Tu cuenta está desactivada. Contacta al administrador de FitSearch');
     if (existente.googleId) throw new ErrorHttp(409, MENSAJE_OTRA_CUENTA_GOOGLE);
     return sesion(await usuarioModel.vincularGoogle(existente.id, googleId), recordar, false);
   }
@@ -110,12 +113,12 @@ async function iniciarSesionConGoogle({ credencial, recordar = false }) {
 // El rol viaja dentro del token, así que al confirmar el tipo de cuenta hay que emitir uno nuevo.
 // Conserva el vencimiento del token anterior para no acortar ni alargar la sesión de "Recordarme" (D17).
 function refirmarToken(usuario, vencimiento) {
-  return jwt.sign({ rol: usuario.rol.nombre, exp: vencimiento }, config.jwtSecreto, { subject: String(usuario.id) });
+  return jwt.sign({ rol: usuario.rol.nombre, exp: vencimiento, versionSesion: usuario.versionSesion || 0 }, config.jwtSecreto, { subject: String(usuario.id) });
 }
 
 function verificarToken(token) {
   const datos = jwt.verify(token, config.jwtSecreto);
-  return { id: Number(datos.sub), rol: datos.rol, vencimiento: datos.exp };
+  return { id: Number(datos.sub), rol: datos.rol, vencimiento: datos.exp, versionSesion: datos.versionSesion || 0 };
 }
 
 module.exports = {

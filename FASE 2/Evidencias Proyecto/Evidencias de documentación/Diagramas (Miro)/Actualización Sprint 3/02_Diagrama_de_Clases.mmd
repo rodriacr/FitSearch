@@ -10,6 +10,8 @@ classDiagram
     +string correo
     +string passwordHash [opcional]
     +string googleId [opcional]
+    +bool activo
+    +int versionSesion
     +bool rolConfirmado
     +datetime fechaRegistro
   }
@@ -45,11 +47,26 @@ classDiagram
     +string especialidad
     +string descripcion
     +bool verificado
+    +string estadoVerificacion
+    +string motivoRechazo [opcional]
+    +json historialVerificacion [opcional]
+    +int revisionVerificacion
+    +string rut [opcional]
+    +string telefono [opcional]
     +decimal ubicacionLat
     +decimal ubicacionLng
     +string comuna [opcional]
     +Modalidad modalidad
     +calificacionPromedio() decimal
+  }
+  class DocumentoProfesional {
+    +int id
+    +string tipo
+    +string nombre
+    +string clave
+    +string mime
+    +int tamano
+    +datetime fechaCreacion
   }
   class Favorito {
     +int id
@@ -102,7 +119,7 @@ classDiagram
     +decimal grasasG
   }
   Rol "1" <-- "0..*" Usuario : tiene
-  Usuario "1" *-- "1" PerfilUsuario : perfil
+  Usuario "1" *-- "0..1" PerfilUsuario : perfil
   Usuario "1" *-- "0..1" InformacionSalud : salud
   Usuario "1" *-- "0..*" TokenRecuperacion : recuperación
   Usuario "1" -- "0..1" Profesional : ficha profesional
@@ -117,3 +134,4 @@ classDiagram
   Favorito "0..*" --> "1" Profesional : marca
   Usuario "1" *-- "0..*" Resena : escribe
   Profesional "1" -- "0..*" Resena : recibe
+  Profesional "1" *-- "0..*" DocumentoProfesional : adjunta

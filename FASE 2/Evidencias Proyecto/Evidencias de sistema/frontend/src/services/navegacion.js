@@ -2,7 +2,7 @@
 // que todavía no elige cómo usar FitSearch pasa primero por "Elegir perfil".
 export const ELEGIR_PERFIL = '/elegir-perfil';
 export const ACCESO_NO_DISPONIBLE = '/acceso-no-disponible';
-const INICIO_POR_ROL = { usuario: '/inicio', profesional: '/profesional/inicio' };
+const INICIO_POR_ROL = { usuario: '/inicio', profesional: '/profesional/inicio', administrador: '/admin/dashboard' };
 
 export const esRutaProfesional = (ruta) => ruta === '/profesional' || ruta.startsWith('/profesional/');
 
@@ -22,5 +22,9 @@ export function destinoTrasIngreso(estado, usuario) {
   const interna = typeof desde === 'string' && desde.startsWith('/') && !desde.startsWith('//');
   if (!interna || inicio === ELEGIR_PERFIL || inicio === ACCESO_NO_DISPONIBLE
     || desde.split(/[?#]/)[0] === ACCESO_NO_DISPONIBLE) return inicio;
+  const ruta = desde.split(/[?#]/)[0];
+  const administrativa = ruta === '/admin' || ruta.startsWith('/admin/');
+  if (usuario?.rol === 'administrador') return administrativa ? desde : inicio;
+  if (administrativa) return inicio;
   return esRutaProfesional(desde) === (usuario?.rol === 'profesional') ? desde : inicio;
 }

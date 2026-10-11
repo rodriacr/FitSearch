@@ -1,0 +1,34 @@
+classDiagram
+  direction TB
+  class Rol
+  class Usuario
+  class PerfilUsuario
+  class InformacionSalud
+  class TokenRecuperacion
+  class Profesional
+  class DocumentoProfesional
+  class Favorito
+  class Resena
+  class Establecimiento
+  class Disponibilidad
+  class Reserva
+  class Conversacion
+  class Mensaje
+  class RegistroComida
+  Rol "1" <-- "0..*" Usuario : tiene
+  Usuario "1" *-- "0..1" PerfilUsuario : perfil
+  Usuario "1" *-- "0..1" InformacionSalud : salud
+  Usuario "1" *-- "0..*" TokenRecuperacion : recuperación
+  Usuario "1" -- "0..1" Profesional : ficha profesional
+  Establecimiento "0..1" o-- "0..*" Profesional : agrupa
+  Profesional "1" *-- "0..*" Disponibilidad : publica
+  Disponibilidad "1" -- "0..*" Reserva : se reserva en
+  Usuario "1" -- "0..*" Reserva : realiza
+  Usuario "1" *-- "0..*" Conversacion : inicia
+  Conversacion "1" *-- "1..*" Mensaje : contiene
+  Usuario "1" *-- "0..*" RegistroComida : registra
+  Usuario "1" *-- "0..*" Favorito : guarda
+  Favorito "0..*" --> "1" Profesional : marca
+  Usuario "1" *-- "0..*" Resena : escribe
+  Profesional "1" -- "0..*" Resena : recibe
+  Profesional "1" *-- "0..*" DocumentoProfesional : adjunta

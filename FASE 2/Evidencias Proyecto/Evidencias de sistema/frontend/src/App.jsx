@@ -5,6 +5,7 @@ import RutaProtegida from './components/RutaProtegida.jsx';
 import { useSesion } from './context/SesionContext.jsx';
 import ElegirPerfil from './pages/ElegirPerfil.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
+import { DisenoAdministrador, ResumenAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
 import Favoritos from './pages/Favoritos.jsx';
 import FichaProfesional from './pages/FichaProfesional.jsx';
 import Inicio from './pages/Inicio.jsx';
@@ -23,7 +24,7 @@ import { ACCESO_NO_DISPONIBLE, destinoTrasIngreso, ELEGIR_PERFIL } from './servi
 
 export default function App() {
   const { sesion, aviso } = useSesion();
-  const { state } = useLocation();
+  const { state, pathname } = useLocation();
   // La portada y las pantallas de acceso son solo para invitados: con sesión, una cuenta recién creada va a
   // "Elegir perfil" y el resto, a la página que había pedido antes de iniciar sesión o al Inicio de su rol
   // (DAS, D20, D22 y D25).
@@ -40,6 +41,17 @@ export default function App() {
       <Route element={<RutaProtegida />}>
         <Route path={ACCESO_NO_DISPONIBLE} element={<AccesoNoDisponible />} />
         <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
+        <Route element={<RutaProtegida rol="administrador" />}>
+          <Route path="/admin" element={<DisenoAdministrador />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<ResumenAdministrador />} />
+            <Route path="profesionales" element={<ListadoAdministrador key="profesionales" tipo="profesionales" />} />
+            <Route path="verificaciones" element={<ListadoAdministrador key="verificaciones" tipo="verificaciones" />} />
+            <Route path="verificaciones/:id" element={<DetalleVerificacion key={pathname} />} />
+            <Route path="usuarios" element={<ListadoAdministrador key="usuarios" tipo="usuarios" />} />
+            <Route path="reportes" element={<ResumenAdministrador reporte />} />
+          </Route>
+        </Route>
         {/* Espacio del usuario */}
         <Route element={<RutaProtegida rol="usuario" />}>
           <Route element={<DisenoAplicacion />}>

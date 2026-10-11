@@ -10,5 +10,7 @@ router.use('/perfil', perfilRoutes);
 router.use('/profesionales', require('./profesional.routes'));
 router.use('/favoritos', require('./favorito.routes'));
 router.use('/clima', require('./clima.routes'));
+router.use('/administrador', require('./administrador.routes'));
+router.use('/verificaciones', require('./verificacion.routes'));
 
 module.exports = router;

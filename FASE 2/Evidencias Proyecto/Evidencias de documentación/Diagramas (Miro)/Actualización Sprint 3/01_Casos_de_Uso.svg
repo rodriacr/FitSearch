@@ -1,6 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1160" viewBox="0 0 1500 1160" font-family="Poppins, Arial, sans-serif">
 <defs><marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5f6f80"/></marker><marker id="abierta" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L11 6 L0 12" fill="none" stroke="#0b4f80" stroke-width="1.6"/></marker></defs>
 <rect width="1500" height="1160" fill="#ffffff"/>
+<text x="24" y="25" font-size="17" fill="#0b4f80">DAS 1.18: panel administrativo implementado en PR #17; aceptación del PO pendiente</text>
+<text x="24" y="49" font-size="14" fill="#5f6f80">IA, alimentación, disponibilidad, reservas y Google Maps son diseño previsto. Configuración y contenido quedan fuera del panel.</text>
 <rect x="310.0" y="80" width="855.0" height="1030.0" rx="10" fill="#fbfcfe" stroke="#0b4f80" stroke-width="2"/>
 <text x="737.5" y="114" text-anchor="middle" font-size="18" font-weight="700" fill="#0b4f80">Sistema FitSearch</text>
 <line x1="132" y1="391.0" x2="350.0" y2="175" stroke="#5f6f80" stroke-width="1.4"/>
@@ -67,7 +69,7 @@
 <text x="540" y="948.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-13</text>
 <ellipse cx="540" cy="1039" rx="190.0" ry="37.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
 <text x="540" y="1037.5" text-anchor="middle" font-size="15" fill="#1c2b39" font-weight="600">CU-07 Administrar plataforma</text>
-<text x="540" y="1056.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-12 y procesos manuales</text>
+<text x="540" y="1056.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">Panel: revisión, cuentas y reportes</text>
 <ellipse cx="985" cy="175" rx="150.0" ry="29.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
 <text x="985" y="172.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Estimar requerimiento calórico</text>
 <text x="985" y="189.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">Mifflin-St Jeor</text>
@@ -81,7 +83,7 @@
 <text x="985" y="712.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Consultar horarios disponibles</text>
 <text x="985" y="729.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">bloques de CU-08</text>
 <ellipse cx="985" cy="1039" rx="150.0" ry="29.0" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
-<text x="985" y="1036.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Verificar perfiles profesionales</text>
+<text x="985" y="1036.5" text-anchor="middle" font-size="13" fill="#1c2b39" font-weight="600">Revisar y verificar documentos</text>
 <text x="985" y="1053.5" text-anchor="middle" font-size="11.5" fill="#5f6f80">FS-HU-12</text>
 <g stroke="#0b4f80" stroke-width="3" fill="none" stroke-linecap="round"><circle cx="110" cy="361.0" r="13" fill="#ffffff"/><line x1="110" y1="374.0" x2="110" y2="409.0"/><line x1="88" y1="387.0" x2="132" y2="387.0"/><line x1="110" y1="409.0" x2="92" y2="437.0"/><line x1="110" y1="409.0" x2="128" y2="437.0"/></g>
 <text x="110" y="461.0" text-anchor="middle" font-size="16" font-weight="700" fill="#0b4f80">Usuario</text>
@@ -101,4 +103,9 @@
 <rect x="1265.0" y="651" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
 <text x="1370" y="671" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
 <text x="1370" y="689" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Google Identity Services</text>
+<line x1="835" y1="823" x2="730" y2="823" stroke="#0b4f80" stroke-width="1.5" stroke-dasharray="7 5" marker-end="url(#abierta)"/>
+<text x="782" y="813" text-anchor="middle" font-size="12" fill="#0b4f80">«extend»</text>
+<ellipse cx="985" cy="823" rx="150" ry="29" fill="#e6f0f8" stroke="#1565a0" stroke-width="1.6"/>
+<text x="985" y="820" text-anchor="middle" font-size="13" fill="#1c2b39">Enviar documentos y solicitud</text>
+<text x="985" y="839" text-anchor="middle" font-size="11.5" fill="#5f6f80">Certificaciones · FS-HU-12</text>
 </svg>

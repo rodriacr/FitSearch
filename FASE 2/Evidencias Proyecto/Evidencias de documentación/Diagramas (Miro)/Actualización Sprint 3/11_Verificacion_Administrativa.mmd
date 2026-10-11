@@ -1,0 +1,21 @@
+flowchart TD
+  P(["Profesional<br/>Ficha nueva: sin_solicitud"]) --> C["RUT con guion automático<br/>Identidad y título: selectores propios<br/>Antecedentes opcionales"]
+  C --> U["Carga autenticada<br/>PDF, PNG o JPEG; firma real<br/>5 MB por archivo<br/>Históricos no consumen cupos actuales"]
+  U --> S["Archivos privados y metadatos<br/>Solo último archivo actual por tipo"]
+  S --> E["Identidad y título vigentes + RUT válido<br/>Solo enviar solicitud abre Pendientes"]
+  P --> F["Recargar conserva adjuntos vigentes<br/>Último documento actual por tipo"]
+  F --> C
+  E --> L["Administrador<br/>Pendientes y detalle"]
+  L --> D["Revisar información,<br/>documentos e historial"]
+  D --> R{"¿Solicitud pendiente,<br/>cuenta activa y revisión vigente?"}
+  R -->|"No"| X["409; actualizar detalle<br/>Sin sobrescribir decisiones"]
+  R -->|"Sí"| V{"Decisión administrativa"}
+  V -->|"Aprobar"| A["verificado=true<br/>Estado verificado<br/>Insignia en perfil y listado"]
+  V -->|"Rechazar con motivo"| H["verificado=false; rechazado<br/>Motivo visible; documentos previos no cuentan<br/>Solicitud cerrada hasta nuevo envío"]
+  H --> C
+  A --> J{"¿Revocar o cambiar especialidad?"}
+  J -->|"Sí"| N["Retirar insignia; rechazado<br/>Documentos previos no cuentan<br/>Solicitud cerrada hasta nuevo envío"]
+  N --> C
+  A --> T["Transacción<br/>Historial, fecha y administrador<br/>Revisión incrementada"]
+  H --> T
+  N --> T

@@ -1,5 +1,7 @@
 const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
+const ErrorHttp = require('../utils/ErrorHttp');
+const verificacion = require('./verificacion.model');
 
 // Solo datos de la ficha pública. Nunca incluir correo de acceso, contraseña ni salud.
 // La búsqueda usa SQL parametrizado ($queryRaw) porque combina texto, filtros, la distancia calculada
@@ -21,7 +23,7 @@ function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin
   const distancia = ubicacion
     ? Prisma.sql`ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000`
     : Prisma.sql`NULL`;
-  const condiciones = [Prisma.sql`r.nombre = 'profesional'`];
+  const condiciones = [Prisma.sql`r.nombre = 'profesional'`, Prisma.sql`u.activo = true`];
   if (q) {
     const patron = `%${escaparLike(q)}%`;
     // La intercalación utf8mb4_unicode_ci ignora mayúsculas y tildes: "nutricion" encuentra "Nutrición".
@@ -85,7 +87,7 @@ async function existe(id) {
 
 // Valores disponibles para los filtros del buscador (solo los que tienen al menos un profesional).
 async function filtros() {
-  const donde = { usuario: { rol: { nombre: 'profesional' } } };
+  const donde = { usuario: { activo: true, rol: { nombre: 'profesional' } } };
   const [especialidades, comunas] = await Promise.all([
     prisma.profesional.findMany({ where: donde, select: { especialidad: true }, distinct: ['especialidad'], orderBy: { especialidad: 'asc' } }),
     prisma.profesional.findMany({ where: { ...donde, comuna: { not: null } }, select: { comuna: true }, distinct: ['comuna'], orderBy: { comuna: 'asc' } }),
@@ -102,15 +104,27 @@ function obtenerPorUsuario(usuarioId) {
 
 // Crea o actualiza la ficha: una cuenta tiene como máximo una (usuario_id es único).
 function guardarFicha(usuarioId, datos) {
-  return prisma.profesional.upsert({ where: { usuarioId }, update: datos, create: { usuarioId, ...datos }, select: seleccionFicha });
+  return prisma.$transaction(async (tx) => {
+    const ficha = await tx.profesional.findUnique({ where: { usuarioId } });
+    if (!ficha) return tx.profesional.create({ data: { usuarioId, ...datos }, select: seleccionFicha });
+    const especialidadCambio = datos.especialidad !== ficha.especialidad;
+    const teniaSolicitud = ficha.verificado || ficha.estadoVerificacion === 'pendiente';
+    const historial = Array.isArray(ficha.historialVerificacion) ? ficha.historialVerificacion : [];
+    const cambio = await tx.profesional.updateMany({ where: { id: ficha.id, revisionVerificacion: ficha.revisionVerificacion }, data: {
+      ...datos, revisionVerificacion: { increment: 1 },
+      ...(especialidadCambio && {
+        verificado: false, estadoVerificacion: teniaSolicitud ? 'rechazado' : 'sin_solicitud',
+        motivoRechazo: 'La especialidad cambió. Adjunta documentos de la nueva especialidad y envía otra solicitud.',
+        historialVerificacion: [...historial, { accion: 'cambio_especialidad', fecha: new Date().toISOString() }],
+      }),
+    } });
+    if (!cambio.count) throw new ErrorHttp(409, 'Tu ficha cambió. Actualiza la pantalla antes de guardar');
+    return tx.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });
+  });
 }
 
-function verificarPerfil(id) {
-  return prisma.profesional.update({
-    where: { id },
-    data: { verificado: true },
-    select: { id: true, verificado: true },
-  });
+function verificarPerfil(id, administradorId) {
+  return verificacion.decidir(id, { accion: 'aprobar', administradorId });
 }
 
 module.exports = { listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha, verificarPerfil };
