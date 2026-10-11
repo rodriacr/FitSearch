@@ -51,4 +51,3 @@ Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el 
 ## Consolidación final del PR 17
 
 El flujo 11 refleja los apartados vacíos al recargar Certificaciones sin verificar, la obligación de adjuntar identidad y título en esa pantalla y los documentos nuevos tras rechazo o revocación. No se muestran versiones anteriores. El DAS 1.18 incorpora estas reglas y el flujo actualizado. Validación: 206 pruebas backend y 161 frontend; lint y build correctos. Los otros diagramas conservan el modelo vigente, sin cambios estructurales adicionales. La revisión y fusión de los PR 16 y 17 y la aceptación del PO siguen pendientes.
-
