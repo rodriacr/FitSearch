@@ -7,14 +7,14 @@ flowchart TD
   F --> C
   E --> L["Administrador<br/>Pendientes y detalle"]
   L --> D["Revisar información,<br/>documentos e historial"]
-  D --> R{"¿Cuenta activa<br/>y revisión vigente?"}
+  D --> R{"¿Solicitud pendiente,<br/>cuenta activa y revisión vigente?"}
   R -->|"No"| X["409; actualizar detalle<br/>Sin sobrescribir decisiones"]
   R -->|"Sí"| V{"Decisión administrativa"}
   V -->|"Aprobar"| A["verificado=true<br/>Estado verificado<br/>Insignia en perfil y listado"]
-  V -->|"Rechazar con motivo"| H["verificado=false; rechazado<br/>Motivo visible; documentos previos no cuentan<br/>Se requieren nuevas subidas"]
+  V -->|"Rechazar con motivo"| H["verificado=false; rechazado<br/>Motivo visible; documentos previos no cuentan<br/>Solicitud cerrada hasta nuevo envío"]
   H --> C
   A --> J{"¿Revocación con motivo?"}
-  J -->|"Sí"| N["Retirar insignia; rechazado<br/>Documentos previos no cuentan<br/>Se requieren nuevas subidas"]
+  J -->|"Sí"| N["Retirar insignia; rechazado<br/>Documentos previos no cuentan<br/>Solicitud cerrada hasta nuevo envío"]
   N --> C
   A --> T["Transacción<br/>Historial, fecha y administrador<br/>Revisión incrementada"]
   H --> T

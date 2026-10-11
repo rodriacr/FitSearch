@@ -73,3 +73,7 @@ Backend: 206 pruebas en 25 suites aprobadas. Certificaciones y administración: 
 Los tests de interfaz y API usan respuestas/modelos simulados. Lint y build se verifican antes de subir. No se declara aceptación de la HU por el PO.
 
 Suite completa frontend: 161 pruebas en 21 archivos aprobadas; lint de ambas capas y build frontend correctos. Revisión y aceptación del PO pendientes.
+
+## Solicitudes cerradas
+
+Después de rechazar o revocar, la solicitud queda cerrada: el administrador no ve Aprobar/Rechazar y la API responde 409 a ambas decisiones. Adjuntar archivos no reabre la revisión; solo enviar una nueva solicitud desde Certificaciones la devuelve a pendiente. Comprobé rechazo, revocación, recarga y reenvío: 208 pruebas backend y 163 frontend aprobadas.

@@ -91,3 +91,7 @@ flowchart TD
 El panel está en el PR #17, apilado sobre el #16, y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.18 incorpora esta ampliación y los diagramas 01–04, 07, 08 y nuevo 11; los marcos anteriores y la documentación del DAS 1.17 se conservan como historial. Los enlaces vigentes están en Exportaciones_Miro.md. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.
 
 - Validación final: 161 pruebas frontend en 21 archivos; 17 de Certificaciones y administración. Recargar o reabrir un perfil sin verificar deja todos los apartados vacíos y exige adjuntar identidad y título en esa pantalla antes de enviar. Lint y build correctos.
+
+## Solicitudes cerradas
+
+Después de rechazar o revocar, la solicitud queda cerrada: el administrador no ve Aprobar/Rechazar y la API responde 409 a ambas decisiones. Adjuntar archivos no reabre la revisión; solo enviar una nueva solicitud desde Certificaciones la devuelve a pendiente. Comprobé rechazo, revocación, recarga y reenvío: 208 pruebas backend y 163 frontend aprobadas.

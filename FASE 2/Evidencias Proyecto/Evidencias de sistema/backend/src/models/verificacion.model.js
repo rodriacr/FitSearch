@@ -41,6 +41,7 @@ async function decidir(id, { accion, motivo = '', administradorId, revision }) {
     if (!ficha.usuario.activo) throw new ErrorHttp(409, 'No se puede revisar una cuenta desactivada');
     if (revision !== undefined && revision !== ficha.revisionVerificacion) throw new ErrorHttp(409, 'La ficha cambió. Actualiza la pantalla antes de decidir');
     if (accion === 'aprobar' && ficha.verificado) return { id, verificado: true };
+    if (['aprobar', 'rechazar'].includes(accion) && ficha.estadoVerificacion !== 'pendiente') throw new ErrorHttp(409, 'La solicitud está cerrada. El profesional debe enviar una nueva solicitud de verificación');
     if (accion === 'aprobar') exigirDocumentos(ficha);
     if (accion === 'rechazar' && ficha.verificado) throw new ErrorHttp(409, 'Para retirar una verificación usa Revocar');
     if (accion === 'revocar' && !ficha.verificado) throw new ErrorHttp(409, 'Este perfil no está verificado');

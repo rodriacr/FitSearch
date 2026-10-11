@@ -1,7 +1,7 @@
 jest.mock('../../src/models/prisma', () => ({ $transaction: jest.fn(), profesional: { findUnique: jest.fn(), updateMany: jest.fn() }, documentoProfesional: { count: jest.fn(), create: jest.fn() } }));
 const prisma = require('../../src/models/prisma');
 const modelo = require('../../src/models/verificacion.model');
-const ficha = () => ({ id: 2, usuarioId: 7, usuario: { activo: true }, verificado: false, rut: '12345678-5', revisionVerificacion: 3, documentos: [{ tipo: 'identidad' }, { tipo: 'titulo' }], historialVerificacion: [] });
+const ficha = () => ({ id: 2, usuarioId: 7, usuario: { activo: true }, verificado: false, estadoVerificacion: 'pendiente', rut: '12345678-5', revisionVerificacion: 3, documentos: [{ tipo: 'identidad' }, { tipo: 'titulo' }], historialVerificacion: [] });
 const documentosFechados = (fecha) => [{ id: 1, tipo: 'identidad', fechaCreacion: new Date(fecha) }, { id: 2, tipo: 'titulo', fechaCreacion: new Date(fecha) }];
 beforeEach(() => { jest.resetAllMocks(); prisma.$transaction.mockImplementation((f) => f(prisma)); prisma.profesional.findUnique.mockResolvedValue(ficha()); prisma.profesional.updateMany.mockResolvedValue({ count: 1 }); });
 test('aprueba con documentos y registra el administrador sin devolver documentos privados', async () => {
@@ -53,4 +53,17 @@ test('las subidas nuevas persisten al recargar y permiten reenviar sin recuperar
   expect(modelo.documentosActuales(recargada).map((d) => d.id)).toEqual([4, 3]);
   expect(await modelo.enviarSolicitud(7, { rut: '12345678-5', telefono: null })).toEqual({ estado: 'pendiente' });
   expect(modelo.documentosActuales({ ...recargada, historialVerificacion: [...recargada.historialVerificacion, { accion: 'solicitud', fecha: '2026-10-10T13:00:00Z' }] })).toEqual(modelo.documentosActuales(recargada));
+});
+
+
+test.each(['rechazar', 'revocar'])('tras %s, incluso con documentos nuevos, no permite decidir hasta reenviar', async (decision) => {
+  const datos = { ...ficha(), estadoVerificacion: 'rechazado', documentos: documentosFechados('2026-10-10T12:00:00Z'), historialVerificacion: [{ accion: decision, fecha: '2026-10-10T11:00:00Z' }] };
+  prisma.profesional.findUnique.mockResolvedValue(datos);
+  for (const accion of ['aprobar', 'rechazar']) {
+    await expect(modelo.decidir(2, { accion, motivo: 'Motivo de revisión', revision: 3 })).rejects.toMatchObject({ estado: 409 });
+  }
+  expect(prisma.profesional.updateMany).not.toHaveBeenCalled();
+  await modelo.enviarSolicitud(7, { rut: '12345678-5', telefono: null });
+  prisma.profesional.findUnique.mockResolvedValue({ ...datos, estadoVerificacion: 'pendiente', revisionVerificacion: 4 });
+  expect(await modelo.decidir(2, { accion: 'aprobar', revision: 4 })).toEqual({ id: 2, verificado: true });
 });

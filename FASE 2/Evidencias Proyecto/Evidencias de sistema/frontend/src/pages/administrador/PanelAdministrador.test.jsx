@@ -3,7 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test } from 'vitest';
 import { renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
 
-const ficha = { id: 2, revision: 1, activo: true, documentos: [], historial: [], nombre: 'Ana Demo', correo: 'ana@example.test', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'online', verificado: false };
+const ficha = { id: 2, revision: 1, estado: 'pendiente', activo: true, documentos: [], historial: [], nombre: 'Ana Demo', correo: 'ana@example.test', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'online', verificado: false };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, rol: 'administrador' } })));
 
 test('muestra pendientes y abre la revisión de una ficha real', async () => {
@@ -73,4 +73,29 @@ test('desactiva una cuenta solo después de confirmar y protege a los administra
   const [url, opciones] = fetch.mock.calls.find(([, o]) => o.method === 'PATCH');
   expect(url).toBe('/api/administrador/usuarios/7/estado');
   expect(JSON.parse(opciones.body)).toEqual({ activo: false });
+});
+
+
+test.each(['rechazar', 'revocar'])('oculta decisiones después de %s y al recargar hasta recibir otra solicitud', async (accion) => {
+  let actual = { ...ficha, verificado: accion === 'revocar', estado: accion === 'revocar' ? 'verificado' : 'pendiente' };
+  simularApi({
+    '/api/administrador/profesionales/2': () => [200, { profesional: actual }],
+    '/api/administrador/profesionales/2/decision': () => { actual = { ...actual, verificado: false, estado: 'rechazado', revision: 2 }; return [200, { id: 2, verificado: false }]; },
+  });
+  const vista = renderizarApp('/admin/verificaciones/2');
+  await userEvent.click(await screen.findByRole('button', { name: accion === 'revocar' ? 'Revocar verificación' : 'Rechazar solicitud' }));
+  await userEvent.type(screen.getByLabelText('Motivo obligatorio'), 'Documentos por corregir');
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar decisión' }));
+  expect(await screen.findByText(/La solicitud está cerrada/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Aprobar verificación' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Rechazar solicitud' })).not.toBeInTheDocument();
+  vista.unmount();
+  const recarga = renderizarApp('/admin/verificaciones/2');
+  expect(await screen.findByText(/La solicitud está cerrada/)).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Aprobar verificación' })).not.toBeInTheDocument();
+  recarga.unmount();
+  actual = { ...actual, estado: 'pendiente', revision: 3 };
+  renderizarApp('/admin/verificaciones/2');
+  expect(await screen.findByRole('button', { name: 'Aprobar verificación' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Rechazar solicitud' })).toBeInTheDocument();
 });
