@@ -1,0 +1,12 @@
+flowchart LR
+  U["Navegador del usuario o profesional"] --> F["React y Vite, desarrollo local"]
+  F -->|"HTTP /api y Bearer JWT"| B["Express, Node.js"]
+  B -->|"Prisma compartido, TCP 3306"| D[("MySQL, 9 tablas de dominio")]
+  F -->|"ID token"| I["Google Identity Services"]
+  B -->|"Verifica ID token por HTTPS"| I
+  B -->|"HTTPS, caché 30 minutos, sin clave"| O["Open-Meteo"]
+  B -.->|"SMTP/TLS, requiere configuración"| S["Servidor SMTP"]
+  F -.-> G["Previsto: Google Maps"]
+  B -.-> C["Previsto: API Claude"]
+  N["Despliegue objetivo: Docker y Nginx, FS-HU-11 pendiente"]
+  M["Modelo completo: 14 tablas, 9 implementadas y 5 previstas"]

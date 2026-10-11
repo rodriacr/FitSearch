@@ -1,6 +1,7 @@
 // Navegación según el rol (DAS, D25): el usuario y el profesional tienen cada uno su propio espacio, y una cuenta
 // que todavía no elige cómo usar FitSearch pasa primero por "Elegir perfil".
 export const ELEGIR_PERFIL = '/elegir-perfil';
+export const ACCESO_NO_DISPONIBLE = '/acceso-no-disponible';
 const INICIO_POR_ROL = { usuario: '/inicio', profesional: '/profesional/inicio' };
 
 export const esRutaProfesional = (ruta) => ruta === '/profesional' || ruta.startsWith('/profesional/');
@@ -9,7 +10,7 @@ export const esRutaProfesional = (ruta) => ruta === '/profesional' || ruta.start
 // (las sesiones guardadas antes de este cambio no lo traen).
 export function inicioDe(usuario) {
   if (usuario?.rolConfirmado === false) return ELEGIR_PERFIL;
-  if (usuario?.rol && !INICIO_POR_ROL[usuario.rol]) return '/acceso-no-disponible';
+  if (usuario?.rol && !INICIO_POR_ROL[usuario.rol]) return ACCESO_NO_DISPONIBLE;
   return INICIO_POR_ROL[usuario?.rol] ?? INICIO_POR_ROL.usuario;
 }
 
@@ -19,6 +20,7 @@ export function destinoTrasIngreso(estado, usuario) {
   const inicio = inicioDe(usuario);
   const desde = estado?.desde;
   const interna = typeof desde === 'string' && desde.startsWith('/') && !desde.startsWith('//');
-  if (!interna || inicio === ELEGIR_PERFIL) return inicio;
+  if (!interna || inicio === ELEGIR_PERFIL || inicio === ACCESO_NO_DISPONIBLE
+    || desde.split(/[?#]/)[0] === ACCESO_NO_DISPONIBLE) return inicio;
   return esRutaProfesional(desde) === (usuario?.rol === 'profesional') ? desde : inicio;
 }

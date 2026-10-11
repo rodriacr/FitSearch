@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { destinoTrasIngreso, inicioDe } from './navegacion.js';
+import { ACCESO_NO_DISPONIBLE, destinoTrasIngreso, inicioDe } from './navegacion.js';
 import { formatearKm, formatearNumero, iniciales, primerNombre } from './formato.js';
 
 test('después de iniciar sesión vuelve a la ruta interna pedida o va al Inicio', () => {
@@ -36,4 +36,16 @@ test('los números se muestran con el formato de Chile', () => {
   expect(formatearKm(2.34)).toBe('2,3 km');
   expect(iniciales('Ana María Pérez')).toBe('AM');
   expect(primerNombre('  Ana Pérez')).toBe('Ana');
+});
+
+test('una cuenta administrativa vuelve al aviso aunque antes haya pedido una ruta del usuario', () => {
+  const administrador = { rol: 'administrador', rolConfirmado: true };
+  expect(inicioDe(administrador)).toBe(ACCESO_NO_DISPONIBLE);
+  expect(destinoTrasIngreso({ desde: '/favoritos' }, administrador)).toBe(ACCESO_NO_DISPONIBLE);
+});
+
+test.each(['usuario', 'profesional'])('el rol %s no vuelve al aviso después de iniciar sesión', (rol) => {
+  const usuario = { rol, rolConfirmado: true };
+  expect(destinoTrasIngreso({ desde: ACCESO_NO_DISPONIBLE }, usuario)).toBe(inicioDe(usuario));
+  expect(destinoTrasIngreso({ desde: `${ACCESO_NO_DISPONIBLE}?origen=perfil` }, usuario)).toBe(inicioDe(usuario));
 });

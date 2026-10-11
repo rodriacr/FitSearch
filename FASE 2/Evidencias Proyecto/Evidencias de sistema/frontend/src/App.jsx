@@ -19,7 +19,7 @@ import Proximamente from './pages/Proximamente.jsx';
 import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
 import Registro from './pages/Registro.jsx';
 import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
-import { destinoTrasIngreso, ELEGIR_PERFIL } from './services/navegacion.js';
+import { ACCESO_NO_DISPONIBLE, destinoTrasIngreso, ELEGIR_PERFIL } from './services/navegacion.js';
 
 export default function App() {
   const { sesion, aviso } = useSesion();
@@ -38,7 +38,7 @@ export default function App() {
       <Route path="/recuperar-contrasena" element={soloInvitado(<RecuperarContrasena />)} />
       <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
       <Route element={<RutaProtegida />}>
-        <Route path="/acceso-no-disponible" element={<AccesoNoDisponible />} />
+        <Route path={ACCESO_NO_DISPONIBLE} element={<AccesoNoDisponible />} />
         <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
         {/* Espacio del usuario */}
         <Route element={<RutaProtegida rol="usuario" />}>

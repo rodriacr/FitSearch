@@ -20,13 +20,13 @@
 <polygon points="1040,110 1056,94 1056,814 1040,830" fill="#e6f0f8" stroke="#0b4f80" stroke-width="2.2"/>
 <rect x="460" y="110" width="580" height="720" fill="#e6f0f8" stroke="#0b4f80" stroke-width="2.2"/>
 <text x="472" y="130" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
-<text x="472" y="149" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Servidor (Docker host)</text>
-<text x="472" y="167" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">docker-compose, red interna de Docker</text>
+<text x="472" y="149" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Servidor objetivo (Docker)</text>
+<text x="472" y="167" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">Previsto: docker-compose, red interna</text>
 <polygon points="490,200 506,184 1026,184 1010,200" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <polygon points="1010,200 1026,184 1026,364 1010,380" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <rect x="490" y="200" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <text x="502" y="220" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
-<text x="502" y="239" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor frontend: Nginx</text>
+<text x="502" y="239" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Previsto: contenedor Nginx</text>
 <text x="502" y="257" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 80 / 443 (expuesto)</text>
 <rect x="506" y="300" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
 <path d="M720 308 h10 l6 6 v14 h-16 z M730 308 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
@@ -42,7 +42,7 @@
 <polygon points="1010,410 1026,394 1026,574 1010,590" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <rect x="490" y="410" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <text x="502" y="430" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
-<text x="502" y="449" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor backend: Node.js LTS</text>
+<text x="502" y="449" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Previsto: contenedor Node.js LTS</text>
 <text x="502" y="467" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 3000 (solo red interna)</text>
 <rect x="506" y="510" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
 <path d="M720 518 h10 l6 6 v14 h-16 z M730 518 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
@@ -58,24 +58,24 @@
 <polygon points="1010,620 1026,604 1026,784 1010,800" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <rect x="490" y="620" width="520" height="180" fill="#cfe0f5" stroke="#1565a0" stroke-width="1.8"/>
 <text x="502" y="640" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«executionEnvironment»</text>
-<text x="502" y="659" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Contenedor base de datos: MySQL 8</text>
+<text x="502" y="659" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Previsto: contenedor MySQL 8</text>
 <text x="502" y="677" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">puerto 3306 (solo red interna)</text>
 <rect x="506" y="720" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
 <path d="M720 728 h10 l6 6 v14 h-16 z M730 728 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
 <text x="516" y="738" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«schema»</text>
 <text x="516" y="755" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">fitsearch</text>
-<text x="516" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">14 tablas, utf8mb4 (migraciones Prisma)</text>
+<text x="516" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">9 tablas de dominio, utf8mb4 (Prisma)</text>
 <rect x="758" y="720" width="238" height="58" fill="#ffffff" stroke="#5f6f80" stroke-width="1.3"/>
 <path d="M972 728 h10 l6 6 v14 h-16 z M982 728 v6 h6" fill="#ffffff" stroke="#5f6f80" stroke-width="1.2"/>
 <text x="768" y="738" text-anchor="start" font-size="10.5" font-weight="400" fill="#5f6f80" font-style="italic">«artifact»</text>
 <text x="768" y="755" text-anchor="start" font-size="13" font-weight="600" fill="#1c2b39">volumen Docker</text>
-<text x="768" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">persistencia de los datos</text>
+<text x="768" y="770" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80">Previsto: persistencia de los datos</text>
 <polygon points="1260,170 1276,154 1576,154 1560,170" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <polygon points="1560,170 1576,154 1576,250 1560,266" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <rect x="1260" y="170" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <text x="1272" y="190" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
 <text x="1272" y="209" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">Google Maps Platform</text>
-<text x="1272" y="227" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">Maps JavaScript, Geocoding, Places</text>
+<text x="1272" y="227" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">Previsto: Maps, Geocoding, Places</text>
 <polygon points="1260,340 1276,324 1576,324 1560,340" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <polygon points="1560,340 1576,324 1576,420 1560,436" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <rect x="1260" y="340" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
@@ -87,7 +87,7 @@
 <rect x="1260" y="510" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <text x="1272" y="530" text-anchor="start" font-size="11" font-weight="400" fill="#5f6f80" font-style="italic">«device»</text>
 <text x="1272" y="549" text-anchor="start" font-size="14.5" font-weight="700" fill="#0b4f80">API de Claude (Anthropic)</text>
-<text x="1272" y="567" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">asistente de IA con function calling</text>
+<text x="1272" y="567" text-anchor="start" font-size="11.5" font-weight="400" fill="#5f6f80">Previsto: asistente con function calling</text>
 <polygon points="1260,680 1276,664 1576,664 1560,680" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <polygon points="1560,680 1576,664 1576,760 1560,776" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
 <rect x="1260" y="680" width="300" height="96" fill="#fde8d4" stroke="#c9772f" stroke-width="1.5"/>
@@ -128,4 +128,4 @@
 <rect x="481.45" y="41" width="557.1" height="18" fill="#ffffff" opacity="0.95"/>
 <text x="760" y="54" text-anchor="middle" font-size="12" font-weight="400" fill="#1c2b39" font-style="italic">«HTTPS» desde el navegador: mapa (Maps JavaScript) y botón de Google (ID token)</text>
 <polyline points="1610,218 1610,388 1576,388" fill="none" stroke="#1c2b39" stroke-width="1.6"/>
-</svg>
+<text x="40" y="970" font-size="13" fill="#0b4f80">Estado Sprint 3: desarrollo local con React/Vite, Express y MySQL; Google Identity y Open-Meteo integrados.</text><text x="40" y="991" font-size="12" fill="#5f6f80">Docker/Nginx representan el despliegue objetivo (FS-HU-11). Maps y Claude pendientes. SMTP requiere configuración.</text></svg>
