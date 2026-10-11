@@ -95,3 +95,7 @@ El panel está en el PR #17, apilado sobre el #16, y sigue pendiente de revisió
 ## Solicitudes cerradas
 
 Después de rechazar o revocar, la solicitud queda cerrada: el administrador no ve Aprobar/Rechazar y la API responde 409 a ambas decisiones. Adjuntar archivos no reabre la revisión; solo enviar una nueva solicitud desde Certificaciones la devuelve a pendiente. Comprobé rechazo, revocación, recarga y reenvío: 208 pruebas backend y 163 frontend aprobadas.
+
+## Validación manual final
+
+Completé correctamente los seis recorridos manuales propuestos: reenvío, aprobación e insignias, rechazo y cierre, validaciones de documentos/RUT, desactivación/reactivación y filtros/reportes/navegación móvil. El detalle y el origen de esta confirmación están en Plan de Pruebas/FS-HU-12_Verificacion.md. Este resultado no modifica la arquitectura: DAS 1.18 y diagramas vigentes se conservan. Revisión, fusión y aceptación del PO pendientes.

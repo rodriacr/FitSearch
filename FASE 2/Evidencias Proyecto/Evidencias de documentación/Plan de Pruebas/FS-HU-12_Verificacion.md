@@ -77,3 +77,18 @@ Suite completa frontend: 161 pruebas en 21 archivos aprobadas; lint de ambas cap
 ## Solicitudes cerradas
 
 Después de rechazar o revocar, la solicitud queda cerrada: el administrador no ve Aprobar/Rechazar y la API responde 409 a ambas decisiones. Adjuntar archivos no reabre la revisión; solo enviar una nueva solicitud desde Certificaciones la devuelve a pendiente. Comprobé rechazo, revocación, recarga y reenvío: 208 pruebas backend y 163 frontend aprobadas.
+
+## Validación manual del panel después de las correcciones
+
+Ejecutor: Luis Méndez. Resultado comunicado: todos los recorridos propuestos se completaron correctamente en el entorno local.
+
+| Recorrido | Resultado |
+|---|---|
+| Reenvío después de rechazo: documentos nuevos, estado pendiente y revisión disponible | Correcto |
+| Aprobación: insignia en perfil/listado y persistencia al recargar | Correcto |
+| Rechazo: motivo obligatorio, visible al profesional y solicitud cerrada | Correcto |
+| Validaciones: documentos obligatorios, tamaño/formato de archivo y formato/dígito verificador del RUT | Correcto |
+| Desactivación/reactivación: bloqueo de sesión y nuevo ingreso | Correcto |
+| Búsquedas, filtros, períodos de reportes y navegación móvil | Correcto |
+
+El cierre tras rechazo o revocación también se comprobó manualmente después de la corrección: Aprobar/Rechazar no vuelve hasta el nuevo envío. Este registro recoge el resultado confirmado por el ejecutor; no añade capturas ni sustituye la revisión y aceptación del PO. La fusión de los PR #16 y #17 permanece pendiente.
