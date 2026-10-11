@@ -31,6 +31,7 @@ export default function Certificaciones() {
   const [rut, setRut] = useState('');
   const [telefono, setTelefono] = useState('');
   const [archivos, setArchivos] = useState({});
+  const [adjuntadosEnPantalla, setAdjuntadosEnPantalla] = useState({});
   const [guardando, setGuardando] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -47,11 +48,13 @@ export default function Certificaciones() {
       if (tipo) {
         const archivo = archivos[tipo];
         if (!archivo || archivo.size > 5 * 1024 * 1024) throw new Error('Selecciona un PDF, JPG o PNG de hasta 5 MB');
-        await solicitar(`/verificaciones/documentos?${new URLSearchParams({ tipo, nombre: archivo.name })}`, { metodo: 'POST', archivo });
+        const { documento } = await solicitar(`/verificaciones/documentos?${new URLSearchParams({ tipo, nombre: archivo.name })}`, { metodo: 'POST', archivo });
+        setAdjuntadosEnPantalla((anteriores) => ({ ...anteriores, [tipo]: documento }));
         setArchivos((anteriores) => ({ ...anteriores, [tipo]: null })); formulario.reset(); setAviso('Documento adjuntado.');
       } else {
         const rutFormateado = formatearRut(rut);
         setRut(rutFormateado);
+        if (!adjuntadosEnPantalla.identidad || !adjuntadosEnPantalla.titulo) throw new Error('Adjunta el documento de identidad y el título profesional antes de enviar esta solicitud.');
         await solicitar('/verificaciones/mi-solicitud', { metodo: 'POST', cuerpo: { rut: rutFormateado, telefono } });
         setAviso('Solicitud enviada para revisión.');
       }
@@ -66,7 +69,7 @@ export default function Certificaciones() {
       {solicitud.estado === 'rechazado' && <p className="certificaciones__correccion">Tu solicitud fue rechazada o tu verificación fue revocada. Adjunta nuevamente el documento de identidad y el título profesional, corrige lo indicado en el motivo y envía una nueva solicitud.</p>}
       <p className="certificaciones__privacidad"><Icono nombre="candado" tamano={18} /> Los documentos son privados: solo tú y el administrador pueden descargarlos.</p>
       <div className="certificaciones__documentos">{TIPOS_DOCUMENTO.map(({ tipo, nombre, obligatorio }, indice) => {
-        const adjuntados = solicitud.documentos.filter((documento) => documento.tipo === tipo);
+        const adjuntados = solicitud.estado === 'verificado' ? solicitud.documentos.filter((documento) => documento.tipo === tipo) : adjuntadosEnPantalla[tipo] ? [adjuntadosEnPantalla[tipo]] : [];
         return <section className="certificaciones__documento" key={tipo} aria-labelledby={`titulo-documento-${tipo}`}>
           <div className="certificaciones__titulo-documento"><h4 id={`titulo-documento-${tipo}`}><span className="certificaciones__numero" aria-hidden="true">{indice + 1}</span>{nombre}</h4><span>{obligatorio ? 'Obligatorio' : 'Opcional'}</span></div>
           <p className={`certificaciones__indicador${adjuntados.length ? ' certificaciones__indicador--adjuntado' : ''}`}><Icono nombre={adjuntados.length ? 'check' : 'info'} tamano={16} />{adjuntados.length ? 'Adjuntado' : 'Sin adjuntar'}</p>

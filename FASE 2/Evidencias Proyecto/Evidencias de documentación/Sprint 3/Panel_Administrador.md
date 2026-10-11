@@ -15,7 +15,9 @@ Implementación del 10-10-2026, rama `codex/panel-administrador`. Rodri autoriz�
 
 ## Documentos privados
 
-Acepto PDF, JPG y PNG de hasta 5 MB, con comprobación de firma del formato y un máximo de 20 archivos por ficha. Tras rechazar o revocar, los documentos anteriores dejan de contar para la solicitud y se requieren nuevas subidas de identidad y título. La API y las pantallas solo presentan el último archivo de cada tipo posterior a esa decisión, sin versiones anteriores; las nuevas subidas sí persisten al recargar. Los archivos previos se conservan en almacenamiento privado, sin borrado automático. Los archivos se almacenan con nombres UUID, fuera de las carpetas públicas y de Git; MySQL guarda sus metadatos. No se publican rutas internas.
+Acepto PDF, JPG y PNG de hasta 5 MB, con comprobación de firma del formato y un máximo de 20 archivos por ficha. Tras rechazar o revocar, los documentos anteriores dejan de contar para la solicitud y se requieren nuevas subidas de identidad y título. La API y las pantallas solo presentan el último archivo de cada tipo posterior a esa decisión, sin versiones anteriores; las la API conserva las subidas actuales, pero la pantalla sin verificar reinicia sus apartados al recargar. Los archivos previos se conservan en almacenamiento privado, sin borrado automático. Los archivos se almacenan con nombres UUID, fuera de las carpetas públicas y de Git; MySQL guarda sus metadatos. No se publican rutas internas.
+
+En Certificaciones, mientras la solicitud no está verificada, recargar o volver a abrir la pantalla reinicia los indicadores y los selectores: todos muestran «Sin adjuntar». Cada documento se adjunta con su botón azul y solo entonces muestra «Adjuntado». El envío naranjo exige identidad y título adjuntados en esa pantalla. Este reinicio visual no elimina archivos privados ya almacenados. El RUT agrega el guion antes del dígito verificador automáticamente y sigue sujeto a validación.
 
 Solo el propietario profesional y el administrador pueden descargar un documento, con sesión vigente. Se descarga como archivo adjunto, con `nosniff` y sin caché compartida. Esta validación de formato no sustituye un antivirus ni acredita el documento: la revisión administrativa es manual. La aplicación no incluye análisis antivirus ni correo automático de rechazo; el estado y motivo se consultan dentro del perfil.
 
@@ -69,15 +71,15 @@ flowchart TD
   A -->|Aprobar| V["Verificado: insignia en perfil y listado"]
   A -->|Rechazar con motivo| R["Rechazado: motivo visible al profesional"]
   R --> D
-  V -->|Revocar con motivo| N["Pendiente: retira insignia y registra motivo"]
+  V -->|Revocar con motivo| N["Rechazado: retira insignia y exige documentos nuevos"]
   N --> D
   V -->|Cambiar especialidad| S
 ```
 
 ## Validación y seguimiento
 
-- Backend: 202 pruebas en 25 suites aprobadas.
-- Frontend: 152 pruebas en 21 archivos aprobadas.
+- Backend: 206 pruebas en 25 suites aprobadas.
+- Frontend: 161 pruebas en 21 archivos aprobadas.
 - Lint en ambas capas y build frontend correctos.
 - MySQL local: 17 comprobaciones del flujo con cuentas y archivos temporales, eliminados al terminar. Cubrí documentos, permisos de descarga, rechazo/reenvío/aprobación, revisión obsoleta, desactivación, reactivación y protección del administrador.
 - Edge: cinco vistas en escritorio de 1440 px y móvil de 390 px, menú y aprobación con API simulada; sin errores de JavaScript ni desbordamiento horizontal. Estas capturas no son evidencia de datos de producción.
@@ -87,3 +89,6 @@ flowchart TD
 - Documentos de la nueva solicitud: corregí la persistencia de «Adjuntado» tras rechazar o revocar. La API filtra los archivos anteriores a la última decisión y exige nuevas subidas para reenviar o aprobar. Solo se muestra el último archivo actual por tipo, sin acceso a versiones anteriores en las pantallas. Comprobé el reinicio, la recarga con documentos nuevos y el bloqueo de reenvío/aprobación con archivos antiguos: 206 pruebas backend en 25 suites y 16 pruebas frontend de Certificaciones y administración aprobadas; lint en ambas capas y build correctos. Los apartados conservan numeración, fondo y borde azul.
 
 El panel está en el PR #17, apilado sobre el #16, y sigue pendiente de revisión y aceptación de Rodri. El DAS 1.18 incorpora esta ampliación y los diagramas 01–04, 07, 08 y nuevo 11; los marcos anteriores y la documentación del DAS 1.17 se conservan como historial. Los enlaces vigentes están en Exportaciones_Miro.md. La planificación del Product Backlog conserva Sprint 5, prioridad baja y 3 puntos: la autorización de implementar no cambia por sí sola la planificación del equipo.
+
+- Validación final: 161 pruebas frontend en 21 archivos; 17 de Certificaciones y administración. Recargar o reabrir un perfil sin verificar deja todos los apartados vacíos y exige adjuntar identidad y título en esa pantalla antes de enviar. Lint y build correctos.
+

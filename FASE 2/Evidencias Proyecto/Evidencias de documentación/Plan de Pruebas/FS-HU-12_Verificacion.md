@@ -58,4 +58,18 @@ Los tests de API usan modelos simulados y los del frontend usan respuestas simul
 
 El DAS 1.16 incorporó el flujo y la decisión D28. La revisión 1.17 actualiza D25, el flujo 8 y los diagramas 06, 07 y 08. La planilla contiene los ocho casos. El Product Backlog conserva «Planificada», Sprint 5, prioridad baja y 3 puntos; el avance técnico no declara completada la HU.
 
-Quedan pendientes la definición del PO de la pantalla administrativa y la provisión de cuentas, su implementación cuando se confirme el alcance y la aceptación del PO. Se detectó un bucle de navegación al ingresar como administrador y se corrigió con una página de acceso no disponible que permite cerrar sesión; no es una pantalla administrativa de verificación. No se habilita registro público como administrador. Trello: [FS-HU-12](https://trello.com/c/4CaN8UAs).
+El PO autorizó el panel del mockup salvo Configuración y Contenido. El PR #17 implementa Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; las cuentas administrativas se provisionan mediante CLI, sin registro público. La aceptación del PO y la fusión de los PR #16 y #17 siguen pendientes. Trello: [FS-HU-12](https://trello.com/c/4CaN8UAs).
+
+## Pruebas finales del formulario y panel del PR #17
+
+Backend: 206 pruebas en 25 suites aprobadas. Certificaciones y administración: 17 pruebas en dos archivos aprobadas, incluidas las siguientes comprobaciones:
+
+- Rechazar o revocar descarta los documentos anteriores como requisitos de la nueva solicitud; reenviar o aprobar sin documentos nuevos devuelve 409.
+- Recargar la API mantiene solo los últimos documentos del ciclo actual, sin versiones anteriores.
+- En Certificaciones sin verificar, recargar o reabrir muestra todos los apartados «Sin adjuntar», aunque existan archivos privados almacenados. El formulario bloquea el envío hasta adjuntar identidad y título en esa pantalla.
+- Cada selector y botón azul adjunta el tipo correcto sin perder el archivo seleccionado en otro apartado. El envío final es naranjo.
+- El RUT se normaliza al perder el foco y antes de enviar, conservando los errores por campo y la validación del dígito verificador.
+
+Los tests de interfaz y API usan respuestas/modelos simulados. Lint y build se verifican antes de subir. No se declara aceptación de la HU por el PO.
+
+Suite completa frontend: 161 pruebas en 21 archivos aprobadas; lint de ambas capas y build frontend correctos. Revisión y aceptación del PO pendientes.

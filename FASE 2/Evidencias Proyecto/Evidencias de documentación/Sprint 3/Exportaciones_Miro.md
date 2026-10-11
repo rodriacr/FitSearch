@@ -47,3 +47,8 @@ Los marcos anteriores se conservan como historial. La arquitectura futura no equ
 El DAS 1.17 contiene las imágenes locales actualizadas de 06, 07 y 08. Se revisó su exportación con Microsoft Word: 44 páginas, índice actualizado, sin la página vacía previa al índice y D28 en una sola fila. La ilustración 6 se dividió en tres partes con etiquetas envueltas y participantes repetidos, conservando la numeración del flujo. El resumen, la vista física y la tabla de reutilización distinguen las capacidades actuales de las previstas. Las versiones integrales de Miro y las fuentes del repositorio se conservan; la división es una adaptación de presentación para el DAS.
 
 Sincronicé y comprobé en Drive los siete diagramas actuales (20 archivos), el DAS 1.17 y las instrucciones de Miro. Conservé los enlaces existentes y las versiones históricas. La sincronización documental está completada.
+
+## Consolidación final del PR 17
+
+El flujo 11 refleja los apartados vacíos al recargar Certificaciones sin verificar, la obligación de adjuntar identidad y título en esa pantalla y los documentos nuevos tras rechazo o revocación. No se muestran versiones anteriores. El DAS 1.18 incorpora estas reglas y el flujo actualizado. Validación: 206 pruebas backend y 161 frontend; lint y build correctos. Los otros diagramas conservan el modelo vigente, sin cambios estructurales adicionales. La revisión y fusión de los PR 16 y 17 y la aceptación del PO siguen pendientes.
+
