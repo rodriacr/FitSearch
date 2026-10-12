@@ -67,3 +67,7 @@ Las rutas delegan en servicios y estos en modelos con Prisma compartido. La sesi
 213 pruebas backend en 25 suites y 165 frontend en 21 archivos aprobadas. La regresión adicional sobre Express y MySQL reales completó 49 comprobaciones, incluidas 22 cargas sucesivas del título, recarga, rechazo, reenvío, cambio de especialidad y endpoint compatible. Las cuentas y archivos temporales se eliminaron al terminar. Los casos y límites están en [FS-HU-12_Verificacion.md](../Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
 El PR #16 está fusionado. El #17 quedó cerrado sin fusionar al desaparecer su rama base; la entrega continúa en el [PR #19](https://github.com/rodriacr/FitSearch/pull/19), dirigido a main. El DAS local 1.19 y flujo 11 reflejan estas correcciones. Drive y Miro conservan la publicación anterior; su sincronización se realizará después de fusionar el PR, conforme a la revisión de Rodrigo.
+
+## Ajustes posteriores a la revisión del PR 19
+
+La rama de ajustes admite diez cargas por tipo y trámite, con cupos independientes y reinicio tras cierre; tras un cierre, la vigencia usa solo documentoId. Todos muestra Sin solicitud y las fichas sin postulación no exponen motivos de cambio de especialidad. Validación: 217 pruebas backend, 166 frontend, lint/build y 38 comprobaciones con MySQL real. Contrato y límites en [Ajustes_Verificacion_Posteriores_PR19.md](Ajustes_Verificacion_Posteriores_PR19.md). Esta ampliación espera su propio PR; Drive/Miro conservan la versión aprobada del #19 hasta la siguiente fusión.

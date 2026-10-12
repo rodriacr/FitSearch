@@ -114,7 +114,7 @@ function guardarFicha(usuarioId, datos) {
       ...datos, revisionVerificacion: { increment: 1 },
       ...(especialidadCambio && {
         verificado: false, estadoVerificacion: teniaSolicitud ? 'rechazado' : 'sin_solicitud',
-        motivoRechazo: 'La especialidad cambió. Adjunta documentos de la nueva especialidad y envía otra solicitud.',
+        motivoRechazo: teniaSolicitud ? 'La especialidad cambió. Adjunta documentos de la nueva especialidad y envía otra solicitud.' : null,
         historialVerificacion: [...historial, { accion: 'cambio_especialidad', fecha: new Date().toISOString() }],
       }),
     } });

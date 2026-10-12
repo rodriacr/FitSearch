@@ -492,7 +492,9 @@ export function ListadoAdministrador({ tipo }) {
                         ? 'Verificado'
                         : fila.estado === 'rechazado'
                           ? 'Rechazado'
-                          : 'Pendiente'}
+                          : fila.estado === 'sin_solicitud'
+                            ? 'Sin solicitud'
+                            : 'Pendiente'}
                     </span>
                     <Link
                       className="admin__boton"

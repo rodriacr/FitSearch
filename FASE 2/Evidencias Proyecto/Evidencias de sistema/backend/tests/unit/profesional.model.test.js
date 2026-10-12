@@ -31,6 +31,13 @@ test('la ficha propia se busca por la cuenta y devuelve solo sus campos', async 
   expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'especialidad', 'id', 'modalidad', 'ubicacionLat', 'ubicacionLng', 'verificado']);
 });
 
+test('cambiar especialidad antes de postular no crea un motivo de rechazo', async () => {
+  prisma.profesional.findUnique.mockResolvedValue({ id: 2, especialidad: 'Kinesiología', verificado: false, estadoVerificacion: 'sin_solicitud', revisionVerificacion: 3, historialVerificacion: [] });
+  prisma.profesional.updateMany.mockResolvedValue({ count: 1 });
+  await guardarFicha(7, datos);
+  expect(prisma.profesional.updateMany.mock.calls[0][0].data).toMatchObject({ estadoVerificacion: 'sin_solicitud', motivoRechazo: null });
+});
+
 test('la ruta anterior aplica las mismas reglas de documentos e historial que el panel', async () => {
   await verificarPerfil(5, 7);
   expect(require('../../src/models/verificacion.model').decidir).toHaveBeenCalledWith(5, { accion: 'aprobar', administradorId: 7 });

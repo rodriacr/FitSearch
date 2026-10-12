@@ -6,6 +6,13 @@ import { renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
 const ficha = { id: 2, revision: 1, estado: 'pendiente', activo: true, documentos: [], historial: [], nombre: 'Ana Demo', correo: 'ana@example.test', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'online', verificado: false };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, rol: 'administrador' } })));
 
+test('el listado Todos identifica fichas sin solicitud sin llamarlas pendientes', async () => {
+  simularApi({ '/api/administrador/profesionales': { resultados: [{ ...ficha, estado: 'sin_solicitud' }], total: 1, pagina: 1, totalPaginas: 1 } });
+  renderizarApp('/admin/profesionales');
+  expect(await screen.findByText('Sin solicitud')).toBeInTheDocument();
+  expect(screen.queryByText('Pendiente')).not.toBeInTheDocument();
+});
+
 test('muestra pendientes y abre la revisión de una ficha real', async () => {
   simularApi({ '/api/administrador/profesionales/2': { profesional: ficha }, '/api/administrador/profesionales': { resultados: [ficha], total: 1, pagina: 1, totalPaginas: 1 } });
   renderizarApp('/admin/verificaciones');

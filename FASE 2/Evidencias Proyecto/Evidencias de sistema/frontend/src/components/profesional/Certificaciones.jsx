@@ -223,7 +223,7 @@ export default function Certificaciones() {
                   {solicitud.estado !== 'verificado' && (
                     <form onSubmit={(e) => enviar(e, tipo)}>
                       <label htmlFor={`archivo-${tipo}`}>
-                        Archivo PDF, JPG o PNG (máximo 5 MB)
+                        Archivo PDF, JPG o PNG (máximo 5 MB). Hasta 10 subidas de este documento por trámite.
                       </label>
                       <input
                         id={`archivo-${tipo}`}

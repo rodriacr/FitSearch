@@ -16,11 +16,20 @@ test('al recargar una solicitud rechazada devuelve solo los documentos posterior
   const recargar = () => request(app).get('/api/verificaciones/mi-solicitud').set('Authorization', `Bearer ${token('profesional')}`);
   expect((await recargar()).body.solicitud.documentos).toEqual([]);
   fila.documentos.push({ id: 2, tipo: 'identidad', fechaCreacion: new Date('2026-10-10T12:00:00Z') });
+  fila.historialVerificacion.push({ accion: 'documento', tipo: 'identidad', documentoId: 2 });
   for (let intento = 0; intento < 2; intento++) {
     const respuesta = await recargar();
     expect(respuesta.status).toBe(200);
     expect(respuesta.body.solicitud.documentos.map((d) => d.id)).toEqual([2]);
   }
+});
+
+test('una ficha sin solicitud no expone un antiguo motivo de cambio de especialidad', async () => {
+  modelo.buscarPorUsuario.mockResolvedValue({ id: 2, estadoVerificacion: 'sin_solicitud', motivoRechazo: 'La especialidad cambió', historialVerificacion: [], documentos: [] });
+  modelo.documentosActuales.mockReturnValue([]);
+  const res = await request(app).get('/api/verificaciones/mi-solicitud').set('Authorization', `Bearer ${token('profesional')}`);
+  expect(res.status).toBe(200);
+  expect(res.body.solicitud.motivo).toBeNull();
 });
 test('solo un profesional envía su propia solicitud, con RUT válido normalizado', async () => {
   modelo.enviarSolicitud.mockResolvedValue({ estado: 'pendiente' });
