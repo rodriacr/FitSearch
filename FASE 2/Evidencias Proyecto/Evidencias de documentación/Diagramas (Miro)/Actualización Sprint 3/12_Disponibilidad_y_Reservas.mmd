@@ -19,8 +19,8 @@ sequenceDiagram
   F->>A: POST reservas con JWT
   A->>A: Validar usuario y mensaje de 10 a 500 caracteres
   A->>D: Transacción ReadCommitted: bloquear profesional y bloque
-  A->>D: Consultar reservas activas bajo bloqueo
-  alt Ocupado o pasado
+  A->>D: Consultar activas del bloque y del usuario con este profesional
+  alt Ocupado, pasado o usuario con reserva activa del profesional
     A-->>F: 409 recargar horarios y conservar mensaje
   else Libre
     A->>D: Crear pendiente y commit
@@ -40,5 +40,5 @@ sequenceDiagram
     A-->>F: 200 retirar de nuevas reservas
   else Sin historial
     A->>D: Eliminar bloque sin reservas
-    A-->>F: 200 bloque retirado
+    A-->>F: 200 bloque eliminado
   end

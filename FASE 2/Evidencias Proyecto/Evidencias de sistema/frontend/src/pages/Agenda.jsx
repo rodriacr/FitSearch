@@ -251,7 +251,7 @@ export function HorariosProfesional() {
         metodo: editando ? 'PUT' : 'POST',
         cuerpo: campos,
       });
-      setAviso('Horario publicado.');
+      setAviso(editando ? 'Horario actualizado.' : 'Horario publicado.');
       setCampos({ fecha: '', horaInicio: '', horaFin: '' });
       setEditando(null);
       setRevision((r) => r + 1);
@@ -265,9 +265,15 @@ export function HorariosProfesional() {
     setOcupado(true);
     setError('');
     try {
-      await solicitar(`/disponibilidades/${borrando}`, { metodo: 'DELETE' });
+      const resultado = await solicitar(`/disponibilidades/${borrando}`, { metodo: 'DELETE' });
+      if (editando === borrando) {
+        setEditando(null);
+        setCampos({ fecha: '', horaInicio: '', horaFin: '' });
+      }
       setBorrando(null);
-      setAviso('Horario retirado. Ya no admite nuevas reservas; su historial se conserva.');
+      setAviso(resultado.retirado
+        ? 'Horario retirado. Ya no admite nuevas reservas; su historial se conserva.'
+        : 'Horario eliminado.');
       setRevision((r) => r + 1);
     } catch (e) {
       setError(e.message);

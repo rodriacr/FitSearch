@@ -35,7 +35,7 @@ async function propia(tx, usuarioId) {
     );
   return f;
 }
-async function listarDisponibilidad(usuario, profesionalId) {
+async function listarDisponibilidad(usuario, profesionalId, fechaDesde) {
   const f = profesionalId
     ? await prisma.profesional.findFirst({
         where: {
@@ -49,9 +49,10 @@ async function listarDisponibilidad(usuario, profesionalId) {
     where: {
       profesionalId: f.id,
       retirado: false,
+      fecha: { gte: fechaDesde },
       ...(profesionalId && { reservas: { none: { estado: { in: ACTIVOS } } } }),
     },
-    include: ocupado,
+    include: profesionalId ? { reservas: ocupado.reservas } : ocupado,
     orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
   });
 }
@@ -189,6 +190,18 @@ async function crearReserva(
         await tx.$queryRaw`SELECT id FROM reservas WHERE disponibilidad_id = ${disponibilidadId} AND estado IN ('pendiente', 'confirmada') FOR UPDATE`;
       if (activas.length)
         throw new ErrorHttp(409, 'El horario ya no está disponible');
+      const delUsuario = await tx.reserva.count({
+        where: {
+          usuarioId,
+          estado: { in: ACTIVOS },
+          disponibilidad: { profesionalId: actual.profesionalId },
+        },
+      });
+      if (delUsuario)
+        throw new ErrorHttp(
+          409,
+          'Ya tienes una reserva activa con este profesional. Cancélala antes de reservar otra hora',
+        );
       return tx.reserva.create({
         data: { usuarioId, disponibilidadId, mensaje },
         include: reservaInclude,

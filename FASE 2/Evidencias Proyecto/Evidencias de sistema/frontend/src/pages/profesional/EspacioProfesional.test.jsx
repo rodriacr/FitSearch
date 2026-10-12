@@ -10,6 +10,7 @@ const SALUDO = { level: 1, name: '¡Hola, Matías!' };
 const simular = ({ ficha = MI_FICHA, clima = CLIMA } = {}) => simularApi({
   '/api/profesionales/mi-ficha': { ficha },
   '/api/clima': clima,
+  '/api/disponibilidades': { horarios: [] },
 });
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
@@ -66,6 +67,12 @@ describe('Diseño del profesional', () => {
 });
 
 describe('Inicio del profesional', () => {
+  test('no solicita definir disponibilidad si ya hay horarios publicados', async () => {
+    simularApi({ '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] } });
+    renderizarApp('/profesional/inicio');
+    await screen.findByRole('group', { name: 'Clima en Providencia: 18 grados, Despejado' });
+    expect(screen.queryByText('Define tu disponibilidad')).not.toBeInTheDocument();
+  });
   test('saluda, muestra el clima de su comuna con la fuente y el resumen semanal sin datos simulados', async () => {
     simular();
     renderizarApp('/profesional/inicio');

@@ -6,6 +6,28 @@ const h = { id: 2, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00', o
 const r = { id: 4, estado: 'pendiente', mensaje: 'Necesito orientación nutricional', horario: h, usuario: { id: 1, nombre: 'Ana' }, profesional: { id: 3, nombre: 'Juan' } };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
 
+test('editar avisa actualización; eliminar el bloque editado limpia el formulario sin afirmar historial', async () => {
+  let horarios = [h];
+  simularApi({
+    '/api/disponibilidades/2': (_u,o) => {
+      if (o.method === 'DELETE') { horarios=[]; return [200,{id:2}]; }
+      return [200,{horario:h}];
+    },
+    '/api/disponibilidades': () => [200,{horarios}],
+    '/api/reservas': { reservas:[] },
+  });
+  renderizarApp('/profesional/agenda');
+  await userEvent.click(await screen.findByRole('button',{name:'Editar horario'}));
+  await userEvent.click(screen.getByRole('button',{name:'Guardar horario'}));
+  expect(await screen.findByText('Horario actualizado.')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button',{name:'Editar horario'}));
+  await userEvent.click(screen.getByRole('button',{name:'Retirar horario'}));
+  await userEvent.click(screen.getByRole('button',{name:'Confirmar retiro'}));
+  expect(await screen.findByText('Horario eliminado.')).toBeInTheDocument();
+  expect(screen.getByLabelText('Fecha')).toHaveValue('');
+  expect(screen.queryByRole('button',{name:'Cancelar edición'})).not.toBeInTheDocument();
+});
+
 test('retira un bloque con historial cancelado solo tras confirmar y mantiene la reserva en historial', async () => {
   let horarios = [{ ...h, conHistorial: true }];
   const fetch = simularApi({

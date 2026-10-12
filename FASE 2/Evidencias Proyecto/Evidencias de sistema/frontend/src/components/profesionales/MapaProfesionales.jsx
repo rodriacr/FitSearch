@@ -5,33 +5,51 @@ import './MapaProfesionales.css';
 
 export default function MapaProfesionales({ profesionales, desde }) {
   const contenedor = useRef(null);
+  const mapa = useRef(null);
+  const api = useRef(null);
   const [estado, setEstado] = useState('cargando');
   const [error, setError] = useState('');
   const [intento, setIntento] = useState(0);
-  const [seleccionado, setSeleccionado] = useState(null);
+  const [seleccion, setSeleccion] = useState(null);
+  const seleccionado = seleccion?.resultados === profesionales ? seleccion.profesional : null;
   useEffect(() => {
     let vigente = true;
-    const marcadores = [];
-    const informacion = [];
     (async () => {
       try {
         const maps = await cargarGoogleMaps();
         const { Map } = await maps.importLibrary('maps');
         const { AdvancedMarkerElement } = await maps.importLibrary('marker');
         if (!vigente) return;
-        const puntos = profesionales.filter(
-          (p) =>
-            Number.isFinite(Number(p.ubicacionLat)) &&
-            Number.isFinite(Number(p.ubicacionLng)),
-        );
-        const mapa = new Map(contenedor.current, {
+        api.current = { maps, AdvancedMarkerElement };
+        if (!mapa.current) mapa.current = new Map(contenedor.current, {
           center: { lat: -33.45, lng: -70.66 },
           zoom: 11,
           mapId: import.meta.env.VITE_GOOGLE_MAPS_MAP_ID || 'DEMO_MAP_ID',
           streetViewControl: false,
           mapTypeControl: false,
         });
-        const limites = new maps.LatLngBounds();
+        setEstado('listo');
+        setError('');
+      } catch (e) {
+        if (vigente) {
+          setEstado('error');
+          setError(e.message);
+        }
+      }
+    })();
+    return () => { vigente = false; };
+  }, [intento]);
+
+  useEffect(() => {
+    if (estado !== 'listo') return;
+    const { maps, AdvancedMarkerElement } = api.current;
+    const marcadores = [];
+    const informacion = [];
+    const puntos = profesionales.filter((p) =>
+      p.ubicacionLat != null && p.ubicacionLng != null &&
+      Number.isFinite(Number(p.ubicacionLat)) &&
+      Number.isFinite(Number(p.ubicacionLng)));
+    const limites = new maps.LatLngBounds();
         for (const p of puntos) {
           const position = {
             lat: Number(p.ubicacionLat),
@@ -39,7 +57,7 @@ export default function MapaProfesionales({ profesionales, desde }) {
           };
           limites.extend(position);
           const marcador = new AdvancedMarkerElement({
-            map: mapa,
+            map: mapa.current,
             position,
             title: `${p.nombre}, ${p.especialidad}`,
           });
@@ -52,38 +70,29 @@ export default function MapaProfesionales({ profesionales, desde }) {
           const ventana = new maps.InfoWindow({ content: tarjeta });
           const listener = marcador.addListener('click', () => {
             informacion.forEach((v) => v.close());
-            ventana.open({ map: mapa, anchor: marcador });
-            setSeleccionado(p);
+            ventana.open({ map: mapa.current, anchor: marcador });
+            setSeleccion({ profesional: p, resultados: profesionales });
           });
           marcadores.push({ marcador, listener });
           informacion.push(ventana);
         }
-        if (puntos.length > 1) mapa.fitBounds(limites, 40);
+        if (puntos.length > 1) mapa.current.fitBounds(limites, 40);
         else if (puntos.length === 1) {
-          mapa.setCenter({
+          mapa.current.setCenter({
             lat: Number(puntos[0].ubicacionLat),
             lng: Number(puntos[0].ubicacionLng),
           });
-          mapa.setZoom(13);
+          mapa.current.setZoom(13);
         }
-        setEstado('listo');
-        setError('');
-      } catch (e) {
-        if (vigente) {
-          setEstado('error');
-          setError(e.message);
-        }
-      }
-    })();
+        else { mapa.current.setCenter({ lat: -33.45, lng: -70.66 }); mapa.current.setZoom(11); }
     return () => {
-      vigente = false;
       marcadores.forEach(({ marcador, listener }) => {
         listener.remove();
         marcador.map = null;
       });
       informacion.forEach((v) => v.close());
     };
-  }, [profesionales, intento]);
+  }, [profesionales, estado]);
   return (
     <section
       className="mapa-profesionales"

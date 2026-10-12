@@ -7,6 +7,33 @@ import MapaProfesionales from './MapaProfesionales.jsx';
 import { fichaProfesional, listado, FILTROS, renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
 vi.mock('../../services/mapas.js', () => ({ cargarGoogleMaps: vi.fn() }));
 beforeEach(() => cargarGoogleMaps.mockReset());
+
+test('cambiar la página reutiliza el mapa y limpia selección, ventanas y marcadores anteriores', async () => {
+  const crearMapa = vi.fn();
+  const callbacks = [];
+  const markers = [];
+  const remove = vi.fn();
+  const close = vi.fn();
+  class Map { constructor() { crearMapa(); } setCenter() {} setZoom() {} fitBounds() {} }
+  class LatLngBounds { extend() {} }
+  class InfoWindow { open() {} close() { close(); } }
+  class AdvancedMarkerElement {
+    constructor() { markers.push(this); }
+    addListener(_tipo, cb) { callbacks.push(cb); return { remove }; }
+  }
+  cargarGoogleMaps.mockResolvedValue({ LatLngBounds, InfoWindow, importLibrary: async (nombre) => nombre === 'maps' ? { Map } : { AdvancedMarkerElement } });
+  const { rerender } = render(<MemoryRouter><MapaProfesionales profesionales={[fichaProfesional()]} /></MemoryRouter>);
+  await waitFor(() => expect(callbacks).toHaveLength(1));
+  act(() => callbacks[0]());
+  expect(screen.getByRole('link', { name: 'Ver ficha de Ana Demo' })).toBeInTheDocument();
+  rerender(<MemoryRouter><MapaProfesionales profesionales={[fichaProfesional({ id: 2, nombre: 'Otro profesional' })]} /></MemoryRouter>);
+  await waitFor(() => expect(callbacks).toHaveLength(2));
+  expect(crearMapa).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole('link', { name: 'Ver ficha de Ana Demo' })).not.toBeInTheDocument();
+  expect(markers[0].map).toBeNull();
+  expect(remove).toHaveBeenCalled();
+  expect(close).toHaveBeenCalled();
+});
 test('una falla del proveedor conserva los enlaces accesibles a las fichas', async () => {
   cargarGoogleMaps.mockResolvedValue({ importLibrary: () => { throw new Error('Mapa no disponible'); } });
   render(<MemoryRouter><MapaProfesionales profesionales={[fichaProfesional()]} desde="/profesionales?q=nutri" /></MemoryRouter>);

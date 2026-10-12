@@ -10,12 +10,9 @@ export function cargarGoogleMaps(
     );
   if (window.google?.maps?.importLibrary)
     return Promise.resolve(window.google.maps);
-  if (carga) return carga;
-  carga = new Promise((resolve, reject) => {
+  if (!carga) carga = new Promise((resolve, reject) => {
     const script = document.createElement('script');
-    let temporizador;
     const fallar = () => {
-      clearTimeout(temporizador);
       script.remove();
       delete window.fitsearchMapsListo;
       carga = null;
@@ -24,15 +21,23 @@ export function cargarGoogleMaps(
       );
     };
     window.fitsearchMapsListo = () => {
-      clearTimeout(temporizador);
       delete window.fitsearchMapsListo;
       resolve(window.google.maps);
     };
     script.src = `https://maps.googleapis.com/maps/api/js?${new URLSearchParams({ key: clave, v: 'weekly', loading: 'async', libraries: 'marker', callback: 'fitsearchMapsListo', language: 'es', region: 'CL' })}`;
     script.async = true;
     script.onerror = fallar;
-    temporizador = setTimeout(fallar, 15000);
     document.head.appendChild(script);
   });
-  return carga;
+  // El plazo limita la espera de la pantalla, no la descarga compartida.
+  // Una llegada tardía mantiene su callback y los reintentos usan el mismo script.
+  return new Promise((resolve, reject) => {
+    const temporizador = setTimeout(() => reject(new Error(
+      'El mapa está tardando en cargar. Reintenta o utiliza la lista.',
+    )), 15000);
+    carga.then(
+      (maps) => { clearTimeout(temporizador); resolve(maps); },
+      (error) => { clearTimeout(temporizador); reject(error); },
+    );
+  });
 }

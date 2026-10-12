@@ -239,6 +239,8 @@ async function check(n, r, s) {
       200,
     );
     assert(libres.horarios.some((h) => h.id === slot.id));
+    assert(libres.horarios.every((h) => !Object.hasOwn(h, 'conHistorial')));
+    comprobaciones.push('Listado público no revela historial cancelado');
     const nueva = (
       await check(
         'Nuevo usuario reserva bloque liberado',
@@ -342,6 +344,36 @@ async function check(n, r, s) {
       }),
       404,
     );
+    const bloques = [];
+    for (const hora of ['16:00', '17:00']) {
+      bloques.push((await check('Publica bloque para límite por usuario '+hora,
+        api(p,'post','/disponibilidades',{...h,horaInicio:hora,horaFin:hora.replace(':00',':30')}),201)).horario);
+    }
+    const simultaneas = await Promise.all(bloques.map((bloque) => api(a,'post','/reservas',{
+      disponibilidadId:bloque.id,mensaje:'Consulta para comprobar límite por usuario',
+    })));
+    assert.deepEqual(simultaneas.map((q) => q.status).sort(),[201,409]);
+    comprobaciones.push('Dos bloques simultáneos del mismo usuario y profesional: un 201 y un 409');
+    const activa = simultaneas.find((q) => q.status === 201).body.reserva;
+    const libre = bloques.find((q) => q.id !== activa.horario.id);
+    await check('Confirma reserva para comprobar límite',api(p,'patch',`/reservas/${activa.id}`,{estado:'confirmada'}),200);
+    await check('Confirmada bloquea otra reserva con el mismo profesional',api(a,'post','/reservas',{
+      disponibilidadId:libre.id,mensaje:'Otra reserva que debe ser rechazada',
+    }),409);
+    const otroBloque=(await check('Publica bloque de otro profesional',api(otro,'post','/disponibilidades',h),201)).horario;
+    await check('El límite permite reservar con otro profesional',api(a,'post','/reservas',{
+      disponibilidadId:otroBloque.id,mensaje:'Consulta con un profesional diferente',
+    }),201);
+    await check('Cancela reserva para liberar límite',api(a,'patch',`/reservas/${activa.id}`,{estado:'cancelada'}),200);
+    await check('Cancelada permite otra hora del mismo profesional',api(a,'post','/reservas',{
+      disponibilidadId:libre.id,mensaje:'Nueva reserva después de cancelar',
+    }),201);
+    const pasado = await prisma.disponibilidad.create({data:{profesionalId:p.profesional.id,
+      fecha:new Date('2020-01-01T00:00:00Z'),horaInicio:new Date('1970-01-01T09:00:00Z'),horaFin:new Date('1970-01-01T10:00:00Z')}});
+    for (const [cuenta,ruta] of [[p,'/disponibilidades'],[b,`/profesionales/${p.profesional.id}/disponibilidades`]]) {
+      const listado = await check('Omitir horarios pasados '+ruta,api(cuenta,'get',ruta),200);
+      assert(!listado.horarios.some((q) => q.id === pasado.id));
+    }
     const resultado = {
       fecha: new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Santiago',

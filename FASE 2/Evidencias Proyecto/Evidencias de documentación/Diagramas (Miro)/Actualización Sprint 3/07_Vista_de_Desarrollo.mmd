@@ -15,7 +15,6 @@ flowchart TB
     V["Servicios<br/>Agenda, reservas<br/>Ficha, documentos<br/>y clima"]
     D["Modelos<br/>Dominio, admin,<br/>sesión, agenda y verificación"]
     R --> M --> K --> V --> D
-    K --> D
   end
   SPA -->|"HTTP /api; Bearer JWT"| API
   API --> PR["models/prisma.js<br/>Conexión compartida"]

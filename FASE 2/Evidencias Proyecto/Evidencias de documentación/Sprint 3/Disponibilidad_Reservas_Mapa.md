@@ -26,7 +26,7 @@ Configuración oficial: https://developers.google.com/maps/documentation/javascr
 
 ## SMTP pendiente del Sprint 2
 
-La recuperación ya tiene su flujo y servicio, pero el .env local no contiene usuario ni contraseña SMTP. La dirección del destinatario no reemplaza estas credenciales. El comando npm run smtp:comprobar verifica la configuración y la conexión sin enviar mensajes; termina con código 2 si faltan datos.
+La recuperación ya tiene su flujo y servicio, pero el .env local tiene usuario y remitente, pero la contraseña de aplicación está pendiente. La dirección del destinatario no reemplaza estas credenciales. El comando npm run smtp:comprobar verifica la configuración y la conexión sin enviar mensajes; termina con código 2 si faltan datos.
 
 Una vez configuradas las credenciales localmente, ejecutar desde backend:
 
@@ -75,3 +75,12 @@ Se corrigieron las alertas críticas y altas detectadas por npm audit. Backend: 
 ## Corrección de la revisión del PR 21
 
 12-10-2026: se reemplazó CAST de parámetros TIME por comparación TIME_TO_SEC con segundos numéricos. Se comprobaron el duplicado 09:00–11:00 (409), 10:00–12:00 superpuesto (409), 15:00–15:30 libre (201), bloques contiguos y edición superpuesta. Nueva migración 20261012040000_retirar_disponibilidad, sin borrado de historial. La prueba reproducible npm run test:mysql:agenda ejecuta 39 comprobaciones con MySQL local y elimina únicamente sus datos temporales. Evidencia Agenda_MySQL_2026-10-12.json. Product Backlog conserva íntegramente las notas previas de FS-HU-13/14 y agrega el avance debajo. Drive/Miro esperan la fusión.
+
+
+## Revisión posterior a la fusión del PR 21
+
+El PR #21 fue aprobado y fusionado el 12-10-2026. El cierre oficial del Sprint 2 se conserva. La siguiente entrega limita a una reserva pendiente o confirmada por usuario con cada profesional, bajo el mismo bloqueo transaccional. Permite otro profesional y vuelve a permitir reservar al cancelar. El listado filtra fecha >= hoy en la consulta y no expone conHistorial públicamente.
+
+MapaProfesionales conserva su instancia al paginar y alternar lista/mapa; reemplaza marcadores y ventanas y limpia la selección anterior. El plazo de 15 segundos no elimina el callback de una descarga tardía; los reintentos comparten el script. Agenda distingue actualización, eliminación y retiro con historial, y limpia el formulario del bloque retirado. Inicio deja de solicitar disponibilidad si ya hay horarios. El comprobador SMTP explica cuándo falta --enviar-prueba y muestra códigos de proveedor sin revelar credenciales.
+
+Validación de esta revisión: 233 pruebas backend en 28 suites, 178 frontend en 24 archivos, 51 comprobaciones MySQL reales; lint y build correctos. Falta contraseña de aplicación SMTP, clave Maps, comprobación real de ambos proveedores y aceptación del PO. DAS 1.22 y flujo 12 revisado se publican después de fusionar la nueva entrega.

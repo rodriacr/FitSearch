@@ -48,7 +48,12 @@ async function comprobar() {
     transporte.close();
   }
 }
-comprobar().catch(() => {
+comprobar().catch((error) => {
+  // Códigos del proveedor ayudan a diagnosticar sin publicar datos de autenticación.
+  const diagnostico = error.message?.startsWith('Confirma el envío')
+    ? error.message
+    : `Error SMTP: ${error.code || 'sin código'}${error.responseCode ? ` (${error.responseCode})` : ''}`;
+  console.error(diagnostico);
   console.error(
     'No se pudo completar la comprobación SMTP. Revisa la cuenta, su contraseña de aplicación y la conexión; no publiques credenciales.',
   );

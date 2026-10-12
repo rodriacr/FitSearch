@@ -1,0 +1,255 @@
+{
+  "fecha": "2026-10-12",
+  "estado": "DAS 1.21 publicado; DAS 1.22 y revisión posterior pendientes",
+  "pr": "https://github.com/rodriacr/FitSearch/pull/21",
+  "files": [
+    {
+      "relative": "Documento de Arquitectura (DAS)/Documento_Arquitectura_Sistema_DAS_.docx",
+      "id": "1ZDYdzfxujsZvTHXRr9MaGNR5DsxBi2zq",
+      "action": "publicado DAS 1.21; borrador local 1.22 requiere fusión",
+      "sha256": "9bf131b85029a0be068e56a74e80c6d9f1f9438926a91ffa81f69cf4894c6727",
+      "bytes": 5564789
+    },
+    {
+      "relative": "Sprint 2/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx",
+      "id": "1FGZ6GjbV_6gDYW8ooVO0oZ_25XlEZ4GG",
+      "action": "cierre oficial de Rodrigo; no editar",
+      "sha256": "f18711ace932986ae08e5b0507fabda4c1d430ec952fda46400581df4d0b9e26",
+      "bytes": 211246
+    },
+    {
+      "relative": "Sprint 3/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx",
+      "id": "16D3Gw5uO5zdN8oeZlpj9ApjxWkuRlq51",
+      "action": "conciliación oficial de Rodrigo conservada",
+      "sha256": "1f48935a31ba0f987fd3adf144d8c0f78f046b4cbbb42767d3f2bfdeb56474f5",
+      "bytes": 208878
+    }
+  ],
+  "product": {
+    "relative": "FASE 1/Evidencias Grupales/Material complementario/PMOInformatica_Plantilla_de_Product_Backlog.xlsx",
+    "id": "1ZLZZH1cf2Y2uDfSDgZpyTwDdJ2DPDn-k",
+    "action": "conciliación oficial de Rodrigo conservada",
+    "sha256": "0c3a0d632008cac53ab174e762869b9ec5a387bc98ef3f0e1d9419e7d4e07d8e"
+  },
+  "marco12": "https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686919929732",
+  "source_commit": "fcb1346223ee2337488341fbe3f81f2c2187d36d",
+  "diagrams": [
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/01_Casos_de_Uso.png",
+      "drive_id": "1j0JbLnmaUmOdernXfYnfFAi9WAL5V6wH",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "70e9664fbf6e0ee8fe7b2d495111c2c9993423881453a6b02a9ec8ed97dc8627",
+      "bytes": 661704
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/01_Casos_de_Uso.svg",
+      "drive_id": "1_UGcwfbhg76lbSqPc2QaYQhCtsMhXKKi",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "9f7915f8de66c277658d3e2b5b0f299f11ac63cbf064603f4f10432c9d75ea9e",
+      "bytes": 12966
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/02_Diagrama_de_Clases.mmd",
+      "drive_id": "1_-n2tr9gOK7hBQp6U2m7ur4qhbom3ApG",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "a0b08eb970e6b1fd3e653ac00daa33f805c6fa870942416f62da0b6c7d9ebbfb",
+      "bytes": 3410
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/02_Diagrama_de_Clases.png",
+      "drive_id": "1uVbj0fiXVg25fpUW9z4UYMKxa_Cxta1a",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "d98b0a8c9d6b01c4a4aba79af7de3e8c61e5e290f20c044dd919dcf4ed12f5d1",
+      "bytes": 615634
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/02_Diagrama_de_Clases.svg",
+      "drive_id": "1aBSZAa0b_VGX3hmu1JY4lm92xGTnslfn",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "597469eac65ff545c86e02d8c25ed5ab1472aba6c691e07e269452969ca59235",
+      "bytes": 47377
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/03_DER_Modelo_Completo.mmd",
+      "drive_id": "1RBZdeQNSfaHYTQZnwXLyt_AqZeHxWerw",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "fd2dd5179b2120a615af8d28b7da751ecfdbdb668ff57da326fe07309503ee8e",
+      "bytes": 4085
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/03_DER_Modelo_Completo.png",
+      "drive_id": "1I7FygXelplngGMYiOuJJ-EjqJqeclYlP",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "f1a5094a74a8ddb4a293f81b73adead7c53163a0875713f73beee00a3fedd4b8",
+      "bytes": 368533
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/03_DER_Modelo_Completo.svg",
+      "drive_id": "177eR2Grpa0QpnEmkW_iAel6pJ2FffW-p",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "02bf803ef7468037a9902c9313ca67128a68fe7c2317487d4ac4aa0b0ab6674d",
+      "bytes": 148189
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/04_DER_Tablas_Implementadas.mmd",
+      "drive_id": "1VN_ZnOtGMthNa15QgImclRrcrWYvtzcp",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "466537f9c9c18cc9c589bc0eafb2c1c1a05ffe057a7037c08ef81bbb994c49d2",
+      "bytes": 3618
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/04_DER_Tablas_Implementadas.png",
+      "drive_id": "1g4XpFL4va-8f5K4eXwcJPCfxLdgVUoIb",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "2c00927c9db9f0bb67e66069651c0b47e24e607913f480f29793de83b829b42d",
+      "bytes": 449190
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/04_DER_Tablas_Implementadas.svg",
+      "drive_id": "192I71LksFs3M6mikeeTf6fh-Adn7BOoB",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "cb13b9e0194deff7fcd21df21054c4180aaec0a6c1ff473839185f77ebe35296",
+      "bytes": 122780
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/06_Secuencia_Elegir_Perfil_y_Asistente.mmd",
+      "drive_id": "1A8lFpnqfyj8HZAdIXINf4awpXdxlsDi6",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "1149aad2dc4a6c0eba4135ad83d0007cfd086eada51aa73d71c479c77ac44e7c",
+      "bytes": 2303
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/06_Secuencia_Elegir_Perfil_y_Asistente.png",
+      "drive_id": "1JTSgHCci8_gbnM5i3UyuDgq0z5ha8R6t",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "47d195293d626613f2e202ac21f141bee3898363785f450ecbe5ecd56e82afb8",
+      "bytes": 335728
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/06_Secuencia_Elegir_Perfil_y_Asistente.svg",
+      "drive_id": "1INAAaa1cIH_P-_2c7bz8VwBe3UW66r_J",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "7b3315a6ccc96bde3c1d257503e54230b5f3e697e22690c1c177a927367a5211",
+      "bytes": 41096
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/07_Vista_de_Desarrollo.mmd",
+      "drive_id": "1Rim64SYf8ae3b3vMw2J6OeKlI5XgF_1O",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "d3dc7768212d3cee9899ec39b82a5e6e981ca9918bb2730f3f9b40c75fe8896a",
+      "bytes": 1270
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/07_Vista_de_Desarrollo.png",
+      "drive_id": "1sX2h4xZY6wlUNo93mQ_KT9padu55uhFZ",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "cc4b369e87c390127c3152f9ee285686985b852f9179b5d7b1372d5ee83af432",
+      "bytes": 311901
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/07_Vista_de_Desarrollo.svg",
+      "drive_id": "15xOOCwcl_HnllHfjWkvEQf5edyBevDte",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "4c098768fb81ec949ce801bf7f885832629d498b795ae3a7c34092ad0124a31b",
+      "bytes": 21354
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/08_Vista_Fisica.mmd",
+      "drive_id": "1wCiwwQcfOvPz3SNDVk4sDHBGL12_HcUl",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "6ec238dfc7edae783d262aed98a42de4e63dbe41a5146ff44746ee1bea5068f0",
+      "bytes": 947
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/08_Vista_Fisica.png",
+      "drive_id": "1tmpr-QFEEpOAjkUE1YadmIQl94vGCldi",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "564c8d2c0329ba45fd179776065baadee6588b8fc2465fb3a4b3f3b68d308ca9",
+      "bytes": 232178
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/08_Vista_Fisica.svg",
+      "drive_id": "1cMtMXxvgr2onKApbjU6vetYfsVWaY6uW",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "f1054021dbf3b1c29cdfe4f15e4653c2e8a213bb5a212185de2f2005c75ff670",
+      "bytes": 17488
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/11_Verificacion_Administrativa.mmd",
+      "drive_id": "1q9Dy5UlfHvB588ksRG0P1IgBJUGGp6K1",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "ea65bbeb660005d94294b5294e891e5b4761c85a14726812d7523236adb55250",
+      "bytes": 1458
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/11_Verificacion_Administrativa.png",
+      "drive_id": "1_kYS7L6zqyOM2EOX0kDDhNhXO-3FGKPz",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "315c674bfeec0622b5bd5a1e9c7d09297c2d658b2f4467b7de3cc035b31a8ca8",
+      "bytes": 706262
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/11_Verificacion_Administrativa.svg",
+      "drive_id": "1cXLncDEMtNbonuMOAgzu39tPQOWTzmLf",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "816373baf3d7cdc52a5011922d3d9c2d6bf35323860110bb66da38776e81c0fb",
+      "bytes": 23519
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/12_Disponibilidad_y_Reservas.mmd",
+      "drive_id": "1XdgnJ-KySOD9P-PMNroZOXnbHN5sBciF",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "71a2f2fd07804b60b9ca136858a867dafd61720dbf06039899195390d7ff589a",
+      "bytes": 1636
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/12_Disponibilidad_y_Reservas.png",
+      "drive_id": "1iQjxtIsXOGnDODghMOForgR9AjFXdEla",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "21e02930cbc51cb7b34e61bec351f2745d968888904e2b632b8abc025e1f65e7",
+      "bytes": 520909
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/12_Disponibilidad_y_Reservas.svg",
+      "drive_id": "1diywHYAeFy83Odv-kXCR2UsmO2kvB2Zr",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "730d34fb2750b4a8a5c07b0c4ff75dfaa95b5ab3d879b9653e1f04f2da50a370",
+      "bytes": 35542
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.json",
+      "drive_id": null,
+      "action": "crear tras fusión",
+      "sha256": "030fd2f4c0344c3a3208a5b650b7007d9e968ae9004c12888a950a2277c7ab00",
+      "bytes": 940
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.png",
+      "drive_id": null,
+      "action": "crear tras fusión",
+      "sha256": "9cd3fcde158218fc38f0a8d15891255e9a0303a5cc75c2604be05218d4631836",
+      "bytes": 532364
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.svg",
+      "drive_id": null,
+      "action": "crear tras fusión",
+      "sha256": "bea578718a3c968d5c1139df66f8088bee13f1f94ee9907b7b453c3591da8a50",
+      "bytes": 15616
+    },
+    {
+      "relative": "Diagramas (Miro)/Actualización Sprint 3/INSTRUCCIONES_PARA_MIRO.md",
+      "drive_id": "1GRwf25AgcksyM_YNdQ3jP_ztfGBgrLW3",
+      "action": "reemplazar conservando ID tras fusión",
+      "sha256": "2113b66a06d3ecc8112950da88614dde0c60fb7acb7565dfddb7b11eac8fa8b0",
+      "bytes": 1156
+    }
+  ],
+  "diagram_folder": "https://drive.google.com/drive/folders/1iciiu_xqJcdlT6iBovB8L1W0VmcYKKQo",
+  "miro_board": "https://miro.com/app/board/uXjVHtdZChE=/",
+  "restricciones": [
+    "No contiene .env, credenciales ni documentos privados",
+    "No reemplazar planillas completas antes de conciliar horas y notas remotas",
+    "DAS 1.22 y cambios posteriores se publican tras fusionar su nueva revisión"
+  ]
+}
