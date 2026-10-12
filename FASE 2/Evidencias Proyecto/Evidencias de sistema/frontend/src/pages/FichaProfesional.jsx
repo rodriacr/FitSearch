@@ -9,6 +9,7 @@ import Resenas from '../components/profesionales/Resenas.jsx';
 import { etiquetaModalidad, iniciales } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
+import { ReservarHora } from './Agenda.jsx';
 
 // Ficha de un profesional con sus datos públicos, favorito y reseñas (FS-HU-23, FS-HU-24).
 // Con "vistaPrevia" la ve el propio profesional desde su perfil: sin favorito y volviendo a su perfil (DAS, D25).
@@ -101,6 +102,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
         </section>
       </div>
 
+      {!vistaPrevia && <ReservarHora profesionalId={profesional.id} />}
       <Resenas profesionalId={profesional.id} nombre={nombre} resumen={resumenResenas} miResena={miResena}
         puedeResenar={puedeResenar} onCambio={actualizarResenas} />
     </article>

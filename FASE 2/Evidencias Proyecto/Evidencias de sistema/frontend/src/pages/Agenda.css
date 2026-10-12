@@ -1,0 +1,114 @@
+.agenda {
+  margin: 1.4rem 0;
+  color: #0b4f80;
+}
+.agenda__cabecera,
+.agenda__acciones,
+.agenda__filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem;
+}
+.agenda__cabecera {
+  justify-content: space-between;
+}
+.agenda__cabecera h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.agenda__lista {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.agenda__tarjeta,
+.agenda__formulario,
+.agenda__confirmacion {
+  padding: 1.3rem;
+  background: #fff;
+  border: 1px solid #d7e8f1;
+  border-radius: 16px;
+  box-shadow: 0 6px 20px #0b4f8009;
+}
+.agenda__tarjeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.agenda__tarjeta h3 {
+  margin: 0.6rem 0;
+}
+.agenda__formulario {
+  display: grid;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.agenda__campos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+.agenda label {
+  display: grid;
+  gap: 0.5rem;
+  min-width: 0;
+}
+.agenda textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+.agenda__formulario button {
+  justify-self: start;
+}
+.agenda__estado {
+  padding: 0.3rem 0.7rem;
+  border-radius: 99px;
+  background: #e9f4fb;
+  font-size: 0.85rem;
+  text-transform: capitalize;
+}
+.agenda__estado--confirmada {
+  background: #def5ec;
+  color: #076342;
+}
+.agenda__estado--cancelada {
+  background: #fce5e5;
+  color: #962b2b;
+}
+.agenda__mensaje {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-width: 65ch;
+}
+.agenda__error {
+  padding: 1rem;
+  background: #fff0f0;
+  color: #a02525;
+  border-radius: 10px;
+}
+.agenda__confirmacion {
+  border: 2px solid #0b4f80;
+}
+.agenda__confirmacion button {
+  margin: 0.5rem 0.5rem 0 0;
+}
+.agenda__vacio {
+  padding: 1rem;
+  border: 1px dashed #b6d3e4;
+  border-radius: 12px;
+}
+@media (max-width: 600px) {
+  .agenda__campos {
+    grid-template-columns: 1fr;
+  }
+  .agenda__acciones {
+    width: 100%;
+  }
+  .agenda__tarjeta {
+    padding: 1rem;
+  }
+}

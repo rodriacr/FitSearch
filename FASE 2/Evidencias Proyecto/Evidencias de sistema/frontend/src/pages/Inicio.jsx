@@ -10,6 +10,7 @@ import { useSesion } from '../context/SesionContext.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { obtenerPerfil } from '../services/perfil.service.js';
 import { buscarProfesionales } from '../services/profesional.service.js';
+import { MisCitas } from './Agenda.jsx';
 import { ubicacionSiHayPermiso } from '../services/ubicacion.js';
 import './Inicio.css';
 
@@ -75,17 +76,7 @@ function TarjetaProgreso({ kcal }) {
 
 function TarjetaCitas() {
   return (
-    <section className="panel-tarjeta" aria-labelledby="titulo-citas">
-      <div className="panel-tarjeta__cabecera">
-        <h2 id="titulo-citas" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="calendario" tamano={20} /></span> Próximas citas</h2>
-        <Link to={SECCIONES.citas.ruta} className="enlace-panel">Ver todas</Link>
-      </div>
-      {/* Las reservas llegan con FS-HU-14: mientras tanto no hay citas que mostrar. */}
-      <EstadoVacio compacto icono="calendario" titulo="Aún no tienes citas agendadas"
-        accion={<Link to="/profesionales" className="boton boton--secundario boton--compacto">Buscar profesionales</Link>}>
-        Cuando reserves una hora con un profesional, la verás aquí.
-      </EstadoVacio>
-    </section>
+    <div className="panel-tarjeta"><MisCitas compacto /></div>
   );
 }
 

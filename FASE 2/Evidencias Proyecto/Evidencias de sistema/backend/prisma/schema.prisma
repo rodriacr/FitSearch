@@ -43,6 +43,7 @@ model Usuario {
   profesional        Profesional?
   favoritos          Favorito[]
   resenas            Resena[]
+  reservas           Reserva[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -72,6 +73,7 @@ model Profesional {
   favoritos         Favorito[]
   resenas           Resena[]
   documentos        DocumentoProfesional[]
+  disponibilidades  Disponibilidad[]
 
   @@index([especialidad])
   @@index([comuna])
@@ -91,6 +93,35 @@ model DocumentoProfesional {
 
   @@index([profesionalId])
   @@map("documentos_profesionales")
+}
+
+// FS-HU-13/14: horarios locales de America/Santiago y reservas privadas.
+model Disponibilidad {
+  id            Int         @id @default(autoincrement())
+  profesionalId Int         @map("profesional_id")
+  fecha         DateTime    @db.Date
+  horaInicio    DateTime    @map("hora_inicio") @db.Time(0)
+  horaFin       DateTime    @map("hora_fin") @db.Time(0)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+  reservas      Reserva[]
+
+  @@index([profesionalId, fecha])
+  @@map("disponibilidades")
+}
+
+model Reserva {
+  id               Int            @id @default(autoincrement())
+  usuarioId        Int            @map("usuario_id")
+  disponibilidadId Int            @map("disponibilidad_id")
+  mensaje          String         @db.VarChar(500)
+  estado           String         @default("pendiente") @db.VarChar(20)
+  fechaCreacion    DateTime       @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario          Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  disponibilidad   Disponibilidad @relation(fields: [disponibilidadId], references: [id], onDelete: Restrict)
+
+  @@index([disponibilidadId, estado])
+  @@index([usuarioId])
+  @@map("reservas")
 }
 
 // Profesionales que cada usuario guarda para volver a encontrarlos (FS-HU-23).

@@ -1,0 +1,45 @@
+import { fireEvent, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { beforeEach, test, expect } from 'vitest';
+import { renderizarApp, simularApi, SESION, SESION_PROFESIONAL, fichaProfesional } from '../tests/utilidades.jsx';
+const h = { id: 2, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00', ocupado: false };
+const r = { id: 4, estado: 'pendiente', mensaje: 'Necesito orientación nutricional', horario: h, usuario: { id: 1, nombre: 'Ana' }, profesional: { id: 3, nombre: 'Juan' } };
+beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
+test('publica horarios y conserva los valores ante una superposición', async () => {
+  let horarios = [];
+  const fetch = simularApi({ '/api/disponibilidades': (_u, o) => {
+    if (o.method === 'POST') { horarios = [h]; return [201, { horario: h }]; }
+    return [200, { horarios }];
+  } });
+  renderizarApp('/profesional/agenda');
+  fireEvent.change(await screen.findByLabelText('Fecha'), { target: { value: h.fecha } });
+  fireEvent.change(screen.getByLabelText('Hora de inicio'), { target: { value: h.horaInicio } });
+  fireEvent.change(screen.getByLabelText('Hora de término'), { target: { value: h.horaFin } });
+  await userEvent.click(screen.getByRole('button', { name: 'Publicar horario' }));
+  expect(await screen.findByText('Horario publicado.')).toBeInTheDocument();
+  expect(JSON.parse(fetch.mock.calls.find(([, o]) => o.method === 'POST')[1].body)).toEqual({ fecha: h.fecha, horaInicio: '09:00', horaFin: '10:00' });
+  expect(await screen.findByText('Disponible')).toBeInTheDocument();
+});
+test('cancelar requiere confirmación explícita y actualiza el historial', async () => {
+  let estado = 'pendiente';
+  const fetch = simularApi({ '/api/reservas/4': () => { estado = 'cancelada'; return [200, { reserva: { ...r, estado } }]; }, '/api/reservas': () => [200, { reservas: [{ ...r, estado }] }] });
+  renderizarApp('/profesional/agenda');
+  await userEvent.click(await screen.findByRole('button', { name: 'Cancelar reserva' }));
+  expect(fetch.mock.calls.some(([, o]) => o.method === 'PATCH')).toBe(false);
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar cambio' }));
+  expect(await screen.findByText(/Reserva cancelada/)).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  expect(await screen.findByText('cancelada')).toBeInTheDocument();
+});
+test('reserva desde la ficha con mensaje obligatorio; conflicto conserva el mensaje y actualiza horas', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  let horarios = [h];
+  const fetch = simularApi({ '/api/profesionales/3/disponibilidades': () => [200, { horarios }], '/api/profesionales/3/resenas': { resenas: [], pagina: 1, total: 0, totalPaginas: 0 }, '/api/profesionales/3': { profesional: fichaProfesional({ id: 3 }), resumenResenas: { promedio: null, total: 0, distribucion: [] }, miResena: null, puedeResenar: false }, '/api/reservas': (_u,o) => { if(o.method==='POST'){ horarios=[]; return [409,{error:'El horario ya no está disponible'}]; } return [200,{reservas:[]}]; } });
+  renderizarApp('/profesionales/3');
+  await userEvent.selectOptions(await screen.findByLabelText('Horario disponible'), '2');
+  await userEvent.type(screen.getByLabelText('Qué necesitas consultar'), r.mensaje);
+  await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud de reserva' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('El horario ya no está disponible');
+  await waitFor(() => expect(screen.getByText('Este profesional no tiene horarios disponibles por ahora.')).toBeInTheDocument());
+  expect(JSON.parse(fetch.mock.calls.find(([, o]) => o.method==='POST')[1].body)).toEqual({ disponibilidadId: 2, mensaje: r.mensaje });
+});

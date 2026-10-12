@@ -1,0 +1,29 @@
+{
+  "tipo": "Navegador con API simulada para revisión visual; MySQL se valida por separado",
+  "results": [
+    {
+      "mode": "desktop",
+      "rol": "profesional",
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "mode": "desktop",
+      "rol": "usuario",
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "mode": "mobile",
+      "rol": "profesional",
+      "overflow": false,
+      "errors": []
+    },
+    {
+      "mode": "mobile",
+      "rol": "usuario",
+      "overflow": false,
+      "errors": []
+    }
+  ]
+}

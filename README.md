@@ -203,7 +203,17 @@ Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "men
 
 Avance técnico en revisión, previsto para Sprint 5 si hay capacidad y sujeto al alcance del Product Owner. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
 
-El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración y Contenido quedan fuera. Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. El PR #19 sigue pendiente de revisión y aceptación del PO; Drive se sincroniza después de la fusión. Detalle y evidencia automatizada: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
+El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración y Contenido quedan fuera. Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados; la aceptación de la historia sigue pendiente del PO. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
+
+### Disponibilidad, reservas y mapa — FS-HU-13, FS-HU-14 y FS-HU-06
+
+El profesional publica bloques en Mi agenda; el usuario reserva desde la ficha con un mensaje de 10 a 500 caracteres. El profesional confirma y cualquiera de los participantes cancela. Se conserva el historial. La API protege la propiedad y una transacción impide dos reservas activas simultáneas para el mismo bloque. Las fechas y horas se interpretan en `America/Santiago`.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`. La nueva migración agrega `disponibilidades` y `reservas` sin borrar datos existentes. Las rutas principales son `/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`.
+
+Lista/Mapa conserva filtros y página. Para probar Google Maps real, configurar `VITE_GOOGLE_MAPS_API_KEY` y `VITE_GOOGLE_MAPS_MAP_ID` en `frontend/.env`; sin clave continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
+
+La implementación está en revisión; SMTP y Google Maps reales siguen pendientes de configuración. [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS y los diagramas nuevos se sincronizarán con Drive/Miro después de la fusión.
 
 ## Ejecución con Docker
 

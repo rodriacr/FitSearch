@@ -40,3 +40,12 @@ erDiagram
   documentos_profesionales {
     INT id PK
   }
+  profesionales ||--o{ disponibilidades : relacion
+  disponibilidades ||--o{ reservas : relacion
+  usuarios ||--o{ reservas : relacion
+  disponibilidades {
+    INT id PK
+  }
+  reservas {
+    INT id PK
+  }

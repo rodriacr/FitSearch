@@ -57,9 +57,9 @@ describe('Diseño del profesional', () => {
 
   test('una sección que aún no existe muestra "Próximamente" y vuelve al Inicio del profesional', async () => {
     simular();
-    renderizarApp('/profesional/agenda');
-    expect(screen.getByRole('heading', { level: 1, name: 'Agenda' })).toBeInTheDocument();
-    expect(screen.getByText(/publicar tus horarios disponibles/)).toBeInTheDocument();
+    renderizarApp('/profesional/clientes');
+    expect(screen.getByRole('heading', { level: 1, name: 'Clientes' })).toBeInTheDocument();
+    expect(screen.getByText(/personas que reserven/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/profesional/inicio');
     expect(screen.queryByRole('link', { name: /Buscar profesionales/ })).not.toBeInTheDocument();
   });
@@ -95,9 +95,9 @@ describe('Inicio del profesional', () => {
 
     expect(await screen.findByText('Completa tu ficha profesional')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Completar/ })).toHaveAttribute('href', '/profesional/perfil');
-    // La disponibilidad llega con la agenda (FS-HU-13).
+    // La agenda ya permite publicar disponibilidad (FS-HU-13).
     const tarea = screen.getByText('Define tu disponibilidad').closest('li');
-    expect(within(tarea).getByText('Próximamente')).toBeInTheDocument();
+    expect(within(tarea).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
   });
 
   test('con ficha pero sin descripción, sugiere agregarla', async () => {
@@ -114,6 +114,6 @@ describe('Inicio del profesional', () => {
     const accesos = (await screen.findByRole('heading', { name: 'Accesos rápidos' })).closest('section');
     expect(within(accesos).getByRole('link', { name: /Mi perfil profesional/ })).toHaveAttribute('href', '/profesional/perfil');
     expect(within(accesos).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(3);
+    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
   });
 });

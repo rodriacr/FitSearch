@@ -47,10 +47,10 @@ describe('Inicio con datos', () => {
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toEqual({ orden: 'destacados', limite: '4' });
   });
 
-  test('las próximas citas muestran un estado vacío con su acción (las reservas llegan con FS-HU-14)', async () => {
+  test('las próximas citas consultan la agenda y muestran su estado vacío con acción', async () => {
     simular(); renderizarApp('/inicio');
     const citas = screen.getByRole('heading', { name: 'Próximas citas' }).closest('section');
-    expect(within(citas).getByText('Aún no tienes citas agendadas')).toBeInTheDocument();
+    expect(await within(citas).findByText('Aún no tienes citas agendadas')).toBeInTheDocument();
     expect(within(citas).getByRole('link', { name: 'Buscar profesionales' })).toHaveAttribute('href', '/profesionales');
     expect(within(citas).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/citas');
   });

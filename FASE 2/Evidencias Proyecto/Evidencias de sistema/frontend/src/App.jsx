@@ -17,6 +17,7 @@ import PerfilProfesional from './pages/profesional/PerfilProfesional.jsx';
 import VistaPublica from './pages/profesional/VistaPublica.jsx';
 import Profesionales from './pages/Profesionales.jsx';
 import Proximamente from './pages/Proximamente.jsx';
+import AgendaProfesional, { MisCitas } from './pages/Agenda.jsx';
 import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
 import Registro from './pages/Registro.jsx';
 import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/profesionales" element={<Profesionales />} />
             <Route path="/profesionales/:id" element={<FichaProfesional />} />
             <Route path="/favoritos" element={<Favoritos />} />
+            <Route path="/citas" element={<MisCitas />} />
             <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
             {SECCIONES_PROXIMAMENTE.map((clave) => (
               <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />
@@ -71,6 +73,7 @@ export default function App() {
             <Route path="/profesional" element={<Navigate to={SECCIONES_PROFESIONAL.inicio.ruta} replace />} />
             <Route path={SECCIONES_PROFESIONAL.inicio.ruta} element={<InicioProfesional />} />
             <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
+            <Route path="/profesional/agenda" element={<AgendaProfesional />} />
             <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
             {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (
               <Route key={clave} path={SECCIONES_PROFESIONAL[clave].ruta}

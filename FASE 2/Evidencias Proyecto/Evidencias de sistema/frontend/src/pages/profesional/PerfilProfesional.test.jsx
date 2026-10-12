@@ -112,11 +112,11 @@ describe('Con ficha', () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Horarios' }));
-    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveAttribute('aria-selected', 'true');
+    await userEvent.click(await screen.findByRole('tab', { name: 'Experiencia' }));
+    expect(screen.getByRole('tab', { name: 'Experiencia' })).toHaveAttribute('aria-selected', 'true');
     const panel = screen.getByRole('tabpanel');
     expect(within(panel).getByText('Próximamente')).toBeInTheDocument();
-    expect(within(panel).getByText(/desde la Agenda/)).toBeInTheDocument();
+    expect(within(panel).getByText(/años de experiencia/)).toBeInTheDocument();
   });
 
   test('permite recorrer las pestañas con el teclado y mantiene foco y panel coordinados', async () => {

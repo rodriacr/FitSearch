@@ -1,0 +1,33 @@
+sequenceDiagram
+  actor P as Profesional
+  actor U as Usuario
+  participant F as React
+  participant A as Express
+  participant D as MySQL
+  P->>F: Publicar fecha y horas
+  F->>A: POST disponibilidades con JWT
+  A->>A: Validar rol, fecha futura y duración
+  A->>D: Transacción: bloquear profesional
+  A->>D: Comparar bloques del día como TIME
+  alt Superpuesto
+    A-->>F: 409 conserva formulario
+  else Libre
+    A->>D: Guardar bloque y commit
+    A-->>F: 201 horario publicado
+  end
+  U->>F: Elegir bloque y escribir mensaje
+  F->>A: POST reservas con JWT
+  A->>A: Validar usuario y mensaje de 10 a 500 caracteres
+  A->>D: Transacción ReadCommitted: bloquear profesional y bloque
+  A->>D: Consultar reservas activas bajo bloqueo
+  alt Ocupado o pasado
+    A-->>F: 409 recargar horarios y conservar mensaje
+  else Libre
+    A->>D: Crear pendiente y commit
+    A-->>F: 201 reserva privada
+  end
+  P->>A: PATCH reserva: confirmar o cancelar
+  U->>A: PATCH reserva propia: cancelar
+  A->>D: Validar dueño y futuro, bloquear y actualizar
+  A-->>F: Reserva actualizada
+  Note over A,D: Cancelar libera el bloque. El historial se conserva.
