@@ -2,16 +2,17 @@
 
 DAS local 1.20 en revisión al 11-10-2026. Los PR #19 y #20 están fusionados; Drive/Miro conservan la publicación aprobada 1.19. Esta rama agrega disponibilidad, reservas y mapa/lista. Sus fuentes se publicarán después de fusionar el nuevo PR, conservando enlaces y versiones históricas.
 
-| Número | Marco publicado | Estado frente al PR #19 |
+| Número | Marco publicado | Cambio local para el PR #21 |
 | --- | --- | --- |
 | 01 | [Casos de uso](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777496) | Estructura vigente; sin cambios en esta corrección |
 | 02 | [Clases del dominio](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777497) | Estructura vigente; sin cambios en esta corrección |
 | 03 | [DER completo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777498) | Estructura vigente; sin cambios en esta corrección |
-| 04 | [DER implementado](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777499) | Estructura vigente; sin cambios en esta corrección |
+| 04 | [DER implementado](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777499) | Local: doce tablas; publicación pendiente de fusión |
 | 06 | [Elección de perfil y asistente](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686730989749) | Estructura vigente; sin cambios en esta corrección |
-| 07 | [Vista de desarrollo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777500) | Estructura vigente; sin cambios en esta corrección |
-| 08 | [Vista física](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777501) | Estructura vigente; sin cambios en esta corrección |
-| 11 | [Verificación administrativa](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777502) | Corrección local preparada; publicación pendiente de fusión |
+| 07 | [Vista de desarrollo](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777500) | Local: agenda, reservas y Maps; publicación pendiente de fusión |
+| 08 | [Vista física](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777501) | Local: doce tablas y Maps pendiente de clave; publicación pendiente de fusión |
+| 11 | [Verificación administrativa](https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686744777502) | Flujo publicado vigente; cuota del PR #20 registrada en DAS local |
+| 12 | Marco pendiente de crear tras fusión | Fuente local: disponibilidad y reserva concurrente comprobadas con MySQL |
 
 ## Archivos y cambios
 
