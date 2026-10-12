@@ -116,6 +116,8 @@ export default function Profesionales() {
   ];
   const cantidadFiltros = FILTROS.filter((nombre) => filtros[nombre]).length;
   const listo = !cargando && !resultado.error;
+  // Sin resultados se muestra solo el estado vacío, no un mapa vacío al lado.
+  const mapaVisible = vistaMapa && listo && resultado.profesionales.length > 0;
 
   let contenido;
   if (cargando) {
@@ -221,8 +223,9 @@ export default function Profesionales() {
             </Alerta>
           )}
 
-          {(mapaIniciado || vistaMapa) && <div hidden={!vistaMapa || !listo}>
-            <MapaProfesionales profesionales={listo ? resultado.profesionales : SIN_RESULTADOS} desde={`${pathname}${search}`} />
+          {(mapaIniciado || vistaMapa) && <div hidden={!mapaVisible}>
+            <MapaProfesionales profesionales={listo ? resultado.profesionales : SIN_RESULTADOS} desde={`${pathname}${search}`}
+              visible={mapaVisible} />
           </div>}
           {contenido}
         </div>

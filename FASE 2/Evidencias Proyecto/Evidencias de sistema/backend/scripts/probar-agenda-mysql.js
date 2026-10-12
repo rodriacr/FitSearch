@@ -374,6 +374,19 @@ async function check(n, r, s) {
       const listado = await check('Omitir horarios pasados '+ruta,api(cuenta,'get',ruta),200);
       assert(!listado.horarios.some((q) => q.id === pasado.id));
     }
+    // Una cita pasada sigue "confirmada" para siempre en el historial: no debe bloquear nuevas reservas.
+    await prisma.reserva.create({data:{usuarioId:b.id,disponibilidadId:pasado.id,mensaje:'Cita ya realizada con este profesional',estado:'confirmada'}});
+    const despues=(await check('Publica bloque para reservar después de una cita pasada',
+      api(p,'post','/disponibilidades',{...h,horaInicio:'18:00',horaFin:'18:30'}),201)).horario;
+    await check('Una cita pasada confirmada no cuenta para el límite',api(b,'post','/reservas',{
+      disponibilidadId:despues.id,mensaje:'Control después de la cita anterior',
+    }),201);
+    const otroLibre=(await check('Publica bloque para comprobar el motivo del límite',
+      api(p,'post','/disponibilidades',{...h,horaInicio:'19:00',horaFin:'19:30'}),201)).horario;
+    const limite=await check('El límite responde 409 con su motivo',api(a,'post','/reservas',{
+      disponibilidadId:otroLibre.id,mensaje:'Segunda reserva futura con el mismo profesional',
+    }),409);
+    assert.equal(limite.detalles?.motivo,'limite_por_profesional');
     const resultado = {
       fecha: new Intl.DateTimeFormat('en-CA', {
         timeZone: 'America/Santiago',

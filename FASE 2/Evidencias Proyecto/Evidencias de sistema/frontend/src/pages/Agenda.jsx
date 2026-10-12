@@ -422,6 +422,14 @@ export function ReservarHora({ profesionalId }) {
     `/profesionales/${profesionalId}/disponibilidades`,
     revision,
   );
+  // Límite del PO: una reserva activa por usuario con cada profesional. Se avisa antes de escribir el mensaje.
+  const { datos: misReservas } = useAgenda('/reservas', revision);
+  const reservaActiva = misReservas?.reservas.find(
+    (r) =>
+      r.profesional.id === Number(profesionalId) &&
+      r.estado !== 'cancelada' &&
+      futura(r),
+  );
   const [error, setError] = useState('');
   const [bloque, setBloque] = useState('');
   const [mensaje, setMensaje] = useState('');
@@ -444,7 +452,10 @@ export function ReservarHora({ profesionalId }) {
       setRevision((r) => r + 1);
     } catch (e) {
       setError(e.message);
-      if (e.estado === 409) {
+      if (e.estado === 409 && e.detalles?.motivo === 'limite_por_profesional') {
+        // El horario sigue libre: se conserva la selección y se recarga para mostrar la reserva activa.
+        setRevision((r) => r + 1);
+      } else if (e.estado === 409) {
         setBloque('');
         setRevision((r) => r + 1);
       }
@@ -468,11 +479,18 @@ export function ReservarHora({ profesionalId }) {
         }}
       />
       {aviso && <Link to="/citas">Ver mis citas</Link>}
+      {reservaActiva && !aviso && (
+        <p className="agenda__vacio" role="status">
+          Ya tienes una reserva {reservaActiva.estado} con este profesional para
+          el {fechaHorario(reservaActiva.horario)}. Para pedir otra hora,
+          primero cancélala en <Link to="/citas">Mis citas</Link>.
+        </p>
+      )}
       {!datos && !errorCarga && <p role="status">Cargando horarios…</p>}
       {datos && !datos.horarios.length && (
         <p>Este profesional no tiene horarios disponibles por ahora.</p>
       )}
-      {datos?.horarios.length > 0 && (
+      {datos?.horarios.length > 0 && !reservaActiva && (
         <form className="agenda__formulario" onSubmit={enviar}>
           <label>
             Horario disponible

@@ -1,6 +1,6 @@
 {
   "fecha": "2026-10-12T19:18:22.056Z",
-  "cuenta": "temporal; alias del buzÃ³n autorizado",
+  "cuenta": "temporal; alias del buzón autorizado",
   "smtpReal": true,
   "pruebas": [
     {
@@ -9,17 +9,17 @@
       "resultado": "OK"
     },
     {
-      "prueba": "Inicio de sesiÃ³n previo",
+      "prueba": "Inicio de sesión previo",
       "estado": 200,
       "resultado": "OK"
     },
     {
-      "prueba": "Solicitud de recuperaciÃ³n",
+      "prueba": "Solicitud de recuperación",
       "estado": 200,
       "resultado": "OK"
     },
     {
-      "prueba": "Correo real de recuperaciÃ³n aceptado por Gmail SMTP",
+      "prueba": "Correo real de recuperación aceptado por Gmail SMTP",
       "resultado": "OK",
       "recepcionEnBandeja": "Confirmada por el destinatario: bandeja de entrada"
     },
@@ -29,12 +29,12 @@
       "resultado": "OK"
     },
     {
-      "prueba": "ContraseÃ±a anterior rechazada",
+      "prueba": "Contraseña anterior rechazada",
       "estado": 401,
       "resultado": "OK"
     },
     {
-      "prueba": "Inicio con contraseÃ±a nueva",
+      "prueba": "Inicio con contraseña nueva",
       "estado": 200,
       "resultado": "OK"
     },

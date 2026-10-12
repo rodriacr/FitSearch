@@ -3,7 +3,9 @@ import { Link } from 'react-router-dom';
 import { cargarGoogleMaps } from '../../services/mapas.js';
 import './MapaProfesionales.css';
 
-export default function MapaProfesionales({ profesionales, desde }) {
+// visible: el mapa sigue montado al volver a la lista, pero solo dibuja marcadores y encuadra cuando se ve
+// (un mapa oculto mide 0 y fitBounds calcularía un zoom equivocado).
+export default function MapaProfesionales({ profesionales, desde, visible = true }) {
   const contenedor = useRef(null);
   const mapa = useRef(null);
   const api = useRef(null);
@@ -41,7 +43,7 @@ export default function MapaProfesionales({ profesionales, desde }) {
   }, [intento]);
 
   useEffect(() => {
-    if (estado !== 'listo') return;
+    if (estado !== 'listo' || !visible) return;
     const { maps, AdvancedMarkerElement } = api.current;
     const marcadores = [];
     const informacion = [];
@@ -92,7 +94,7 @@ export default function MapaProfesionales({ profesionales, desde }) {
       });
       informacion.forEach((v) => v.close());
     };
-  }, [profesionales, estado]);
+  }, [profesionales, estado, visible]);
   return (
     <section
       className="mapa-profesionales"

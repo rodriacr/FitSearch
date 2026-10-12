@@ -15,6 +15,8 @@ test('explica el permiso de envío faltante y cierra el transporte', async () =>
     jest.isolateModules(() => require('../../scripts/comprobar-smtp'));
     await new Promise(setImmediate);
     expect(error).toHaveBeenCalledWith('Confirma el envío con --enviar-prueba y un destinatario válido');
+    // Un error de uso no debe sugerir que la cuenta o su contraseña están mal.
+    expect(error).not.toHaveBeenCalledWith(expect.stringContaining('contraseña de aplicación'));
     expect(sendMail).not.toHaveBeenCalled();
     expect(close).toHaveBeenCalled();
     expect(process.exitCode).toBe(1);

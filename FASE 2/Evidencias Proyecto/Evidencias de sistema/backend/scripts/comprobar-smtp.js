@@ -31,8 +31,9 @@ async function comprobar() {
         !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(para) ||
         !process.argv.includes('--enviar-prueba')
       )
-        throw new Error(
-          'Confirma el envío con --enviar-prueba y un destinatario válido',
+        throw Object.assign(
+          new Error('Confirma el envío con --enviar-prueba y un destinatario válido'),
+          { deUso: true },
         );
       await transporte.sendMail({
         from: remitente,
@@ -49,13 +50,17 @@ async function comprobar() {
   }
 }
 comprobar().catch((error) => {
+  process.exitCode = 1;
+  // Un error de uso (faltan --enviar-prueba o el destinatario) no es un problema de la cuenta SMTP.
+  if (error.deUso) {
+    console.error(error.message);
+    return;
+  }
   // Códigos del proveedor ayudan a diagnosticar sin publicar datos de autenticación.
-  const diagnostico = error.message?.startsWith('Confirma el envío')
-    ? error.message
-    : `Error SMTP: ${error.code || 'sin código'}${error.responseCode ? ` (${error.responseCode})` : ''}`;
-  console.error(diagnostico);
+  console.error(
+    `Error SMTP: ${error.code || 'sin código'}${error.responseCode ? ` (${error.responseCode})` : ''}`,
+  );
   console.error(
     'No se pudo completar la comprobación SMTP. Revisa la cuenta, su contraseña de aplicación y la conexión; no publiques credenciales.',
   );
-  process.exitCode = 1;
 });

@@ -190,17 +190,20 @@ async function crearReserva(
         await tx.$queryRaw`SELECT id FROM reservas WHERE disponibilidad_id = ${disponibilidadId} AND estado IN ('pendiente', 'confirmada') FOR UPDATE`;
       if (activas.length)
         throw new ErrorHttp(409, 'El horario ya no está disponible');
-      const delUsuario = await tx.reserva.count({
+      const delUsuario = await tx.reserva.findMany({
         where: {
           usuarioId,
           estado: { in: ACTIVOS },
           disponibilidad: { profesionalId: actual.profesionalId },
         },
+        select: { disponibilidad: { select: { fecha: true, horaInicio: true } } },
       });
-      if (delUsuario)
+      // Las citas que ya pasaron quedan en el historial (no se pueden cancelar) y no cuentan para el límite.
+      if (delUsuario.some((r) => esFuturo(instante(r.disponibilidad))))
         throw new ErrorHttp(
           409,
           'Ya tienes una reserva activa con este profesional. Cancélala antes de reservar otra hora',
+          { motivo: 'limite_por_profesional' },
         );
       return tx.reserva.create({
         data: { usuarioId, disponibilidadId, mensaje },
