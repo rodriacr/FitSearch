@@ -54,7 +54,7 @@
 /* ---------- Menú lateral (panel en celular, columna fija en escritorio) ---------- */
 .menu-lateral {
   position: fixed; top: 0; bottom: 0; left: 0; z-index: 45; display: flex; flex-direction: column; gap: 1rem;
-  width: min(18rem, 86vw); padding: 1rem; overflow-y: auto; background: var(--color-superficie);
+  width: min(18rem, 86vw); padding: 1rem; overflow-y: auto; overflow-x: hidden; background: var(--color-superficie);
   box-shadow: 8px 0 30px rgb(6 38 63 / 18%); transform: translateX(-105%); visibility: hidden; transition: transform 0.22s ease, visibility 0.22s;
 }
 .menu-lateral--abierto { transform: none; visibility: visible; }
@@ -63,7 +63,7 @@
 .menu-lateral__cabecera .logo { width: 8.5rem; }
 .menu-lateral__lista { display: grid; gap: 0.15rem; margin: 0; padding: 0; list-style: none; }
 .menu-lateral__enlace {
-  display: flex; align-items: center; gap: 0.8rem; min-height: 2.9rem; padding: 0.55rem 0.8rem; border-radius: 10px;
+  display: flex; align-items: center; gap: 0.6rem; min-height: 2.9rem; padding: 0.55rem 0.8rem; border-radius: 10px;
   color: var(--color-texto); font-size: 0.92rem; font-weight: 500; text-decoration: none;
 }
 .menu-lateral__enlace .icono { color: var(--color-primario); }
