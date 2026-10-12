@@ -61,7 +61,7 @@ erDiagram
     VARCHAR100 especialidad
     TEXT descripcion "NULL"
     BOOLEAN verificado
-    VARCHAR20 estado_verificacion "pendiente, verificado, rechazado"
+    VARCHAR20 estado_verificacion "sin_solicitud, pendiente, verificado, rechazado"
     VARCHAR500 motivo_rechazo "NULL"
     JSON historial_verificacion "NULL"
     INT revision_verificacion "DEFAULT 0"
@@ -104,5 +104,24 @@ erDiagram
     VARCHAR50 clave UK
     VARCHAR40 mime
     INT tamano
+    DATETIME fecha_creacion
+  }
+  profesionales ||--o{ disponibilidades : "profesional_id (CASCADE)"
+  disponibilidades ||--o{ reservas : "disponibilidad_id (RESTRICT)"
+  usuarios ||--o{ reservas : "usuario_id (CASCADE)"
+  disponibilidades {
+    INT id PK
+    INT profesional_id FK
+    DATE fecha
+    TIME hora_inicio
+    TIME hora_fin
+    BOOLEAN retirado "DEFAULT false"
+  }
+  reservas {
+    INT id PK
+    INT usuario_id FK
+    INT disponibilidad_id FK
+    VARCHAR500 mensaje
+    VARCHAR20 estado "pendiente, confirmada, cancelada"
     DATETIME fecha_creacion
   }

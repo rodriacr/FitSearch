@@ -12,5 +12,6 @@ router.use('/favoritos', require('./favorito.routes'));
 router.use('/clima', require('./clima.routes'));
 router.use('/administrador', require('./administrador.routes'));
 router.use('/verificaciones', require('./verificacion.routes'));
+router.use('/', require('./agenda.routes'));
 
 module.exports = router;

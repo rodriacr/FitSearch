@@ -1,0 +1,42 @@
+.mapa-profesionales__mapa {
+  width: 100%;
+  height: 430px;
+  border-radius: 14px;
+  border: 1px solid #c9dde9;
+  background: #e8f2f8;
+}
+.mapa-profesionales__alternativa {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+.mapa-profesionales__alternativa li {
+  display: grid;
+  padding: 0.9rem;
+  border: 1px solid #dce9f2;
+  border-radius: 10px;
+  background: #fff;
+}
+.mapa-profesionales__alternativa span {
+  color: #58768b;
+  font-size: 0.85rem;
+  margin-top: 0.3rem;
+}
+.buscador__vistas {
+  display: flex;
+  gap: 0.5rem;
+}
+.buscador__vistas [aria-pressed='true'] {
+  background: #0b4f80;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .mapa-profesionales__mapa {
+    height: 350px;
+  }
+  .mapa-profesionales__alternativa {
+    grid-template-columns: 1fr;
+  }
+}

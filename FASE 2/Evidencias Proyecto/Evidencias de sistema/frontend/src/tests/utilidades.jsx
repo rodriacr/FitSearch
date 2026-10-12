@@ -66,7 +66,11 @@ export const PERFIL_COMPLETO = {
 // Servidor simulado por rutas: gana el prefijo más largo que coincida con la URL ('/api/profesionales/filtros'
 // antes que '/api/profesionales'). Cada respuesta es un cuerpo (200) o una función (url, opciones) => [estado, cuerpo].
 export function simularApi(respuestas) {
+  // Agenda vacía por defecto; las pruebas de horarios/reservas pueden sobrescribir sus rutas.
+  respuestas = { '/api/reservas': { reservas: [] }, '/api/disponibilidades': { horarios: [] }, ...respuestas };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
+    const horarios = url.match(/^\/api\/profesionales\/\d+\/disponibilidades/);
+    if (horarios && !respuestas[horarios[0]]) return respuestaJson(200, { horarios: [] });
     const prefijo = Object.keys(respuestas).filter((ruta) => url.startsWith(ruta)).sort((a, b) => b.length - a.length)[0];
     if (!prefijo) return respuestaJson(404, { error: 'Recurso no encontrado' });
     const respuesta = respuestas[prefijo];

@@ -5,6 +5,7 @@ const validadores = require('../validators/profesional.validators');
 const validadoresFicha = require('../validators/ficha.validators');
 const validar = require('../middlewares/validar');
 const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
+const agenda = require('../services/agenda.service');
 
 const router = Router();
 router.use(autenticar);
@@ -17,6 +18,8 @@ router.put('/mi-ficha', autorizarRoles('profesional'), validadoresFicha, validar
 router.patch('/:id/verificar', autorizarRoles('administrador'), validadores.id(), validar, controlador.verificarPerfil);
 router.get('/', autorizarRoles('usuario'), validadores.listar, validar, controlador.listar);
 router.get('/:id', validadores.id(), validar, controlador.ficha);
+router.get('/:id/disponibilidades', autorizarRoles('usuario', 'profesional'), validadores.id(), validar,
+  async (req, res) => res.json(await agenda.listarDisponibilidad(req.usuario, Number(req.params.id))));
 // Reseñas (FS-HU-24): cualquiera con sesión las lee; solo las cuentas de usuario califican.
 router.get('/:id/resenas', validadores.id(), validadores.pagina, validar, resenas.listar);
 router.put('/:id/resenas', autorizarRoles('usuario'), validadores.id(), validadores.guardarResena, validar, resenas.guardar);

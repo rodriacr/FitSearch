@@ -1,0 +1,33 @@
+{
+  "fecha": "2026-10-11",
+  "mysqlReal": true,
+  "total": 25,
+  "comprobaciones": [
+    "Sin sesión",
+    "Usuario no publica",
+    "Horario invertido",
+    "Publica disponibilidad",
+    "Rechaza superposición",
+    "Permite bloque contiguo",
+    "Otro profesional no edita",
+    "Otro profesional no borra",
+    "Mensaje obligatorio",
+    "Reserva simultánea: exactamente un 201 y un 409; una activa en MySQL",
+    "Lista pública omite bloque ocupado",
+    "Usuario no confirma",
+    "Otro usuario no cancela",
+    "Otro profesional no confirma",
+    "Protege horario reservado al editar",
+    "Protege horario reservado al borrar",
+    "Profesional confirma",
+    "Historial privado del otro usuario",
+    "Propietario cancela",
+    "Cancelada no se reactiva",
+    "Cancelación libera el bloque",
+    "Nuevo usuario reserva bloque liberado",
+    "Edita bloque sin reservas",
+    "Elimina bloque sin reservas",
+    "Horario inexistente"
+  ],
+  "limpieza": "Solo cuentas y horarios/reservas temporales"
+}

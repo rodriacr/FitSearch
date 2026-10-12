@@ -1,7 +1,7 @@
 flowchart TB
   subgraph SPA[Frontend React y Vite]
     direction LR
-    P["Acceso y perfiles<br/>Panel administrador"]
+    P["Acceso y perfiles<br/>Panel administrador<br/>Agenda y Mis citas"]
     C["Tarjetas y formularios<br/>Certificaciones"]
     S["SesionContext y JWT<br/>Navegación por rol"]
     A["Cliente API<br/>JSON y archivos"]
@@ -12,15 +12,16 @@ flowchart TB
     R["Rutas del dominio<br/>administrador<br/>verificaciones"]
     M["JWT y roles<br/>Cuenta activa<br/>Versión de sesión"]
     K["Controladores<br/>Rutas administrativas"]
-    V["Servicios<br/>Ficha, documentos<br/>y clima"]
-    D["Modelos<br/>Dominio, admin,<br/>sesión y verificación"]
+    V["Servicios<br/>Agenda, reservas<br/>Ficha, documentos<br/>y clima"]
+    D["Modelos<br/>Dominio, admin,<br/>sesión, agenda y verificación"]
     R --> M --> K --> V --> D
     K --> D
   end
   SPA -->|"HTTP /api; Bearer JWT"| API
   API --> PR["models/prisma.js<br/>Conexión compartida"]
-  PR --> DB[("MySQL<br/>10 tablas implementadas")]
+  PR --> DB[("MySQL<br/>12 tablas implementadas")]
   API --> G["shared/reglas.json<br/>Nutrición y catálogos"]
   API --> O["Open-Meteo<br/>HTTPS; caché 30 min"]
   API --> F[("Archivos privados<br/>PDF, PNG, JPEG; 5 MB")]
   API --> N["Aprobar, rechazar, revocar<br/>Historial y revisión<br/>contra concurrencia"]
+  SPA --> GM["Google Maps JavaScript API<br/>Marcadores avanzados<br/>Clave pendiente para prueba real"]

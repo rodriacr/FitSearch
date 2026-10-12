@@ -22,4 +22,4 @@ El listado administrativo Todos muestra «Sin solicitud» para `sin_solicitud`. 
 
 217 pruebas backend en 25 suites y 166 frontend en 21 archivos aprobadas; lint de ambas capas y build correctos. Se realizaron 38 comprobaciones sobre Express, Prisma, almacenamiento y MySQL reales, incluyendo cupo del título, identidad cargada después de alcanzar ese cupo, recarga, envío y nuevo ciclo tras rechazo. Solo los datos temporales de la prueba se eliminaron.
 
-No requiere migraciones. Drive/Miro conservan el DAS 1.19 y flujo 11 aprobados del #19. Tras aprobar esta entrega se incorporará el cupo en el DAS y se sincronizará su publicación; las observaciones sobre ID y etiquetas no cambian entidades ni conexiones de los diagramas.
+El PR #20 está aprobado y fusionado (merge 01ec70f). No requirió migraciones. La cuota ya se incorporó en el DAS local 1.20, junto con el nuevo desarrollo de los Sprints 2 y 3 en revisión. Drive/Miro conservan 1.19 hasta publicar una versión fusionada. ID y etiquetas no cambian entidades ni conexiones. La observación posterior de Rodrigo sobre reiniciar repetidamente el cupo al cambiar especialidad sigue pendiente y no se declara resuelta.

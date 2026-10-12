@@ -24,12 +24,12 @@ export const SECCIONES = {
   perfil: { ruta: '/perfil', nombre: 'Mi perfil', icono: 'usuario' },
   favoritos: { ruta: '/favoritos', nombre: 'Favoritos', icono: 'corazon' },
   citas: {
-    ruta: '/citas', nombre: 'Mis citas', icono: 'calendario', proximamente: true,
+    ruta: '/citas', nombre: 'Mis citas', icono: 'calendario',
     descripcion: 'Pronto podrás reservar horas con profesionales y ver aquí tus próximas citas.',
   },
 };
 
-export const MENU_LATERAL = ['inicio', 'profesionales', 'centros', 'gimnasios', 'asistente', 'comidas', 'perfil', 'favoritos'];
+export const MENU_LATERAL = ['inicio', 'profesionales', 'centros', 'gimnasios', 'asistente', 'comidas', 'perfil', 'favoritos', 'citas'];
 export const ACCESOS_RAPIDOS = ['profesionales', 'centros', 'gimnasios', 'asistente', 'comidas'];
 export const BARRA_INFERIOR = [
   { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
@@ -42,7 +42,7 @@ export const BARRA_INFERIOR = [
 export const SECCIONES_PROFESIONAL = {
   inicio: { ruta: '/profesional/inicio', nombre: 'Inicio', icono: 'casa' },
   agenda: {
-    ruta: '/profesional/agenda', nombre: 'Agenda', icono: 'calendario', proximamente: true,
+    ruta: '/profesional/agenda', nombre: 'Agenda', icono: 'calendario',
     descripcion: 'Pronto podrás publicar tus horarios disponibles y ver tus citas de la semana.',
   },
   clientes: {

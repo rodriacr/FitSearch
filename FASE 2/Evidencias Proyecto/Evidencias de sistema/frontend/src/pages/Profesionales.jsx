@@ -6,6 +6,7 @@ import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import PanelFiltros from '../components/profesionales/PanelFiltros.jsx';
 import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
+import MapaProfesionales from '../components/profesionales/MapaProfesionales.jsx';
 import { buscarProfesionales, obtenerFiltros } from '../services/profesional.service.js';
 import { obtenerUbicacion, ubicacionSiHayPermiso } from '../services/ubicacion.js';
 import './Profesionales.css';
@@ -26,6 +27,7 @@ function etiquetaFiltro(clave, valor) {
 // Buscador de profesionales con texto, filtros, orden y páginas (FS-HU-03, FS-HU-05, FS-HU-22).
 export default function Profesionales() {
   const [parametros, setParametros] = useSearchParams();
+  const vistaMapa = parametros.get('vista') === 'mapa';
   const { pathname, search } = useLocation();
   const filtros = Object.fromEntries(CLAVES.map((clave) => [clave, parametros.get(clave) || '']));
   const necesitaUbicacion = Boolean(filtros.distancia) || filtros.orden === 'cercania';
@@ -139,11 +141,11 @@ export default function Profesionales() {
     contenido = (
       <>
         <h2 className="solo-lector">Resultados de la búsqueda</h2>
-        <div className="buscador__lista">
+        {vistaMapa ? <MapaProfesionales profesionales={profesionales} desde={`${pathname}${search}`} /> : <div className="buscador__lista">
           {profesionales.map((profesional) => (
             <TarjetaProfesional key={profesional.id} profesional={profesional} desde={`${pathname}${search}`} />
           ))}
-        </div>
+        </div>}
         {totalPaginas > 1 && (
           <nav className="paginacion" aria-label="Páginas de resultados">
             <button type="button" className="boton boton--secundario boton--compacto" disabled={pagina === 1} onClick={() => cambiarPagina(pagina - 1)}>Anterior</button>
@@ -182,6 +184,9 @@ export default function Profesionales() {
               {listo && `${resultado.total} ${resultado.total === 1 ? 'profesional encontrado' : 'profesionales encontrados'}`}
             </p>
             <div className="buscador__controles">
+              <div className="buscador__vistas" aria-label="Vista de resultados">
+                {[['', 'Lista'], ['mapa', 'Mapa']].map(([valor, nombre]) => <button type="button" className="boton boton--secundario boton--compacto" key={nombre} aria-pressed={vistaMapa === (valor === 'mapa')} onClick={() => { const siguiente = new URLSearchParams(parametros); if (valor) siguiente.set('vista', valor); else siguiente.delete('vista'); setParametros(siguiente); }}>{nombre}</button>)}
+              </div>
               <button type="button" className="boton boton--secundario buscador__boton-filtros" aria-expanded={panelAbierto} aria-controls="panel-filtros"
                 onClick={() => setPanelAbierto(true)}>
                 <Icono nombre="filtro" tamano={18} /> Filtros{cantidadFiltros ? ` (${cantidadFiltros})` : ''}

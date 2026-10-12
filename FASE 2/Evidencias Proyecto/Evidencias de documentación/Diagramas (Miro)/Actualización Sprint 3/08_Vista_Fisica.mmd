@@ -1,14 +1,14 @@
 flowchart LR
   U["Navegador<br/>Usuario, profesional<br/>o administrador"] --> F["React y Vite<br/>Desarrollo local"]
   F -->|"HTTP /api y Bearer JWT"| B["Express, Node.js"]
-  B -->|"Prisma compartido; TCP 3306"| D[("MySQL<br/>10 tablas implementadas")]
+  B -->|"Prisma compartido; TCP 3306"| D[("MySQL<br/>12 tablas implementadas")]
   B -->|"Lectura y escritura; dueño o administrador"| A[("Documentos privados<br/>PDF, PNG y JPEG")]
   A --- P["VERIFICATION_STORAGE_DIR<br/>Persistencia y acceso restringido<br/>Respaldo junto con MySQL"]
   F -->|"ID token"| I["Google Identity Services"]
   B -->|"Verifica ID token por HTTPS"| I
   B -->|"HTTPS; caché 30 minutos; sin clave"| O["Open-Meteo"]
   B -.->|"SMTP/TLS; requiere configuración"| S["Servidor SMTP"]
-  F -.-> G["Previsto: Google Maps"]
+  F -.-> G["Google Maps JavaScript API<br/>Integrado; prueba real pendiente de clave"]
   B -.-> C["Previsto: API Claude"]
   N["Objetivo: Docker, Nginx y HTTPS<br/>FS-HU-11 pendiente"]
-  M["Modelo completo: 15 tablas<br/>10 implementadas y 5 previstas"]
+  M["Modelo completo: 15 tablas<br/>12 implementadas y 3 previstas"]

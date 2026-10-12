@@ -34,7 +34,7 @@ function TarjetaClima({ clima }) {
   );
 }
 
-// Tareas reales que hoy puede resolver el profesional; las que dependen de reservas llegan con la agenda.
+// Tareas que el profesional puede resolver desde su espacio.
 function tareasDe(ficha) {
   const tareas = [];
   if (!ficha) {
@@ -42,7 +42,7 @@ function tareasDe(ficha) {
   } else if (!ficha.descripcion) {
     tareas.push({ icono: 'lapiz', titulo: 'Agrega una descripción a tu ficha', detalle: 'Cuéntales a las personas cómo es tu atención.', a: SECCIONES.perfil.ruta, accion: 'Agregar' });
   }
-  tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, proximamente: true });
+  tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, accion: 'Publicar horario' });
   return tareas;
 }
 
@@ -137,7 +137,7 @@ export default function InicioProfesional() {
         <ul className="resumen-semanal">
           {RESUMEN.map((nombre) => <li key={nombre}><span>{nombre}</span><strong aria-label="Sin datos todavía">—</strong></li>)}
         </ul>
-        <p className="texto-secundario resumen-semanal__nota">Estas cifras se activarán cuando las personas puedan reservar horas contigo.</p>
+        <p className="texto-secundario resumen-semanal__nota">Puedes consultar tus reservas en Mi agenda. El resumen estadístico semanal está pendiente.</p>
       </section>
     </div>
   );

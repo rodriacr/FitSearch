@@ -63,7 +63,7 @@ describe('Con sesión', () => {
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     const nombres = within(menu).getAllByRole('link').map((enlace) => enlace.textContent.replace('Próximamente', '').trim());
     // Sin Farmacias ni Historial de chats (el historial vive dentro del asistente) y con Comidas (decisiones del PO del 05-10-2026).
-    expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Abrir chat']);
+      expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Abrir chat']);
     expect(within(menu).queryByText('Buscar profesionales')).not.toBeInTheDocument();
     expect(within(menu).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
   });

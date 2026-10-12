@@ -1,6 +1,6 @@
 # Revisión de Sprint Backlogs 2 y 3
 
-Estado documental al 11-10-2026. Los hallazgos de las planillas proceden de la revisión del 10-10-2026 sobre el commit 5fcbf8e; las decisiones posteriores de los PR se distinguen más abajo. No se asignan responsables ni se aceptan historias sin acuerdo del equipo.
+Estado documental al 11-10-2026. Los hallazgos de las planillas proceden de la revisión del 10-10-2026 sobre el commit 5fcbf8e; las decisiones posteriores de los PR se distinguen más abajo. La autorización posterior de Rodrigo asigna los pendientes a Luis; la aceptación del PO y las horas no se inventan.
 
 ## Hallazgos iniciales
 
@@ -46,4 +46,8 @@ La revisión del 11-10-2026 corrige las fichas pendientes sin envío, la conserv
 - [FS-HU-04](https://trello.com/c/NRpHvcg0), [FS-HU-06](https://trello.com/c/H2XV5ORS), [FS-HU-13](https://trello.com/c/Wie6El3W), [FS-HU-14](https://trello.com/c/xxQfnJVB) y [revisión del PR #13](https://trello.com/c/wjtYViPS).
 - Código: esquema Prisma, rutas del backend, navegación y pantallas de agenda/mapas del frontend.
 
-Las observaciones de las planillas corresponden a las filas y evidencias de la revisión inicial. La autorización administrativa posterior y sus correcciones no asignan disponibilidad, reservas ni mapa/lista a un integrante. Las aproximadamente siete horas de Luis son un total retrospectivo sin desglose diario.
+Las observaciones de las planillas corresponden a las filas y evidencias de la revisión inicial. Rodrigo autorizó posteriormente a Luis completar todos los pendientes de los Sprints 2 y 3. Las aproximadamente siete horas de Luis son un total retrospectivo sin desglose diario.
+
+## Avance actual autorizado
+
+PR #19 y #20 fusionados en main. Disponibilidad FS-HU-13, reservas FS-HU-14 y alternancia Google Maps/lista FS-HU-06 están en el PR #21. La revisión del 12-10-2026 corrigió la superposición de horas en punto, agregó retiro de horarios conservando el historial y restauró las notas originales de FS-HU-13/14. Pasaron 231 pruebas backend, 173 frontend y 39 comprobaciones MySQL, lint y build. El PR sigue abierto, pendiente de nueva revisión y fusión por Rodrigo. El correo real requiere la contraseña de aplicación SMTP y Maps necesita clave para validar el proveedor. Las horas, las estimaciones y las aceptaciones del PO continúan pendientes. Fuentes y límites en [Disponibilidad_Reservas_Mapa.md](Disponibilidad_Reservas_Mapa.md). DAS local 1.21 y diagramas listos; Drive/Miro se sincronizarán después de fusionar.

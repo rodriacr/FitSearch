@@ -1,7 +1,9 @@
 # Diagramas de FitSearch
 
-El inventario y enlaces publicados están en [Exportaciones_Miro.md](../../Sprint%203/Exportaciones_Miro.md). Las fuentes vigentes están en esta carpeta; Sprint 2 conserva recuperación y diseños de reservas. Los archivos anteriores son históricos y no se borran.
+DAS local 1.21 en revisión. Las fuentes de esta carpeta incluyen doce tablas implementadas de quince del modelo completo, agenda, reservas y Google Maps integrado con validación real pendiente de clave. Las carpetas anteriores conservan los diseños históricos.
 
-La revisión local del DAS 1.19 actualiza el flujo 11 de verificación para el PR #19. Los diagramas estructurales permanecen vigentes: 15 tablas del modelo completo, 10 implementadas y 5 previstas. No se presenta el diseño futuro como una función terminada.
+Actualizar en Miro los diagramas 04, 07 y 08 y agregar 12_Disponibilidad_y_Reservas después de fusionar el nuevo PR. El flujo 11 sigue vigente; el PR 20 fusionado limita diez cargas por tipo y trámite. Publicar el DAS y las exportaciones en Drive conservando los enlaces existentes. No sincronizar la nueva implementación antes de su fusión.
 
-Después de fusionar el PR, actualizar el marco 11 con `11_Verificacion_Administrativa.mmd` y sincronizar sus exportaciones y el DAS en Drive conservando enlaces. Revisar que las etiquetas sean legibles y que el flujo distinga ficha sin solicitud, envío explícito, adjuntos vigentes y cierre por rechazo, revocación o cambio de especialidad. No publicar esta revisión antes de la fusión.
+Los diseños 09 y 10 de Sprint 2 representan los antecedentes de reserva. El flujo 12 describe la implementación actual y su bloqueo transaccional. La aceptación de historias requiere al PO.
+
+La revisión incluye retirado en Disponibilidad (02/03/04) y retiro en el flujo 12. Actualizar estas fuentes tras fusionar el PR #21.
