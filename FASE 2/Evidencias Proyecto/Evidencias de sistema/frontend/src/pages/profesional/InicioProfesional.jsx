@@ -6,6 +6,7 @@ import { useSesion } from '../../context/SesionContext.jsx';
 import { obtenerClima } from '../../services/clima.service.js';
 import { primerNombre } from '../../services/formato.js';
 import { obtenerMiFicha } from '../../services/profesional.service.js';
+import { solicitar } from '../../services/api.js';
 import './InicioProfesional.css';
 
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
@@ -35,14 +36,14 @@ function TarjetaClima({ clima }) {
 }
 
 // Tareas que el profesional puede resolver desde su espacio.
-function tareasDe(ficha) {
+function tareasDe(ficha, tieneHorarios) {
   const tareas = [];
   if (!ficha) {
     tareas.push({ icono: 'medico', titulo: 'Completa tu ficha profesional', detalle: 'Sin ficha no apareces en el buscador de FitSearch.', a: SECCIONES.perfil.ruta, accion: 'Completar' });
   } else if (!ficha.descripcion) {
     tareas.push({ icono: 'lapiz', titulo: 'Agrega una descripción a tu ficha', detalle: 'Cuéntales a las personas cómo es tu atención.', a: SECCIONES.perfil.ruta, accion: 'Agregar' });
   }
-  tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, accion: 'Publicar horario' });
+  if (tieneHorarios === false) tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, accion: 'Publicar horario' });
   return tareas;
 }
 
@@ -71,11 +72,20 @@ export default function InicioProfesional() {
   const { sesion } = useSesion();
   const [ficha, setFicha] = useState({ cargando: true });
   const [clima, setClima] = useState(null);
+  const [tieneHorarios, setTieneHorarios] = useState(null);
 
   useEffect(() => {
     let activo = true;
     obtenerMiFicha()
-      .then(({ ficha: datos }) => activo && setFicha({ datos }))
+      .then(async ({ ficha: datos }) => {
+        if (!activo) return;
+        setFicha({ datos });
+        if (!datos) { setTieneHorarios(false); return; }
+        try {
+          const { horarios } = await solicitar('/disponibilidades');
+          if (activo) setTieneHorarios(horarios.length > 0);
+        } catch { /* No se afirma que falten horarios si la consulta falla. */ }
+      })
       .catch(() => activo && setFicha({ error: true }));
     obtenerClima()
       .then((datos) => activo && setClima(datos))
@@ -83,7 +93,7 @@ export default function InicioProfesional() {
     return () => { activo = false; };
   }, []);
 
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos);
+  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios);
 
   return (
     <div className="inicio-prof">

@@ -16,6 +16,7 @@ const CLAVES = ['q', 'especialidad', 'comuna', 'distancia', 'calificacion', 'mod
 const FILTROS = ['especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad'];
 const { ordenes, filtroModalidad, busqueda } = reglas.profesionales;
 const UBICACION_INICIAL = { estado: 'inactiva', coords: null, mensaje: '' };
+const SIN_RESULTADOS = [];
 
 function etiquetaFiltro(clave, valor) {
   if (clave === 'distancia') return `Hasta ${valor} km`;
@@ -28,6 +29,7 @@ function etiquetaFiltro(clave, valor) {
 export default function Profesionales() {
   const [parametros, setParametros] = useSearchParams();
   const vistaMapa = parametros.get('vista') === 'mapa';
+  const [mapaIniciado, setMapaIniciado] = useState(vistaMapa);
   const { pathname, search } = useLocation();
   const filtros = Object.fromEntries(CLAVES.map((clave) => [clave, parametros.get(clave) || '']));
   const necesitaUbicacion = Boolean(filtros.distancia) || filtros.orden === 'cercania';
@@ -114,6 +116,8 @@ export default function Profesionales() {
   ];
   const cantidadFiltros = FILTROS.filter((nombre) => filtros[nombre]).length;
   const listo = !cargando && !resultado.error;
+  // Sin resultados se muestra solo el estado vacío, no un mapa vacío al lado.
+  const mapaVisible = vistaMapa && listo && resultado.profesionales.length > 0;
 
   let contenido;
   if (cargando) {
@@ -141,7 +145,7 @@ export default function Profesionales() {
     contenido = (
       <>
         <h2 className="solo-lector">Resultados de la búsqueda</h2>
-        {vistaMapa ? <MapaProfesionales profesionales={profesionales} desde={`${pathname}${search}`} /> : <div className="buscador__lista">
+        {!vistaMapa && <div className="buscador__lista">
           {profesionales.map((profesional) => (
             <TarjetaProfesional key={profesional.id} profesional={profesional} desde={`${pathname}${search}`} />
           ))}
@@ -185,7 +189,7 @@ export default function Profesionales() {
             </p>
             <div className="buscador__controles">
               <div className="buscador__vistas" aria-label="Vista de resultados">
-                {[['', 'Lista'], ['mapa', 'Mapa']].map(([valor, nombre]) => <button type="button" className="boton boton--secundario boton--compacto" key={nombre} aria-pressed={vistaMapa === (valor === 'mapa')} onClick={() => { const siguiente = new URLSearchParams(parametros); if (valor) siguiente.set('vista', valor); else siguiente.delete('vista'); setParametros(siguiente); }}>{nombre}</button>)}
+                {[['', 'Lista'], ['mapa', 'Mapa']].map(([valor, nombre]) => <button type="button" className="boton boton--secundario boton--compacto" key={nombre} aria-pressed={vistaMapa === (valor === 'mapa')} onClick={() => { if (valor) setMapaIniciado(true); const siguiente = new URLSearchParams(parametros); if (valor) siguiente.set('vista', valor); else siguiente.delete('vista'); setParametros(siguiente); }}>{nombre}</button>)}
               </div>
               <button type="button" className="boton boton--secundario buscador__boton-filtros" aria-expanded={panelAbierto} aria-controls="panel-filtros"
                 onClick={() => setPanelAbierto(true)}>
@@ -219,6 +223,10 @@ export default function Profesionales() {
             </Alerta>
           )}
 
+          {(mapaIniciado || vistaMapa) && <div hidden={!mapaVisible}>
+            <MapaProfesionales profesionales={listo ? resultado.profesionales : SIN_RESULTADOS} desde={`${pathname}${search}`}
+              visible={mapaVisible} />
+          </div>}
           {contenido}
         </div>
       </div>

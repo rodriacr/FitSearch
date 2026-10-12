@@ -1,0 +1,31 @@
+{
+  "fecha": "2026-10-12",
+  "tipo": "Diagrama UML de componentes",
+  "componentes": [
+    "Vistas y navegación",
+    "Cliente API",
+    "SesionContext",
+    "Rutas y controladores",
+    "Servicios y autorización",
+    "Modelos",
+    "Prisma compartido",
+    "MySQL",
+    "Almacenamiento privado"
+  ],
+  "interfaces": [
+    "IAPI: HTTP JSON y Bearer JWT",
+    "ISQL: MySQL por TCP 3306",
+    "IArchivos: lectura/escritura privada"
+  ],
+  "nota": "Los documentos privados no están en el frontend. SMTP/recuperación y mapa integrado comprobados con proveedores reales. Google Identity requiere autorizar el origen localhost:5173 y repetir el ingreso.",
+  "fuentes": [
+    "frontend/src/App.jsx",
+    "frontend/src/context/SesionContext.jsx",
+    "frontend/src/services/api.js",
+    "backend/src/routes/index.js",
+    "backend/src/routes/administrador.routes.js",
+    "backend/src/models/prisma.js",
+    "backend/src/services/agenda.service.js",
+    "backend/src/services/verificacion.service.js"
+  ]
+}

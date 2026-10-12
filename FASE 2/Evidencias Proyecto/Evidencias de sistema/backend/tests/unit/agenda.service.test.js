@@ -4,6 +4,22 @@ const servicio = require('../../src/services/agenda.service');
 const ahora = new Date('2026-10-11T18:00:00Z');
 const horario = { fecha: '2026-10-12', horaInicio: '09:00', horaFin: '10:00' };
 beforeEach(() => jest.resetAllMocks());
+
+test('la consulta recibe hoy en Santiago y la respuesta pública no revela historial', async () => {
+  jest.useFakeTimers().setSystemTime(ahora);
+  try {
+    modelo.listarDisponibilidad.mockResolvedValue([{
+      id: 1, fecha: new Date('2026-10-12T00:00:00Z'),
+      horaInicio: new Date('1970-01-01T09:00:00Z'),
+      horaFin: new Date('1970-01-01T10:00:00Z'), _count: { reservas: 2 },
+    }]);
+    const publico = await servicio.listarDisponibilidad({ id: 7 }, 3);
+    expect(modelo.listarDisponibilidad).toHaveBeenCalledWith({ id: 7 }, 3, new Date('2026-10-11T00:00:00Z'));
+    expect(publico.horarios[0]).not.toHaveProperty('conHistorial');
+    const propio = await servicio.listarDisponibilidad({ id: 7 });
+    expect(propio.horarios[0].conHistorial).toBe(true);
+  } finally { jest.useRealTimers(); }
+});
 test.each([
   { fecha: '2026-02-30' },
   { horaInicio: '25:00' },

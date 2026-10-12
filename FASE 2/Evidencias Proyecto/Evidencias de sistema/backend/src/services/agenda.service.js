@@ -82,9 +82,18 @@ const esFuturo = (b, ahora = ahoraChile()) =>
   b.fecha > ahora.fecha ||
   (b.fecha === ahora.fecha && b.horaInicio > ahora.hora);
 async function listarDisponibilidad(usuario, profesionalId) {
-  const bloques = await modelo.listarDisponibilidad(usuario, profesionalId);
+  const ahora = ahoraChile();
+  const bloques = await modelo.listarDisponibilidad(
+    usuario,
+    profesionalId,
+    new Date(`${ahora.fecha}T00:00:00Z`),
+  );
   return {
-    horarios: bloques.map(horario).filter((b) => esFuturo(b)),
+    horarios: bloques.map((b) => {
+      const resultado = horario(b);
+      if (profesionalId) delete resultado.conHistorial;
+      return resultado;
+    }).filter((b) => esFuturo(b, ahora)),
     zonaHoraria: 'America/Santiago',
   };
 }

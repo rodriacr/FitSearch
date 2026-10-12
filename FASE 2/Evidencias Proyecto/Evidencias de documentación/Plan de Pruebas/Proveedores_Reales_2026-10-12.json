@@ -1,0 +1,71 @@
+{
+  "fecha": "2026-10-12T19:18:22.056Z",
+  "cuenta": "temporal; alias del buzón autorizado",
+  "smtpReal": true,
+  "pruebas": [
+    {
+      "prueba": "Registro temporal",
+      "estado": 201,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Inicio de sesión previo",
+      "estado": 200,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Solicitud de recuperación",
+      "estado": 200,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Correo real de recuperación aceptado por Gmail SMTP",
+      "resultado": "OK",
+      "recepcionEnBandeja": "Confirmada por el destinatario: bandeja de entrada"
+    },
+    {
+      "prueba": "Restablecimiento con enlace enviado por SMTP",
+      "estado": 200,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Contraseña anterior rechazada",
+      "estado": 401,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Inicio con contraseña nueva",
+      "estado": 200,
+      "resultado": "OK"
+    },
+    {
+      "prueba": "Enlace usado rechazado",
+      "estado": 400,
+      "resultado": "OK"
+    }
+  ],
+  "resultado": "OK",
+  "cuentaTemporalEliminada": true,
+  "maps": {
+    "proveedor": "Google Maps JavaScript API real, Demo Key sin facturación",
+    "resultado": "OK",
+    "casos": [
+      "Dos marcadores del directorio existente",
+      "Selección accesible de marcador: ventana, nombre y enlace a ficha",
+      "Filtro Nutrición: un resultado y un marcador; selección anterior eliminada",
+      "Alternancia Lista/Mapa conserva especialidad y resultado",
+      "Paginación de 15 fichas: 12 marcadores en página 1 y 3 en página 2",
+      "Volver a página 1 elimina marcador y selección de página 2"
+    ],
+    "limpieza": "13 fichas profesionales y una cuenta de usuario temporales eliminadas",
+    "datoPerfilPorCorregir": "Juan conserva latitud 33, longitud 71; no se alteraron sus datos"
+  },
+  "googleIdentity": {
+    "resultado": "BLOQUEADO",
+    "origen": "http://localhost:5173",
+    "error": "[GSI_LOGGER]: The given origin is not allowed for the given client ID.",
+    "accion": "Agregar http://localhost y http://localhost:5173 a Orígenes JavaScript autorizados del cliente OAuth existente y repetir el ingreso real. Si la app está en pruebas, revisar también sus usuarios de prueba.",
+    "referencia": "https://developers.google.com/identity/gsi/web/guides/get-google-api-clientid"
+  },
+  "alcance": "Recuperación por API real con token del correo enviado por SMTP y cuenta temporal. Mapa mediante navegador, SDK real y MySQL. No se acredita ingreso Google ni aceptación del PO."
+}
