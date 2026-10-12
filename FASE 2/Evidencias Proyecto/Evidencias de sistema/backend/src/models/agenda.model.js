@@ -13,6 +13,7 @@ const reservaInclude = {
 };
 const ocupado = {
   reservas: { where: { estado: { in: ACTIVOS } }, select: { id: true } },
+  _count: { select: { reservas: true } },
 };
 const instante = (b) => ({
   fecha: b.fecha.toISOString().slice(0, 10),
@@ -47,6 +48,7 @@ async function listarDisponibilidad(usuario, profesionalId) {
   return prisma.disponibilidad.findMany({
     where: {
       profesionalId: f.id,
+      retirado: false,
       ...(profesionalId && { reservas: { none: { estado: { in: ACTIVOS } } } }),
     },
     include: ocupado,
@@ -66,6 +68,11 @@ async function guardarDisponibilidad(usuarioId, id, datos) {
         if (!actual) throw new ErrorHttp(404, 'No encontramos este horario');
         if (actual.profesionalId !== f.id)
           throw new ErrorHttp(403, 'Solo puedes modificar tus horarios');
+        if (actual.retirado)
+          throw new ErrorHttp(
+            409,
+            'Este horario está retirado. Publica un bloque nuevo',
+          );
         // No se cambia un bloque usado: preserva la fecha de las reservas también canceladas.
         if (await tx.reserva.count({ where: { disponibilidadId: id } }))
           throw new ErrorHttp(
@@ -73,13 +80,15 @@ async function guardarDisponibilidad(usuarioId, id, datos) {
             'Este horario tiene reservas. Publica un bloque nuevo',
           );
       }
-      // TIME se compara como TIME, sin convertir los parámetros de Prisma en DATETIME.
-      const inicio = datos.horaInicio.toISOString().slice(11, 19);
-      const fin = datos.horaFin.toISOString().slice(11, 19);
+      // Los parámetros numéricos evitan la conversión de cadenas TIME de Prisma/MySQL.
+      const segundos = (hora) =>
+        hora.getUTCHours() * 3600 + hora.getUTCMinutes() * 60;
+      const inicio = segundos(datos.horaInicio);
+      const fin = segundos(datos.horaFin);
       const excluir = id || 0;
       const superpuestos = await tx.$queryRaw`SELECT id FROM disponibilidades
-      WHERE profesional_id = ${f.id} AND fecha = DATE(${datos.fecha})
-        AND hora_inicio < CAST(${fin} AS TIME) AND hora_fin > CAST(${inicio} AS TIME)
+      WHERE profesional_id = ${f.id} AND fecha = DATE(${datos.fecha}) AND retirado = FALSE
+        AND TIME_TO_SEC(hora_inicio) < ${fin} AND TIME_TO_SEC(hora_fin) > ${inicio}
         AND id <> ${excluir} LIMIT 1`;
       if (superpuestos.length)
         throw new ErrorHttp(
@@ -109,11 +118,22 @@ async function eliminarDisponibilidad(usuarioId, id) {
       if (!b) throw new ErrorHttp(404, 'No encontramos este horario');
       if (b.profesionalId !== f.id)
         throw new ErrorHttp(403, 'Solo puedes eliminar tus horarios');
-      if (await tx.reserva.count({ where: { disponibilidadId: id } }))
+      if (
+        await tx.reserva.count({
+          where: { disponibilidadId: id, estado: { in: ACTIVOS } },
+        })
+      )
         throw new ErrorHttp(
           409,
-          'Este horario tiene reservas y se conserva en el historial',
+          'Cancela la reserva activa antes de retirar este horario',
         );
+      if (await tx.reserva.count({ where: { disponibilidadId: id } })) {
+        await tx.disponibilidad.update({
+          where: { id },
+          data: { retirado: true },
+        });
+        return { id, retirado: true };
+      }
       await tx.disponibilidad.delete({ where: { id } });
       return { id };
     },
@@ -159,6 +179,7 @@ async function crearReserva(
         },
       });
       if (
+        actual.retirado ||
         !actual.profesional.usuario.activo ||
         actual.profesional.usuario.rol.nombre !== 'profesional' ||
         !esFuturo(instante(actual))

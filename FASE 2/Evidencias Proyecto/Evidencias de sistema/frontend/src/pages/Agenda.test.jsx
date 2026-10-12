@@ -5,6 +5,28 @@ import { renderizarApp, simularApi, SESION, SESION_PROFESIONAL, fichaProfesional
 const h = { id: 2, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00', ocupado: false };
 const r = { id: 4, estado: 'pendiente', mensaje: 'Necesito orientación nutricional', horario: h, usuario: { id: 1, nombre: 'Ana' }, profesional: { id: 3, nombre: 'Juan' } };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
+
+test('retira un bloque con historial cancelado solo tras confirmar y mantiene la reserva en historial', async () => {
+  let horarios = [{ ...h, conHistorial: true }];
+  const fetch = simularApi({
+    '/api/disponibilidades/2': (_u, o) => {
+      expect(o.method).toBe('DELETE');
+      horarios = [];
+      return [200, { id: 2, retirado: true }];
+    },
+    '/api/disponibilidades': () => [200, { horarios }],
+    '/api/reservas': { reservas: [{ ...r, estado: 'cancelada', horario: { ...h, retirado: true } }] },
+  });
+  renderizarApp('/profesional/agenda');
+  expect(await screen.findByRole('button', { name: 'Editar horario' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: 'Retirar horario' }));
+  expect(fetch.mock.calls.some(([, o]) => o.method === 'DELETE')).toBe(false);
+  await userEvent.click(screen.getByRole('button', { name: 'Confirmar retiro' }));
+  expect(await screen.findByText(/Horario retirado/)).toBeInTheDocument();
+  expect(await screen.findByText('Aún no has publicado horarios disponibles.')).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  expect(await screen.findByText(r.mensaje)).toBeInTheDocument();
+});
 test('publica horarios y conserva los valores ante una superposición', async () => {
   let horarios = [];
   const fetch = simularApi({ '/api/disponibilidades': (_u, o) => {

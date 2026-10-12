@@ -8,7 +8,7 @@ sequenceDiagram
   F->>A: POST disponibilidades con JWT
   A->>A: Validar rol, fecha futura y duración
   A->>D: Transacción: bloquear profesional
-  A->>D: Comparar bloques del día como TIME
+  A->>D: Comparar segundos con TIME_TO_SEC
   alt Superpuesto
     A-->>F: 409 conserva formulario
   else Libre
@@ -31,3 +31,14 @@ sequenceDiagram
   A->>D: Validar dueño y futuro, bloquear y actualizar
   A-->>F: Reserva actualizada
   Note over A,D: Cancelar libera el bloque. El historial se conserva.
+  P->>A: DELETE disponibilidad propia
+  A->>D: Bloquear profesional y comprobar reservas activas
+  alt Hay reserva activa
+    A-->>F: 409 cancelar antes de retirar
+  else Solo historial cancelado
+    A->>D: Marcar retirado sin borrar reservas
+    A-->>F: 200 retirar de nuevas reservas
+  else Sin historial
+    A->>D: Eliminar bloque sin reservas
+    A-->>F: 200 bloque retirado
+  end

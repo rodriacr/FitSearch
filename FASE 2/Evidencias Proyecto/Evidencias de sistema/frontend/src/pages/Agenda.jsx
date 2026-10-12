@@ -267,7 +267,7 @@ export function HorariosProfesional() {
     try {
       await solicitar(`/disponibilidades/${borrando}`, { metodo: 'DELETE' });
       setBorrando(null);
-      setAviso('Horario eliminado.');
+      setAviso('Horario retirado. Ya no admite nuevas reservas; su historial se conserva.');
       setRevision((r) => r + 1);
     } catch (e) {
       setError(e.message);
@@ -355,7 +355,7 @@ export function HorariosProfesional() {
               <button
                 type="button"
                 className="boton boton--secundario boton--compacto"
-                disabled={b.ocupado || ocupado}
+                disabled={b.ocupado || b.conHistorial || ocupado}
                 onClick={() => {
                   setEditando(b.id);
                   setCampos({
@@ -373,7 +373,7 @@ export function HorariosProfesional() {
                 disabled={b.ocupado || ocupado}
                 onClick={() => setBorrando(b.id)}
               >
-                Eliminar horario
+                Retirar horario
               </button>
             </div>
           </article>
@@ -385,7 +385,7 @@ export function HorariosProfesional() {
           role="dialog"
           aria-labelledby="eliminar-horario"
         >
-          <h3 id="eliminar-horario">¿Eliminar este horario?</h3>
+          <h3 id="eliminar-horario">¿Retirar este horario?</h3>
           <p>
             El bloque dejará de aparecer para nuevas reservas. Los bloques con
             historial se conservan.
@@ -395,7 +395,7 @@ export function HorariosProfesional() {
             disabled={ocupado}
             onClick={borrar}
           >
-            Confirmar eliminación
+            Confirmar retiro
           </button>
           <button
             className="boton boton--secundario"

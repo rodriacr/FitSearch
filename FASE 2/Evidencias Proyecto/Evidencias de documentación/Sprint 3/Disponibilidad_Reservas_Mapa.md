@@ -6,7 +6,7 @@ Estado al 11-10-2026. Implementación en codex/completar-sprints-2-y-3, pendient
 
 El profesional publica, edita y elimina bloques desde Mi agenda o la pestaña Horarios de su perfil. Fecha y horas se interpretan en America/Santiago, sin convertir la hora publicada según el navegador. Se permiten bloques futuros dentro de 365 días, con inicio anterior al término. Los bloques contiguos son válidos; los superpuestos reciben 409.
 
-Los bloques que alguna vez tuvieron reservas se conservan y no se editan ni eliminan, incluso si sus reservas se cancelaron. Así no cambia la fecha del historial. Para cambiar un bloque usado se publica otro. El usuario ve solamente bloques futuros libres de profesionales activos.
+Los bloques con historial no se editan: así no cambia la fecha de las reservas. Si todas están canceladas, Retirar horario marca retirado=true, conserva el historial y lo excluye de nuevas reservas y de la comparación de superposición. Con una reserva activa responde 409 y exige cancelarla antes. Los bloques sin historial se eliminan. Retirar y reservar usan el mismo bloqueo del profesional para evitar carreras. El usuario ve solamente bloques futuros libres de profesionales activos.
 
 ## Reservas FS-HU-14
 
@@ -46,7 +46,7 @@ Todas las rutas requieren sesión. Disponibilidad propia exige rol profesional; 
 | GET /api/disponibilidades | Horarios futuros propios |
 | POST /api/disponibilidades | Publicar con fecha, horaInicio y horaFin |
 | PUT /api/disponibilidades/:id | Editar un bloque propio sin reservas previas |
-| DELETE /api/disponibilidades/:id | Eliminar un bloque propio sin reservas previas |
+| DELETE /api/disponibilidades/:id | Retirar bloque propio sin reservas activas; conservarlo si tiene historial |
 | GET /api/profesionales/:id/disponibilidades | Horarios públicos futuros y libres |
 | GET /api/reservas | Reservas privadas del participante |
 | POST /api/reservas | Reservar con disponibilidadId y mensaje |
@@ -58,7 +58,7 @@ La API no acepta usuarioId ni profesionalId del cliente para asignar propiedad. 
 
 Desde backend, ejecutar db:generate y db:migrate antes de iniciar. La migración 20261012010000_disponibilidad_reservas agrega disponibilidades y reservas, con claves foráneas y comprobaciones de horarios y estados. Son doce tablas de dominio implementadas de quince del modelo completo; conversaciones, mensajes y registro_comida siguen previstos.
 
-Validación: 231 pruebas backend en 27 suites y 172 frontend en 23 archivos; lint de ambas capas y build frontend correctos. Se ejecutaron 25 comprobaciones con Express y MySQL reales, incluidas privacidad, superposición, reserva concurrente, confirmación, cancelación y conservación del historial. Las cuentas y bloques temporales de la prueba se eliminaron al finalizar. La evidencia está en Plan de Pruebas/Agenda_MySQL_2026-10-11.json.
+Validación: 231 pruebas backend en 27 suites y 173 frontend en 23 archivos; lint de ambas capas y build frontend correctos. Se ejecutaron 25 comprobaciones con Express y MySQL reales, incluidas privacidad, superposición, reserva concurrente, confirmación, cancelación y conservación del historial. Las cuentas y bloques temporales de la prueba se eliminaron al finalizar. La evidencia está en Plan de Pruebas/Agenda_MySQL_2026-10-11.json.
 
 Prueba manual recomendada: publicar dos bloques contiguos, rechazar uno superpuesto, reservar como usuario con mensaje, confirmar desde el profesional y cancelar desde el usuario. Comprobar que el bloque vuelve a estar libre y que el historial permanece. Abrir Mapa, alternar a Lista conservando filtros y repetir con clave real cuando esté disponible.
 
@@ -71,3 +71,7 @@ Este cambio requiere revisión y fusión del nuevo PR antes de sincronizar el DA
 ## Comprobación de dependencias
 
 Se corrigieron las alertas críticas y altas detectadas por npm audit. Backend: proxy-addr actualizado y nodemon sustituido por node --watch (Node 20.13 o superior); npm run dev conserva la recarga automática. Frontend: brace-expansion y source-map-js actualizados. Auditoría completa frontend sin vulnerabilidades, backend sin altas/críticas y producción backend sin vulnerabilidades. Quedan 19 alertas moderadas transitivas de herramientas Jest, derivadas de sprintf-js; no se aplicó la degradación a Jest 25 sugerida por --force. El lint, las 231/172 pruebas y el build se comprobaron después de actualizar.
+
+## Corrección de la revisión del PR 21
+
+12-10-2026: se reemplazó CAST de parámetros TIME por comparación TIME_TO_SEC con segundos numéricos. Se comprobaron el duplicado 09:00–11:00 (409), 10:00–12:00 superpuesto (409), 15:00–15:30 libre (201), bloques contiguos y edición superpuesta. Nueva migración 20261012040000_retirar_disponibilidad, sin borrado de historial. La prueba reproducible npm run test:mysql:agenda ejecuta 39 comprobaciones con MySQL local y elimina únicamente sus datos temporales. Evidencia Agenda_MySQL_2026-10-12.json. Product Backlog conserva íntegramente las notas previas de FS-HU-13/14 y agrega el avance debajo. Drive/Miro esperan la fusión.

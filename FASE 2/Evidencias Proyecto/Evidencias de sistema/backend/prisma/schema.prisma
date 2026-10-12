@@ -102,6 +102,7 @@ model Disponibilidad {
   fecha         DateTime    @db.Date
   horaInicio    DateTime    @map("hora_inicio") @db.Time(0)
   horaFin       DateTime    @map("hora_fin") @db.Time(0)
+  retirado      Boolean     @default(false)
   profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
   reservas      Reserva[]
 

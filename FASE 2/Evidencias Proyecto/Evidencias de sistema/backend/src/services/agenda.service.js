@@ -61,6 +61,8 @@ const horario = (b) => ({
   horaInicio: b.horaInicio.toISOString().slice(11, 16),
   horaFin: b.horaFin.toISOString().slice(11, 16),
   ocupado: Boolean(b.reservas?.length),
+  ...(b._count?.reservas && { conHistorial: true }),
+  ...(b.retirado && { retirado: true }),
 });
 function reserva(r) {
   return {
