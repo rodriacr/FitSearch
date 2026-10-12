@@ -7,8 +7,8 @@
       "relative": "Documento de Arquitectura (DAS)/Documento_Arquitectura_Sistema_DAS_.docx",
       "id": "1ZDYdzfxujsZvTHXRr9MaGNR5DsxBi2zq",
       "action": "publicado DAS 1.21; borrador local 1.22 requiere fusión",
-      "sha256": "9bf131b85029a0be068e56a74e80c6d9f1f9438926a91ffa81f69cf4894c6727",
-      "bytes": 5564789
+      "sha256": "85607eb5ce024d250b9c9d6490acc45fb7236b33b0a0e9ea7746cf44e951b66d",
+      "bytes": 5564826
     },
     {
       "relative": "Sprint 2/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx",
@@ -32,7 +32,7 @@
     "sha256": "0c3a0d632008cac53ab174e762869b9ec5a387bc98ef3f0e1d9419e7d4e07d8e"
   },
   "marco12": "https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686919929732",
-  "source_commit": "fcb1346223ee2337488341fbe3f81f2c2187d36d",
+  "source_commit": "37ffeb0b4856ee53313598ba031f904a6b288590",
   "diagrams": [
     {
       "relative": "Diagramas (Miro)/Actualización Sprint 3/01_Casos_de_Uso.png",

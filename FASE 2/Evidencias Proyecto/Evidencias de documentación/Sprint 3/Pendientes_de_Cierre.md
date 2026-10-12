@@ -21,3 +21,5 @@ Validación: 233 pruebas backend, 178 frontend, 51 comprobaciones MySQL reales, 
 - La observación anterior del PR #20 sobre cuotas de documentos al cambiar especialidad sigue registrada aparte.
 
 Los destinos y huellas locales están en Manifiesto_Sincronizacion.json. No contiene credenciales ni documentos privados.
+
+Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.

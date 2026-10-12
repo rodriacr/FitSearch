@@ -17,3 +17,5 @@ Validación ejecutada: backend 233/233 en 28 suites; frontend 178/178 en 24 arch
 Documentación: DAS 1.22, diagrama UML de componentes 13, corrección de dependencia en vista 07 y flujo 12 con límite por usuario/profesional. DAS 1.21 y fuentes aprobadas de #21 publicados en Drive/Miro. Sprint Backlog 2 y conciliación oficial de Rodrigo conservados. Horas y aceptación de historias no se inventan.
 
 Pendientes externos: contraseña de aplicación SMTP, recepción y recuperación reales; clave y prueba Google Maps real; aceptación del PO. No se enviaron correos ni se activó facturación.
+
+Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.
