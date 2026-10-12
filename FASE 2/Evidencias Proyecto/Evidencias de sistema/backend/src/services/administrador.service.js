@@ -11,7 +11,8 @@ function profesional(fila) {
     especialidad: fila.especialidad, descripcion: fila.descripcion, comuna: fila.comuna,
     modalidad: fila.modalidad, verificado: fila.verificado,
     estado: fila.estadoVerificacion || (fila.verificado ? 'verificado' : 'sin_solicitud'), activo: fila.usuario.activo,
-    motivoRechazo: fila.motivoRechazo, revision: fila.revisionVerificacion, rut: fila.rut, telefono: fila.telefono,
+    motivoRechazo: fila.estadoVerificacion === 'sin_solicitud' ? null : fila.motivoRechazo,
+    revision: fila.revisionVerificacion, rut: fila.rut, telefono: fila.telefono,
   };
 }
 async function listado(consulta, convertir, parametros) {

@@ -3,7 +3,8 @@ const modelo = require('../models/verificacion.model');
 async function obtenerSolicitud(usuarioId) {
   const fila = await modelo.buscarPorUsuario(usuarioId);
   return { solicitud: fila && {
-    id: fila.id, estado: fila.estadoVerificacion, motivo: fila.motivoRechazo,
+    id: fila.id, estado: fila.estadoVerificacion,
+    motivo: fila.estadoVerificacion === 'sin_solicitud' ? null : fila.motivoRechazo,
     rut: fila.rut, telefono: fila.telefono,
     documentos: modelo.documentosActuales(fila), historial: fila.historialVerificacion || [],
   } };

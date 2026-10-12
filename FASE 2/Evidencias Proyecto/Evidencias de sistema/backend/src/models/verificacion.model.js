@@ -1,5 +1,13 @@
 const prisma = require('./prisma');
 const ErrorHttp = require('../utils/ErrorHttp');
+const LIMITE_SUBIDAS_POR_TIPO = 10;
+
+function eventosDelTramite(ficha) {
+  const eventos = ficha.historialVerificacion || [];
+  const ultimoCierre = eventos.findLastIndex((evento) =>
+    ['rechazar', 'revocar', 'cambio_especialidad'].includes(evento.accion));
+  return { ultimoCierre, eventos: eventos.slice(ultimoCierre + 1) };
+}
 
 const documentoPublico = { id: true, tipo: true, nombre: true, mime: true, tamano: true, fechaCreacion: true };
 const seleccion = {
@@ -12,19 +20,13 @@ function buscarPorUsuario(usuarioId) { return prisma.profesional.findUnique({ wh
 function buscarPorId(id) { return prisma.profesional.findUnique({ where: { id }, select: seleccion }); }
 function buscarDocumento(id) { return prisma.documentoProfesional.findUnique({ where: { id }, include: { profesional: { select: { usuarioId: true } } } }); }
 function documentosActuales(ficha) {
-  const eventos = ficha.historialVerificacion || [];
-  const cierres = ['rechazar', 'revocar', 'cambio_especialidad'];
-  const ultimoCierre = eventos.findLastIndex((evento) => cierres.includes(evento.accion));
-  const subidas = eventos.slice(ultimoCierre + 1).filter((evento) => evento.accion === 'documento');
+  const { ultimoCierre, eventos } = eventosDelTramite(ficha);
+  const subidas = eventos.filter((evento) => evento.accion === 'documento');
   const idsActuales = new Set(subidas.map((evento) => evento.documentoId));
-  const reinicio = ultimoCierre >= 0 ? Date.parse(eventos[ultimoCierre].fecha) || 0 : 0;
   const ordenados = [...(ficha.documentos || [])].filter((documento) => {
     if (ultimoCierre < 0) return true;
-    // Los eventos identifican nuevas subidas incluso con fechas MySQL de precisión de un segundo.
-    if (idsActuales.has(documento.id)) return true;
-    return new Date(documento.fechaCreacion).getTime() > reinicio;
-  }).sort((a, b) => (new Date(b.fechaCreacion).getTime() || 0)
-    - (new Date(a.fechaCreacion).getTime() || 0) || b.id - a.id);
+    return idsActuales.has(documento.id);
+  }).sort((a, b) => b.id - a.id);
   const tipos = new Set();
   return ordenados.filter((documento) => {
     if (tipos.has(documento.tipo)) return false;
@@ -68,7 +70,16 @@ async function guardarDocumento(usuarioId, datos) {
     const ficha = await tx.profesional.findUnique({ where: { usuarioId }, select: seleccion });
     if (!ficha) throw new ErrorHttp(409, 'Completa tu ficha profesional antes de adjuntar documentos');
     if (ficha.verificado) throw new ErrorHttp(409, 'La ficha ya está verificada; contacta al administrador si debes corregir documentos');
-    // Solo hay tres tipos admitidos; las versiones antiguas no consumen cupos del trámite actual.
+    // Cada tipo tiene su propio cupo para no bloquear identidad por reemplazos del título.
+    const { eventos, ultimoCierre } = eventosDelTramite(ficha);
+    const ids = new Set(eventos.filter((e) => e.accion === 'documento' && e.tipo === datos.tipo).map((e) => e.documentoId));
+    // Compatibilidad con documentos previos al historial; tras un cierre solo cuentan IDs registrados.
+    const subidas = ultimoCierre < 0
+      ? Math.max(ids.size, ficha.documentos.filter((d) => d.tipo === datos.tipo).length)
+      : ids.size;
+    if (subidas >= LIMITE_SUBIDAS_POR_TIPO) {
+      throw new ErrorHttp(409, `Este documento admite ${LIMITE_SUBIDAS_POR_TIPO} subidas por trámite. Puedes enviar los adjuntos vigentes a revisión`);
+    }
     const documento = await tx.documentoProfesional.create({ data: { ...datos, profesionalId: ficha.id }, select: documentoPublico });
     await actualizar(tx, ficha, {
       ...(ficha.estadoVerificacion === 'pendiente' && { estadoVerificacion: 'sin_solicitud' }),
@@ -87,4 +98,4 @@ async function enviarSolicitud(usuarioId, { rut, telefono }) {
     return { estado: 'pendiente' };
   });
 }
-module.exports = { buscarPorUsuario, buscarPorId, buscarDocumento, decidir, guardarDocumento, enviarSolicitud, documentoPublico, documentosActuales };
+module.exports = { buscarPorUsuario, buscarPorId, buscarDocumento, decidir, guardarDocumento, enviarSolicitud, documentoPublico, documentosActuales, LIMITE_SUBIDAS_POR_TIPO };

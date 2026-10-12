@@ -47,7 +47,7 @@ test.each(['rechazar', 'revocar'])('después de %s los documentos anteriores no 
 
 test('las subidas nuevas persisten al recargar y permiten reenviar sin recuperar versiones anteriores', async () => {
   const nuevos = documentosFechados('2026-10-10T12:00:00Z').map((d) => ({ ...d, id: d.id + 2 }));
-  const datos = { ...ficha(), documentos: [...documentosFechados('2026-10-10T10:00:00Z'), ...nuevos], historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00Z' }] };
+  const datos = { ...ficha(), documentos: [...documentosFechados('2026-10-10T10:00:00Z'), ...nuevos], historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00Z' }, { accion: 'documento', tipo: 'identidad', documentoId: 3 }, { accion: 'documento', tipo: 'titulo', documentoId: 4 }] };
   prisma.profesional.findUnique.mockResolvedValue(datos);
   const recargada = await modelo.buscarPorUsuario(7);
   expect(modelo.documentosActuales(recargada).map((d) => d.id)).toEqual([4, 3]);
@@ -57,7 +57,7 @@ test('las subidas nuevas persisten al recargar y permiten reenviar sin recuperar
 
 
 test.each(['rechazar', 'revocar'])('tras %s, incluso con documentos nuevos, no permite decidir hasta reenviar', async (decision) => {
-  const datos = { ...ficha(), estadoVerificacion: 'rechazado', documentos: documentosFechados('2026-10-10T12:00:00Z'), historialVerificacion: [{ accion: decision, fecha: '2026-10-10T11:00:00Z' }] };
+  const datos = { ...ficha(), estadoVerificacion: 'rechazado', documentos: documentosFechados('2026-10-10T12:00:00Z'), historialVerificacion: [{ accion: decision, fecha: '2026-10-10T11:00:00Z' }, { accion: 'documento', tipo: 'identidad', documentoId: 1 }, { accion: 'documento', tipo: 'titulo', documentoId: 2 }] };
   prisma.profesional.findUnique.mockResolvedValue(datos);
   for (const accion of ['aprobar', 'rechazar']) {
     await expect(modelo.decidir(2, { accion, motivo: 'Motivo de revisión', revision: 3 })).rejects.toMatchObject({ estado: 409 });
@@ -78,7 +78,7 @@ test('una ficha sin solicitud no permite aprobación ni rechazo', async () => {
 });
 
 test('más de 20 archivos históricos no bloquean adjuntos del trámite actual', async () => {
-  const vieja = { ...ficha(), estadoVerificacion: 'rechazado', documentos: Array.from({ length: 25 }, (_, id) => ({ id, tipo: 'titulo', fechaCreacion: new Date('2026-10-10T10:00:00Z') })), historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00Z' }] };
+  const vieja = { ...ficha(), estadoVerificacion: 'rechazado', documentos: Array.from({ length: 25 }, (_, id) => ({ id, tipo: 'titulo', fechaCreacion: new Date('2026-10-10T10:00:00Z') })), historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00Z' }, { accion: 'documento', tipo: 'identidad', documentoId: 3 }, { accion: 'documento', tipo: 'titulo', documentoId: 4 }] };
   prisma.profesional.findUnique.mockResolvedValue(vieja);
   prisma.documentoProfesional.count.mockResolvedValue(25);
   prisma.documentoProfesional.create.mockResolvedValue({ id: 26, tipo: 'titulo' });
@@ -100,10 +100,31 @@ test('un cambio de especialidad invalida los documentos y exige nuevo envío', a
   await expect(modelo.decidir(2, { accion: 'aprobar' })).rejects.toMatchObject({ estado: 409 });
   datos.documentos.push(...documentosFechados('2026-10-10T12:00:00Z').map((d) => ({ ...d, id: d.id + 2 })));
   await expect(modelo.decidir(2, { accion: 'aprobar' })).rejects.toMatchObject({ estado: 409 });
+  datos.historialVerificacion.push({ accion: 'documento', tipo: 'identidad', documentoId: 3 }, { accion: 'documento', tipo: 'titulo', documentoId: 4 });
   expect(await modelo.enviarSolicitud(7, { rut: '12345678-5' })).toEqual({ estado: 'pendiente' });
 });
 
 test('las subidas posteriores al cierre funcionan dentro del mismo segundo MySQL', () => {
   const datos = { documentos: documentosFechados('2026-10-10T11:00:00Z'), historialVerificacion: [{ accion: 'revocar', fecha: '2026-10-10T11:00:00.123Z' }, { accion: 'documento', documentoId: 1 }, { accion: 'documento', documentoId: 2 }] };
   expect(modelo.documentosActuales(datos)).toHaveLength(2);
+});
+
+test('una fecha posterior al cierre no hace vigente un archivo sin evento de carga', () => {
+  const datos = { documentos: documentosFechados('2026-10-10T11:00:01Z'), historialVerificacion: [{ accion: 'rechazar', fecha: '2026-10-10T11:00:00.999Z' }] };
+  expect(modelo.documentosActuales(datos)).toEqual([]);
+});
+
+test('limita por tipo y trámite sin bloquear otro documento ni contar ciclos cerrados', async () => {
+  const datos = { ...ficha(), documentos: [], historialVerificacion: [
+    ...Array.from({ length: 25 }, (_, i) => ({ accion: 'documento', tipo: 'titulo', documentoId: i })),
+    { accion: 'rechazar' },
+    ...Array.from({ length: 10 }, (_, i) => ({ accion: 'documento', tipo: 'titulo', documentoId: i + 30 })),
+  ] };
+  prisma.profesional.findUnique.mockResolvedValue(datos);
+  await expect(modelo.guardarDocumento(7, { tipo: 'titulo' })).rejects.toMatchObject({ estado: 409 });
+  expect(prisma.documentoProfesional.create).not.toHaveBeenCalled();
+  prisma.documentoProfesional.create.mockResolvedValue({ id: 50, tipo: 'identidad' });
+  expect(await modelo.guardarDocumento(7, { tipo: 'identidad' })).toMatchObject({ tipo: 'identidad' });
+  datos.historialVerificacion.push({ accion: 'revocar' });
+  await expect(modelo.guardarDocumento(7, { tipo: 'titulo' })).resolves.toBeDefined();
 });
