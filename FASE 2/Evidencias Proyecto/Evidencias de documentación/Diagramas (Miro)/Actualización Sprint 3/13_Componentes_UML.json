@@ -17,7 +17,7 @@
     "ISQL: MySQL por TCP 3306",
     "IArchivos: lectura/escritura privada"
   ],
-  "nota": "Los documentos privados no están en el frontend. Configuración local lista; faltan mapa integrado y entrega/recuperación reales.",
+  "nota": "Los documentos privados no están en el frontend. SMTP/recuperación y mapa integrado comprobados con proveedores reales. Google Identity requiere autorizar el origen localhost:5173 y repetir el ingreso.",
   "fuentes": [
     "frontend/src/App.jsx",
     "frontend/src/context/SesionContext.jsx",

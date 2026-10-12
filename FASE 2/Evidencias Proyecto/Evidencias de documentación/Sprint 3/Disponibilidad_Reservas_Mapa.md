@@ -66,7 +66,7 @@ Prueba manual recomendada: publicar dos bloques contiguos, rechazar uno superpue
 
 Los PR 19 y 20 están fusionados. El PR 20 limita diez cargas por tipo y trámite y determina vigencia mediante IDs. La observación posterior sobre el reinicio reiterado de cuota al cambiar especialidad sigue pendiente: no forma parte de esta implementación de agenda.
 
-Este cambio requiere revisión y fusión del nuevo PR antes de sincronizar el DAS y sus diagramas con Drive/Miro, conforme a Rodrigo. No se declara que los Sprints estén aceptados: faltan credenciales SMTP, la validación real de Maps, registro de horas/estimaciones y aceptación del PO.
+La revisión posterior requiere fusionar el PR #22 antes de sincronizar DAS 1.22 y sus diagramas con Drive/Miro, conforme a Rodrigo. SMTP y Maps reales se comprobaron el 12-10-2026. No se declara que los Sprints estén aceptados: quedan el origen OAuth y el ingreso Google real, registro de horas/estimaciones y aceptación del PO.
 
 ## Comprobación de dependencias
 
@@ -83,6 +83,10 @@ El PR #21 fue aprobado y fusionado el 12-10-2026. El cierre oficial del Sprint 2
 
 MapaProfesionales conserva su instancia al paginar y alternar lista/mapa; reemplaza marcadores y ventanas y limpia la selección anterior. El plazo de 15 segundos no elimina el callback de una descarga tardía; los reintentos comparten el script. Agenda distingue actualización, eliminación y retiro con historial, y limpia el formulario del bloque retirado. Inicio deja de solicitar disponibilidad si ya hay horarios. El comprobador SMTP explica cuándo falta --enviar-prueba y muestra códigos de proveedor sin revelar credenciales.
 
-Validación de esta revisión: 233 pruebas backend en 28 suites, 178 frontend en 24 archivos, 51 comprobaciones MySQL reales; lint y build correctos. Falta contraseña de aplicación SMTP, clave Maps, comprobación real de ambos proveedores y aceptación del PO. DAS 1.22 y flujo 12 revisado se publican después de fusionar la nueva entrega.
+Validación de esta revisión: 233 pruebas backend en 28 suites, 178 frontend en 24 archivos, 51 comprobaciones MySQL reales; lint y build correctos. SMTP y Maps reales comprobados el 12-10-2026; quedan configuración OAuth/ingreso Google y aceptación del PO. DAS 1.22 y flujo 12 revisado se publican después de fusionar la nueva entrega.
 
-Actualización de configuración del 12-10-2026: SMTP autenticado con smtp:comprobar, sin enviar correos. ID Google igual en backend/frontend. Maps Demo Key guardada en frontend/.env y DEMO_MAP_ID para prototipo, sin datos de pago. Falta recepción, recuperación completa y comprobación del mapa integrado. Abrir el enlace externo de Google Maps no acredita el SDK integrado. El ajuste del menú lateral está en PR #22 y el diario original en PR #23; ambos siguen abiertos. Los .env no se publican.
+## Pruebas con proveedores reales — 12-10-2026
+
+SMTP real: correo recibido en bandeja, restablecimiento e inicio con contraseña nueva comprobados, contraseña anterior y enlace reutilizado rechazados. Google Maps real: marcadores, selección, filtro Nutrición, lista/mapa y paginación 12/3 comprobados con Demo Key sin facturación. Google Identity bloqueado por origen no autorizado en localhost:5173; autorizar localhost y localhost:5173 en el cliente OAuth y repetir. PR #22/#23 pendientes de fusión, horas y aceptación del PO pendientes. DAS 1.22 y fuentes se publican en Drive/Miro tras la fusión.
+
+Evidencia: ../Plan de Pruebas/Proveedores_Reales_2026-10-12.json y Mapa_Real_Paginacion_2026-10-12.jpg. No contienen claves, tokens ni contraseñas.

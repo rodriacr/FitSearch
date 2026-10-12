@@ -16,8 +16,12 @@ Validación ejecutada: backend 233/233 en 28 suites; frontend 178/178 en 24 arch
 
 Documentación: DAS 1.22, diagrama UML de componentes 13, corrección de dependencia en vista 07 y flujo 12 con límite por usuario/profesional. DAS 1.21 y fuentes aprobadas de #21 publicados en Drive/Miro. Sprint Backlog 2 y conciliación oficial de Rodrigo conservados. Horas y aceptación de historias no se inventan.
 
-Pendientes externos: contraseña de aplicación SMTP, recepción y recuperación reales; clave y prueba Google Maps real; aceptación del PO. No se enviaron correos ni se activó facturación.
+Pendientes externos: origen OAuth de Google y repetición del ingreso; revisión/fusión de los PR, horas y aceptación del PO. SMTP y Maps reales comprobados el 12-10-2026; no se activó facturación.
 
 Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.
 
-Actualización de configuración del 12-10-2026: SMTP autenticado con smtp:comprobar, sin enviar correos. ID Google igual en backend/frontend. Maps Demo Key guardada en frontend/.env y DEMO_MAP_ID para prototipo, sin datos de pago. Falta recepción, recuperación completa y comprobación del mapa integrado. Abrir el enlace externo de Google Maps no acredita el SDK integrado. El ajuste del menú lateral está en PR #22 y el diario original en PR #23; ambos siguen abiertos. Los .env no se publican.
+## Pruebas con proveedores reales — 12-10-2026
+
+SMTP real: correo recibido en bandeja, restablecimiento e inicio con contraseña nueva comprobados, contraseña anterior y enlace reutilizado rechazados. Google Maps real: marcadores, selección, filtro Nutrición, lista/mapa y paginación 12/3 comprobados con Demo Key sin facturación. Google Identity bloqueado por origen no autorizado en localhost:5173; autorizar localhost y localhost:5173 en el cliente OAuth y repetir. PR #22/#23 pendientes de fusión, horas y aceptación del PO pendientes. DAS 1.22 y fuentes se publican en Drive/Miro tras la fusión.
+
+Evidencia: ../Plan de Pruebas/Proveedores_Reales_2026-10-12.json y Mapa_Real_Paginacion_2026-10-12.jpg. No contienen claves, tokens ni contraseñas.
