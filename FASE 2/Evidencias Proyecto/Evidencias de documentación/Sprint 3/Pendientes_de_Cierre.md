@@ -14,8 +14,8 @@ Validación: 233 pruebas backend, 178 frontend, 51 comprobaciones MySQL reales, 
 
 ## Dependencias restantes
 
-- SMTP: host, puerto, usuario y remitente guardados localmente; contraseña de aplicación pendiente. Está autorizado el envío de prueba a lmendezl1999@gmail.com. No se envió correo. Probar autenticación, entrega y recuperación con cuenta temporal; no cambiar contraseñas de cuentas existentes.
-- Maps: clave del proyecto y prueba real pendientes. No se activó facturación ni se creó una cuenta.
+- SMTP: host, puerto, usuario y remitente guardados localmente; contraseña de aplicación guardada y autenticación SMTP comprobada. Está autorizado el envío de prueba a lmendezl1999@gmail.com. No se envió correo. Probar autenticación, entrega y recuperación con cuenta temporal; no cambiar contraseñas de cuentas existentes.
+- Maps: clave demo configurada localmente, sin facturación; falta comprobar el mapa integrado y sus marcadores con el proveedor real. No se activó facturación ni se creó una cuenta.
 - Horas: usar los registros oficiales de Rodrigo. La aproximación de siete horas comunicada por Luis no sustituye el desglose real ni modifica el Sprint 2 cerrado.
 - Aceptación de historias: corresponde al PO y no se infiere de la fusión técnica.
 - La observación anterior del PR #20 sobre cuotas de documentos al cambiar especialidad sigue registrada aparte.
@@ -23,3 +23,5 @@ Validación: 233 pruebas backend, 178 frontend, 51 comprobaciones MySQL reales, 
 Los destinos y huellas locales están en Manifiesto_Sincronizacion.json. No contiene credenciales ni documentos privados.
 
 Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.
+
+Actualización de configuración del 12-10-2026: SMTP autenticado con smtp:comprobar, sin enviar correos. ID Google igual en backend/frontend. Maps Demo Key guardada en frontend/.env y DEMO_MAP_ID para prototipo, sin datos de pago. Falta recepción, recuperación completa y comprobación del mapa integrado. Abrir el enlace externo de Google Maps no acredita el SDK integrado. El ajuste del menú lateral está en PR #22 y el diario original en PR #23; ambos siguen abiertos. Los .env no se publican.

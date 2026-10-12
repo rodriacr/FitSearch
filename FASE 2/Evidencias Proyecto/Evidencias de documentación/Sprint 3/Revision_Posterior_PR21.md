@@ -19,3 +19,5 @@ Documentación: DAS 1.22, diagrama UML de componentes 13, corrección de depende
 Pendientes externos: contraseña de aplicación SMTP, recepción y recuperación reales; clave y prueba Google Maps real; aceptación del PO. No se enviaron correos ni se activó facturación.
 
 Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.
+
+Actualización de configuración del 12-10-2026: SMTP autenticado con smtp:comprobar, sin enviar correos. ID Google igual en backend/frontend. Maps Demo Key guardada en frontend/.env y DEMO_MAP_ID para prototipo, sin datos de pago. Falta recepción, recuperación completa y comprobación del mapa integrado. Abrir el enlace externo de Google Maps no acredita el SDK integrado. El ajuste del menú lateral está en PR #22 y el diario original en PR #23; ambos siguen abiertos. Los .env no se publican.

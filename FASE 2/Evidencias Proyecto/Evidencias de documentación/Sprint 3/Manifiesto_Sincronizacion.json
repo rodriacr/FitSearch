@@ -7,8 +7,8 @@
       "relative": "Documento de Arquitectura (DAS)/Documento_Arquitectura_Sistema_DAS_.docx",
       "id": "1ZDYdzfxujsZvTHXRr9MaGNR5DsxBi2zq",
       "action": "publicado DAS 1.21; borrador local 1.22 requiere fusión",
-      "sha256": "85607eb5ce024d250b9c9d6490acc45fb7236b33b0a0e9ea7746cf44e951b66d",
-      "bytes": 5564826
+      "sha256": "8c70bfa61004553646f0becfe112c3f03c334e03666dcda73e64a75507642960",
+      "bytes": 5564573
     },
     {
       "relative": "Sprint 2/PMOInformatica_Plantilla_de_Sprint_Backlog.xlsx",
@@ -32,7 +32,7 @@
     "sha256": "0c3a0d632008cac53ab174e762869b9ec5a387bc98ef3f0e1d9419e7d4e07d8e"
   },
   "marco12": "https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764686919929732",
-  "source_commit": "37ffeb0b4856ee53313598ba031f904a6b288590",
+  "source_commit": "7661769370e5082b0810440df75a05a3863fb19d",
   "diagrams": [
     {
       "relative": "Diagramas (Miro)/Actualización Sprint 3/01_Casos_de_Uso.png",
@@ -220,22 +220,22 @@
       "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.json",
       "drive_id": null,
       "action": "crear tras fusión",
-      "sha256": "030fd2f4c0344c3a3208a5b650b7007d9e968ae9004c12888a950a2277c7ab00",
-      "bytes": 940
+      "sha256": "c871f5745a987877831b8a1d5ad66347d03b72edce76533409572f19f2f60a1f",
+      "bytes": 963
     },
     {
       "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.png",
       "drive_id": null,
       "action": "crear tras fusión",
-      "sha256": "9cd3fcde158218fc38f0a8d15891255e9a0303a5cc75c2604be05218d4631836",
-      "bytes": 532364
+      "sha256": "5642e17d3b589517a3b6b82e5e0f86d930bfe24c6333c3396f2a82a767fb5133",
+      "bytes": 532036
     },
     {
       "relative": "Diagramas (Miro)/Actualización Sprint 3/13_Componentes_UML.svg",
       "drive_id": null,
       "action": "crear tras fusión",
-      "sha256": "bea578718a3c968d5c1139df66f8088bee13f1f94ee9907b7b453c3591da8a50",
-      "bytes": 15616
+      "sha256": "1f087697b3d90fab7d5d00fda5167861dbc2427c25639c4a78ca3e943a8733e9",
+      "bytes": 15614
     },
     {
       "relative": "Diagramas (Miro)/Actualización Sprint 3/INSTRUCCIONES_PARA_MIRO.md",

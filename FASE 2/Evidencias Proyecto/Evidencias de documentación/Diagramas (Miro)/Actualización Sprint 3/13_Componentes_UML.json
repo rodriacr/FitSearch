@@ -17,7 +17,7 @@
     "ISQL: MySQL por TCP 3306",
     "IArchivos: lectura/escritura privada"
   ],
-  "nota": "Los documentos privados no están en el frontend. Maps y SMTP requieren configuración y validación reales.",
+  "nota": "Los documentos privados no están en el frontend. Configuración local lista; faltan mapa integrado y entrega/recuperación reales.",
   "fuentes": [
     "frontend/src/App.jsx",
     "frontend/src/context/SesionContext.jsx",
