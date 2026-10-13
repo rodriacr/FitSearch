@@ -4,7 +4,7 @@ Plataforma web responsiva que conecta a personas que buscan mejorar su salud, co
 
 Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicaciones, sección 003D, sede Melipilla.
 
-> **Estado:** Fase 2 — cierre del Sprint 2 (acceso a la cuenta, perfil completo, portada y listado de profesionales) y adelanto del Sprint 3 (Inicio con sesión, búsqueda avanzada y por cercanía, favoritos y reseñas).
+> **Estado (12-10-2026):** Fase 2 — Sprints 1 y 2 cerrados (acceso a la cuenta, perfil completo, portada y listado de profesionales). Sprint 3 en curso, con el código en `main`: Inicio con sesión, búsqueda avanzada y por cercanía, favoritos y reseñas, elección de perfil y espacio del profesional, verificación y panel del administrador, y agenda, reservas y mapa. Las historias del Sprint 3 que siguen en revisión esperan la aceptación del Product Owner.
 
 ## Equipo
 
@@ -163,7 +163,13 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 ### Navegación de la aplicación
 
-Sin sesión, la raíz (`/`) muestra la portada pública. Con sesión, el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Las pantallas con sesión comparten encabezado (logo, notificaciones y menú de la cuenta), menú lateral y, en celular, barra inferior; el acceso a Profesionales está en el menú lateral, la barra inferior y los accesos rápidos del Inicio. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
+Sin sesión, la raíz (`/`) muestra la portada pública. Después de registrarse (con correo o con Google), la cuenta elige una sola vez cómo usar FitSearch en `/elegir-perfil`: como usuario sigue al asistente de perfil de 4 pasos (`/perfil`) y como profesional entra a su propio espacio (`/profesional/inicio`). Cambiar el tipo de cuenta después lo hace un administrador.
+
+- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Favoritos, Mis citas (`/citas`) y su perfil.
+- **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda (`/profesional/agenda`), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`). Clientes, Mensajes, Reportes y Configuración aparecen como «Próximamente».
+- **Administrador:** panel en `/admin` (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; FS-HU-12).
+
+Las pantallas con sesión comparten encabezado (logo, notificaciones y menú de la cuenta), menú lateral y, en celular, barra inferior. Si se abre una ruta protegida sin sesión, después de iniciar sesión se vuelve a ella con sus filtros.
 
 ### Directorio de profesionales — FS-HU-03, FS-HU-05 y FS-HU-22 a FS-HU-24
 
@@ -176,44 +182,50 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
 | GET | `/api/salud` | No | Estado de la API |
-| POST | `/api/auth/registro` | No | Crea la cuenta (siempre con el rol `usuario`) y devuelve el token; el tipo de cuenta se elige en el perfil |
+| POST | `/api/auth/registro` | No | Crea la cuenta (siempre con el rol `usuario`) y devuelve el token; el tipo de cuenta se elige después en `/elegir-perfil` |
 | POST | `/api/auth/login` | No | Inicia sesión y devuelve el token (`recordar: true` para una sesión de 30 días) |
+| POST | `/api/auth/google` | No | Inicia sesión o crea la cuenta con el token de Google Identity Services (exige correo verificado; FS-HU-16) |
 | POST | `/api/auth/recuperar` | No | Envía el enlace para restablecer la contraseña (responde lo mismo exista o no el correo) |
 | POST | `/api/auth/restablecer` | No | Cambia la contraseña con el código del enlace (vence en 60 minutos y sirve una vez) |
 | POST | `/api/auth/logout` | Bearer JWT | Cierra la sesión |
 | GET | `/api/perfil` | Bearer JWT | Datos del usuario, perfil completo, pasos pendientes del asistente y requerimiento calórico estimado |
-| PUT | `/api/perfil/tipo-cuenta` | Bearer JWT | Guarda el tipo de cuenta elegido en el paso 1 del asistente (`usuario` o `profesional`) y devuelve un token nuevo con el rol confirmado (FS-HU-02) |
-| PUT | `/api/perfil` | Bearer JWT | Guarda peso, altura, edad, sexo y actividad física |
-| PUT | `/api/perfil/objetivos` | Bearer JWT | Guarda objetivo principal, comidas al día y horas de sueño (FS-HU-18) |
-| PUT | `/api/perfil/salud` | Bearer JWT | Guarda condiciones médicas, medicamentos y alergias (FS-HU-19; solo valores de `shared/reglas.json`) |
-| GET | `/api/profesionales` | Bearer JWT | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
-| GET | `/api/profesionales/filtros` | Bearer JWT | Especialidades y comunas disponibles para los filtros |
+| PUT | `/api/perfil/tipo-cuenta` | Bearer JWT | Guarda el tipo de cuenta elegido en `/elegir-perfil` (`usuario` o `profesional`) y devuelve un token nuevo con el rol confirmado; responde 409 si ya se había elegido (FS-HU-02) |
+| PUT | `/api/perfil` | Bearer JWT (rol usuario) | Guarda peso, altura, edad, sexo y actividad física |
+| PUT | `/api/perfil/objetivos` | Bearer JWT (rol usuario) | Guarda objetivo principal, comidas al día y horas de sueño (FS-HU-18) |
+| PUT | `/api/perfil/salud` | Bearer JWT (rol usuario) | Guarda condiciones médicas, medicamentos y alergias (FS-HU-19; solo valores de `shared/reglas.json`) |
+| GET | `/api/profesionales/mi-ficha` | Bearer JWT (rol profesional) | Ficha propia del profesional (FS-HU-04) |
+| PUT | `/api/profesionales/mi-ficha` | Bearer JWT (rol profesional) | Crea o actualiza la ficha propia: especialidad, comuna, modalidad, ubicación y descripción (FS-HU-04) |
+| GET | `/api/clima` | Bearer JWT (rol profesional) | Clima actual para el Inicio del profesional (Open-Meteo, con las coordenadas de su ficha y caché de 30 minutos) |
+| GET | `/api/profesionales` | Bearer JWT (rol usuario) | Listado paginado (12 por página) con `q`, `especialidad`, `comuna`, `modalidad`, `calificacionMin`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre`, `cercania`, `calificacion`, `resenas`), `pagina` y `limite`; devuelve `profesionales`, `total`, `totalPaginas` y `hayMas` |
+| GET | `/api/profesionales/filtros` | Bearer JWT (rol usuario) | Especialidades y comunas disponibles para los filtros |
 | GET | `/api/profesionales/:id` | Bearer JWT | Ficha pública, resumen de calificaciones, reseña propia y si la persona puede calificar |
 | PATCH | `/api/profesionales/:id/verificar` | Bearer JWT (rol administrador) | Compatibilidad FS-HU-12: requiere solicitud pendiente, cuenta activa, RUT e identidad/título actuales; responde `{ id, verificado: true }`, 409 sin requisitos o 404 si no existe |
 | GET | `/api/profesionales/:id/resenas` | Bearer JWT | Reseñas paginadas (5 por página) con el autor abreviado |
 | PUT | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Crea o reemplaza la reseña propia: `puntaje` de 1 a 5 y `comentario` opcional de 10 a 500 caracteres (FS-HU-24) |
 | DELETE | `/api/profesionales/:id/resenas` | Bearer JWT (rol usuario) | Elimina la reseña propia |
-| GET | `/api/favoritos` | Bearer JWT | Profesionales favoritos del usuario (FS-HU-23) |
-| PUT | `/api/favoritos/:profesionalId` | Bearer JWT | Guarda un favorito (idempotente) |
-| DELETE | `/api/favoritos/:profesionalId` | Bearer JWT | Quita un favorito (idempotente) |
+| GET | `/api/favoritos` | Bearer JWT (rol usuario) | Profesionales favoritos del usuario (FS-HU-23) |
+| PUT | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Guarda un favorito (idempotente) |
+| DELETE | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Quita un favorito (idempotente) |
+
+Las rutas de la agenda y las reservas (`/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`) se describen en su sección, más abajo. Las del panel del administrador están bajo `/api/administrador` y las solicitudes y documentos de verificación del profesional bajo `/api/verificaciones` (FS-HU-12).
 
 Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "mensaje" } }`.
 
 ### Verificación básica de profesionales — FS-HU-12
 
-Avance técnico en revisión, previsto para Sprint 5 si hay capacidad y sujeto al alcance del Product Owner. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
+Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 5 «si hay capacidad»; el 12-10-2026 el Product Owner la reubicó en el Sprint 3, y falta su aceptación. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
 
 El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración y Contenido quedan fuera. Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados; la aceptación de la historia sigue pendiente del PO. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
 ### Disponibilidad, reservas y mapa — FS-HU-13, FS-HU-14 y FS-HU-06
 
-El profesional publica bloques en Mi agenda; el usuario reserva desde la ficha con un mensaje de 10 a 500 caracteres. El profesional confirma y cualquiera de los participantes cancela. Se conserva el historial. La API protege la propiedad y una transacción impide dos reservas activas simultáneas para el mismo bloque. Las fechas y horas se interpretan en `America/Santiago`.
+El profesional publica bloques en Mi agenda; el usuario reserva desde la ficha con un mensaje de 10 a 500 caracteres. El profesional confirma y cualquiera de los participantes cancela. Se conserva el historial. La API protege la propiedad y una transacción impide dos reservas activas simultáneas para el mismo bloque. Además, cada usuario puede tener como máximo una reserva activa (pendiente o confirmada) de un horario futuro con cada profesional; si no, la API responde 409 con `detalles.motivo = limite_por_profesional` (decisión del PO del 12-10-2026). Las fechas y horas se interpretan en `America/Santiago`.
 
 Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`. La nueva migración agrega `disponibilidades` y `reservas` sin borrar datos existentes. Las rutas principales son `/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`.
 
 Lista/Mapa conserva filtros y página. Para probar Google Maps real, configurar `VITE_GOOGLE_MAPS_API_KEY` y `VITE_GOOGLE_MAPS_MAP_ID` en `frontend/.env`; sin clave continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
 
-La implementación está en revisión; SMTP y Google Maps reales siguen pendientes de configuración. [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS y los diagramas nuevos se sincronizarán con Drive/Miro después de la fusión.
+Los PR #21 y #22 están fusionados en `main` (12-10-2026); la aceptación de FS-HU-06, FS-HU-13 y FS-HU-14 sigue pendiente del PO. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación. [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS 1.22 y sus diagramas están publicados en el Drive del equipo.
 
 ## Ejecución con Docker
 
@@ -228,7 +240,11 @@ npm run lint                # en cada carpeta: ESLint sin errores (DoD-05)
 npm audit                   # en cada carpeta: sin vulnerabilidades críticas ni altas (DoD-12)
 ```
 
-Las pruebas de integración del backend simulan el acceso a datos, por lo que no requieren MySQL.
+Las pruebas de integración del backend simulan el acceso a datos, por lo que no requieren MySQL. Para la agenda y las reservas hay además una comprobación contra MySQL real, que crea sus propios datos temporales y los elimina al terminar:
+
+```bash
+cd backend && npm run test:mysql:agenda
+```
 
 ## Convenciones de trabajo
 

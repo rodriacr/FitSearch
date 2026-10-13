@@ -1,6 +1,6 @@
 # Disponibilidad reservas y mapa del Sprint 3
 
-Estado al 11-10-2026. Implementación en codex/completar-sprints-2-y-3, pendiente de revisión y fusión. Rodrigo autorizó completar los pendientes de los Sprints 2 y 3. La aceptación del PO, las horas y las estimaciones no se deducen de las pruebas.
+Estado al 12-10-2026. Implementado en los PR #21 y #22, ambos fusionados en main (el #22 con el merge 662e79c). Rodrigo autorizó completar los pendientes de los Sprints 2 y 3. La aceptación del PO, las horas y las estimaciones no se deducen de las pruebas. Las secciones fechadas más abajo registran cada etapa tal como estaba en ese momento.
 
 ## Disponibilidad FS-HU-13
 
@@ -20,22 +20,22 @@ La pantalla pide confirmación antes de cancelar. Conserva el mensaje y vuelve a
 
 La alternancia Lista/Mapa conserva filtros, búsqueda y página. El mapa muestra los resultados de la página actual; se puede paginar en ambas vistas. Usa Google Maps JavaScript API y AdvancedMarkerElement. Los marcadores abren el nombre, la especialidad y un enlace a la ficha. Las coordenadas corresponden a las fichas públicas; no se envía una posición privada adicional.
 
-Falta configurar VITE_GOOGLE_MAPS_API_KEY en frontend/.env para validar el proveedor real. El SDK se carga únicamente al abrir Mapa. Sin clave o si falla, la lista de resultados continúa disponible y la pantalla ofrece reintentar. Las pruebas del mapa usan un SDK simulado; no acreditan la conexión real con Google.
+El proveedor real se usa configurando VITE_GOOGLE_MAPS_API_KEY en frontend/.env; el 12-10-2026 se comprobó con una Demo Key, sin facturación (ver «Pruebas con proveedores reales»). El SDK se carga únicamente al abrir Mapa. Sin clave o si falla, la lista de resultados continúa disponible y la pantalla ofrece reintentar. Las pruebas automatizadas del mapa usan un SDK simulado; no acreditan por sí solas la conexión real con Google.
 
 Configuración oficial: https://developers.google.com/maps/documentation/javascript/get-api-key y https://developers.google.com/maps/documentation/javascript/advanced-markers/start. Restringir la clave por sitios web autorizados y por Maps JavaScript API. Para desarrollo, VITE_GOOGLE_MAPS_MAP_ID=DEMO_MAP_ID; para publicación, configurar el ID de mapa del proyecto. No se activaron cuentas ni facturación.
 
-## SMTP pendiente del Sprint 2
+## SMTP del Sprint 2
 
-La recuperación ya tiene su flujo y servicio, pero el .env local tiene usuario y remitente, pero la contraseña de aplicación está pendiente. La dirección del destinatario no reemplaza estas credenciales. El comando npm run smtp:comprobar verifica la configuración y la conexión sin enviar mensajes; termina con código 2 si faltan datos.
+La recuperación usa el correo configurado en backend/.env: usuario, contraseña de aplicación y remitente. La dirección del destinatario no reemplaza estas credenciales. El comando npm run smtp:comprobar verifica la configuración y la conexión sin enviar mensajes; termina con código 2 si faltan datos.
 
-Una vez configuradas las credenciales localmente, ejecutar desde backend:
+Con las credenciales configuradas localmente, ejecutar desde backend:
 
 ```powershell
 npm run smtp:comprobar
-npm run smtp:comprobar -- --destinatario lmendezl1999@gmail.com --enviar-prueba
+npm run smtp:comprobar -- --destinatario correo-de-prueba@ejemplo.cl --enviar-prueba
 ```
 
-Luis autorizó ese correo de prueba. No se envió porque faltan las credenciales. No publicar los .env ni contraseñas en GitHub, Trello o documentación. La comprobación de entrega y la recuperación con un correo real siguen pendientes.
+Reemplazar `correo-de-prueba@ejemplo.cl` por un buzón propio que autorice recibir la prueba. No publicar los .env ni contraseñas en GitHub, Trello o documentación. El 12-10-2026 se comprobaron la entrega real en bandeja y la recuperación completa (ver «Pruebas con proveedores reales»).
 
 ## API
 
@@ -66,7 +66,7 @@ Prueba manual recomendada: publicar dos bloques contiguos, rechazar uno superpue
 
 Los PR 19 y 20 están fusionados. El PR 20 limita diez cargas por tipo y trámite y determina vigencia mediante IDs. La observación posterior sobre el reinicio reiterado de cuota al cambiar especialidad sigue pendiente: no forma parte de esta implementación de agenda.
 
-La revisión posterior requiere fusionar el PR #22 antes de sincronizar DAS 1.22 y sus diagramas con Drive/Miro, conforme a Rodrigo. SMTP y Maps reales se comprobaron el 12-10-2026. No se declara que los Sprints estén aceptados: quedan el origen OAuth y el ingreso Google real, registro de horas/estimaciones y aceptación del PO.
+El PR #22 se fusionó el 12-10-2026 (merge 662e79c) y el DAS 1.22 con sus diagramas quedó publicado en Drive ese mismo día; falta actualizar los marcos de Miro. SMTP y Maps reales se comprobaron el 12-10-2026. No se declara que los Sprints estén aceptados: quedan el origen OAuth y el ingreso Google real, registro de horas/estimaciones y aceptación del PO.
 
 ## Comprobación de dependencias
 
@@ -102,3 +102,10 @@ Rodrigo pidió cambios en el PR #22 (commit 0ab6ec3) y los corrigió en la misma
 - Proveedores_Reales_2026-10-12.json: se corrigieron las tildes mal codificadas.
 
 Validación: backend 233/233, frontend 183/183 (5 pruebas nuevas), 55 comprobaciones con MySQL real (4 nuevas: una cita pasada no cuenta para el límite y el 409 trae su motivo; evidencia en Agenda_MySQL_2026-10-12_PR22.json), lint y build correctos. Revisión en el navegador con datos temporales, eliminados al terminar.
+
+## Estado al cierre del 12-10-2026
+
+- PR #22 aprobado y fusionado en main (merge 662e79c); 55/55 comprobaciones con MySQL real repetidas sobre main.
+- Defecto 26 corregido. Casos CP-079 y CP-080 aprobados; la planilla suma 80 casos, con 77 aprobados.
+- DAS 1.22, diagramas 07, 12 y 13 y estas evidencias publicados en el Drive del equipo. Falta actualizar los marcos de Miro.
+- Pendientes: CP-078 (mapa real sobre main), CP-024 y CP-025 (autorizar el origen localhost en el cliente OAuth y repetir el ingreso con Google), registro de horas del Sprint 3 y aceptación del PO de FS-HU-06, FS-HU-13 y FS-HU-14.

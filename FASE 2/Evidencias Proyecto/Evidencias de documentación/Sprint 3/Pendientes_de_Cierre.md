@@ -23,7 +23,7 @@ Validación: 233 pruebas backend, 178 frontend, 51 comprobaciones MySQL reales, 
 
 Los destinos y huellas locales están en Manifiesto_Sincronizacion.json. No contiene credenciales ni documentos privados.
 
-Revisión abierta: https://github.com/rodriacr/FitSearch/pull/22. Rodrigo figura como revisor solicitado.
+Revisión: https://github.com/rodriacr/FitSearch/pull/22 (fusionado el 12-10-2026; ver el estado al cierre al final de este documento).
 
 ## Pruebas con proveedores reales — 12-10-2026
 
@@ -42,3 +42,10 @@ Rodrigo pidió cambios en el PR #22 (commit 0ab6ec3) y los corrigió en la misma
 - Proveedores_Reales_2026-10-12.json: se corrigieron las tildes mal codificadas.
 
 Validación: backend 233/233, frontend 183/183 (5 pruebas nuevas), 55 comprobaciones con MySQL real (4 nuevas: una cita pasada no cuenta para el límite y el 409 trae su motivo; evidencia en Agenda_MySQL_2026-10-12_PR22.json), lint y build correctos. Revisión en el navegador con datos temporales, eliminados al terminar.
+
+## Estado al cierre del 12-10-2026
+
+- PR #22 aprobado y fusionado en main (merge 662e79c). PR #23 (diario de Luis) aprobado y fusionado (f6607a5).
+- DAS 1.22, diagramas 07, 12 y 13 y las evidencias de esta entrega publicados en el Drive del equipo; el Drive coincide con main. Las secciones anteriores que dicen «después de la fusión» ya se cumplieron, salvo los marcos de Miro, que siguen en la versión 1.21.
+- Siguen pendientes: CP-078 (mapa real sobre main), CP-024 y CP-025 (origen OAuth y nuevo ingreso con Google), horas del Sprint 3 y aceptación del PO de las historias en revisión.
+- Manifiesto_Sincronizacion.json conserva la sincronización del DAS 1.21 tal como se hizo; no se actualizó para el 1.22.
