@@ -1,0 +1,134 @@
+# Sincroniza el tablero de Trello con la actividad de GitHub.
+#
+# - PR abierto o reabierto que menciona FS-HU-xx: comenta el enlace en la
+#   tarjeta de esa historia y la mueve a «En revisión (PR / PO)», salvo que
+#   ya esté en «Terminado».
+# - PR fusionado o cerrado: lo comenta en la tarjeta, sin moverla. La fusión
+#   no equivale a la aceptación del PO; pasar a «Terminado» sigue siendo manual.
+# - Commit directo a main (sin PR asociado) que menciona FS-HU-xx: lo comenta
+#   en la tarjeta.
+#
+# Requiere los secrets TRELLO_API_KEY y TRELLO_TOKEN del repositorio.
+# Las historias se buscan en el título y la descripción del PR, o en el
+# mensaje del commit, con el formato FS-HU-01.
+
+name: Sincronizar Trello
+
+on:
+  pull_request:
+    types: [opened, reopened, closed]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: trello-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  TRELLO_BOARD_ID: 6a8f4c91cd995df9503da12c
+  LISTA_REVISION: En revisión
+  LISTA_TERMINADO: Terminado
+
+jobs:
+  sincronizar:
+    runs-on: ubuntu-latest
+    # Los PR desde forks no reciben secrets.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - name: Actualizar tarjetas
+        env:
+          TRELLO_API_KEY: ${{ secrets.TRELLO_API_KEY }}
+          TRELLO_TOKEN: ${{ secrets.TRELLO_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          EVENTO: ${{ github.event_name }}
+          ACCION: ${{ github.event.action }}
+          PR_NUMERO: ${{ github.event.pull_request.number }}
+          PR_TITULO: ${{ github.event.pull_request.title }}
+          PR_CUERPO: ${{ github.event.pull_request.body }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTOR: ${{ github.event.pull_request.user.login }}
+          PR_FUSIONADO: ${{ github.event.pull_request.merged }}
+          PR_SHA_FUSION: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${TRELLO_API_KEY}" ] || [ -z "${TRELLO_TOKEN}" ]; then
+            echo "::warning::Faltan los secrets TRELLO_API_KEY o TRELLO_TOKEN; no se actualiza Trello."
+            exit 0
+          fi
+
+          API=https://api.trello.com/1
+          AUTH="key=${TRELLO_API_KEY}&token=${TRELLO_TOKEN}"
+
+          trello_get() { local sep='?'; [[ "$1" == *\?* ]] && sep='&'; curl -fsS "${API}$1${sep}${AUTH}"; }
+          trello_post() { curl -fsS -o /dev/null -X "$1" "${API}$2?${AUTH}" --data-urlencode "$3"; }
+
+          historias() { grep -oE 'FS-HU-[0-9]{2}' | sort -u || true; }
+
+          LISTAS=$(trello_get "/boards/${TRELLO_BOARD_ID}/lists?fields=name")
+          TARJETAS=$(trello_get "/boards/${TRELLO_BOARD_ID}/cards?fields=name,idList")
+          ID_REVISION=$(jq -r --arg n "$LISTA_REVISION" 'map(select(.name | contains($n)))[0].id // empty' <<<"$LISTAS")
+          ID_TERMINADO=$(jq -r --arg n "$LISTA_TERMINADO" 'map(select(.name | contains($n)))[0].id // empty' <<<"$LISTAS")
+
+          # Tarjetas cuyo nombre menciona la historia (por ejemplo «FS-HU-07 y FS-HU-08 | ...»).
+          tarjetas_de() {
+            jq -c --arg h "$1" '.[] | select(.name | test("(^|[^0-9])" + $h + "([^0-9]|$)"))' <<<"$TARJETAS"
+          }
+
+          comentar() {
+            local hu="$1" texto="$2" mover="${3:-no}" encontradas=0
+            while IFS= read -r tarjeta; do
+              [ -z "$tarjeta" ] && continue
+              encontradas=1
+              local id lista
+              id=$(jq -r .id <<<"$tarjeta")
+              lista=$(jq -r .idList <<<"$tarjeta")
+              trello_post POST "/cards/${id}/actions/comments" "text=${texto}"
+              if [ "$mover" = "si" ] && [ -n "$ID_REVISION" ] && [ "$lista" != "$ID_TERMINADO" ] && [ "$lista" != "$ID_REVISION" ]; then
+                trello_post PUT "/cards/${id}" "idList=${ID_REVISION}"
+                echo "${hu}: tarjeta movida a «${LISTA_REVISION}»."
+              fi
+              echo "${hu}: comentario agregado."
+            done < <(tarjetas_de "$hu")
+            [ "$encontradas" = 1 ] || echo "::notice::${hu}: no hay tarjeta en Trello con esa historia."
+          }
+
+          if [ "$EVENTO" = "pull_request" ]; then
+            HUS=$(printf '%s\n%s\n' "$PR_TITULO" "$PR_CUERPO" | historias)
+            [ -z "$HUS" ] && { echo "El PR #${PR_NUMERO} no menciona historias FS-HU."; exit 0; }
+
+            case "$ACCION" in
+              opened|reopened)
+                TEXTO="🔗 PR #${PR_NUMERO} abierto por @${PR_AUTOR}: ${PR_TITULO}"$'\n'"${PR_URL}"
+                MOVER=si ;;
+              closed)
+                if [ "$PR_FUSIONADO" = "true" ]; then
+                  TEXTO="✅ PR #${PR_NUMERO} fusionado en main (${PR_SHA_FUSION:0:7}). Falta la aceptación del PO para pasar a Terminado."$'\n'"${PR_URL}"
+                else
+                  TEXTO="✖️ PR #${PR_NUMERO} cerrado sin fusionar."$'\n'"${PR_URL}"
+                fi
+                MOVER=no ;;
+              *) exit 0 ;;
+            esac
+
+            for hu in $HUS; do comentar "$hu" "$TEXTO" "$MOVER"; done
+            exit 0
+          fi
+
+          # push a main: solo commits sin PR asociado, para no repetir lo que ya comentó el PR.
+          jq -c '.commits[]' "$GITHUB_EVENT_PATH" | while IFS= read -r commit; do
+            SHA=$(jq -r .id <<<"$commit")
+            MENSAJE=$(jq -r .message <<<"$commit")
+            URL=$(jq -r .url <<<"$commit")
+            AUTOR=$(jq -r '.author.username // .author.name' <<<"$commit")
+            PRS=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq 'length' 2>/dev/null || echo 0)
+            [ "$PRS" != "0" ] && continue
+            HUS=$(historias <<<"$MENSAJE")
+            [ -z "$HUS" ] && continue
+            TEXTO="📝 Commit ${SHA:0:7} de ${AUTOR} en main: $(head -n1 <<<"$MENSAJE")"$'\n'"${URL}"
+            for hu in $HUS; do comentar "$hu" "$TEXTO"; done
+          done
