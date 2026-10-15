@@ -8,7 +8,13 @@
 # - Commit directo a main (sin PR asociado) que menciona FS-HU-xx: lo comenta
 #   en la tarjeta.
 #
-# Requiere los secrets TRELLO_API_KEY y TRELLO_TOKEN del repositorio.
+# Nada se sube sin aprobación: el job «vista-previa» publica en el resumen
+# de la ejecución qué se hará en Trello, y el job «sincronizar» usa el
+# environment «trello», cuyos revisores obligatorios deben aprobarlo en
+# GitHub antes de que se ejecute. Si nadie lo aprueba, Trello no cambia.
+#
+# Requiere el environment «trello» con revisores obligatorios y los secrets
+# TRELLO_API_KEY y TRELLO_TOKEN (de preferencia como secrets del environment).
 # Las historias se buscan en el título y la descripción del PR, o en el
 # mensaje del commit, con el formato FS-HU-01.
 
@@ -34,10 +40,69 @@ env:
   LISTA_TERMINADO: Terminado
 
 jobs:
-  sincronizar:
+  vista-previa:
     runs-on: ubuntu-latest
     # Los PR desde forks no reciben secrets.
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    outputs:
+      hay_cambios: ${{ steps.plan.outputs.hay_cambios }}
+    steps:
+      - name: Mostrar lo que se hará en Trello
+        id: plan
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENTO: ${{ github.event_name }}
+          ACCION: ${{ github.event.action }}
+          PR_NUMERO: ${{ github.event.pull_request.number }}
+          PR_TITULO: ${{ github.event.pull_request.title }}
+          PR_CUERPO: ${{ github.event.pull_request.body }}
+          PR_FUSIONADO: ${{ github.event.pull_request.merged }}
+        run: |
+          set -euo pipefail
+          historias() { grep -oE 'FS-HU-[0-9]{2}' | sort -u || true; }
+          PLAN=""
+
+          if [ "$EVENTO" = "pull_request" ]; then
+            HUS=$(printf '%s\n%s\n' "$PR_TITULO" "$PR_CUERPO" | historias)
+            case "$ACCION" in
+              opened|reopened) QUE="comentar el enlace del PR #${PR_NUMERO} y mover la tarjeta a «${LISTA_REVISION}» (salvo que esté en «${LISTA_TERMINADO}»)" ;;
+              closed) [ "$PR_FUSIONADO" = "true" ] && QUE="comentar que el PR #${PR_NUMERO} se fusionó en main (sin mover la tarjeta)" || QUE="comentar que el PR #${PR_NUMERO} se cerró sin fusionar" ;;
+              *) QUE="" ;;
+            esac
+            for hu in $HUS; do [ -n "$QUE" ] && PLAN+="- **${hu}**: ${QUE}"$'\n'; done
+          else
+            while IFS= read -r commit; do
+              SHA=$(jq -r .id <<<"$commit")
+              PRS=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq 'length' 2>/dev/null || echo 0)
+              [ "$PRS" != "0" ] && continue
+              MENSAJE=$(jq -r .message <<<"$commit")
+              for hu in $(historias <<<"$MENSAJE"); do
+                PLAN+="- **${hu}**: comentar el commit ${SHA:0:7} «$(head -n1 <<<"$MENSAJE")»"$'\n'
+              done
+            done < <(jq -c '.commits[]' "$GITHUB_EVENT_PATH")
+          fi
+
+          {
+            echo "## Cambios propuestos en Trello"
+            if [ -n "$PLAN" ]; then
+              echo
+              printf '%s' "$PLAN"
+              echo
+              echo "Nada se aplica hasta que un revisor apruebe el job «sincronizar» (environment «trello»)."
+            else
+              echo
+              echo "No se menciona ninguna historia FS-HU: no se hará nada en Trello."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          [ -n "$PLAN" ] && echo "hay_cambios=true" >> "$GITHUB_OUTPUT" || echo "hay_cambios=false" >> "$GITHUB_OUTPUT"
+
+  sincronizar:
+    needs: vista-previa
+    if: needs.vista-previa.outputs.hay_cambios == 'true'
+    runs-on: ubuntu-latest
+    # Requiere la aprobación de un revisor del environment antes de ejecutarse.
+    environment: trello
     steps:
       - name: Actualizar tarjetas
         env:
