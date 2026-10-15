@@ -26,13 +26,13 @@ Rama local `feat/mapa-maplibre` (2 commits), aún no publicada en GitHub a la es
 - Motivo: CP-078 estaba bloqueado porque Google Maps exige una clave con facturación. MapLibre GL JS 5.24.0 con las teselas de OpenFreeMap (datos de OpenStreetMap) es gratuito y no requiere clave, cuenta ni tarjeta.
 - Alcance: `frontend/src/services/mapas.js`, `MapaProfesionales.jsx`, sus pruebas, `frontend/.env.example` y el README. El SDK se carga solo al abrir la vista Mapa, con versión fija y huella SRI. Se conservan el plazo de 15 s, los mensajes, el reintento, la lista accesible y el comportamiento al ocultar el mapa.
 - Defectos encontrados y corregidos durante la prueba con el proveedor real: encuadrar antes del evento `load` dejaba el mapa en otra zona; la ventana del marcador se cerraba al abrirse (se usa `setPopup`).
-- Verificación en GitHub Codespaces sobre `main` + el cambio: frontend 189/189, backend 233/233, lint y build correctos; aplicación completa con MySQL real, 12 profesionales de demostración en el mapa, ventana al hacer clic y enlace «Ver ficha». Se corrigió además la simulación de falla en 3 pruebas (incompatibilidad con Vitest 5).
+- Verificación en un entorno de desarrollo con Node y MySQL 8.4 en un contenedor Docker, sobre `main` + el cambio: frontend 189/189, backend 233/233, lint y build correctos; aplicación completa con MySQL real, 12 profesionales de demostración en el mapa, ventana al hacer clic y enlace «Ver ficha». Se corrigió además la simulación de falla en 3 pruebas (incompatibilidad con Vitest 5).
 - Pendiente del Product Owner: aprobar la SC-18, registrarla en la Matriz de Control de Cambio y la decisión de diseño en el DAS; con eso CP-078 queda ejecutable y FS-HU-06 puede cerrarse.
 
 ## 5. FS-HU-16: acceso con Google
 
-- Cliente OAuth «FitSearch local» (Google Cloud de Nicolás Silva): orígenes autorizados `http://localhost`, `http://localhost:5173`, `http://localhost:5174` y el del Codespace; marca completa; 5 usuarios de prueba (cuentas Duoc y Gmail de los tres integrantes).
-- En el Codespace, con el ID del cliente configurado, el botón oficial de Google carga sin errores. Falta el primer ingreso real para ejecutar CP-024 y CP-025.
+- Cliente OAuth «FitSearch local» (Google Cloud de Nicolás Silva): orígenes autorizados `http://localhost`, `http://localhost:5173`, `http://localhost:5174` y el del entorno de pruebas; marca completa; 5 usuarios de prueba (cuentas Duoc y Gmail de los tres integrantes).
+- En el entorno de pruebas, con el ID del cliente configurado, el botón oficial de Google carga sin errores. Falta el primer ingreso real para ejecutar CP-024 y CP-025.
 - Para que cualquier persona pueda ingresar (publicar la app) Google exige página principal y política de privacidad públicas: tarea propuesta para el Sprint 4.
 - El ID de cliente no es secreto: `35904243963-tltmtnidrkt5j94rgfi55g2ggo31kvui.apps.googleusercontent.com`. Decisión pendiente del Product Owner: si se adopta como el cliente del equipo.
 
