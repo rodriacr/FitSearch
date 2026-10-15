@@ -33,7 +33,7 @@ Fuera de alcance este semestre: pagos, integración con calendarios externos, ve
 | Backend | Node.js + Express (API REST) |
 | Base de datos | MySQL 8 + Prisma (ORM y migraciones) |
 | Autenticación | JWT + bcryptjs, control de acceso por roles |
-| Mapas | Google Maps Platform (Maps JavaScript, Geocoding, Places) |
+| Mapas | MapLibre GL JS con teselas de OpenFreeMap (datos de OpenStreetMap), sin clave ni facturación |
 | IA | API de Claude (Anthropic) con function calling |
 | Contenedores | Docker + docker-compose (frontend con Nginx, backend, MySQL) |
 | Pruebas | Backend: Jest + Supertest · Frontend: Vitest + Testing Library · Postman/Insomnia |
@@ -87,7 +87,7 @@ cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
 - Node.js 20 LTS o superior y npm
 - MySQL 8
 - Docker y Docker Compose (para el despliegue en contenedores)
-- Clave de API de Google Maps Platform y de la API de Claude (a partir de los Sprints 3 y 4)
+- Clave de la API de Claude (a partir del Sprint 4). El mapa no requiere clave
 
 ## Instalación (ambiente local)
 
@@ -223,7 +223,7 @@ El profesional publica bloques en Mi agenda; el usuario reserva desde la ficha c
 
 Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`. La nueva migración agrega `disponibilidades` y `reservas` sin borrar datos existentes. Las rutas principales son `/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`.
 
-Lista/Mapa conserva filtros y página. Para probar Google Maps real, configurar `VITE_GOOGLE_MAPS_API_KEY` y `VITE_GOOGLE_MAPS_MAP_ID` en `frontend/.env`; sin clave continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
+Lista/Mapa conserva filtros y página. El mapa usa MapLibre GL JS y las teselas de OpenFreeMap, que no requieren clave; si no carga, continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
 
 Los PR #21 y #22 están fusionados en `main` (12-10-2026); la aceptación de FS-HU-06, FS-HU-13 y FS-HU-14 sigue pendiente del PO. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación. [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS 1.22 y sus diagramas están publicados en el Drive del equipo.
 
