@@ -1,5 +1,5 @@
 {
-  "fecha": "2026-10-12",
+  "fecha": "2026-10-15",
   "tipo": "Diagrama UML de componentes",
   "componentes": [
     "Vistas y navegación",
@@ -17,7 +17,7 @@
     "ISQL: MySQL por TCP 3306",
     "IArchivos: lectura/escritura privada"
   ],
-  "nota": "Los documentos privados no están en el frontend. SMTP/recuperación y mapa integrado comprobados con proveedores reales. Google Identity requiere autorizar el origen localhost:5173 y repetir el ingreso.",
+  "nota": "Los documentos privados no están en el frontend. SMTP/recuperación comprobado con proveedor real. El mapa usa MapLibre GL JS con teselas de OpenFreeMap, sin clave (SC-18, 15-10-2026). Google Identity requiere autorizar el origen localhost:5173 y repetir el ingreso.",
   "fuentes": [
     "frontend/src/App.jsx",
     "frontend/src/context/SesionContext.jsx",

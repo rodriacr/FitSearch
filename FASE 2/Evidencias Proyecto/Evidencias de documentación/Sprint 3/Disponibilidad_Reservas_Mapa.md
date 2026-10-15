@@ -18,11 +18,11 @@ La pantalla pide confirmación antes de cancelar. Conserva el mensaje y vuelve a
 
 ## Mapa FS-HU-06
 
-La alternancia Lista/Mapa conserva filtros, búsqueda y página. El mapa muestra los resultados de la página actual; se puede paginar en ambas vistas. Usa Google Maps JavaScript API y AdvancedMarkerElement. Los marcadores abren el nombre, la especialidad y un enlace a la ficha. Las coordenadas corresponden a las fichas públicas; no se envía una posición privada adicional.
+La alternancia Lista/Mapa conserva filtros, búsqueda y página. El mapa muestra los resultados de la página actual; se puede paginar en ambas vistas. Desde el 15-10-2026 usa MapLibre GL JS 5.24.0 con las teselas de OpenFreeMap (datos de OpenStreetMap), en vez de Google Maps (SC-18, PR #27, decisión D31 del DAS). Los marcadores abren el nombre, la especialidad y un enlace a la ficha. Las coordenadas corresponden a las fichas públicas; no se envía una posición privada adicional.
 
-El proveedor real se usa configurando VITE_GOOGLE_MAPS_API_KEY en frontend/.env; el 12-10-2026 se comprobó con una Demo Key, sin facturación (ver «Pruebas con proveedores reales»). El SDK se carga únicamente al abrir Mapa. Sin clave o si falla, la lista de resultados continúa disponible y la pantalla ofrece reintentar. Las pruebas automatizadas del mapa usan un SDK simulado; no acreditan por sí solas la conexión real con Google.
+El mapa no requiere clave, cuenta ni facturación, ni variables en frontend/.env. El SDK se descarga únicamente al abrir Mapa, desde unpkg con versión fija y huella SRI. Si falla, la lista de resultados continúa disponible y la pantalla ofrece reintentar. Las pruebas automatizadas del mapa usan un SDK simulado; no acreditan por sí solas la conexión real con el proveedor. Defectos abiertos 27 a 29: reintento cuando falla el estilo, selección con teclado y textos de los controles en inglés.
 
-Configuración oficial: https://developers.google.com/maps/documentation/javascript/get-api-key y https://developers.google.com/maps/documentation/javascript/advanced-markers/start. Restringir la clave por sitios web autorizados y por Maps JavaScript API. Para desarrollo, VITE_GOOGLE_MAPS_MAP_ID=DEMO_MAP_ID; para publicación, configurar el ID de mapa del proyecto. No se activaron cuentas ni facturación.
+Hasta el 15-10-2026 el mapa usaba Google Maps JavaScript API con AdvancedMarkerElement, configurado con VITE_GOOGLE_MAPS_API_KEY y VITE_GOOGLE_MAPS_MAP_ID; el 12-10-2026 se comprobó con una Demo Key, sin facturación (ver «Pruebas con proveedores reales»). Se reemplazó porque la prueba sobre main exigía una clave con facturación. No se activaron cuentas ni facturación.
 
 ## SMTP del Sprint 2
 
@@ -109,3 +109,10 @@ Validación: backend 233/233, frontend 183/183 (5 pruebas nuevas), 55 comprobaci
 - Defecto 26 corregido. Casos CP-079 y CP-080 aprobados; la planilla suma 80 casos, con 77 aprobados.
 - DAS 1.22, diagramas 07, 12 y 13 y estas evidencias publicados en el Drive del equipo. Falta actualizar los marcos de Miro.
 - Pendientes: CP-078 (mapa real sobre main), CP-024 y CP-025 (autorizar el origen localhost en el cliente OAuth y repetir el ingreso con Google), registro de horas del Sprint 3 y aceptación del PO de FS-HU-06, FS-HU-13 y FS-HU-14.
+
+## Actualización del 15-10-2026 (SC-18)
+
+- PR #27 de Nicolás Silva fusionado en main (merge b10a96a): el mapa pasa de Google Maps a MapLibre GL JS con teselas de OpenFreeMap, sin clave. PR #25 (matriz de trazabilidad) fusionado (merge 9d9a2a3).
+- Validación sobre main: backend 233/233, frontend 189/189, lint y build correctos. En Edge se comprobó el componente del mapa con MapLibre y OpenFreeMap reales.
+- DAS 1.23 (D31 reemplaza a D8), SC-18 en la Matriz de Control de Cambio, CP-076 a CP-078 y defectos 27 a 29 registrados.
+- Pendientes: CP-078 sobre main con sesión de usuario, corrección de los defectos 27 a 29 en un PR siguiente, CP-024 y CP-025, y la aceptación del PO de FS-HU-06. FS-HU-13 y FS-HU-14 se aceptaron el 12-10-2026.

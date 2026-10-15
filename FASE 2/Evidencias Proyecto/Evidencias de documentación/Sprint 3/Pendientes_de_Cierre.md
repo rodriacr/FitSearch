@@ -49,3 +49,10 @@ Validación: backend 233/233, frontend 183/183 (5 pruebas nuevas), 55 comprobaci
 - DAS 1.22, diagramas 07, 12 y 13 y las evidencias de esta entrega publicados en el Drive del equipo; el Drive coincide con main. Las secciones anteriores que dicen «después de la fusión» ya se cumplieron, salvo los marcos de Miro, que siguen en la versión 1.21.
 - Siguen pendientes: CP-078 (mapa real sobre main), CP-024 y CP-025 (origen OAuth y nuevo ingreso con Google), horas del Sprint 3 y aceptación del PO de las historias en revisión.
 - Manifiesto_Sincronizacion.json conserva la sincronización del DAS 1.21 tal como se hizo; no se actualizó para el 1.22.
+
+## Actualización del 15-10-2026 (SC-18)
+
+- PR #27 de Nicolás Silva fusionado en main (merge b10a96a): el mapa pasa de Google Maps a MapLibre GL JS con teselas de OpenFreeMap, sin clave. PR #25 (matriz de trazabilidad) fusionado (merge 9d9a2a3).
+- Validación sobre main: backend 233/233, frontend 189/189, lint y build correctos. En Edge se comprobó el componente del mapa con MapLibre y OpenFreeMap reales.
+- DAS 1.23 (D31 reemplaza a D8), SC-18 en la Matriz de Control de Cambio, CP-076 a CP-078 y defectos 27 a 29 registrados.
+- Pendientes: CP-078 sobre main con sesión de usuario, corrección de los defectos 27 a 29 en un PR siguiente, CP-024 y CP-025, y la aceptación del PO de FS-HU-06. FS-HU-13 y FS-HU-14 se aceptaron el 12-10-2026.

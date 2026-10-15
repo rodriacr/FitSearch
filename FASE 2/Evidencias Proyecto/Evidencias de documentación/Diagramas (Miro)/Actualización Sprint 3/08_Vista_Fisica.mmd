@@ -8,7 +8,7 @@ flowchart LR
   B -->|"Verifica ID token por HTTPS"| I
   B -->|"HTTPS; caché 30 minutos; sin clave"| O["Open-Meteo"]
   B -.->|"SMTP/TLS; requiere configuración"| S["Servidor SMTP"]
-  F -.-> G["Google Maps JavaScript API<br/>Integrado; prueba real pendiente de clave"]
+  F --> G["MapLibre GL JS y OpenFreeMap<br/>Teselas por HTTPS; sin clave (SC-18)"]
   B -.-> C["Previsto: API Claude"]
   N["Objetivo: Docker, Nginx y HTTPS<br/>FS-HU-11 pendiente"]
   M["Modelo completo: 15 tablas<br/>12 implementadas y 3 previstas"]
