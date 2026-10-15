@@ -43,7 +43,7 @@ function simularMapLibre({ cargaManual = false } = {}) {
   cargarMapLibre.mockResolvedValue({ Map, LngLatBounds, NavigationControl, Marker, Popup });
   return registro;
 }
-const fallarProveedor = () => cargarMapLibre.mockRejectedValue(new Error('Mapa no disponible'));
+const fallarProveedor = () => cargarMapLibre.mockResolvedValue({ Map: class { constructor() { throw new Error('Mapa no disponible'); } } });
 
 test('cambiar la página reutiliza el mapa y limpia selección, ventanas y marcadores anteriores', async () => {
   const registro = simularMapLibre();
