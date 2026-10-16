@@ -8,4 +8,4 @@ Los diseños 09 y 10 de Sprint 2 representan los antecedentes de reserva. El flu
 
 Disponibilidad incluye retirado (02/03/04). La nueva revisión de 12 agrega máximo una reserva activa por usuario/profesional. El modelo de componentes 13 tiene fuentes JSON, SVG y PNG. SMTP y Maps reales, horas y aceptación del PO siguen pendientes.
 
-15-10-2026 (DAS 1.23, SC-18): se actualizaron 01, 07, 08 y 13 (fuentes, SVG y PNG) por el cambio del mapa a MapLibre GL JS con OpenFreeMap. En Miro hay que reemplazar esos cuatro marcos.
+15-10-2026 (DAS 1.23, SC-18): se actualizaron 01, 07, 08 y 13 (fuentes, SVG y PNG) por el cambio del mapa a MapLibre GL JS con OpenFreeMap. Miro quedó actualizado el mismo día: la fila «Diagramas vigentes del DAS 1.23» del tablero https://miro.com/app/board/uXjVHtdZChE=/?moveToWidget=3458764687416365624 tiene los 10 marcos vigentes (01, 02, 03, 04, 06, 07, 08, 11, 12 y 13), cargados desde estas fuentes. Los marcos de más arriba en el tablero son versiones anteriores.
