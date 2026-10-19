@@ -64,6 +64,28 @@ describe('Resultados', () => {
     expect(await screen.findByRole('heading', { name: 'Ana Demo' })).toBeInTheDocument();
   });
 
+  test('al cambiar un filtro deja los resultados anteriores, atenuados, hasta que llega la búsqueda nueva (la página no salta)', async () => {
+    let responder;
+    vi.spyOn(globalThis, 'fetch').mockImplementation((url) => {
+      if (url.includes('/filtros')) return respuestaJson(200, FILTROS);
+      if (url.includes('modalidad=online')) return new Promise((resolver) => { responder = () => resolver(respuestaJson(200, listado([camila]))); });
+      return respuestaJson(200, listado([fichaProfesional(), camila]));
+    });
+    renderizarApp('/profesionales');
+    await screen.findByRole('heading', { name: 'Ana Demo' });
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Online' }));
+    expect(screen.getByText('Actualizando resultados…')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Ana Demo' })).toBeInTheDocument();
+    expect(screen.queryByText('Cargando profesionales…')).not.toBeInTheDocument();
+    expect(document.querySelector('.buscador__contenido')).toHaveAttribute('aria-busy', 'true');
+
+    responder();
+    expect(await screen.findByText('1 profesional encontrado')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Ana Demo' })).not.toBeInTheDocument();
+    expect(document.querySelector('.buscador__contenido')).toHaveAttribute('aria-busy', 'false');
+  });
+
   test('pagina los resultados y conserva los filtros al cambiar de página', async () => {
     const fetch = simular((url) => listado([fichaProfesional()], { pagina: Number(parametrosDe(url).pagina || 1), total: 30 }));
     renderizarApp('/profesionales?especialidad=Nutrici%C3%B3n');

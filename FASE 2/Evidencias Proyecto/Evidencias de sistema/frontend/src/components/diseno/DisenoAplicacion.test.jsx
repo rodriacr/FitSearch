@@ -91,6 +91,18 @@ describe('Con sesión', () => {
     expect(await screen.findByRole('heading', { level: 1, name: 'Favoritos' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute('aria-expanded', 'false');
   });
+
+  test('con el menú del celular abierto la página de fondo no se desplaza, y vuelve a hacerlo al cerrarlo', async () => {
+    renderizarApp('/inicio');
+    expect(document.body.style.overflow).toBe('');
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    expect(document.body.style.overflow).toBe('hidden');
+    // El fondo oscuro queda montado (para fundirse) y al tocarlo cierra el menú.
+    await userEvent.click(document.querySelector('.menu-lateral__fondo--visible'));
+    expect(screen.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute('aria-expanded', 'false');
+    expect(document.querySelector('.menu-lateral__fondo')).not.toHaveClass('menu-lateral__fondo--visible');
+    expect(document.body.style.overflow).toBe('');
+  });
 });
 
 test('sin sesión, el logo de las pantallas de acceso lleva a la portada', () => {

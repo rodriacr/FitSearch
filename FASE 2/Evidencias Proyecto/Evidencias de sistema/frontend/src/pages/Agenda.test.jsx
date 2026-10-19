@@ -75,6 +75,26 @@ test('cancelar requiere confirmación explícita y actualiza el historial', asyn
   await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
   expect(await screen.findByText('cancelada')).toBeInTheDocument();
 });
+test('la confirmación aparece dentro de la tarjeta elegida (no al final de la lista) y al volver el foco regresa al botón', async () => {
+  const otra = { ...r, id: 5, usuario: { id: 2, nombre: 'Bruno' }, horario: { ...h, id: 3, horaInicio: '11:00', horaFin: '12:00' } };
+  simularApi({ '/api/reservas': { reservas: [r, otra] } });
+  renderizarApp('/profesional/agenda');
+  const tarjetaBruno = (await screen.findByRole('heading', { name: 'Bruno' })).closest('article');
+  const cancelar = within(tarjetaBruno).getByRole('button', { name: 'Cancelar reserva' });
+  await userEvent.click(cancelar);
+  const pregunta = within(tarjetaBruno).getByRole('group', { name: '¿Cancelar esta reserva?' });
+  expect(pregunta).toHaveFocus();
+  expect(within(tarjetaBruno).queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument();
+  expect(within(screen.getByRole('heading', { name: 'Ana' }).closest('article')).queryByRole('group')).not.toBeInTheDocument();
+
+  await userEvent.click(within(pregunta).getByRole('button', { name: 'Volver' }));
+  expect(cancelar).toHaveFocus();
+
+  await userEvent.click(cancelar);
+  await userEvent.keyboard('{Escape}');
+  expect(within(tarjetaBruno).queryByRole('group')).not.toBeInTheDocument();
+  expect(cancelar).toHaveFocus();
+});
 test('reserva desde la ficha con mensaje obligatorio; conflicto conserva el mensaje y actualiza horas', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
   let horarios = [h];

@@ -13,7 +13,7 @@
   background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: 999px; color: var(--color-primario);
 }
 .buscador__campo:focus-within { border-color: var(--color-primario-claro); box-shadow: 0 0 0 3px rgb(21 101 160 / 18%); }
-.buscador__campo input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 0.95rem; color: var(--color-texto); outline: none; }
+.buscador__campo input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--color-texto); outline: none; }
 .buscador__formulario .boton { border-radius: 999px; }
 
 .buscador__cuerpo { display: grid; gap: 1.25rem; align-items: start; }
@@ -23,8 +23,12 @@
 .buscador__controles { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 .buscador .buscador__boton-filtros { gap: 0.4rem; }
 .buscador__orden { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--color-texto-secundario); }
-.buscador__orden .campo__control { width: auto; min-height: 2.6rem; padding-block: 0.35rem; font-size: 0.88rem; }
+.buscador__orden .campo__control { width: auto; min-height: 2.6rem; padding-block: 0.35rem; }
 .buscador__lista { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
+/* Mientras llega una búsqueda nueva se ven los resultados anteriores atenuados. El atenuado espera 150 ms para que
+   una respuesta rápida no parpadee; al llegar los nuevos, la opacidad vuelve en 150 ms. */
+.buscador__contenido { display: grid; gap: 1rem; min-width: 0; transition: opacity 150ms ease; }
+.buscador__contenido--actualizando { opacity: 0.55; pointer-events: none; transition: opacity 200ms ease 150ms; }
 .buscador__estado { padding: 2rem 1rem; text-align: center; background: var(--color-superficie); border-radius: var(--radio); }
 .buscador__ayuda { padding: 1.25rem 1.5rem; background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: var(--radio); }
 .buscador__ayuda h2 { margin: 0 0 0.5rem; }
@@ -35,21 +39,28 @@
   display: inline-flex; align-items: center; gap: 0.35rem; min-height: 2.25rem; padding: 0.3rem 0.75rem; border: 1px solid #bfd6e5;
   border-radius: 999px; font: inherit; font-size: 0.82rem; font-weight: 500; color: var(--color-primario); background: var(--color-info-fondo); cursor: pointer;
 }
-.chip:hover { border-color: var(--color-primario); }
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover { border-color: var(--color-primario); }
+}
 
-/* Panel de filtros: hoja inferior en celular, columna en escritorio. */
+/* Panel de filtros: hoja inferior en celular, columna en escritorio. Como el menú lateral: sube en 300 ms con la curva
+   de los cajones de iOS, baja en 200 ms y el fondo oscuro se funde con ella. */
 .panel-filtros {
-  position: fixed; right: 0; bottom: 0; left: 0; z-index: 46; max-height: 85vh; overflow-y: auto;
+  position: fixed; right: 0; bottom: 0; left: 0; z-index: 46; max-height: 85vh; max-height: 85dvh; overflow-y: auto; overscroll-behavior: contain;
   padding: 1rem 1.25rem calc(1rem + env(safe-area-inset-bottom)); background: var(--color-superficie);
   border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgb(6 38 63 / 20%);
-  transform: translateY(105%); visibility: hidden; transition: transform 0.22s ease, visibility 0.22s;
+  transform: translateY(105%); visibility: hidden; transition: transform 200ms var(--curva-cajon), visibility 0s 200ms;
 }
-.panel-filtros--abierto { transform: none; visibility: visible; }
-.panel-filtros__fondo { position: fixed; inset: 0; z-index: 45; background: rgb(6 38 63 / 45%); }
+.panel-filtros--abierto { transform: none; visibility: visible; transition: transform 300ms var(--curva-cajon), visibility 0s; }
+.panel-filtros__fondo {
+  position: fixed; inset: 0; z-index: 45; background: rgb(6 38 63 / 45%);
+  opacity: 0; visibility: hidden; transition: opacity 200ms ease, visibility 0s 200ms;
+}
+.panel-filtros__fondo--visible { opacity: 1; visibility: visible; transition: opacity 300ms ease, visibility 0s; }
 .panel-filtros__cabecera { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
 .panel-filtros__cabecera h2 { margin: 0; }
 .panel-filtros .campo { margin-bottom: 0.9rem; }
-.panel-filtros .campo__control { min-height: 2.75rem; font-size: 0.9rem; }
+.panel-filtros .campo__control { min-height: 2.75rem; }
 .panel-filtros__grupo { margin-bottom: 0.9rem; }
 .panel-filtros__grupo .casilla--opcion { display: flex; padding: 0.25rem 0; }
 .panel-filtros__grupo input { accent-color: var(--color-primario); width: 1.05rem; height: 1.05rem; }
@@ -105,7 +116,9 @@
 .selector-estrellas__opciones { display: flex; gap: 0.25rem; }
 .selector-estrellas__opcion { position: relative; display: grid; place-items: center; width: 2.9rem; height: 2.9rem; border-radius: 10px; color: #c7d3de; cursor: pointer; }
 .selector-estrellas__opcion input { position: absolute; opacity: 0; pointer-events: none; }
-.selector-estrellas__opcion:hover { background: #fff7e6; }
+@media (hover: hover) and (pointer: fine) {
+  .selector-estrellas__opcion:hover { background: #fff7e6; }
+}
 .selector-estrellas__opcion--activa { color: #f5a524; }
 .selector-estrellas__opcion:has(input:focus-visible) { outline: 3px solid rgb(244 123 32 / 45%); outline-offset: 1px; }
 .formulario-resena__acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0.75rem; }
@@ -131,10 +144,15 @@
   .buscador__cuerpo { grid-template-columns: 16rem minmax(0, 1fr); }
   .buscador .buscador__boton-filtros { display: none; }
   .panel-filtros {
-    position: sticky; top: 5.75rem; z-index: auto; max-height: calc(100vh - 7rem); padding: 1.25rem;
+    position: sticky; top: 5.75rem; z-index: auto; max-height: calc(100vh - 7rem); max-height: calc(100dvh - 7rem); padding: 1.25rem;
     border: 1px solid var(--color-borde); border-radius: var(--radio); box-shadow: none; transform: none; visibility: visible; transition: none;
   }
   .panel-filtros__fondo, .panel-filtros .panel-filtros__cerrar, .panel-filtros .panel-filtros__ver { display: none; }
   .panel-filtros__pie { position: static; margin: 0; padding: 0.5rem 0 0; border-top: 0; }
   .ficha__grilla { grid-template-columns: 1.4fr 1fr; }
+}
+
+/* Movimiento reducido: la hoja de filtros aparece y se va sin deslizarse (el fondo sí se funde). */
+@media (prefers-reduced-motion: reduce) {
+  .panel-filtros, .panel-filtros--abierto { transition: none; }
 }

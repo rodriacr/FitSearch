@@ -3,6 +3,9 @@ import { cleanup } from '@testing-library/react';
 import { afterEach, vi } from 'vitest';
 import { olvidarUbicacion } from '../services/ubicacion.js';
 
+// jsdom no implementa el scroll de la ventana: sin esto, cada cambio de pantalla (VolverArriba) ensucia la salida.
+window.scrollTo = () => {};
+
 afterEach(() => {
   cleanup();
   localStorage.clear();

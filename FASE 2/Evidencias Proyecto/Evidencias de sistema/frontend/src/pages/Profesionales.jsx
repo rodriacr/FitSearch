@@ -107,7 +107,9 @@ export default function Profesionales() {
   };
   const cambiarPagina = (numero) => {
     actualizar({ pagina: numero > 1 ? String(numero) : '' });
-    document.getElementById('resultados')?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+    // Con "reducir movimiento" activado en el sistema, el salto a los resultados es directo, sin desplazamiento animado.
+    const suave = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    document.getElementById('resultados')?.scrollIntoView?.({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
   };
 
   const activos = [
@@ -115,12 +117,16 @@ export default function Profesionales() {
     ...FILTROS.filter((nombre) => filtros[nombre]).map((nombre) => ({ clave: nombre, texto: etiquetaFiltro(nombre, filtros[nombre]) })),
   ];
   const cantidadFiltros = FILTROS.filter((nombre) => filtros[nombre]).length;
-  const listo = !cargando && !resultado.error;
+  // Mientras llega una búsqueda nueva se dejan los resultados anteriores, atenuados, en vez de cambiarlos por
+  // "Cargando…": así la página no salta con cada filtro, página u orden.
+  const actualizando = cargando && Boolean(resultado?.profesionales?.length);
+  const vigente = cargando && !actualizando ? null : resultado;
+  const listo = Boolean(vigente) && !vigente.error;
   // Sin resultados se muestra solo el estado vacío, no un mapa vacío al lado.
-  const mapaVisible = vistaMapa && listo && resultado.profesionales.length > 0;
+  const mapaVisible = vistaMapa && listo && vigente.profesionales.length > 0;
 
   let contenido;
-  if (cargando) {
+  if (!vigente) {
     contenido = <p className="buscador__estado" role="status">Cargando profesionales…</p>;
   } else if (resultado.error) {
     contenido = (
@@ -180,12 +186,13 @@ export default function Profesionales() {
       <div className="buscador__cuerpo">
         <PanelFiltros id="panel-filtros" abierto={panelAbierto} onCerrar={cerrarPanel} filtros={filtros} catalogo={catalogo}
           ubicacion={{ estado: ubicacion.estado, buscando: pidiendoUbicacion }} onCambiar={cambiarFiltros} onLimpiar={limpiar}
-          total={listo ? resultado.total : undefined} hayFiltros={activos.length > 0} />
+          total={listo && !actualizando ? resultado.total : undefined} hayFiltros={activos.length > 0} />
 
         <div className="buscador__resultados" id="resultados">
           <div className="buscador__barra">
             <p className="buscador__contador" role="status">
-              {listo && `${resultado.total} ${resultado.total === 1 ? 'profesional encontrado' : 'profesionales encontrados'}`}
+              {actualizando ? 'Actualizando resultados…'
+                : listo && `${resultado.total} ${resultado.total === 1 ? 'profesional encontrado' : 'profesionales encontrados'}`}
             </p>
             <div className="buscador__controles">
               <div className="buscador__vistas" aria-label="Vista de resultados">
@@ -223,11 +230,13 @@ export default function Profesionales() {
             </Alerta>
           )}
 
-          {(mapaIniciado || vistaMapa) && <div hidden={!mapaVisible}>
-            <MapaProfesionales profesionales={listo ? resultado.profesionales : SIN_RESULTADOS} desde={`${pathname}${search}`}
-              visible={mapaVisible} />
-          </div>}
-          {contenido}
+          <div className={`buscador__contenido${actualizando ? ' buscador__contenido--actualizando' : ''}`} aria-busy={actualizando}>
+            {(mapaIniciado || vistaMapa) && <div hidden={!mapaVisible}>
+              <MapaProfesionales profesionales={listo ? resultado.profesionales : SIN_RESULTADOS} desde={`${pathname}${search}`}
+                visible={mapaVisible} />
+            </div>}
+            {contenido}
+          </div>
         </div>
       </div>
 

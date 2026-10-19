@@ -51,13 +51,16 @@ export default function AsistentePerfil({ paso, children, aviso }) {
       <div className="asistente__principal">
         <IndicadorPasos actual={paso} />
         {aviso}
-        {titulo && (
-          <header className="asistente__encabezado">
-            <h1>{titulo}</h1>
-            <p className="texto-secundario">{subtitulo}</p>
-          </header>
-        )}
-        {children}
+        {/* La clave por paso hace que cada paso entre con su fundido (index.css, .asistente__paso). */}
+        <div key={paso} className="asistente__paso">
+          {titulo && (
+            <header className="asistente__encabezado">
+              <h1>{titulo}</h1>
+              <p className="texto-secundario">{subtitulo}</p>
+            </header>
+          )}
+          {children}
+        </div>
       </div>
       <aside className="asistente__panel" aria-hidden="true">
         <img src={iconoLogo} alt="" className="asistente__panel-icono" />

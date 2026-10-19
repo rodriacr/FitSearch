@@ -13,7 +13,9 @@
 .portada__enlace-acceso { font-size: 0.72rem; font-weight: 600; text-decoration: none; }
 .portada__navegacion { order: 3; display: flex; justify-content: center; width: 100%; gap: 1.5rem; font-size: 0.8rem; }
 .portada__navegacion a, .portada__pie a { text-decoration: none; color: var(--color-texto-secundario); }
-.portada a:hover:not(.boton) { text-decoration: underline; text-underline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .portada a:hover:not(.boton) { text-decoration: underline; text-underline-offset: 4px; }
+}
 .portada__hero {
   position: relative; overflow: hidden; color: #fff; padding-bottom: 4.5rem;
   background:
@@ -25,7 +27,9 @@
 .portada__ola { position: absolute; left: 0; bottom: -1px; width: 100%; height: 5rem; }
 .portada__hero .portada__antetitulo { color: #ffc18e; }
 .portada .portada__boton-claro { color: #fff; background: rgb(255 255 255 / 10%); border: 1px solid rgb(255 255 255 / 55%); }
-.portada .portada__boton-claro:hover { background: rgb(255 255 255 / 20%); }
+@media (hover: hover) and (pointer: fine) {
+  .portada .portada__boton-claro:hover { background: rgb(255 255 255 / 20%); }
+}
 .portada__categorias { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
 .portada__categorias li { display: flex; align-items: center; gap: 0.9rem; padding: 0.85rem 1rem; border-radius: 14px; background: rgb(255 255 255 / 9%); border: 1px solid rgb(255 255 255 / 16%); }
 .portada__categorias li > span { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 12px; background: rgb(255 255 255 / 14%); color: #fff; }

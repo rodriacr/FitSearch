@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { solicitar } from '../services/api.js';
 import { useSesion } from '../context/SesionContext.jsx';
@@ -54,6 +54,67 @@ function Avisos({ error, aviso, onReintentar }) {
   );
 }
 
+// Pregunta de confirmación dentro de la misma tarjeta, junto a lo que se va a cambiar. Antes aparecía al final de
+// la lista y, con varias citas, quedaba fuera de la pantalla. Recibe el foco al abrirse y Escape la cierra.
+function Confirmacion({ id, titulo, texto, accion, ocupado, onConfirmar, onVolver }) {
+  const caja = useRef(null);
+  useEffect(() => {
+    caja.current?.focus();
+  }, []);
+  return (
+    <div
+      ref={caja}
+      className="agenda__confirmacion"
+      role="group"
+      aria-labelledby={id}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onVolver();
+      }}
+    >
+      <h4 id={id}>{titulo}</h4>
+      <p>{texto}</p>
+      <div className="agenda__acciones">
+        <button
+          type="button"
+          className="boton boton--principal boton--compacto"
+          disabled={ocupado}
+          onClick={onConfirmar}
+        >
+          {accion}
+        </button>
+        <button
+          type="button"
+          className="boton boton--secundario boton--compacto"
+          disabled={ocupado}
+          onClick={onVolver}
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Al cerrar la pregunta con "Volver" o Escape, el foco regresa al botón que la abrió: mientras la pregunta está
+// abierta, las acciones de la tarjeta quedan ocultas (no desmontadas). Tras confirmar no se devuelve (la lista se recarga).
+function useVolverFoco(abierta) {
+  const disparador = useRef(null);
+  useEffect(() => {
+    if (abierta || !disparador.current) return;
+    if (disparador.current.isConnected) disparador.current.focus();
+    disparador.current = null;
+  }, [abierta]);
+  return {
+    recordar: (boton) => {
+      disparador.current = boton;
+    },
+    olvidar: () => {
+      disparador.current = null;
+    },
+  };
+}
+
 export function MisCitas({ compacto = false }) {
   const { sesion } = useSesion();
   const profesional = sesion.usuario.rol === 'profesional';
@@ -62,8 +123,13 @@ export function MisCitas({ compacto = false }) {
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
   const [confirmacion, setConfirmacion] = useState(null);
+  const foco = useVolverFoco(confirmacion);
   const [ocupado, setOcupado] = useState(false);
   const [filtro, setFiltro] = useState('proximas');
+  const preguntar = (e, id, estado) => {
+    foco.recordar(e.currentTarget);
+    setConfirmacion({ id, estado });
+  };
   async function decidir() {
     setOcupado(true);
     setError('');
@@ -77,6 +143,7 @@ export function MisCitas({ compacto = false }) {
           ? 'Reserva cancelada. El horario vuelve a estar disponible.'
           : 'Reserva confirmada.',
       );
+      foco.olvidar();
       setConfirmacion(null);
       setRevision((r) => r + 1);
     } catch (e) {
@@ -165,15 +232,16 @@ export function MisCitas({ compacto = false }) {
               <p className="agenda__mensaje">{r.mensaje}</p>
             </div>
             {!compacto && r.estado !== 'cancelada' && futura(r) && (
-              <div className="agenda__acciones">
+              <div
+                className="agenda__acciones"
+                hidden={confirmacion?.id === r.id}
+              >
                 {profesional && r.estado === 'pendiente' && (
                   <button
                     type="button"
-                    className="boton boton--primario boton--compacto"
+                    className="boton boton--principal boton--compacto"
                     disabled={ocupado}
-                    onClick={() =>
-                      setConfirmacion({ id: r.id, estado: 'confirmada' })
-                    }
+                    onClick={(e) => preguntar(e, r.id, 'confirmada')}
                   >
                     Confirmar reserva
                   </button>
@@ -182,48 +250,30 @@ export function MisCitas({ compacto = false }) {
                   type="button"
                   className="boton boton--secundario boton--compacto"
                   disabled={ocupado}
-                  onClick={() =>
-                    setConfirmacion({ id: r.id, estado: 'cancelada' })
-                  }
+                  onClick={(e) => preguntar(e, r.id, 'cancelada')}
                 >
                   Cancelar reserva
                 </button>
               </div>
             )}
+            {confirmacion?.id === r.id && (
+              <Confirmacion
+                id={`confirmar-reserva-${r.id}`}
+                titulo={`¿${confirmacion.estado === 'cancelada' ? 'Cancelar' : 'Confirmar'} esta reserva?`}
+                texto={
+                  confirmacion.estado === 'cancelada'
+                    ? 'Si cancelas, tendrás que reservar nuevamente para recuperar una hora.'
+                    : 'La solicitud quedará confirmada en ambas agendas.'
+                }
+                accion="Confirmar cambio"
+                ocupado={ocupado}
+                onConfirmar={decidir}
+                onVolver={() => setConfirmacion(null)}
+              />
+            )}
           </article>
         ))}
       </div>
-      {confirmacion && (
-        <div
-          className="agenda__confirmacion"
-          role="dialog"
-          aria-labelledby="confirmar-reserva"
-        >
-          <h3 id="confirmar-reserva">
-            ¿{confirmacion.estado === 'cancelada' ? 'Cancelar' : 'Confirmar'}{' '}
-            esta reserva?
-          </h3>
-          <p>
-            {confirmacion.estado === 'cancelada'
-              ? 'Si cancelas, tendrás que reservar nuevamente para recuperar una hora.'
-              : 'La solicitud quedará confirmada en ambas agendas.'}
-          </p>
-          <button
-            className="boton boton--primario boton--compacto"
-            disabled={ocupado}
-            onClick={decidir}
-          >
-            Confirmar cambio
-          </button>
-          <button
-            className="boton boton--secundario boton--compacto"
-            disabled={ocupado}
-            onClick={() => setConfirmacion(null)}
-          >
-            Volver
-          </button>
-        </div>
-      )}
     </section>
   );
 }
@@ -235,6 +285,7 @@ export function HorariosProfesional() {
   const [aviso, setAviso] = useState('');
   const [editando, setEditando] = useState(null);
   const [borrando, setBorrando] = useState(null);
+  const foco = useVolverFoco(borrando);
   const [ocupado, setOcupado] = useState(false);
   const [campos, setCampos] = useState({
     fecha: '',
@@ -270,6 +321,7 @@ export function HorariosProfesional() {
         setEditando(null);
         setCampos({ fecha: '', horaInicio: '', horaFin: '' });
       }
+      foco.olvidar();
       setBorrando(null);
       setAviso(resultado.retirado
         ? 'Horario retirado. Ya no admite nuevas reservas; su historial se conserva.'
@@ -324,7 +376,7 @@ export function HorariosProfesional() {
             </label>
           ))}
         </div>
-        <button className="boton boton--primario" disabled={ocupado}>
+        <button className="boton boton--principal" disabled={ocupado}>
           {ocupado
             ? 'Guardando…'
             : editando
@@ -357,7 +409,7 @@ export function HorariosProfesional() {
               </span>
               <h3>{fechaHorario(b)}</h3>
             </div>
-            <div className="agenda__acciones">
+            <div className="agenda__acciones" hidden={borrando === b.id}>
               <button
                 type="button"
                 className="boton boton--secundario boton--compacto"
@@ -377,41 +429,28 @@ export function HorariosProfesional() {
                 type="button"
                 className="boton boton--secundario boton--compacto"
                 disabled={b.ocupado || ocupado}
-                onClick={() => setBorrando(b.id)}
+                onClick={(e) => {
+                  foco.recordar(e.currentTarget);
+                  setBorrando(b.id);
+                }}
               >
                 Retirar horario
               </button>
             </div>
+            {borrando === b.id && (
+              <Confirmacion
+                id={`retirar-horario-${b.id}`}
+                titulo="¿Retirar este horario?"
+                texto="El bloque dejará de aparecer para nuevas reservas. Los bloques con historial se conservan."
+                accion="Confirmar retiro"
+                ocupado={ocupado}
+                onConfirmar={borrar}
+                onVolver={() => setBorrando(null)}
+              />
+            )}
           </article>
         ))}
       </div>
-      {borrando && (
-        <div
-          className="agenda__confirmacion"
-          role="dialog"
-          aria-labelledby="eliminar-horario"
-        >
-          <h3 id="eliminar-horario">¿Retirar este horario?</h3>
-          <p>
-            El bloque dejará de aparecer para nuevas reservas. Los bloques con
-            historial se conservan.
-          </p>
-          <button
-            className="boton boton--primario"
-            disabled={ocupado}
-            onClick={borrar}
-          >
-            Confirmar retiro
-          </button>
-          <button
-            className="boton boton--secundario"
-            disabled={ocupado}
-            onClick={() => setBorrando(null)}
-          >
-            Volver
-          </button>
-        </div>
-      )}
     </section>
   );
 }
@@ -525,7 +564,7 @@ export function ReservarHora({ profesionalId }) {
             Entre 10 y 500 caracteres. El mensaje solo lo verán tú y el
             profesional.
           </p>
-          <button className="boton boton--primario" disabled={ocupado}>
+          <button className="boton boton--principal" disabled={ocupado}>
             {ocupado ? 'Enviando…' : 'Enviar solicitud de reserva'}
           </button>
         </form>

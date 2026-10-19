@@ -4,11 +4,13 @@ import Icono from '../Icono.jsx';
 import iconoLogo from '../../assets/logo-fitsearch-icono.png';
 import { Logo } from '../PantallaAcceso.jsx';
 import { ESPACIOS, SECCIONES } from './secciones.js';
+import useBloquearScroll from './useBloquearScroll.js';
 
 // Menú lateral fijo en escritorio; en celular y tableta se abre como panel desde el botón de menú.
 // Cada espacio (usuario o profesional) tiene sus propias secciones (DAS, D25).
 export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) {
   const { secciones, menu } = ESPACIOS[espacio];
+  useBloquearScroll(abierto);
   useEffect(() => {
     if (!abierto) return undefined;
     const alTeclear = (evento) => { if (evento.key === 'Escape') onCerrar(); };
@@ -18,7 +20,8 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) 
 
   return (
     <>
-      {abierto && <div className="menu-lateral__fondo" onClick={onCerrar} aria-hidden="true" />}
+      {/* El fondo siempre está montado para fundirse junto con el panel (al abrir y al cerrar). */}
+      <div className={`menu-lateral__fondo${abierto ? ' menu-lateral__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
       <nav id="menu-principal" className={`menu-lateral${abierto ? ' menu-lateral--abierto' : ''}`} aria-label="Menú principal">
         <div className="menu-lateral__cabecera">
           <Logo />

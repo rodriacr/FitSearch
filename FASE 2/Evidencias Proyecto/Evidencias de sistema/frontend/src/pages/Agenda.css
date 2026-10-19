@@ -23,9 +23,11 @@
   gap: 1rem;
   margin: 1rem 0;
 }
+.agenda__acciones[hidden] {
+  display: none;
+}
 .agenda__tarjeta,
-.agenda__formulario,
-.agenda__confirmacion {
+.agenda__formulario {
   padding: 1.3rem;
   background: #fff;
   border: 1px solid #d7e8f1;
@@ -90,11 +92,30 @@
   color: #a02525;
   border-radius: 10px;
 }
+/* La pregunta de confirmación ocupa su propia fila dentro de la tarjeta, debajo de los datos de la cita. */
 .agenda__confirmacion {
-  border: 2px solid #0b4f80;
+  flex-basis: 100%;
+  padding: 1rem;
+  background: #f3f8fc;
+  border: 1px solid #bfd6e5;
+  border-radius: 12px;
+  /* Aparece en su lugar con un fundido corto (200 ms); al responder desaparece sin esperar. */
+  transition:
+    opacity 200ms var(--curva-salida),
+    transform 200ms var(--curva-salida);
 }
-.agenda__confirmacion button {
-  margin: 0.5rem 0.5rem 0 0;
+@starting-style {
+  .agenda__confirmacion {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+.agenda__confirmacion h4 {
+  margin: 0 0 0.35rem;
+  font-size: 1rem;
+}
+.agenda__confirmacion p {
+  margin: 0 0 0.85rem;
 }
 .agenda__vacio {
   padding: 1rem;
@@ -110,5 +131,12 @@
   }
   .agenda__tarjeta {
     padding: 1rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  @starting-style {
+    .agenda__confirmacion {
+      transform: none;
+    }
   }
 }
