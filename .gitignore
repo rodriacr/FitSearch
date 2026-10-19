@@ -10,7 +10,9 @@ node_modules/
 dist/
 build/
 coverage/
-storage/verificaciones/
+
+# Documentos que suben los profesionales para su verificación (FS-HU-12)
+**/storage/verificaciones/
 
 # Logs
 *.log

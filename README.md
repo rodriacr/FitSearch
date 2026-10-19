@@ -225,7 +225,7 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 Lista/Mapa conserva filtros y página. El mapa usa MapLibre GL JS y las teselas de OpenFreeMap, que no requieren clave; si no carga, continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
 
-Los PR #21 y #22 están fusionados en `main` (12-10-2026); la aceptación de FS-HU-06, FS-HU-13 y FS-HU-14 sigue pendiente del PO. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación. [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS 1.22 y sus diagramas están publicados en el Drive del equipo.
+Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 sigue pendiente de CP-078. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.23) y sus diagramas están en el Drive del equipo.
 
 ## Ejecución con Docker
 
