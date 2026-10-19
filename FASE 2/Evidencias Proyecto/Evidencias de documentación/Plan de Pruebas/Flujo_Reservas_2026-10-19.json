@@ -1,0 +1,93 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) del flujo de reservas con calendario (SC-20) contra la aplicación local (frontend 5173, API 3000, MySQL), repetida después de compartir el calendario con \"Publicar un horario\" (SC-21). Se crearon 7 horarios temporales para la profesional de prueba en noviembre de 2026, la usuaria de prueba envió una solicitud y la canceló; al terminar se borraron de MySQL los horarios y la reserva.",
+  "resultados": [
+    {
+      "caso": "Calendario: noviembre con los días 10, 12 y 19 marcados, el 10 elegido con sus 5 horas, en tres columnas",
+      "ok": true,
+      "detalle": {
+        "mes": "noviembre 2026",
+        "libres": [
+          "10",
+          "12",
+          "19"
+        ],
+        "elegido": "martes 10 de noviembre, 5 horas disponibles",
+        "horas": [
+          "09:00",
+          "09:30",
+          "10:30",
+          "11:30",
+          "16:00"
+        ],
+        "columnas": "200px 476.219px 224px"
+      }
+    },
+    {
+      "caso": "Al elegir 10:30 la fila se divide (animada) y aparece \"Confirmar\"; el resumen muestra la hora",
+      "ok": true,
+      "detalle": {
+        "aMitad": "81.6562px 110.016px",
+        "columnas": "76.3906px 114.609px",
+        "confirmar": "Confirmar",
+        "recortado": false,
+        "resumen": "martes 10 de noviembre, 10:30 – 11:00"
+      }
+    },
+    {
+      "caso": "Solicitud enviada: pantalla con fecha, hora y \"Pendiente de confirmación\"; la API la guardó pendiente",
+      "ok": true,
+      "detalle": {
+        "titulo": "Solicitud enviada",
+        "foco": true,
+        "cuando": "martes 10 de noviembre · 10:30 – 11:00",
+        "estado": "Pendiente de confirmación",
+        "reserva": {
+          "id": 39,
+          "estado": "pendiente",
+          "horario": {
+            "id": 89,
+            "fecha": "2026-11-10",
+            "horaInicio": "10:30",
+            "horaFin": "11:00",
+            "ocupado": false
+          }
+        }
+      }
+    },
+    {
+      "caso": "\"Agregar al calendario\" descarga un .ics con la hora en UTC (10:30 de Chile = 13:30 UTC) y estado tentativo",
+      "ok": true,
+      "detalle": {
+        "archivo": "cita-fitsearch-2026-11-10.ics",
+        "bytes": 502
+      }
+    },
+    {
+      "caso": "Con la solicitud activa, la ficha avisa en vez de mostrar el calendario",
+      "ok": true,
+      "detalle": {
+        "aviso": "Ya tienes una reserva pendiente con este profesional para el martes, 10 de noviembre de 20"
+      }
+    },
+    {
+      "caso": "Celular: una columna, días de al menos 40 px y sin scroll horizontal (la hora cancelada vuelve a estar libre)",
+      "ok": true,
+      "detalle": {
+        "columnas": 1,
+        "anchoDia": 41.3125,
+        "desborde": false,
+        "horas": [
+          "09:00",
+          "09:30",
+          "10:30",
+          "11:30",
+          "16:00"
+        ]
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 6,
+  "total": 6
+}

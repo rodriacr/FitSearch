@@ -59,6 +59,10 @@ const TRAZOS = {
   nieve: <><path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 15Z" /><path d="M8 19h.01M12 20h.01M16 19h.01M10 22h.01M14 22h.01" /></>,
   tormenta: <><path d="M7 15h10.5a4 4 0 0 0 .4-8 6 6 0 0 0-11.6 1.5A3.3 3.3 0 0 0 7 15Z" /><path d="m13 15-2.5 4h3L11 23" /></>,
   niebla: <><path d="M8 5h9M4 9h14M3 13h18M6 17h12M9 21h7" /></>,
+  reloj: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
+  video: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></>,
+  globo: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" /></>,
+  descargar: <><path d="M12 4v11m-5-5 5 5 5-5" /><path d="M5 20h14" /></>,
 };
 
 // "relleno" pinta el interior del ícono (estrella de la calificación, corazón de un favorito guardado).

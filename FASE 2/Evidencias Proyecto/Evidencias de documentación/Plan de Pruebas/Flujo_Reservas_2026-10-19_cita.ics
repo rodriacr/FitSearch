@@ -1,0 +1,17 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//FitSearch//Reservas//ES
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:reserva-37@fitsearch
+DTSTAMP:20261019T224217Z
+DTSTART:20261110T133000Z
+DTEND:20261110T140000Z
+SUMMARY:Cita con Javiera Morales (pendiente de confirmación)
+DESCRIPTION:Nutrición. Solicitud enviada desde FitSearch: queda pendiente 
+ hasta que el profesional la confirme. Revisa su estado en Mis citas.
+LOCATION:Providencia u online
+STATUS:TENTATIVE
+END:VEVENT
+END:VCALENDAR

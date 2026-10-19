@@ -1,0 +1,92 @@
+/* Reserva de una hora en la ficha del profesional (FS-HU-14, SC-20): resumen, calendario del mes y horas del día.
+   Se acomoda al ancho de la sección (container queries, no al de la ventana, porque el menú lateral le quita espacio):
+   una columna en celular, dos desde 40rem y tres desde 54rem. */
+.reservar { container-type: inline-size; }
+.reserva { display: grid; gap: 1.25rem; }
+
+/* ---------- Resumen: profesional, duración, modalidad y zona horaria ---------- */
+.reserva__resumen {
+  display: grid; justify-items: start; align-content: start; gap: 0.75rem;
+  padding-bottom: 1.25rem; border-bottom: 1px solid var(--color-borde);
+}
+.reserva__profesional { display: grid; gap: 0.1rem; margin: 0; }
+.reserva__profesional strong { font-size: 1.1rem; color: var(--color-primario-oscuro); }
+.reserva__profesional span { font-size: 0.88rem; color: var(--color-texto-secundario); }
+.reserva__datos { display: grid; gap: 0.55rem; margin: 0; padding: 0; list-style: none; font-size: 0.9rem; color: var(--color-texto-secundario); }
+.reserva__datos li { display: flex; align-items: center; gap: 0.55rem; }
+.reserva__datos .icono { color: var(--color-primario); }
+.reserva__datos-elegido { color: var(--color-primario-oscuro); font-weight: 600; animation: aparecer 200ms var(--curva-salida); }
+.reserva__nota { margin: 0; font-size: 0.8rem; color: var(--color-texto-secundario); }
+
+/* ---------- Calendario del mes: CalendarioMes.css ---------- */
+.reserva__titulo { margin: 0 0 0.75rem; font-weight: 600; color: var(--color-primario-oscuro); }
+
+/* ---------- Horas del día: al elegir una, la fila se divide y aparece "Confirmar" ---------- */
+.reserva__horas { display: grid; align-content: start; min-width: 0; }
+.reserva__dia-titulo { margin: 0; font-size: 1rem; color: var(--color-texto); }
+.reserva__horas > .texto-secundario { margin: 0.1rem 0 0.75rem; font-size: 0.82rem; }
+.reserva__lista { display: grid; gap: 0.5rem; max-height: 24rem; margin: 0; padding: 0 0.25rem 0 0; overflow-y: auto; list-style: none; }
+.reserva__hora {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0fr); column-gap: 0;
+  transition: grid-template-columns 220ms var(--curva-salida), column-gap 220ms var(--curva-salida);
+}
+.reserva__hora--elegida { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); column-gap: 0.5rem; }
+.reserva__hora-boton, .reserva__confirmar {
+  min-width: 0; min-height: 2.75rem; border-radius: var(--radio-control); font: inherit; font-weight: 600; cursor: pointer;
+  transition: transform 160ms var(--curva-salida), background-color 150ms ease, border-color 150ms ease, opacity 200ms var(--curva-salida);
+}
+.reserva__hora-boton { border: 1px solid var(--color-borde); background: var(--color-superficie); color: var(--color-primario); }
+.reserva__hora--elegida .reserva__hora-boton { border-color: var(--color-primario-claro); background: var(--color-info-fondo); }
+.reserva__confirmar { overflow: hidden; padding-inline: 0.5rem; white-space: nowrap; border: 0; color: #fff; background: var(--color-primario); }
+@starting-style {
+  .reserva__confirmar { opacity: 0; }
+}
+.reserva__hora-boton:active, .reserva__confirmar:active {
+  transform: scale(var(--escala-presion));
+}
+@media (hover: hover) and (pointer: fine) {
+  .reserva__hora-boton:hover { border-color: var(--color-primario); }
+  .reserva__confirmar:hover { background: var(--color-primario-oscuro); }
+}
+
+/* ---------- Paso del mensaje (obligatorio, 10 a 500 caracteres) ---------- */
+.reserva__mensaje { display: grid; align-content: start; gap: 0.5rem; min-width: 0; animation: aparecer 220ms var(--curva-salida); }
+.reserva__mensaje h3 { margin: 0; font-size: 1.05rem; color: var(--color-primario-oscuro); }
+.reserva__mensaje > .texto-secundario { margin: 0 0 0.5rem; }
+.reserva__mensaje .campo { margin-bottom: 0; }
+.reserva__mensaje .campo__ayuda { margin-top: 0; }
+.reserva__mensaje .boton { justify-self: start; width: auto; }
+.reserva__cambiar { justify-self: start; padding-left: 0; }
+
+/* ---------- Solicitud enviada ---------- */
+.reserva-enviada { display: grid; justify-items: center; gap: 0.6rem; padding: 1.5rem 0.5rem 0.5rem; text-align: center; }
+.reserva-enviada__check {
+  display: grid; place-items: center; width: 4.5rem; height: 4.5rem; border: 3px solid #1e9e5a; border-radius: 50%;
+  color: #1e9e5a; box-shadow: 0 0 0 8px #e3f5eb; animation: aparecer-escala 350ms var(--curva-salida) both;
+}
+.reserva-enviada h3 { margin: 0.6rem 0 0; font-size: 1.5rem; color: var(--color-primario-oscuro); }
+.reserva-enviada__cuando { margin: 0; font-weight: 500; }
+.reserva-enviada__fecha { display: inline-block; }
+.reserva-enviada__fecha::first-letter { text-transform: uppercase; }
+.reserva-enviada__estado { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; color: var(--color-acento-oscuro); background: #fff1e6; }
+.reserva-enviada__texto { max-width: 28rem; margin: 0; font-size: 0.9rem; color: var(--color-texto-secundario); }
+.reserva-enviada__acciones { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; margin-top: 0.75rem; }
+.reserva-enviada__nota { margin: 0.25rem 0 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
+
+/* ---------- Anchos de la sección ---------- */
+@container (min-width: 40rem) {
+  .reserva { grid-template-columns: minmax(0, 1fr) minmax(11rem, 14rem); }
+  .reserva__resumen, .reserva__mensaje { grid-column: 1 / -1; }
+}
+@container (min-width: 54rem) {
+  .reserva { grid-template-columns: 12.5rem minmax(0, 1fr) 14rem; gap: 0; }
+  .reserva__resumen { grid-column: auto; padding: 0 1.25rem 0 0; border-bottom: 0; border-right: 1px solid var(--color-borde); }
+  .reserva__calendario { padding: 0 1.25rem; }
+  .reserva__horas { padding-left: 1.25rem; border-left: 1px solid var(--color-borde); }
+  .reserva__mensaje { grid-column: 2 / -1; padding-left: 1.5rem; }
+}
+
+/* Movimiento reducido: la fila de la hora se divide sin animarse y "Confirmar" solo se funde. */
+@media (prefers-reduced-motion: reduce) {
+  .reserva__hora { transition: none; }
+}

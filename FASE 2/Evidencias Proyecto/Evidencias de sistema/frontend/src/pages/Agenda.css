@@ -66,6 +66,63 @@
 .agenda__formulario button {
   justify-self: start;
 }
+/* Publicar un horario (SC-21): calendario del mes y, al lado, el día elegido con las horas y la duración rápida.
+   En celular van uno debajo del otro (container query: depende del ancho de la sección, no de la ventana). */
+.agenda__publicar {
+  container-type: inline-size;
+}
+.publicar {
+  display: grid;
+  gap: 1.25rem;
+}
+.publicar__horas {
+  display: grid;
+  align-content: start;
+  gap: 0.75rem;
+}
+.publicar__dia {
+  margin: 0;
+  font-weight: 600;
+  color: var(--color-primario-oscuro);
+}
+.publicar__existentes {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+}
+.publicar__campos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: end;
+  gap: 0.75rem;
+}
+.publicar__campos label {
+  font-size: 0.9rem;
+}
+.publicar__duraciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.publicar__duraciones .chip[aria-pressed='true'] {
+  color: #fff;
+  background: var(--color-primario);
+  border-color: var(--color-primario);
+}
+.publicar__duraciones .chip:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+@container (min-width: 40rem) {
+  .publicar {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem);
+    gap: 1.75rem;
+  }
+  .publicar__horas {
+    padding-left: 1.75rem;
+    border-left: 1px solid #d7e8f1;
+  }
+}
 .agenda__estado {
   padding: 0.3rem 0.7rem;
   border-radius: 99px;
