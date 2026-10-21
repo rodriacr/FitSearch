@@ -18,6 +18,32 @@ const coordenadas = (p) => (p.ubicacionLat != null && p.ubicacionLng != null
   && Number.isFinite(Number(p.ubicacionLat)) && Number.isFinite(Number(p.ubicacionLng))
   ? [Number(p.ubicacionLng), Number(p.ubicacionLat)] : null);
 const enChile = ([lng, lat]) => lng >= CHILE[0][0] && lng <= CHILE[1][0] && lat >= CHILE[0][1] && lat <= CHILE[1][1];
+// Textos de los controles de MapLibre en español (defecto 29): por defecto decían «Zoom in», «Close popup» y «Map marker».
+const TEXTOS_MAPA = {
+  'Map.Title': 'Mapa de profesionales',
+  'NavigationControl.ZoomIn': 'Acercar',
+  'NavigationControl.ZoomOut': 'Alejar',
+  'NavigationControl.ResetBearing': 'Orientar al norte',
+  'Popup.Close': 'Cerrar ventana',
+  'Marker.Title': 'Marcador del mapa',
+  'AttributionControl.ToggleAttribution': 'Mostrar u ocultar la atribución',
+};
+
+// Promesa de la primera carga del estilo. Si la descarga del estilo falla, MapLibre avisa con el evento error y el mapa
+// nunca emite load: se rechaza de inmediato en vez de esperar el plazo (defecto 27). Una tesela que falla no la rechaza.
+function cargaDelEstilo(mapa) {
+  return new Promise((resolve, reject) => {
+    const alCargar = () => { mapa.off('error', alFallar); resolve(); };
+    const alFallar = ({ error } = {}) => {
+      if (error?.url !== ESTILO_MAPA) return;
+      mapa.off('load', alCargar);
+      mapa.off('error', alFallar);
+      reject(new Error('No se pudo cargar el mapa. Revisa tu conexión y reintenta, o utiliza la lista.'));
+    };
+    mapa.once('load', alCargar);
+    mapa.on('error', alFallar);
+  });
+}
 
 // Encuadrar antes de que cargue el estilo deja el mapa en una posición equivocada,
 // así que se espera el evento load con el mismo plazo que la descarga del SDK.
@@ -63,18 +89,22 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
             maxBounds: CHILE,
             renderWorldCopies: false,
             attributionControl: { compact: true },
+            locale: TEXTOS_MAPA,
           });
           mapa.current.addControl(new maplibregl.NavigationControl({ showCompass: false }));
-          const creado = mapa.current;
-          cargaEstilo.current = new Promise((resolve) => creado.once('load', resolve));
+          cargaEstilo.current = cargaDelEstilo(mapa.current);
         }
-        // Un reintento reutiliza el mismo mapa y su carga de estilo.
         await esperarEstilo(cargaEstilo.current);
         if (!vigente) return;
         setEstado('listo');
         setError('');
       } catch (e) {
         if (vigente) {
+          // Un mapa que no terminó de cargar no se recupera solo: se descarta para que «Reintentar mapa» cree uno nuevo.
+          // Antes el reintento reutilizaba el mismo mapa y esperaba un load que nunca llegaba (defecto 27).
+          mapa.current?.remove();
+          mapa.current = null;
+          cargaEstilo.current = null;
           setEstado('error');
           setError(e.message);
         }
@@ -100,6 +130,8 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
         .addTo(mapa.current);
       const elemento = marcador.getElement();
       elemento.title = `${p.nombre}, ${p.especialidad}`;
+      // El lector de pantalla anuncia a quién corresponde el marcador, no «Marcador del mapa» (defecto 29).
+      elemento.setAttribute('aria-label', `${p.nombre}, ${p.especialidad}`);
       // La ventana trae el nombre de inmediato; el detalle (tipo, verificación, lugar y próxima hora) lo dibuja React
       // dentro de "detalle" cuando se abre (DetalleEnMapa).
       const tarjeta = document.createElement('div');

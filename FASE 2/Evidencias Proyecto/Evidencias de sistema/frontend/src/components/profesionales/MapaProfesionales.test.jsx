@@ -13,16 +13,22 @@ beforeEach(() => {
 });
 
 // MapLibre simulado: registra mapas, marcadores y ventanas para revisar lo que dibuja el componente.
-// Con cargaManual el estilo no termina de cargar hasta llamar registro.cargarEstilo().
+// Con cargaManual el estilo no termina de cargar hasta llamar registro.cargarEstilo(); registro.emitirError(url) simula
+// el evento error de MapLibre (por ejemplo, la descarga del estilo que falla).
 function simularMapLibre({ cargaManual = false } = {}) {
-  const registro = { mapas: [], marcadores: [], ventanas: [], extendidos: [], centros: [], fitBounds: vi.fn(), cargarEstilo: () => {} };
+  const registro = {
+    mapas: [], marcadores: [], ventanas: [], extendidos: [], centros: [], fitBounds: vi.fn(), cargarEstilo: () => {},
+    emitirError: (url) => [...registro.mapas.at(-1).oyentesError].forEach((cb) => cb({ error: { url, status: 0 } })),
+  };
   class Map {
-    constructor(opciones) { this.opciones = opciones; this.remove = vi.fn(); registro.mapas.push(this); }
+    constructor(opciones) { this.opciones = opciones; this.remove = vi.fn(); this.oyentesError = new Set(); registro.mapas.push(this); }
     once(evento, cb) {
       if (evento !== 'load') return;
       if (cargaManual) registro.cargarEstilo = cb;
       else queueMicrotask(cb);
     }
+    on(evento, cb) { if (evento === 'error') this.oyentesError.add(cb); return this; }
+    off(evento, cb) { if (evento === 'error') this.oyentesError.delete(cb); return this; }
     addControl() {}
     resize() {}
     setCenter(centro) { registro.centros.push(centro); }
@@ -185,6 +191,35 @@ test('no dibuja marcadores ni encuadra hasta que carga el estilo del mapa', asyn
   await act(async () => registro.cargarEstilo());
   await waitFor(() => expect(registro.marcadores).toHaveLength(1));
   expect(registro.marcadores[0].ventana).toBe(registro.ventanas[0]);
+});
+test('si falla la descarga del estilo lo avisa de inmediato y «Reintentar mapa» crea un mapa nuevo que sí carga (defecto 27)', async () => {
+  const registro = simularMapLibre({ cargaManual: true });
+  render(<MemoryRouter><MapaProfesionales profesionales={[fichaProfesional()]} /></MemoryRouter>);
+  await waitFor(() => expect(registro.mapas).toHaveLength(1));
+
+  // Una tesela que falla no es la caída del estilo: el mapa sigue cargando.
+  act(() => registro.emitirError('https://tiles.prueba/1/2/3.pbf'));
+  expect(screen.getByRole('status')).toHaveTextContent('Cargando mapa');
+
+  act(() => registro.emitirError('https://estilo.prueba/style.json'));
+  expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo cargar el mapa. Revisa tu conexión y reintenta, o utiliza la lista.');
+  expect(registro.mapas[0].remove).toHaveBeenCalled();
+  expect(screen.getByRole('link', { name: 'Ana Demo' })).toHaveAttribute('href', '/profesionales/1');
+
+  await userEvent.click(screen.getByRole('button', { name: 'Reintentar mapa' }));
+  await waitFor(() => expect(registro.mapas).toHaveLength(2));
+  await act(async () => registro.cargarEstilo());
+  await waitFor(() => expect(registro.marcadores).toHaveLength(1));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+});
+test('los controles del mapa están en español y cada marcador se anuncia con su profesional (defecto 29)', async () => {
+  const registro = simularMapLibre();
+  render(<MemoryRouter><MapaProfesionales profesionales={[fichaProfesional()]} /></MemoryRouter>);
+  await waitFor(() => expect(registro.marcadores).toHaveLength(1));
+  expect(registro.mapas[0].opciones.locale).toMatchObject({
+    'NavigationControl.ZoomIn': 'Acercar', 'NavigationControl.ZoomOut': 'Alejar', 'Popup.Close': 'Cerrar ventana',
+  });
+  expect(registro.marcadores[0].getElement()).toHaveAttribute('aria-label', 'Ana Demo, Nutrición');
 });
 test('al desmontar el componente libera el mapa', async () => {
   const registro = simularMapLibre();

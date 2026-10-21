@@ -1,0 +1,44 @@
+{
+  "fecha": "21-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) con MapLibre GL JS y OpenFreeMap reales de la corrección de los defectos 27 y 29: textos de los controles en español y, con la descarga del estilo bloqueada, aviso inmediato y recuperación con «Reintentar mapa» al desbloquearla, sin recargar la página.",
+  "resultados": [
+    {
+      "caso": "Defecto 29: controles en español y marcadores con el nombre del profesional",
+      "ok": true,
+      "detalle": {
+        "acercar": "Acercar",
+        "alejar": "Alejar",
+        "acercarTitulo": "Acercar",
+        "cerrar": "Cerrar ventana",
+        "marcadores": [
+          "Ana Demo, Nutrición",
+          "Benjamín Demo, Entrenamiento personal",
+          "Camila Demo, Entrenamiento personal"
+        ],
+        "enIngles": false
+      }
+    },
+    {
+      "caso": "Defecto 27: con el estilo bloqueado avisa en segundos (no espera 15 s) y deja la lista",
+      "ok": true,
+      "detalle": {
+        "segundos": 0.2,
+        "texto": "No se pudo cargar el mapa. Revisa tu conexión y reintenta, o utiliza la lista. Reintentar mapa",
+        "enlaces": 12
+      }
+    },
+    {
+      "caso": "Defecto 27: al volver la conexión, «Reintentar mapa» muestra el mapa sin recargar la página",
+      "ok": true,
+      "detalle": {
+        "segundos": 0.7,
+        "marcadores": 11,
+        "aviso": false,
+        "canvas": 1
+      }
+    }
+  ],
+  "excepciones": [],
+  "aprobadas": 3,
+  "total": 3
+}
