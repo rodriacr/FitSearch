@@ -7,7 +7,7 @@ import Icono from '../components/Icono.jsx';
 import BotonFavorito from '../components/profesionales/BotonFavorito.jsx';
 import Resenas from '../components/profesionales/Resenas.jsx';
 import ReservarHora from '../components/reservas/ReservarHora.jsx';
-import { etiquetaModalidad, iniciales } from '../services/formato.js';
+import { direccionDe, etiquetaModalidad, iniciales } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
 
@@ -94,7 +94,8 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
         <section className="ficha__seccion" aria-labelledby="titulo-lugar">
           <h2 id="titulo-lugar">Lugar de atención</h2>
           <p className="ficha__lugar"><strong>{establecimiento?.nombre || (comuna ? `Atención en ${comuna}` : 'Ubicación de atención')}</strong>
-            <span>{establecimiento?.direccion || 'Consulta la dirección exacta directamente con el profesional.'}</span></p>
+            <span>{direccionDe(profesional)
+              || (modalidad === 'online' ? 'Atiende solo online.' : 'Consulta la dirección exacta directamente con el profesional.')}</span></p>
           <a className="ficha__mapa" href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
             target="_blank" rel="noopener noreferrer" aria-label={`Ver ubicación de ${nombre} en Google Maps (nueva pestaña)`}>
             Ver ubicación en Google Maps <Icono nombre="flecha" tamano={16} />

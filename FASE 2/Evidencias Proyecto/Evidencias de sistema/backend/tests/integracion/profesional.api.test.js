@@ -14,13 +14,13 @@ const consulta = (ruta, token = firmar()) => request(app).get(ruta).set('Authori
 // Incluye datos privados para comprobar que nunca llegan a la respuesta.
 const fila = {
   id: 1, usuarioId: 10, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla',
-  modalidad: 'presencial', verificado: 0, ubicacionLat: '-33.6860000', ubicacionLng: '-71.2150000',
+  direccion: 'Av. Demo 123', modalidad: 'presencial', verificado: 0, ubicacionLat: '-33.6860000', ubicacionLng: '-71.2150000',
   establecimientoNombre: 'Consulta Demo', establecimientoDireccion: 'Melipilla', promedio: '4.5000', totalResenas: 2n,
   distanciaKm: null, esFavorito: 1n, correo: 'privado@example.test', passwordHash: 'privado',
 };
 const fichaEsperada = {
-  id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', modalidad: 'presencial',
-  verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
+  id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
+  modalidad: 'presencial', verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
   calificacion: { promedio: 4.5, total: 2 }, distanciaKm: null, esFavorito: true,
 };
 const filtrosPorDefecto = {

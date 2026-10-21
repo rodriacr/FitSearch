@@ -1,0 +1,29 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP, WebGL por SwiftShader) del mapa de /profesionales con MapLibre GL JS y teselas reales de OpenFreeMap, con la cuenta de usuaria de prueba: encuadre inicial y alejamiento máximo con la rueda del mouse (25 pasos). Defecto 35, CP-094.",
+  "resultados": [
+    {
+      "caso": "Al abrir, el mapa encuadra los marcadores de Chile de cerca (sin el punto erróneo) y avisa de la ficha fuera de Chile",
+      "ok": true,
+      "detalle": {
+        "marcadores": 11,
+        "visibles": 11,
+        "separacionX": 587,
+        "separacionY": 304,
+        "aviso": "juanito no aparece en el mapa porque su ubicación registrada está fuera de Chile. Puedes abrir su ficha desde la lista."
+      }
+    },
+    {
+      "caso": "Alejado al máximo, el mapa se queda en Chile (los marcadores no se juntan en un punto)",
+      "ok": true,
+      "detalle": {
+        "visibles": 11,
+        "separacionX": 28,
+        "separacionY": 15
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 2,
+  "total": 2
+}

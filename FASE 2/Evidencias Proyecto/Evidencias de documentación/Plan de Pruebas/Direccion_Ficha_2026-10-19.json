@@ -1,0 +1,93 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) de la dirección de atención de la ficha profesional (SC-24) contra la aplicación local y MySQL, con las cuentas de prueba de profesional y de usuaria: validación en el formulario y en la API, guardado, dirección en el perfil, en la ventana del mapa y en la ficha pública, y celular. La ficha de prueba se dejó después como estaba (sin dirección).",
+  "resultados": [
+    {
+      "caso": "El formulario pide la dirección (atiende de ambas formas) y rechaza -90/-90 sin llamar a la API",
+      "ok": true,
+      "detalle": {
+        "etiqueta": "Dirección de atención (obligatorio)",
+        "errForm": {
+          "direccion": "Ingresa la dirección donde atiendes",
+          "ubicacionLat": "La latitud debe estar en Chile (entre -56,5 y -17)",
+          "ubicacionLng": "La longitud debe estar en Chile (entre -81 y -65,5)"
+        }
+      }
+    },
+    {
+      "caso": "La API responde 400 a coordenadas fuera de Chile y a presencial sin dirección",
+      "ok": true,
+      "detalle": {
+        "buenosAires": {
+          "estado": 400,
+          "cuerpo": {
+            "error": "Hay campos incompletos o inválidos",
+            "detalles": {
+              "ubicacionLng": "La longitud debe estar en Chile (entre -81 y -65,5)"
+            }
+          }
+        },
+        "sinDireccion": {
+          "estado": 400,
+          "cuerpo": {
+            "error": "Hay campos incompletos o inválidos",
+            "detalles": {
+              "direccion": "Ingresa la dirección donde atiendes"
+            }
+          }
+        }
+      }
+    },
+    {
+      "caso": "Se guarda en MySQL y \"Atención\" muestra la dirección",
+      "ok": true,
+      "detalle": {
+        "guardada": {
+          "id": 33,
+          "especialidad": "Nutrición",
+          "descripcion": "Nutricionista clínica y deportiva. Planes de alimentación personalizados, control de peso y hábitos saludables para personas activas.",
+          "comuna": "Providencia",
+          "direccion": "Av. Providencia 1234, oficina 501",
+          "modalidad": "ambas",
+          "verificado": true,
+          "ubicacionLat": -33.4263,
+          "ubicacionLng": -70.611
+        },
+        "atencion": "Av. Providencia 1234, oficina 501"
+      }
+    },
+    {
+      "caso": "La ventana del mapa muestra la dirección exacta de Javiera",
+      "ok": true,
+      "detalle": [
+        "Nutrición · Presencial y online",
+        "Verificado por FitSearch",
+        "Av. Providencia 1234, oficina 501",
+        "Sin horas disponibles por ahora",
+        "Ver ficha y reservarCómo llegar (Google Maps, nueva pestaña)"
+      ]
+    },
+    {
+      "caso": "La ficha pública muestra la dirección en \"Lugar de atención\"",
+      "ok": true,
+      "detalle": {
+        "titulo": "Atención en Providencia",
+        "direccion": "Av. Providencia 1234, oficina 501"
+      }
+    },
+    {
+      "caso": "Celular: el campo se carga con la dirección guardada y no desborda",
+      "ok": true,
+      "detalle": {
+        "valor": "Av. Providencia 1234, oficina 501",
+        "ancho": 318,
+        "derecha": 354,
+        "desborde": false,
+        "ayuda": "Se muestra en tu ficha y en el mapa para que sepan dónde atiendes."
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 6,
+  "total": 6
+}

@@ -4,7 +4,7 @@ import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { solicitar } from '../../services/api.js';
 import { crearIcs, descargarIcs, fechaHorario, fechaLarga, futura, minutosEntre, textoDuracion } from '../../services/agenda.js';
-import { etiquetaModalidad, iniciales, primerNombre } from '../../services/formato.js';
+import { direccionDe, etiquetaModalidad, iniciales, primerNombre } from '../../services/formato.js';
 import CalendarioMes from './CalendarioMes.jsx';
 import useAgenda from './useAgenda.js';
 import './ReservarHora.css';
@@ -15,8 +15,9 @@ function duracionDe(bloques) {
   return minutos.length === 1 ? textoDuracion(minutos[0]) : `${textoDuracion(minutos[0])} a ${textoDuracion(minutos.at(-1))}`;
 }
 
-function lugarDe({ modalidad, comuna, establecimiento }) {
-  const presencial = establecimiento?.direccion || comuna || 'Presencial';
+function lugarDe(profesional) {
+  const { modalidad, comuna } = profesional;
+  const presencial = direccionDe(profesional) || comuna || 'Presencial';
   if (modalidad === 'online') return 'Atención online';
   return modalidad === 'ambas' ? `${presencial} u online` : presencial;
 }

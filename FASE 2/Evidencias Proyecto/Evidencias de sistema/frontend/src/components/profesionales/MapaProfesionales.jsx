@@ -1,10 +1,23 @@
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
+import reglas from '@shared/reglas.json';
 import { cargarMapLibre, ESTILO_MAPA } from '../../services/mapas.js';
+import DetalleEnMapa from './DetalleEnMapa.jsx';
 import './MapaProfesionales.css';
 
 // MapLibre usa [longitud, latitud].
 const SANTIAGO = [-70.66, -33.45];
+// FitSearch funciona en Chile: el mapa no se aleja ni se mueve fuera del Chile continental (con un margen que incluye
+// Juan Fernández). [suroeste, noreste]. Una ubicación fuera de este recuadro no se dibuja ni se usa para encuadrar:
+// antes, una sola ficha con coordenadas erróneas alejaba el mapa hasta mostrar medio continente. Desde la SC-24 el
+// mismo recuadro (shared/reglas.json) valida las coordenadas al guardar la ficha.
+const { latMin, latMax, lngMin, lngMax } = reglas.profesionales.ubicacionChile;
+const CHILE = [[lngMin, latMin], [lngMax, latMax]];
+const coordenadas = (p) => (p.ubicacionLat != null && p.ubicacionLng != null
+  && Number.isFinite(Number(p.ubicacionLat)) && Number.isFinite(Number(p.ubicacionLng))
+  ? [Number(p.ubicacionLng), Number(p.ubicacionLat)] : null);
+const enChile = ([lng, lat]) => lng >= CHILE[0][0] && lng <= CHILE[1][0] && lat >= CHILE[0][1] && lat <= CHILE[1][1];
 
 // Encuadrar antes de que cargue el estilo deja el mapa en una posición equivocada,
 // así que se espera el evento load con el mismo plazo que la descarga del SDK.
@@ -32,6 +45,8 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
   const [intento, setIntento] = useState(0);
   const [seleccion, setSeleccion] = useState(null);
   const seleccionado = seleccion?.resultados === profesionales ? seleccion.profesional : null;
+  const ventanaSeleccionada = seleccionado ? seleccion.detalle : null;
+  const fueraDeChile = profesionales.filter((p) => coordenadas(p) && !enChile(coordenadas(p)));
   useEffect(() => {
     let vigente = true;
     (async () => {
@@ -45,6 +60,8 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
             style: ESTILO_MAPA,
             center: SANTIAGO,
             zoom: 11,
+            maxBounds: CHILE,
+            renderWorldCopies: false,
             attributionControl: { compact: true },
           });
           mapa.current.addControl(new maplibregl.NavigationControl({ showCompass: false }));
@@ -73,45 +90,46 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
     mapa.current.resize();
     const marcadores = [];
     const ventanas = [];
-    const puntos = profesionales.filter((p) =>
-      p.ubicacionLat != null && p.ubicacionLng != null &&
-      Number.isFinite(Number(p.ubicacionLat)) &&
-      Number.isFinite(Number(p.ubicacionLng)));
+    const puntos = profesionales.filter((p) => coordenadas(p) && enChile(coordenadas(p)));
     const limites = new maplibregl.LngLatBounds();
     for (const p of puntos) {
-      const posicion = [Number(p.ubicacionLng), Number(p.ubicacionLat)];
+      const posicion = coordenadas(p);
       limites.extend(posicion);
       const marcador = new maplibregl.Marker({ color: '#0b4f80' })
         .setLngLat(posicion)
         .addTo(mapa.current);
       const elemento = marcador.getElement();
       elemento.title = `${p.nombre}, ${p.especialidad}`;
+      // La ventana trae el nombre de inmediato; el detalle (tipo, verificación, lugar y próxima hora) lo dibuja React
+      // dentro de "detalle" cuando se abre (DetalleEnMapa).
       const tarjeta = document.createElement('div');
+      tarjeta.className = 'ventana-mapa';
       const nombre = document.createElement('strong');
+      nombre.className = 'ventana-mapa__nombre';
       nombre.textContent = p.nombre;
-      const especialidad = document.createElement('p');
-      especialidad.textContent = p.especialidad;
-      tarjeta.append(nombre, especialidad);
-      const ventana = new maplibregl.Popup({ offset: 25 }).setDOMContent(tarjeta);
-      // MapLibre abre la ventana del marcador; aquí solo se cierran las demás y se registra la selección.
+      const detalle = document.createElement('div');
+      tarjeta.append(nombre, detalle);
+      const ventana = new maplibregl.Popup({ offset: 25, maxWidth: '18rem' }).setDOMContent(tarjeta);
       marcador.setPopup(ventana);
+      // Se registra al abrirse la ventana (con el mouse o con Enter sobre el marcador) y se cierran las demás. Antes se
+      // escuchaba solo el clic, y con el teclado quedaban dos ventanas abiertas y la selección anterior (defecto 28).
       const alSeleccionar = () => {
         ventanas.forEach((v) => v !== ventana && v.remove());
-        setSeleccion({ profesional: p, resultados: profesionales });
+        setSeleccion({ profesional: p, resultados: profesionales, detalle });
       };
-      elemento.addEventListener('click', alSeleccionar);
-      marcadores.push({ marcador, elemento, alSeleccionar });
+      ventana.on('open', alSeleccionar);
+      marcadores.push({ marcador, ventana, alSeleccionar });
       ventanas.push(ventana);
     }
     if (puntos.length > 1) mapa.current.fitBounds(limites, { padding: 40, maxZoom: 15, duration: 0 });
     else if (puntos.length === 1) {
-      mapa.current.setCenter([Number(puntos[0].ubicacionLng), Number(puntos[0].ubicacionLat)]);
+      mapa.current.setCenter(coordenadas(puntos[0]));
       mapa.current.setZoom(13);
     }
     else { mapa.current.setCenter(SANTIAGO); mapa.current.setZoom(11); }
     return () => {
-      marcadores.forEach(({ marcador, elemento, alSeleccionar }) => {
-        elemento.removeEventListener('click', alSeleccionar);
+      marcadores.forEach(({ marcador, ventana, alSeleccionar }) => {
+        ventana.off('open', alSeleccionar);
         marcador.remove();
       });
       ventanas.forEach((v) => v.remove());
@@ -156,6 +174,15 @@ export default function MapaProfesionales({ profesionales, desde, visible = true
         El mapa muestra los mismos resultados y filtros de esta página.
         Selecciona un marcador o un profesional de la lista accesible.
       </p>
+      {fueraDeChile.length > 0 && (
+        <p className="texto-secundario">
+          {fueraDeChile.length === 1
+            ? `${fueraDeChile[0].nombre} no aparece en el mapa porque su ubicación registrada está fuera de Chile.`
+            : `${fueraDeChile.length} profesionales de esta página no aparecen en el mapa porque su ubicación registrada está fuera de Chile.`}
+          {' '}Puedes abrir su ficha desde la lista.
+        </p>
+      )}
+      {ventanaSeleccionada && createPortal(<DetalleEnMapa key={seleccionado.id} profesional={seleccionado} desde={desde} />, ventanaSeleccionada)}
       {seleccionado && (
         <p role="status">
           <strong>{seleccionado.nombre}</strong> · {seleccionado.especialidad} ·{' '}

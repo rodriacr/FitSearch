@@ -28,7 +28,7 @@ test('la ficha propia se busca por la cuenta y devuelve solo sus campos', async 
   await obtenerPorUsuario(7);
   const [{ where, select }] = prisma.profesional.findUnique.mock.calls[0];
   expect(where).toEqual({ usuarioId: 7 });
-  expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'especialidad', 'id', 'modalidad', 'ubicacionLat', 'ubicacionLng', 'verificado']);
+  expect(Object.keys(select).sort()).toEqual(['comuna', 'descripcion', 'direccion', 'especialidad', 'id', 'modalidad', 'ubicacionLat', 'ubicacionLng', 'verificado']);
 });
 
 test('cambiar especialidad antes de postular no crea un motivo de rechazo', async () => {

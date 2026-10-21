@@ -6,18 +6,27 @@ import Icono from '../Icono.jsx';
 import { guardarMiFicha } from '../../services/profesional.service.js';
 import './FormularioFicha.css';
 
-const { especialidades, modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA } } = reglas.profesionales;
+const {
+  especialidades, modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION },
+  ubicacionChile: CHILE,
+} = reglas.profesionales;
+const texto = (numero) => String(numero).replace('.', ',');
+const fueraDe = (valor, min, max) => valor === '' || Number.isNaN(Number(valor)) || Number(valor) < min || Number(valor) > max;
 
-// Los nombres de los campos coinciden con la API, así los errores del servidor caen en su campo.
-function validar({ especialidad, comuna, modalidad, ubicacionLat, ubicacionLng }) {
+// Los nombres de los campos coinciden con la API, así los errores del servidor caen en su campo. SC-24: la dirección es
+// obligatoria si atiende presencial o de ambas formas, y las coordenadas deben estar en Chile (shared/reglas.json).
+function validar({ especialidad, comuna, direccion, modalidad, ubicacionLat, ubicacionLng }) {
   const errores = {};
-  const lat = Number(ubicacionLat);
-  const lng = Number(ubicacionLng);
   if (!especialidad) errores.especialidad = 'Selecciona tu especialidad';
   if (!comuna.trim()) errores.comuna = 'Ingresa la comuna donde atiendes';
   if (!modalidad) errores.modalidad = 'Selecciona cómo atiendes';
-  if (ubicacionLat === '' || Number.isNaN(lat) || lat < -90 || lat > 90) errores.ubicacionLat = 'La latitud debe estar entre -90 y 90';
-  if (ubicacionLng === '' || Number.isNaN(lng) || lng < -180 || lng > 180) errores.ubicacionLng = 'La longitud debe estar entre -180 y 180';
+  if (modalidad !== 'online' && !direccion.trim()) errores.direccion = 'Ingresa la dirección donde atiendes';
+  if (fueraDe(ubicacionLat, CHILE.latMin, CHILE.latMax)) {
+    errores.ubicacionLat = `La latitud debe estar en Chile (entre ${texto(CHILE.latMin)} y ${texto(CHILE.latMax)})`;
+  }
+  if (fueraDe(ubicacionLng, CHILE.lngMin, CHILE.lngMax)) {
+    errores.ubicacionLng = `La longitud debe estar en Chile (entre ${texto(CHILE.lngMin)} y ${texto(CHILE.lngMax)})`;
+  }
   return errores;
 }
 
@@ -25,6 +34,7 @@ const desdeFicha = (ficha) => ({
   especialidad: ficha?.especialidad ?? '',
   descripcion: ficha?.descripcion ?? '',
   comuna: ficha?.comuna ?? '',
+  direccion: ficha?.direccion ?? '',
   modalidad: ficha?.modalidad ?? '',
   ubicacionLat: ficha ? String(ficha.ubicacionLat) : '',
   ubicacionLng: ficha ? String(ficha.ubicacionLng) : '',
@@ -54,7 +64,7 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
     try {
       const respuesta = await guardarMiFicha({
         especialidad: datos.especialidad, descripcion: datos.descripcion.trim(), comuna: datos.comuna.trim(),
-        modalidad: datos.modalidad, ubicacionLat: Number(datos.ubicacionLat), ubicacionLng: Number(datos.ubicacionLng),
+        direccion: datos.direccion.trim(), modalidad: datos.modalidad, ubicacionLat: Number(datos.ubicacionLat), ubicacionLng: Number(datos.ubicacionLng),
       });
       onGuardado(respuesta.ficha);
     } catch (error) {
@@ -104,19 +114,23 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
 
         <fieldset className="ficha-prof__seccion">
           <legend><Icono nombre="pin" /> Ubicación de atención</legend>
-          <p className="texto-secundario ficha-prof__intro">Indica tu comuna y las coordenadas de tu lugar de atención para aparecer en el buscador y en el mapa.</p>
+          <p className="texto-secundario ficha-prof__intro">Indica tu comuna, tu dirección y las coordenadas de tu lugar de atención para aparecer en el buscador y en el mapa.</p>
 
           <div className="ficha-prof__ubicacion">
             <div>
               <CampoFormulario id="comuna" etiqueta="Comuna (obligatorio)" maxLength={MAX_COMUNA} autoComplete="address-level2"
                 placeholder="Ej.: Providencia" value={datos.comuna} onChange={cambiar('comuna')} error={errores.comuna} />
+              <CampoFormulario id="direccion" maxLength={MAX_DIRECCION} autoComplete="street-address"
+                etiqueta={`Dirección de atención (${datos.modalidad === 'online' ? 'opcional si atiendes solo online' : 'obligatorio'})`}
+                placeholder="Ej.: Av. Providencia 1234, oficina 501" value={datos.direccion} onChange={cambiar('direccion')}
+                error={errores.direccion} ayuda="Se muestra en tu ficha y en el mapa para que sepan dónde atiendes." />
               <CampoFormulario id="ubicacionLat" etiqueta="Latitud" type="number" step="any" inputMode="decimal"
                 placeholder="-33.4372" value={datos.ubicacionLat} onChange={cambiar('ubicacionLat')} error={errores.ubicacionLat} />
               <CampoFormulario id="ubicacionLng" etiqueta="Longitud" type="number" step="any" inputMode="decimal"
                 placeholder="-70.6506" value={datos.ubicacionLng} onChange={cambiar('ubicacionLng')} error={errores.ubicacionLng} />
               <p className="nota-privacidad nota-privacidad--compacta">
                 <Icono nombre="info" tamano={18} />
-                Puedes copiar las coordenadas desde Google Maps: haz clic derecho sobre tu dirección y elige la primera opción.
+                Puedes copiar las coordenadas desde Google Maps: haz clic derecho sobre tu dirección y elige la primera opción. Deben quedar dentro de Chile.
               </p>
             </div>
 

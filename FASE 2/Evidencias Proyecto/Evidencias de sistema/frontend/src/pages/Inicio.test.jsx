@@ -55,14 +55,69 @@ describe('Inicio con datos', () => {
     expect(within(citas).getByRole('link', { name: 'Ver todas' })).toHaveAttribute('href', '/citas');
   });
 
-  test('el buscador "¿Qué necesitas hoy?" lleva a /profesionales con el texto', async () => {
+  // Buscador general (SC-23): recorre la aplicación; buscar en profesionales queda como última sugerencia.
+  const buscador = () => screen.getByRole('combobox', { name: '¿Qué necesitas hoy?' });
+  const menuLateral = () => screen.getByRole('navigation', { name: 'Menú principal' });
+
+  test('sin coincidencias, Enter busca el texto en profesionales como antes', async () => {
     const fetch = simular(); renderizarApp('/inicio');
-    await userEvent.type(screen.getByRole('searchbox', { name: '¿Qué necesitas hoy?' }), 'dolor de rodilla');
-    await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
+    await userEvent.type(buscador(), 'dolor de rodilla');
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['Buscar «dolor de rodilla» en profesionalesProfesionales']);
+    await userEvent.keyboard('{Enter}');
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
     expect(screen.getByRole('searchbox', { name: 'Buscar profesionales' })).toHaveValue('dolor de rodilla');
     await waitFor(() => expect(llamadasA(fetch, '/api/profesionales?q=').length).toBeGreaterThan(0));
+  });
+
+  test('escribir "perfil" y presionar Enter lleva a Mi perfil (la primera sugerencia)', async () => {
+    simular(); renderizarApp('/inicio');
+    await userEvent.type(buscador(), 'perfil');
+    expect(buscador()).toHaveAttribute('aria-expanded', 'true');
+    const primera = screen.getAllByRole('option')[0];
+    expect(primera).toHaveTextContent('Mi perfil');
+    expect(primera).toHaveAttribute('aria-selected', 'true');
+    expect(buscador()).toHaveAttribute('aria-activedescendant', primera.id);
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(within(menuLateral()).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page'));
+  });
+
+  test('"chat ia" ofrece el Asistente IA (Próximamente) y al elegirlo con el mouse lleva a su página', async () => {
+    simular(); renderizarApp('/inicio');
+    await userEvent.type(buscador(), 'chat ia');
+    const asistente = screen.getByRole('option', { name: /Asistente IA/ });
+    expect(within(asistente).getByText('Próximamente')).toBeInTheDocument();
+    await userEvent.click(asistente);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Asistente IA' })).toBeInTheDocument();
+  });
+
+  test('las flechas cambian la sugerencia marcada y Escape cierra la lista', async () => {
+    simular(); renderizarApp('/inicio');
+    await userEvent.type(buscador(), 'salud');
+    expect(screen.getAllByRole('option').map((o) => o.getAttribute('aria-selected'))).toEqual(['true', 'false', 'false']);
+    await userEvent.keyboard('{ArrowDown}');
+    const segunda = screen.getAllByRole('option')[1];
+    expect(segunda).toHaveTextContent('Centros de salud');
+    expect(segunda).toHaveAttribute('aria-selected', 'true');
+    expect(buscador()).toHaveAttribute('aria-activedescendant', segunda.id);
+    await userEvent.keyboard('{ArrowUp}{ArrowUp}');
+    expect(screen.getAllByRole('option').at(-1)).toHaveAttribute('aria-selected', 'true');
+    await userEvent.keyboard('{Escape}');
+    expect(buscador()).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByRole('option')).not.toBeInTheDocument();
+    expect(buscador()).toHaveValue('salud');
+  });
+
+  test('una especialidad del directorio lleva al buscador de profesionales con ese filtro', async () => {
+    const fetch = simular({ extra: { '/api/profesionales/filtros': { especialidades: ['Kinesiología', 'Nutrición'], comunas: [] } } });
+    renderizarApp('/inicio');
+    await userEvent.type(buscador(), 'nutri');
+    const especialidad = await screen.findByRole('option', { name: /Ver profesionales de Nutrición/ });
+    // El catálogo se pide una sola vez, al empezar a usar el buscador (no al cargar el Inicio).
+    expect(llamadasA(fetch, '/api/profesionales/filtros')).toHaveLength(1);
+    await userEvent.click(especialidad);
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
+    await waitFor(() => expect(parametrosDe(llamadasA(fetch, '/api/profesionales?').at(-1)[0])).toMatchObject({ especialidad: 'Nutrición' }));
   });
 
   test('el corazón de un destacado guarda el favorito en la API', async () => {

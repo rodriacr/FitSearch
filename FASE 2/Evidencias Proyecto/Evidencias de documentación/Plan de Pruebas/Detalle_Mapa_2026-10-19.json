@@ -1,0 +1,48 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP, WebGL por SwiftShader) de la ventana del marcador con MapLibre y OpenFreeMap reales (SC-22) y de su apertura con Enter (defecto 28). Se creó una hora temporal para la profesional de prueba, borrada al terminar.",
+  "resultados": [
+    {
+      "caso": "Javiera: tipo, verificada, comuna sin dirección escrita y próxima hora",
+      "ok": true,
+      "detalle": {
+        "nombre": "Javiera Morales",
+        "datos": [
+          "Nutrición · Presencial y online",
+          "Verificado por FitSearch",
+          "Providencia. Dirección exacta por confirmar con el profesional.",
+          "Próxima hora: martes 10 de noviembre, 09:00",
+          "Ver ficha y reservarCómo llegar (Google Maps, nueva pestaña)"
+        ],
+        "ventanasAbiertas": 1
+      }
+    },
+    {
+      "caso": "Ana: dirección del establecimiento, sin verificar, sin horas y una sola ventana abierta",
+      "ok": true,
+      "detalle": {
+        "nombre": "Ana Demo",
+        "datos": [
+          "Nutrición · Presencial",
+          "Sin verificar",
+          "Consulta de demostración 1 · Ubicación de ejemplo en Melipilla, Chile",
+          "Sin horas disponibles por ahora",
+          "Ver ficha y reservarCómo llegar (Google Maps, nueva pestaña)"
+        ],
+        "ventanasAbiertas": 1
+      }
+    },
+    {
+      "caso": "Con Enter sobre el marcador se abre su ventana, se cierra la anterior y se actualiza la selección",
+      "ok": true,
+      "detalle": {
+        "ventanas": 1,
+        "nombre": "Javiera Morales",
+        "estado": "Javiera Morales · Nutrición · Ver ficha de Javiera Morales"
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 3,
+  "total": 3
+}
