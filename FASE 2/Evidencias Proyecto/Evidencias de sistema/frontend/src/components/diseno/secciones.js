@@ -12,11 +12,8 @@ export const SECCIONES = {
     ruta: '/gimnasios', nombre: 'Gimnasios', icono: 'mancuerna', proximamente: true,
     descripcion: 'Pronto podrás descubrir gimnasios y centros deportivos para entrenar cerca de ti.',
   },
-  // El historial de chats vivirá dentro del asistente IA, no en el menú (decisión del PO del 05-10-2026).
-  asistente: {
-    ruta: '/asistente', nombre: 'Asistente IA', icono: 'chispa', proximamente: true,
-    descripcion: 'Pronto podrás conversar con un asistente que te orienta sobre salud y bienestar y te recomienda qué tipo de profesional buscar. Ahí mismo encontrarás tus conversaciones anteriores. No reemplazará la atención de un profesional de salud.',
-  },
+  // El historial de chats vive dentro del asistente IA, no en el menú (decisión del PO del 05-10-2026; FS-HU-07).
+  asistente: { ruta: '/asistente', nombre: 'Asistente IA', icono: 'chispa' },
   comidas: {
     ruta: '/comidas', nombre: 'Comidas', icono: 'comida', proximamente: true,
     descripcion: 'Pronto podrás anotar lo que comes, ver tus calorías y macronutrientes del día y revisar cómo te fue en la semana y el mes.',

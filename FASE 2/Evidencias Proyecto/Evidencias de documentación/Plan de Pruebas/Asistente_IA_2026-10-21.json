@@ -1,0 +1,105 @@
+{
+  "fecha": "21-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) del asistente IA (FS-HU-07) contra la API y MySQL locales, con el backend en modo de prueba (sin IA_API_KEY, respuestas simuladas): saludo, acciones y límite diario, conversación guardada con Enter y Shift+Enter, chats fijados, aviso del SAMU (131), diseño en 1440 px, 1280 px y celular, y borrado con confirmación sin recuperar el cupo del día. La respuesta real de Groq (CP-109) queda pendiente de la clave.",
+  "resultados": [
+    {
+      "caso": "Escritorio 1440: saludo con el nombre, modo de prueba, 4 acciones y tres columnas",
+      "ok": true,
+      "detalle": {
+        "hola": "¡Hola, Camila! 👋",
+        "modo": true,
+        "columnas": [
+          288,
+          592,
+          1105
+        ],
+        "acciones": 4,
+        "restantes": "Te quedan 26 mensajes hoy",
+        "inicial": {
+          "modo": "simulado",
+          "limiteDiario": 30,
+          "restantesHoy": 26
+        }
+      }
+    },
+    {
+      "caso": "Sugerencia y Enter: la conversación se guarda en MySQL con 4 mensajes; Shift+Enter hace salto de línea",
+      "ok": true,
+      "detalle": {
+        "titulo": "¿Qué comer después de entrenar?",
+        "remitentes": [
+          "usuario",
+          "asistente",
+          "usuario",
+          "asistente"
+        ],
+        "conSalto": "¿Y si entreno\nde noche?"
+      }
+    },
+    {
+      "caso": "Fijar la conversación la muestra en «Chats fijados» y queda guardado",
+      "ok": true,
+      "detalle": {
+        "id": 3,
+        "titulo": "¿Qué comer después de entrenar?",
+        "fijada": true,
+        "fechaInicio": "2026-10-21T05:24:41.000Z",
+        "fechaActualizacion": "2026-10-21T05:24:41.000Z",
+        "vistaPrevia": "Modo de prueba: esta es una respuesta de ejemplo, porque el asistente todavía no tiene co…"
+      }
+    },
+    {
+      "caso": "Ante una señal de emergencia la respuesta indica llamar al SAMU (131)",
+      "ok": true,
+      "detalle": "rofesional de salud.Si es una emergencia, llama de inmediato al SAMU (131).02:24"
+    },
+    {
+      "caso": "Escritorio 1280: historial y sugerencias a la izquierda, chat al centro, sin desborde",
+      "ok": true,
+      "detalle": {
+        "lateral": 288,
+        "extra": 288,
+        "centro": 592,
+        "desborde": false
+      }
+    },
+    {
+      "caso": "Celular: primero la bienvenida y la lista; al abrir un chat, solo el chat con «Volver», sin desborde",
+      "ok": true,
+      "detalle": {
+        "movilLista": {
+          "hola": true,
+          "lista": true,
+          "compositor": false,
+          "desborde": false
+        },
+        "movilChat": {
+          "lista": false,
+          "volver": true,
+          "compositor": true,
+          "campoVisible": true,
+          "desborde": false
+        }
+      }
+    },
+    {
+      "caso": "Borrar con confirmación elimina la conversación (404) y el cupo usado no vuelve",
+      "ok": true,
+      "detalle": {
+        "antes": 26,
+        "despues": 23
+      }
+    }
+  ],
+  "excepciones": [],
+  "capturas": [
+    "Asistente_IA_2026-10-21_aviso_emergencia.png",
+    "Asistente_IA_2026-10-21_escritorio_1280.png",
+    "Asistente_IA_2026-10-21_escritorio_bienvenida.png",
+    "Asistente_IA_2026-10-21_escritorio_conversacion.png",
+    "Asistente_IA_2026-10-21_movil_chat.png",
+    "Asistente_IA_2026-10-21_movil_lista.png"
+  ],
+  "aprobadas": 7,
+  "total": 7
+}

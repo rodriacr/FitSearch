@@ -43,6 +43,18 @@ erDiagram
   profesionales ||--o{ disponibilidades : relacion
   disponibilidades ||--o{ reservas : relacion
   usuarios ||--o{ reservas : relacion
+  usuarios ||--o{ conversaciones : relacion
+  conversaciones ||--o{ mensajes : relacion
+  usuarios ||--o| uso_asistente : relacion
+  conversaciones {
+    INT id PK
+  }
+  mensajes {
+    INT id PK
+  }
+  uso_asistente {
+    INT usuario_id PK
+  }
   disponibilidades {
     INT id PK
   }

@@ -31,9 +31,10 @@ describe('Inicio con datos', () => {
     for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
     }
-    // Farmacias salió del alcance (decisión del PO del 05-10-2026) y Comidas llega como "Próximamente".
+    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Centros, Gimnasios y Comidas llegan como "Próximamente";
+    // el Asistente IA ya está disponible (FS-HU-07).
     expect(within(accesos).queryByRole('link', { name: /Farmacias/ })).not.toBeInTheDocument();
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(4);
+    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(3);
 
     expect(await screen.findByText('Bajar de peso')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver detalle de objetivos/ })).toHaveAttribute('href', '/perfil');
@@ -82,11 +83,11 @@ describe('Inicio con datos', () => {
     await waitFor(() => expect(within(menuLateral()).getByRole('link', { name: 'Mi perfil' })).toHaveAttribute('aria-current', 'page'));
   });
 
-  test('"chat ia" ofrece el Asistente IA (Próximamente) y al elegirlo con el mouse lleva a su página', async () => {
+  test('"chat ia" ofrece el Asistente IA y al elegirlo con el mouse lleva a su página', async () => {
     simular(); renderizarApp('/inicio');
     await userEvent.type(buscador(), 'chat ia');
     const asistente = screen.getByRole('option', { name: /Asistente IA/ });
-    expect(within(asistente).getByText('Próximamente')).toBeInTheDocument();
+    expect(within(asistente).queryByText('Próximamente')).not.toBeInTheDocument();
     await userEvent.click(asistente);
     expect(await screen.findByRole('heading', { level: 1, name: 'Asistente IA' })).toBeInTheDocument();
   });

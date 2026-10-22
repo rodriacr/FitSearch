@@ -207,7 +207,7 @@ export default function Inicio() {
         <span className="banner-asistente__icono"><Icono nombre="chispa" tamano={26} /></span>
         <div className="banner-asistente__texto">
           <h2 id="titulo-banner">¿Dudas sobre tu salud o entrenamiento?</h2>
-          <p>Pregunta a nuestro asistente IA, te ayudará a encontrar la mejor opción para ti. <Proximamente /></p>
+          <p>Pregunta a nuestro asistente IA, te ayudará a encontrar la mejor opción para ti.</p>
         </div>
         <Link to={SECCIONES.asistente.ruta} className="boton boton--principal boton--compacto">Abrir asistente <Icono nombre="flecha" tamano={18} /></Link>
       </section>

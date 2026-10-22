@@ -63,6 +63,10 @@ const TRAZOS = {
   video: <><rect x="3" y="6" width="13" height="12" rx="2" /><path d="m16 10 5-3v10l-5-3" /></>,
   globo: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" /></>,
   descargar: <><path d="M12 4v11m-5-5 5 5 5-5" /><path d="M5 20h14" /></>,
+  enviar: <><path d="M21 3 10 14" /><path d="m21 3-7 18-4-7-7-4Z" /></>,
+  chincheta: <><path d="M9 4h6l-1 6 3 3H7l3-3Z" /><path d="M12 13v8" /></>,
+  basura: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
+  robot: <><rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 8V5" /><circle cx="12" cy="4" r="1" /><path d="M9.5 13h.01M14.5 13h.01M10 16.5h4M3 12v3M21 12v3" /></>,
 };
 
 // "relleno" pinta el interior del ícono (estrella de la calificación, corazón de un favorito guardado).

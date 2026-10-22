@@ -44,6 +44,8 @@ model Usuario {
   favoritos          Favorito[]
   resenas            Resena[]
   reservas           Reserva[]
+  conversaciones     Conversacion[]
+  usoAsistente       UsoAsistente?
 
   @@index([rolId])
   @@map("usuarios")
@@ -125,6 +127,46 @@ model Reserva {
   @@index([disponibilidadId, estado])
   @@index([usuarioId])
   @@map("reservas")
+}
+
+// Conversaciones con el asistente IA (FS-HU-07, DAS D33). El historial vive dentro del asistente y su dueño puede
+// fijarlas o borrarlas; se eliminan junto con la cuenta. fecha_actualizacion ordena el historial (cambia con cada mensaje).
+model Conversacion {
+  id                 Int       @id @default(autoincrement())
+  usuarioId          Int       @map("usuario_id")
+  titulo             String    @db.VarChar(80)
+  fijada             Boolean   @default(false)
+  fechaInicio        DateTime  @default(now()) @map("fecha_inicio") @db.DateTime(0)
+  fechaActualizacion DateTime  @default(now()) @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  mensajes           Mensaje[]
+
+  @@index([usuarioId, fechaActualizacion])
+  @@map("conversaciones")
+}
+
+// Mensajes de cada conversación. remitente: usuario o asistente (catálogo en shared/reglas.json).
+model Mensaje {
+  id             Int          @id @default(autoincrement())
+  conversacionId Int          @map("conversacion_id")
+  remitente      String       @db.VarChar(20)
+  contenido      String       @db.Text
+  fecha          DateTime     @default(now()) @db.DateTime(0)
+  conversacion   Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+
+  @@index([conversacionId, fecha])
+  @@map("mensajes")
+}
+
+// Mensajes que cada usuario envió al asistente en el día (límite diario, FS-HU-07). Una fila por usuario, sin contenido:
+// borrar una conversación no devuelve el cupo. fecha es el día en Chile.
+model UsoAsistente {
+  usuarioId Int      @id @map("usuario_id")
+  fecha     DateTime @db.Date
+  mensajes  Int      @default(0) @db.SmallInt
+  usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@map("uso_asistente")
 }
 
 // Profesionales que cada usuario guarda para volver a encontrarlos (FS-HU-23).

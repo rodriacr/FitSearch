@@ -19,6 +19,14 @@ module.exports = {
   recuperacionMinutos: Number(process.env.RECOVERY_TOKEN_MINUTES) || 60,
   // ID de cliente OAuth de Google (FS-HU-16). No es secreto, pero sin él el botón de Google queda desactivado.
   googleClientId: process.env.GOOGLE_CLIENT_ID || '',
+  // Asistente IA (FS-HU-07, DAS D33): cualquier proveedor compatible con la API de OpenAI (Groq por defecto).
+  // Sin IA_API_KEY el asistente funciona en modo simulado, con respuestas de ejemplo.
+  ia: {
+    urlBase: (process.env.IA_URL_BASE || 'https://api.groq.com/openai/v1').replace(/\/$/, ''),
+    modelo: process.env.IA_MODELO || 'llama-3.3-70b-versatile',
+    apiKey: process.env.IA_API_KEY || '',
+    mensajesPorDia: Number(process.env.IA_MENSAJES_POR_DIA) || 30,
+  },
   // Envío de correos por SMTP (DAS, D14). Si faltan datos, el enlace se muestra en la consola del backend.
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',

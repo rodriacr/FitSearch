@@ -103,7 +103,14 @@ classDiagram
   }
   class Conversacion {
     +int id
+    +string titulo
+    +bool fijada
     +datetime fechaInicio
+    +datetime fechaActualizacion
+  }
+  class UsoAsistente {
+    +date fecha
+    +int mensajes
   }
   class Mensaje {
     +int id
@@ -131,6 +138,7 @@ classDiagram
   Usuario "1" -- "0..*" Reserva : realiza
   Usuario "1" *-- "0..*" Conversacion : inicia
   Conversacion "1" *-- "1..*" Mensaje : contiene
+  Usuario "1" *-- "0..1" UsoAsistente : uso diario
   Usuario "1" *-- "0..*" RegistroComida : registra
   Usuario "1" *-- "0..*" Favorito : guarda
   Favorito "0..*" --> "1" Profesional : marca

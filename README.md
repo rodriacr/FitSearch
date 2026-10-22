@@ -18,7 +18,7 @@ Proyecto Capstone (PTY4614) — Duoc UC, Escuela de Informática y Telecomunicac
 
 - Registro, inicio de sesión y perfiles de usuario y profesional (roles: usuario, profesional, administrador).
 - Directorio de profesionales y establecimientos con búsqueda geolocalizada, vista de mapa y lista.
-- Asistente de orientación en salud y bienestar (API de Claude) que recomienda categorías de profesionales.
+- Asistente de orientación en salud y bienestar (Groq, plan gratuito) que recomienda categorías de profesionales.
 - Gestor de alimentación: registro de comidas en lenguaje natural y seguimiento de calorías y macronutrientes.
 - Reserva básica de horas: el profesional publica su disponibilidad y el usuario reserva indicando brevemente lo que necesita.
 - Despliegue con contenedores Docker.
@@ -34,7 +34,7 @@ Fuera de alcance este semestre: pagos, integración con calendarios externos, ve
 | Base de datos | MySQL 8 + Prisma (ORM y migraciones) |
 | Autenticación | JWT + bcryptjs, control de acceso por roles |
 | Mapas | MapLibre GL JS con teselas de OpenFreeMap (datos de OpenStreetMap), sin clave ni facturación |
-| IA | API de Claude (Anthropic) con function calling |
+| IA | Groq (plan gratuito, API compatible con OpenAI) con un cliente genérico configurable por `.env` |
 | Contenedores | Docker + docker-compose (frontend con Nginx, backend, MySQL) |
 | Pruebas | Backend: Jest + Supertest · Frontend: Vitest + Testing Library · Postman/Insomnia |
 
@@ -87,7 +87,7 @@ cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
 - Node.js 20 LTS o superior y npm
 - MySQL 8
 - Docker y Docker Compose (para el despliegue en contenedores)
-- Clave de la API de Claude (a partir del Sprint 4). El mapa no requiere clave
+- Clave gratuita de Groq para el asistente IA (opcional: sin ella responde en modo de prueba). El mapa no requiere clave
 
 ## Instalación (ambiente local)
 
@@ -128,8 +128,11 @@ Completar `backend/.env`:
 | `SMTP_HOST`, `SMTP_PORT` | Servidor de correo (por defecto Gmail: `smtp.gmail.com`, 465) |
 | `SMTP_USUARIO`, `SMTP_CONTRASENA` | Cuenta que envía los correos y su contraseña de aplicación de Google |
 | `SMTP_REMITENTE` | Remitente visible, por ejemplo `"FitSearch <correo@gmail.com>"` |
+| `IA_API_KEY` | Clave del proveedor del asistente IA (Groq: crearla gratis en https://console.groq.com/keys) |
+| `IA_URL_BASE`, `IA_MODELO` | Proveedor compatible con OpenAI (por defecto Groq: `https://api.groq.com/openai/v1` y `llama-3.3-70b-versatile`) |
+| `IA_MENSAJES_POR_DIA` | Mensajes que cada usuario puede enviar al asistente por día (por defecto 30) |
 
-Mientras `SMTP_CONTRASENA` esté vacía o diga `CAMBIAR`, el enlace de recuperación de contraseña se muestra en la consola del backend en lugar de enviarse por correo (útil en desarrollo).
+Mientras `SMTP_CONTRASENA` esté vacía o diga `CAMBIAR`, el enlace de recuperación de contraseña se muestra en la consola del backend en lugar de enviarse por correo (útil en desarrollo). Mientras `IA_API_KEY` esté vacía, el asistente IA responde en modo de prueba, sin consultar al proveedor.
 
 Opcional en `frontend/.env`: `VITE_GOOGLE_CLIENT_ID` con el ID de cliente OAuth de Google. Sin esta variable, el botón "Continuar con Google" aparece desactivado.
 
@@ -159,13 +162,13 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 > Si cambias `shared/reglas.json` con `npm run dev` en marcha, reinicia el frontend: Vite puede seguir usando la versión anterior del archivo.
 
-## API disponible (Sprints 1 a 3)
+## API disponible (Sprints 1 a 4)
 
 ### Navegación de la aplicación
 
 Sin sesión, la raíz (`/`) muestra la portada pública. Después de registrarse (con correo o con Google), la cuenta elige una sola vez cómo usar FitSearch en `/elegir-perfil`: como usuario sigue al asistente de perfil de 4 pasos (`/perfil`) y como profesional entra a su propio espacio (`/profesional/inicio`). Cambiar el tipo de cuenta después lo hace un administrador.
 
-- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Favoritos, Mis citas (`/citas`) y su perfil.
+- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07) y su perfil.
 - **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda (`/profesional/agenda`), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`). Clientes, Mensajes, Reportes y Configuración aparecen como «Próximamente».
 - **Administrador:** panel en `/admin` (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; FS-HU-12).
 
@@ -225,7 +228,25 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 Lista/Mapa conserva filtros y página. El mapa usa MapLibre GL JS y las teselas de OpenFreeMap, que no requieren clave; si no carga, continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
 
-Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 sigue pendiente de CP-078. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.24) y sus diagramas están en el Drive del equipo.
+Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 sigue pendiente de CP-078. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.25) y sus diagramas están en el Drive del equipo.
+
+### Asistente IA — FS-HU-07
+
+La usuaria o el usuario conversa en `/asistente` con un asistente de orientación general en salud, alimentación y actividad física: historial de conversaciones (las fijadas primero), sugerencias, acciones rápidas y un aviso permanente de que no reemplaza a un profesional. Ante señales de emergencia la API agrega a la respuesta el número del SAMU (131) o el *4141, sin depender del modelo. Cada cuenta puede enviar 30 mensajes por día (hora de Chile); borrar una conversación no devuelve el cupo.
+
+El proveedor es Groq, con plan gratuito y una API compatible con OpenAI (DAS 1.25, D33, SC-25). El backend usa un cliente genérico, así que otro proveedor compatible se configura solo con `IA_URL_BASE`, `IA_MODELO` e `IA_API_KEY`. Al proveedor solo viajan las instrucciones del asistente y los últimos 10 mensajes de la conversación: nunca el perfil ni la información de salud. Sin `IA_API_KEY` el asistente responde en modo de prueba.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261021120000_asistente_ia` agrega `conversaciones`, `mensajes` y `uso_asistente` sin borrar datos existentes.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/asistente/estado` | Bearer JWT (rol usuario) | Modo (`ia` o `simulado`), límite diario y mensajes restantes hoy |
+| GET | `/api/asistente/conversaciones` | Bearer JWT (rol usuario) | Conversaciones propias (las fijadas primero) con la vista previa del último mensaje |
+| POST | `/api/asistente/conversaciones` | Bearer JWT (rol usuario) | Inicia una conversación con el primer `mensaje` (1 a 1000 caracteres) y devuelve la respuesta (201) |
+| GET | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Conversación propia con sus mensajes (404 si no existe o es de otra cuenta) |
+| POST | `/api/asistente/conversaciones/:id/mensajes` | Bearer JWT (rol usuario) | Envía un `mensaje` y devuelve la respuesta (201); 429 al llegar al límite diario y 503 si el proveedor falla (el mensaje no se guarda) |
+| PATCH | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Fija o desfija con `fijada` (máximo 5 fijadas; 409 al superar) |
+| DELETE | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Elimina la conversación y sus mensajes (204) |
 
 ## Ejecución con Docker
 

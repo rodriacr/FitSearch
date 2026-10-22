@@ -314,6 +314,25 @@
       }
     ]
   },
+  "asistente": {
+    "mensaje": {
+      "max": 1000
+    },
+    "titulo": {
+      "max": 80
+    },
+    "mensajesPorDia": 30,
+    "historialEnviado": 10,
+    "conversacionesListadas": 50,
+    "fijadasMax": 5,
+    "vistaPrevia": {
+      "max": 90
+    },
+    "remitentes": [
+      "usuario",
+      "asistente"
+    ]
+  },
   "resena": {
     "puntaje": {
       "min": 1,

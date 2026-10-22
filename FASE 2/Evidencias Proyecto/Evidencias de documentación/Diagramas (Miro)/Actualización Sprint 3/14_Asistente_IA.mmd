@@ -1,0 +1,26 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario
+  participant F as Frontend /asistente
+  participant B as API FitSearch
+  participant D as MySQL
+  participant G as Groq (compatible con OpenAI)
+  U->>F: Escribe un mensaje y presiona Enviar
+  F->>B: POST /api/asistente/conversaciones/:id/mensajes (JWT, rol usuario)
+  B->>D: Conversación propia y uso del día (uso_asistente)
+  alt Llegó al límite diario
+    B-->>F: 429 Llegaste al límite de mensajes de hoy
+  else Hay cupo
+    B->>D: Últimos 10 mensajes de la conversación
+    B->>G: chat/completions: instrucciones + últimos mensajes (sin perfil ni datos de salud)
+    alt Groq falla, tarda más de 20 s o sin cuota
+      G-->>B: Error o sin respuesta
+      B-->>F: 503 y no guarda nada (el texto vuelve al campo)
+    else Respuesta
+      G-->>B: Texto de la respuesta
+      B->>B: Limpia el formato y agrega SAMU 131 o *4141 si hay señales de riesgo
+      B->>D: Guarda mensaje y respuesta, y suma 1 al uso del día
+      B-->>F: 201 mensajes y mensajes restantes hoy
+      F-->>U: Muestra la respuesta como texto
+    end
+  end
