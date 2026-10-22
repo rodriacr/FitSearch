@@ -1,4 +1,5 @@
-/* Buscador de profesionales, ficha con reseñas y favoritos (mobile-first). Desde 64rem los filtros son una columna fija.
+/* Buscador de profesionales, ficha con reseñas y favoritos (mobile-first). Desde 64rem los filtros son una barra sobre
+   los resultados y desde 75rem la lista y el mapa van lado a lado (SC-27); antes, el mapa va arriba de la lista.
    Las reglas que cambian .boton o .boton-icono usan dos clases: index.css se carga después y, a igual especificidad, ganaría. */
 .buscador { display: grid; gap: 1.25rem; }
 .buscador__cabecera {
@@ -16,15 +17,36 @@
 .buscador__campo input { flex: 1; min-width: 0; border: 0; background: none; font: inherit; font-size: 1rem; color: var(--color-texto); outline: none; }
 .buscador__formulario .boton { border-radius: 999px; }
 
-.buscador__cuerpo { display: grid; gap: 1.25rem; align-items: start; }
+.buscador__vista { display: grid; gap: 1.25rem; align-items: start; }
 .buscador__resultados { display: grid; gap: 1rem; min-width: 0; scroll-margin-top: 5rem; }
+.buscador__vista--con-mapa .buscador__mapa { order: -1; }
+.buscador__mapa { display: grid; gap: 0.75rem; min-width: 0; scroll-margin-top: 5.25rem; }
+.buscador__mapa[hidden] { display: none; }
+/* La pista solo tiene sentido con el mapa al lado: en celular el detalle aparece bajo el mapa al elegir un marcador. */
+.buscador__pista { display: none; align-items: center; gap: 0.4rem; margin: 0; padding: 0.75rem 1rem; border: 1px dashed #c9dde9; border-radius: var(--radio); font-size: 0.85rem; color: var(--color-texto-secundario); }
+.buscador__pista .icono { flex-shrink: 0; color: var(--color-primario); }
 .buscador__barra { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
 .buscador__contador { margin: 0; font-weight: 600; color: var(--color-primario-oscuro); }
 .buscador__controles { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
 .buscador .buscador__boton-filtros { gap: 0.4rem; }
 .buscador__orden { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--color-texto-secundario); }
 .buscador__orden .campo__control { width: auto; min-height: 2.6rem; padding-block: 0.35rem; }
-.buscador__lista { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(15.5rem, 1fr)); }
+.buscador__lista { display: grid; gap: 0.85rem; grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr)); }
+.buscador__lista > .tarjeta-profesional { scroll-margin: 6rem 0 1rem; }
+
+/* Accesos rápidos por especialidad (SC-27): marcan la especialidad igual que el filtro de la barra. */
+.accesos-especialidad { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.acceso-especialidad {
+  display: inline-flex; align-items: center; gap: 0.45rem; min-height: 2.6rem; padding: 0.4rem 0.95rem; border: 1px solid var(--color-borde);
+  border-radius: 12px; font: inherit; font-size: 0.86rem; font-weight: 500; color: var(--color-texto); background: var(--color-superficie); cursor: pointer;
+}
+.acceso-especialidad .icono { color: var(--color-primario); }
+.acceso-especialidad[aria-pressed='true'] { border-color: var(--color-primario); color: #fff; background: var(--color-primario); }
+.acceso-especialidad[aria-pressed='true'] .icono { color: inherit; }
+.acceso-especialidad--mas { color: var(--color-primario); font-weight: 600; }
+@media (hover: hover) and (pointer: fine) {
+  .acceso-especialidad:hover { border-color: var(--color-primario); }
+}
 /* Mientras llega una búsqueda nueva se ven los resultados anteriores atenuados. El atenuado espera 150 ms para que
    una respuesta rápida no parpadee; al llegar los nuevos, la opacidad vuelve en 150 ms. */
 .buscador__contenido { display: grid; gap: 1rem; min-width: 0; transition: opacity 150ms ease; }
@@ -61,9 +83,6 @@
 .panel-filtros__cabecera h2 { margin: 0; }
 .panel-filtros .campo { margin-bottom: 0.9rem; }
 .panel-filtros .campo__control { min-height: 2.75rem; }
-.panel-filtros__grupo { margin-bottom: 0.9rem; }
-.panel-filtros__grupo .casilla--opcion { display: flex; padding: 0.25rem 0; }
-.panel-filtros__grupo input { accent-color: var(--color-primario); width: 1.05rem; height: 1.05rem; }
 .panel-filtros__ubicacion { display: flex; align-items: center; gap: 0.35rem; margin: 0.4rem 0 0; font-size: 0.78rem; color: var(--color-texto-secundario); }
 .panel-filtros__pie { position: sticky; bottom: calc(-1rem - env(safe-area-inset-bottom)); display: grid; gap: 0.6rem; margin-inline: -1.25rem; padding: 0.75rem 1.25rem 1rem; background: var(--color-superficie); border-top: 1px solid var(--color-borde); }
 .panel-filtros__pie .boton--secundario { width: 100%; }
@@ -141,15 +160,37 @@
 }
 
 @media (min-width: 64rem) {
-  .buscador__cuerpo { grid-template-columns: 16rem minmax(0, 1fr); }
   .buscador .buscador__boton-filtros { display: none; }
+  /* Barra de filtros: una franja con las cinco listas (se reparte en dos filas si no caben). */
   .panel-filtros {
-    position: sticky; top: 5.75rem; z-index: auto; max-height: calc(100vh - 7rem); max-height: calc(100dvh - 7rem); padding: 1.25rem;
+    position: relative; z-index: auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr)); align-items: start;
+    gap: 0.75rem 1rem; max-height: none; overflow: visible; padding: 0.9rem 1.1rem;
     border: 1px solid var(--color-borde); border-radius: var(--radio); box-shadow: none; transform: none; visibility: visible; transition: none;
   }
+  .panel-filtros__cabecera { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .panel-filtros .campo { margin: 0; }
+  .panel-filtros .campo__etiqueta { font-size: 0.8rem; }
+  .panel-filtros__ubicacion--previa { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   .panel-filtros__fondo, .panel-filtros .panel-filtros__cerrar, .panel-filtros .panel-filtros__ver { display: none; }
-  .panel-filtros__pie { position: static; margin: 0; padding: 0.5rem 0 0; border-top: 0; }
+  .panel-filtros__pie { display: contents; }
+  .panel-filtros__pie .boton--secundario { align-self: end; width: auto; min-height: 2.75rem; }
   .ficha__grilla { grid-template-columns: 1.4fr 1fr; }
+}
+
+/* Lista y mapa lado a lado. El mapa queda fijo mientras se recorre la lista y el detalle del elegido va debajo, con su
+   propio desplazamiento si no cabe. */
+@media (min-width: 75rem) {
+  .buscador__vista--con-mapa { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+  .buscador__vista--con-mapa .buscador__lista { grid-template-columns: minmax(0, 1fr); }
+  .buscador__vista--con-mapa .buscador__mapa {
+    order: 0; position: sticky; top: 5.25rem; display: flex; flex-direction: column;
+    height: calc(100vh - 6.5rem); height: calc(100dvh - 6.5rem);
+  }
+  .buscador__vista--con-mapa .buscador__mapa[hidden] { display: none; }
+  .buscador__mapa .mapa-profesionales { display: flex; flex: 1 1 auto; flex-direction: column; }
+  .buscador__mapa .mapa-profesionales__mapa { flex: 1 1 auto; height: auto; min-height: 15rem; }
+  .buscador__mapa .detalle-mapa { flex: 0 1 auto; max-height: 55%; overflow-y: auto; }
+  .buscador__pista { display: flex; }
 }
 
 /* Movimiento reducido: la hoja de filtros aparece y se va sin deslizarse (el fondo sí se funde). */
