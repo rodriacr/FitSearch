@@ -17,6 +17,18 @@ export const CATEGORIAS = [
   { icono: 'pastilla', nombre: 'Suplementos', inicio: 'Tengo una duda sobre suplementos: ' },
 ];
 
+// FS-HU-08: cómo nombrar en el botón de la recomendación a los profesionales de cada especialidad del catálogo.
+const PROFESIONALES_DE = {
+  'Entrenamiento personal': 'entrenadores personales',
+  Kinesiología: 'kinesiólogos',
+  'Medicina deportiva': 'médicos deportivos',
+  Nutrición: 'nutricionistas',
+  'Psicología deportiva': 'psicólogos deportivos',
+};
+export const nombreProfesionales = (especialidad) => PROFESIONALES_DE[especialidad] ?? `profesionales de ${especialidad}`;
+// El buscador de profesionales (FS-HU-22) con el filtro de la especialidad ya aplicado.
+export const enlaceProfesionales = (especialidad) => `/profesionales?${new URLSearchParams({ especialidad })}`;
+
 // Sugerencias rápidas: preguntas completas que se envían al tocarlas.
 export const SUGERENCIAS = [
   '¿Cuántas calorías necesito al día?',

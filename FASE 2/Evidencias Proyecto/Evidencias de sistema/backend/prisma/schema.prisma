@@ -151,6 +151,8 @@ model Mensaje {
   conversacionId Int          @map("conversacion_id")
   remitente      String       @db.VarChar(20)
   contenido      String       @db.Text
+  // FS-HU-08: especialidad del catálogo que el asistente recomendó en esta respuesta (solo mensajes del asistente).
+  especialidad   String?      @db.VarChar(100)
   fecha          DateTime     @default(now()) @db.DateTime(0)
   conversacion   Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
 

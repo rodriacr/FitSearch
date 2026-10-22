@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
-import { ACCIONES, bloquesDe, CATEGORIAS, CONSEJOS, fechaCorta, horaDe, SUGERENCIAS } from '../services/asistente.js';
+import {
+  ACCIONES, bloquesDe, CATEGORIAS, CONSEJOS, enlaceProfesionales, fechaCorta, horaDe, nombreProfesionales, SUGERENCIAS,
+} from '../services/asistente.js';
 import {
   abrirConversacion, eliminarConversacion, enviarMensaje, fijarConversacion, iniciarConversacion, listarConversaciones,
   obtenerEstadoAsistente,
@@ -25,7 +27,20 @@ function Contenido({ texto }) {
     : <p key={i}>{bloque.lineas.join('\n')}</p>));
 }
 
-function Burbuja({ remitente, contenido, fecha, pendiente = false }) {
+// FS-HU-08: especialidad que recomendó el asistente y acceso al buscador con ese filtro.
+function Recomendacion({ especialidad }) {
+  return (
+    <div className="recomendacion-ia">
+      <span className="recomendacion-ia__icono" aria-hidden="true"><Icono nombre="profesional" tamano={20} /></span>
+      <p className="recomendacion-ia__texto">Te recomendamos consultar con: <strong>{especialidad}</strong></p>
+      <Link to={enlaceProfesionales(especialidad)} className="boton boton--secundario boton--compacto recomendacion-ia__boton">
+        Ver {nombreProfesionales(especialidad)} <Icono nombre="flecha" tamano={16} />
+      </Link>
+    </div>
+  );
+}
+
+function Burbuja({ remitente, contenido, especialidad = null, fecha, pendiente = false }) {
   const esAsistente = remitente === 'asistente';
   return (
     <li className={`burbuja burbuja--${remitente}${pendiente ? ' burbuja--pendiente' : ''}`}>
@@ -33,6 +48,7 @@ function Burbuja({ remitente, contenido, fecha, pendiente = false }) {
       <div className="burbuja__cuerpo">
         <span className="solo-lector">{esAsistente ? 'Asistente: ' : 'Tú: '}</span>
         {esAsistente ? <Contenido texto={contenido} /> : <p>{contenido}</p>}
+        {esAsistente && especialidad && <Recomendacion especialidad={especialidad} />}
         {fecha && <time className="burbuja__hora" dateTime={fecha}>{horaDe(fecha)}</time>}
         {pendiente && <span className="burbuja__hora">Enviando…</span>}
       </div>
@@ -58,9 +74,12 @@ function ItemConversacion({ conversacion, activa, ahora }) {
 
 // Asistente IA del usuario (FS-HU-07, DAS D33), según el mockup del PO: historial a la izquierda (fijadas y recientes),
 // chat al centro y sugerencias, categorías y consejos a la derecha. En el celular, la lista y el chat son vistas separadas
-// (/asistente y /asistente/:id), así el botón Atrás del teléfono vuelve a la lista.
+// (/asistente y /asistente/:id), así el botón Atrás del teléfono vuelve a la lista. El banner «¿Necesitas una
+// recomendación?» abre /asistente/nuevo?inicio=profesional con la pregunta para que recomiende un profesional (FS-HU-08).
 export default function Asistente() {
   const { id } = useParams();
+  const [parametros] = useSearchParams();
+  const { key: navegacion } = useLocation();
   const navigate = useNavigate();
   const { sesion } = useSesion();
   const nombre = primerNombre(sesion.usuario.nombre);
@@ -113,6 +132,18 @@ export default function Asistente() {
     el.focus();
     el.setSelectionRange(el.value.length, el.value.length);
   });
+
+  // Desde el banner llega con ?inicio=profesional: la pregunta queda escrita y el cursor al final para terminarla. Se
+  // atiende una vez por navegación (cada clic), también si la pantalla del asistente ya estaba abierta.
+  const pidePregunta = parametros.get('inicio') === 'profesional';
+  const [navegacionAtendida, setNavegacionAtendida] = useState(null);
+  if (pidePregunta && navegacionAtendida !== navegacion) {
+    setNavegacionAtendida(navegacion);
+    setTexto(ACCIONES.find((accion) => accion.icono === 'profesional').inicio);
+  }
+  useEffect(() => {
+    if (pidePregunta) enfocar();
+  }, [pidePregunta, navegacion]);
 
   // Tarjetas de acción y categorías: completan el comienzo de la pregunta y llevan al chat.
   function usarInicio(inicio) {
@@ -314,7 +345,7 @@ export default function Asistente() {
             <span>{texto.length}/{MAX_MENSAJE}</span>
           </p>
           <p id="aviso-asistente" className="chat-ia__aviso">
-            Orientación general: no reemplaza a un profesional de salud. Lo que escribes se procesa con un servicio de IA externo; no incluyas datos que te identifiquen. En una emergencia, llama al 131.
+            Orientación general: no reemplaza a un profesional de salud. Lo que escribes se procesa con un servicio de IA externo; no incluyas datos que te identifiquen.
           </p>
         </form>
       </section>

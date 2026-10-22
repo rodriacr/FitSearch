@@ -228,23 +228,25 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 Lista/Mapa conserva filtros y página. El mapa usa MapLibre GL JS y las teselas de OpenFreeMap, que no requieren clave; si no carga, continúa disponible el listado. Para SMTP, configurar las credenciales en `backend/.env` y ejecutar `npm run smtp:comprobar`. La dirección de un destinatario no sustituye las credenciales del remitente.
 
-Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 sigue pendiente de CP-078. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.25) y sus diagramas están en el Drive del equipo.
+Los PR #21 y #22 están fusionados en `main` (12-10-2026); el PO aceptó FS-HU-13 y FS-HU-14 el 12-10-2026 y FS-HU-06 sigue pendiente de CP-078. El 12-10-2026 se comprobaron el envío real de correos (SMTP) y Google Maps real con una Demo Key, sin facturación; desde el 15-10-2026 el mapa usa MapLibre GL JS con OpenFreeMap, sin clave (SC-18, PR #27). [Alcance, API, instalación y pruebas](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Sprint%203/Disponibilidad_Reservas_Mapa.md). El DAS (versión 1.26) y sus diagramas están en el Drive del equipo.
 
-### Asistente IA — FS-HU-07
+### Asistente IA — FS-HU-07 y FS-HU-08
 
-La usuaria o el usuario conversa en `/asistente` con un asistente de orientación general en salud, alimentación y actividad física: historial de conversaciones (las fijadas primero), sugerencias, acciones rápidas y un aviso permanente de que no reemplaza a un profesional. Ante señales de emergencia la API agrega a la respuesta el número del SAMU (131) o el *4141, sin depender del modelo. Cada cuenta puede enviar 30 mensajes por día (hora de Chile); borrar una conversación no devuelve el cupo.
+La usuaria o el usuario conversa en `/asistente` con un asistente de orientación general en salud, alimentación y actividad física: historial de conversaciones (las fijadas primero), sugerencias, acciones rápidas y un aviso permanente de que no reemplaza a un profesional. Solo ante una situación crítica (por ejemplo, un hueso roto o dificultad para respirar) la respuesta indica llamar al SAMU (131), y ante señales de riesgo suicida, al *4141; la API lo agrega aunque el modelo no lo diga, y las molestias leves no llevan ese aviso (SC-26). Cada cuenta puede enviar 30 mensajes por día (hora de Chile); borrar una conversación no devuelve el cupo.
 
 El proveedor es Groq, con plan gratuito y una API compatible con OpenAI (DAS 1.25, D33, SC-25). El backend usa un cliente genérico, así que otro proveedor compatible se configura solo con `IA_URL_BASE`, `IA_MODELO` e `IA_API_KEY`. Al proveedor solo viajan las instrucciones del asistente y los últimos 10 mensajes de la conversación: nunca el perfil ni la información de salud. Sin `IA_API_KEY` el asistente responde en modo de prueba.
 
-Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261021120000_asistente_ia` agrega `conversaciones`, `mensajes` y `uso_asistente` sin borrar datos existentes.
+Cuando corresponde, el asistente recomienda uno de los tipos de profesional del catálogo (`shared/reglas.json`): el modelo lo marca en una línea final, el backend lo valida, lo quita del texto y lo guarda en `mensajes.especialidad`, y la pantalla muestra una tarjeta «Ver …» que abre `/profesionales` filtrado por esa especialidad (FS-HU-08, DAS D34). El banner «¿Necesitas una recomendación?» del menú abre un chat nuevo con la pregunta ya escrita (`/asistente/nuevo?inicio=profesional`).
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261021120000_asistente_ia` agrega `conversaciones`, `mensajes` y `uso_asistente` sin borrar datos existentes, y `20261022120000_recomendacion_profesional` agrega la columna `mensajes.especialidad`.
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
 | GET | `/api/asistente/estado` | Bearer JWT (rol usuario) | Modo (`ia` o `simulado`), límite diario y mensajes restantes hoy |
 | GET | `/api/asistente/conversaciones` | Bearer JWT (rol usuario) | Conversaciones propias (las fijadas primero) con la vista previa del último mensaje |
-| POST | `/api/asistente/conversaciones` | Bearer JWT (rol usuario) | Inicia una conversación con el primer `mensaje` (1 a 1000 caracteres) y devuelve la respuesta (201) |
+| POST | `/api/asistente/conversaciones` | Bearer JWT (rol usuario) | Inicia una conversación con el primer `mensaje` (1 a 1000 caracteres) y devuelve la respuesta (201), con la `especialidad` recomendada o `null` |
 | GET | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Conversación propia con sus mensajes (404 si no existe o es de otra cuenta) |
-| POST | `/api/asistente/conversaciones/:id/mensajes` | Bearer JWT (rol usuario) | Envía un `mensaje` y devuelve la respuesta (201); 429 al llegar al límite diario y 503 si el proveedor falla (el mensaje no se guarda) |
+| POST | `/api/asistente/conversaciones/:id/mensajes` | Bearer JWT (rol usuario) | Envía un `mensaje` y devuelve la respuesta (201), con la `especialidad` recomendada o `null`; 429 al llegar al límite diario y 503 si el proveedor falla (el mensaje no se guarda) |
 | PATCH | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Fija o desfija con `fijada` (máximo 5 fijadas; 409 al superar) |
 | DELETE | `/api/asistente/conversaciones/:id` | Bearer JWT (rol usuario) | Elimina la conversación y sus mensajes (204) |
 

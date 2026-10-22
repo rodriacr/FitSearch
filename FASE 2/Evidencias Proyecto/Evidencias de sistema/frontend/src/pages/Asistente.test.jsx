@@ -1,4 +1,5 @@
 // Asistente IA (FS-HU-07): bienvenida, historial con fijadas, conversar, errores, límite diario, fijar y borrar.
+// Recomendación de profesional (FS-HU-08): tarjeta con la especialidad y acceso al buscador filtrado.
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
@@ -83,6 +84,8 @@ describe('bienvenida e historial', () => {
     expect(within(recientes).getByRole('link', { name: /Plan de alimentación/ })).toHaveAttribute('href', '/asistente/5');
     expect(await screen.findByText('Te quedan 28 mensajes hoy')).toBeInTheDocument();
     expect(screen.getByText(/no reemplaza a un profesional de salud/)).toBeInTheDocument();
+    // El SAMU (131) aparece solo en la respuesta ante una situación crítica, no fijo en la pantalla (SC-26).
+    expect(screen.queryByText(/131/)).toBeNull();
   });
 
   test('una tarjeta de acción o una categoría completan el comienzo de la pregunta en el campo', async () => {
@@ -157,6 +160,37 @@ describe('conversar', () => {
     renderizarApp('/asistente/77');
     expect(await screen.findByText('No encontramos esta conversación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ir a tus conversaciones' })).toHaveAttribute('href', '/asistente');
+  });
+});
+
+describe('recomendación de profesional (FS-HU-08)', () => {
+  test('bajo la respuesta muestra la especialidad recomendada con un enlace al buscador filtrado', async () => {
+    const { servidor } = simularAsistente();
+    servidor.mensajes[5].push(mensajeDe(8, 'usuario', 'Me duele la rodilla al correr'),
+      { ...mensajeDe(9, 'asistente', 'Te conviene que te evalúe un kinesiólogo.'), especialidad: 'Kinesiología' });
+    renderizarApp('/asistente/5');
+    expect(await within(mensajes()).findByText('Te conviene que te evalúe un kinesiólogo.')).toBeInTheDocument();
+    expect(within(mensajes()).getByText('Kinesiología')).toBeInTheDocument();
+    expect(within(mensajes()).getByRole('link', { name: /Ver kinesiólogos/ })).toHaveAttribute('href', '/profesionales?especialidad=Kinesiolog%C3%ADa');
+    // Las respuestas sin recomendación no muestran la tarjeta.
+    expect(within(mensajes()).getAllByText(/Te recomendamos consultar con/)).toHaveLength(1);
+  });
+
+  test('el banner «¿Necesitas una recomendación?» abre un chat nuevo con la pregunta, aunque el asistente ya esté abierto', async () => {
+    simularAsistente();
+    renderizarApp('/asistente');
+    const banner = await screen.findByRole('link', { name: /Abrir chat/ });
+    expect(banner).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
+    await userEvent.click(banner);
+    await waitFor(() => expect(campo()).toHaveValue('¿Qué tipo de profesional me conviene consultar para '));
+    await waitFor(() => expect(campo()).toHaveFocus());
+  });
+
+  test('con ?inicio=profesional el campo trae la pregunta y el cursor al final para terminarla', async () => {
+    simularAsistente();
+    renderizarApp('/asistente/nuevo?inicio=profesional');
+    await waitFor(() => expect(campo()).toHaveValue('¿Qué tipo de profesional me conviene consultar para '));
+    await waitFor(() => expect(campo()).toHaveFocus());
   });
 });
 

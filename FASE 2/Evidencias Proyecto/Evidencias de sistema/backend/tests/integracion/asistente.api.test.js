@@ -1,4 +1,5 @@
-// Asistente IA (FS-HU-07, DAS D33). El acceso a datos se simula y el proveedor responde en modo simulado.
+// Asistente IA (FS-HU-07, DAS D33; recomendación FS-HU-08, D34). El acceso a datos se simula y el proveedor responde
+// en modo simulado.
 jest.mock('../../src/models/asistente.model');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
@@ -76,6 +77,7 @@ describe('conversar', () => {
     expect(res.body.conversacion.titulo).toBe('¿Cómo empiezo a trotar?');
     expect(res.body.mensajes.map((m) => m.remitente)).toEqual(['usuario', 'asistente']);
     expect(res.body.mensajes[1].contenido).toMatch(/^Modo de prueba/);
+    expect(res.body.mensajes.map((m) => m.especialidad)).toEqual([null, null]);
     const [usuarioId, , mensajes] = modelo.crearConversacion.mock.calls[0];
     expect(usuarioId).toBe(1);
     expect(mensajes[0]).toMatchObject({ remitente: 'usuario', contenido: '¿Cómo empiezo a trotar?' });
@@ -129,6 +131,18 @@ describe('conversar', () => {
     expect(res.body.error).toMatch(/no está disponible/);
     expect(modelo.agregarMensajes).not.toHaveBeenCalled();
     expect(modelo.registrarUso).not.toHaveBeenCalled();
+  });
+
+  test('la respuesta guarda y devuelve la especialidad recomendada del catálogo (FS-HU-08)', async () => {
+    modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
+    modelo.ultimosMensajes.mockResolvedValue([]);
+    modelo.agregarMensajes.mockImplementation(async (id, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Me duele la rodilla al correr' });
+    expect(res.status).toBe(201);
+    expect(res.body.mensajes[1]).toMatchObject({ remitente: 'asistente', especialidad: 'Kinesiología' });
+    expect(modelo.agregarMensajes.mock.calls[0][1][1]).toMatchObject({ remitente: 'asistente', especialidad: 'Kinesiología' });
+    // Una molestia leve no lleva el aviso del SAMU.
+    expect(res.body.mensajes[1].contenido).not.toContain('131');
   });
 
   test('ante una señal de emergencia la respuesta indica llamar al SAMU', async () => {

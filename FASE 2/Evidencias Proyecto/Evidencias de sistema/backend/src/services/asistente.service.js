@@ -1,5 +1,6 @@
 // Asistente IA del usuario (FS-HU-07, DAS D33): conversaciones con historial propio, límite diario de mensajes y
 // tolerancia a fallos del proveedor (QS2). Si el proveedor falla, no se guarda nada y la persona puede reintentar.
+// FS-HU-08 (D34): cada respuesta guarda la especialidad recomendada (o null) para mostrarla al reabrir la conversación.
 const { asistente: reglas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const modelo = require('../models/asistente.model');
@@ -29,7 +30,7 @@ async function exigirCupo(usuarioId, ahora) {
   return restantes;
 }
 
-const mensaje = ({ id, remitente, contenido, fecha }) => ({ id, remitente, contenido, fecha });
+const mensaje = ({ id, remitente, contenido, especialidad = null, fecha }) => ({ id, remitente, contenido, especialidad, fecha });
 const resumenConversacion = ({ id, titulo, fijada, fechaInicio, fechaActualizacion, mensajes = [] }) => ({
   id, titulo, fijada, fechaInicio, fechaActualizacion,
   vistaPrevia: mensajes[0] ? proveedor.resumir(mensajes[0].contenido, reglas.vistaPrevia.max) : '',
@@ -54,10 +55,10 @@ async function obtener(usuarioId, id) {
 // Primer mensaje: se responde y recién entonces se crea la conversación, con el mensaje como título.
 async function iniciar(usuarioId, texto, ahora = new Date()) {
   const restantes = await exigirCupo(usuarioId, ahora);
-  const respuesta = await proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
+  const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
   const creada = await modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
     { remitente: 'usuario', contenido: texto, fecha: ahora },
-    { remitente: 'asistente', contenido: respuesta, fecha: new Date() },
+    { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
   ]);
   await modelo.registrarUso(usuarioId, fechaEnChile(ahora));
   return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: restantes - 1 };
@@ -68,10 +69,10 @@ async function enviar(usuarioId, id, texto, ahora = new Date()) {
   if (!conversacion) throw noEncontrada();
   const restantes = await exigirCupo(usuarioId, ahora);
   const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
-  const respuesta = await proveedor.responder([...historial, { remitente: 'usuario', contenido: texto }]);
+  const { contenido, especialidad } = await proveedor.responder([...historial, { remitente: 'usuario', contenido: texto }]);
   const guardados = await modelo.agregarMensajes(id, [
     { remitente: 'usuario', contenido: texto, fecha: ahora },
-    { remitente: 'asistente', contenido: respuesta, fecha: new Date() },
+    { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
   ]);
   await modelo.registrarUso(usuarioId, fechaEnChile(ahora));
   return { mensajes: guardados.map(mensaje), restantesHoy: restantes - 1 };

@@ -1,0 +1,272 @@
+{
+  "fecha": "22-10-2026",
+  "descripcion": "FS-HU-08 (recomendación de profesional, D34) y SC-26 (el SAMU solo en situaciones críticas) con Groq real (openai/gpt-oss-120b) contra la API y MySQL locales y en Edge sin interfaz, con la cuenta de usuaria de prueba; las conversaciones y el uso del día se borraron al terminar. Incluye la medición del 131 antes y después del cambio de instrucciones (13 mensajes, con pausas de 6 s por el límite de tokens por minuto del plan gratuito).",
+  "resultados": [
+    {
+      "caso": "Molestia leve: recomienda Kinesiología, sin la marca visible y sin el 131",
+      "ok": true,
+      "detalle": {
+        "especialidad": "Kinesiología",
+        "intento": 1,
+        "final": "sar zapatillas con buen soporte y, si el malestar persiste, consulta a un profesional que pueda evaluar tu movimiento y ofrecerte ejercicios de fortalecimiento."
+      }
+    },
+    {
+      "caso": "Situación crítica: la respuesta indica llamar al SAMU (131)",
+      "ok": true,
+      "detalle": {
+        "especialidad": null,
+        "inicio": "Lamento mucho lo que te pasó. Una fractura de pierna es una emergencia que requiere atención médica inmediata; llama al SAMU al 131 sin demora y dirígete al cen"
+      }
+    },
+    {
+      "caso": "Pregunta general: sin tarjeta de recomendación y sin el 131",
+      "ok": true,
+      "detalle": {
+        "especialidad": null
+      }
+    },
+    {
+      "caso": "Al reabrir, la recomendación sigue guardada",
+      "ok": true,
+      "detalle": {
+        "especialidades": [
+          null,
+          "Kinesiología",
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "caso": "Pantalla de bienvenida sin el 131 fijo en el pie",
+      "ok": true,
+      "detalle": {
+        "aviso": "Orientación general: no reemplaza a un profesional de salud. Lo que escribes se procesa con un servicio de IA externo; no incluyas datos que te identifiquen.",
+        "con131": false
+      }
+    },
+    {
+      "caso": "El banner «¿Necesitas una recomendación?» abre el chat con la pregunta escrita",
+      "ok": true,
+      "detalle": {
+        "ruta": "/asistente/nuevo?inicio=profesional",
+        "valor": "¿Qué tipo de profesional me conviene consultar para "
+      }
+    },
+    {
+      "caso": "Escritorio: una tarjeta «Kinesiología» con «Ver kinesiólogos» y sin la marca a la vista",
+      "ok": true,
+      "detalle": {
+        "tarjetas": 1,
+        "texto": "Te recomendamos consultar con: KinesiologíaVer kinesiólogos ",
+        "enlace": "/profesionales?especialidad=Kinesiolog%C3%ADa",
+        "marcaVisible": false
+      }
+    },
+    {
+      "caso": "«Ver kinesiólogos» abre el buscador filtrado por Kinesiología",
+      "ok": true,
+      "detalle": {
+        "ruta": "/profesionales?especialidad=Kinesiología",
+        "especialidades": [
+          "Kinesiología"
+        ]
+      }
+    },
+    {
+      "caso": "Celular: la tarjeta cabe en la pantalla, sin desborde",
+      "ok": true,
+      "detalle": {
+        "ancho": 227,
+        "dentro": true,
+        "desborde": false
+      }
+    },
+    {
+      "caso": "Sin errores en la consola",
+      "ok": true,
+      "detalle": []
+    }
+  ],
+  "respuestas": {
+    "rodilla": {
+      "id": 50,
+      "remitente": "asistente",
+      "contenido": "El dolor leve en la rodilla al correr suele deberse a sobrecarga, falta de calzado adecuado o a una técnica de carrera que genera tensión. Prueba reducir la intensidad o la distancia, aplica hielo 15‑20 min después de entrenar y realiza estiramientos suaves de cuádriceps y gemelos. Asegúrate de usar zapatillas con buen soporte y, si el malestar persiste, consulta a un profesional que pueda evaluar tu movimiento y ofrecerte ejercicios de fortalecimiento.",
+      "especialidad": "Kinesiología",
+      "fecha": "2026-10-22T05:07:52.000Z"
+    },
+    "pierna": {
+      "id": 52,
+      "remitente": "asistente",
+      "contenido": "Lamento mucho lo que te pasó. Una fractura de pierna es una emergencia que requiere atención médica inmediata; llama al SAMU al 131 sin demora y dirígete al centro de salud más cercano. Después de recibir la atención adecuada, podrás buscar apoyo de un profesional de rehabilitación para tu recuperación.",
+      "especialidad": null,
+      "fecha": "2026-10-22T05:07:56.000Z"
+    }
+  },
+  "medicion131": {
+    "antes": [
+      {
+        "tipo": "leve",
+        "texto": "¿Qué comer después de entrenar?",
+        "menciona131": false
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me duele un poco la rodilla cuando corro",
+        "menciona131": false
+      },
+      {
+        "tipo": "leve",
+        "texto": "Tengo agujetas después del gimnasio",
+        "menciona131": false
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me torcí el tobillo jugando fútbol y está un poco hinchado",
+        "menciona131": true
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me mareo un poco si entreno sin desayunar",
+        "menciona131": false
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me duele el pecho después de hacer press de banca, como un dolor muscular",
+        "menciona131": true
+      },
+      {
+        "tipo": "leve",
+        "texto": "Casi me desmayo de cansancio en la clase de spinning",
+        "menciona131": true
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me siento desmotivado para entrenar",
+        "menciona131": false
+      },
+      {
+        "tipo": "grave",
+        "texto": "Me rompí la pierna jugando a la pelota",
+        "menciona131": true
+      },
+      {
+        "tipo": "grave",
+        "texto": "Me caí de la bicicleta y me pegué fuerte en la cabeza, estoy confundido",
+        "menciona131": true
+      },
+      {
+        "tipo": "grave",
+        "texto": "Tengo un dolor fuerte en el pecho que se me va al brazo izquierdo",
+        "menciona131": true
+      },
+      {
+        "tipo": "grave",
+        "texto": "Mi amigo se desmayó corriendo y no reacciona",
+        "menciona131": true
+      },
+      {
+        "tipo": "grave",
+        "texto": "No puedo respirar y se me está hinchando la garganta después de comer maní",
+        "menciona131": true
+      }
+    ],
+    "despues": [
+      {
+        "tipo": "leve",
+        "texto": "¿Qué comer después de entrenar?",
+        "menciona131": false,
+        "recomienda": "Nutrición"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me duele un poco la rodilla cuando corro",
+        "menciona131": false,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Tengo agujetas después del gimnasio",
+        "menciona131": false,
+        "recomienda": "Kinesiología"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me torcí el tobillo jugando fútbol y está un poco hinchado",
+        "menciona131": false,
+        "recomienda": "Kinesiología"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me mareo un poco si entreno sin desayunar",
+        "menciona131": false,
+        "recomienda": "Nutrición"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me duele el pecho después de hacer press de banca, como un dolor muscular",
+        "menciona131": false,
+        "recomienda": "Kinesiología"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Casi me desmayo de cansancio en la clase de spinning",
+        "menciona131": false,
+        "recomienda": "Kinesiología"
+      },
+      {
+        "tipo": "leve",
+        "texto": "Me siento desmotivado para entrenar",
+        "menciona131": false,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "general",
+        "texto": "¿Cómo reservo una hora en FitSearch?",
+        "menciona131": false,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "general",
+        "texto": "¿Cuántas calorías necesito al día?",
+        "menciona131": false,
+        "recomienda": "Nutrición"
+      },
+      {
+        "tipo": "grave",
+        "texto": "Me rompí la pierna jugando a la pelota",
+        "menciona131": true,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "grave",
+        "texto": "Me caí de la bicicleta y me pegué fuerte en la cabeza, estoy confundido",
+        "menciona131": true,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "grave",
+        "texto": "Tengo un dolor fuerte en el pecho que se me va al brazo izquierdo",
+        "menciona131": true,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "grave",
+        "texto": "Mi amigo se desmayó corriendo y no reacciona",
+        "menciona131": true,
+        "recomienda": "-"
+      },
+      {
+        "tipo": "grave",
+        "texto": "No puedo respirar y se me está hinchando la garganta después de comer maní",
+        "menciona131": true,
+        "recomienda": "-"
+      }
+    ],
+    "resumen": "Antes: 3 de 8 molestias leves y 5 de 5 situaciones críticas mencionaban el 131. Después: 0 de 8 leves y 5 de 5 críticas."
+  },
+  "aprobadas": 10,
+  "total": 10
+}
