@@ -68,7 +68,7 @@ describe('FS-HU-16: continuar con Google', () => {
     await elegirCuenta();
 
     expect(await screen.findByText(mensaje)).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
   });
 });

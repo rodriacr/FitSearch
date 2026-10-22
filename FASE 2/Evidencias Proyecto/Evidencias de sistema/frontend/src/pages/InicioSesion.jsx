@@ -44,8 +44,8 @@ export default function InicioSesion() {
   return (
     <PantallaAcceso>
       <div className="acceso__encabezado">
-        <h1>¡Bienvenido!</h1>
-        <p className="texto-secundario">Inicia sesión para continuar con tu camino hacia una vida más saludable.</p>
+        <h1>Inicia sesión</h1>
+        <p className="texto-secundario">Tu plan de bienestar te espera.</p>
       </div>
       {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
       <Alerta>{mensaje}</Alerta>
@@ -62,11 +62,11 @@ export default function InicioSesion() {
           <Link to="/recuperar-contrasena" className="enlace-acento">¿Olvidaste tu contraseña?</Link>
         </div>
         <button type="submit" className="boton boton--principal" disabled={enviando}>
-          {enviando ? 'Ingresando…' : <>Iniciar sesión <Icono nombre="flecha" /></>}
+          {enviando ? <><span className="boton__carga" aria-hidden="true" /> Ingresando…</> : <>Iniciar sesión <Icono nombre="flecha" /></>}
         </button>
       </form>
       <BotonGoogle recordar={datos.recordar} />
-      <p className="pie-acceso">¿No tienes una cuenta? <Link to="/registro" className="enlace-acento">Regístrate aquí</Link></p>
+      <p className="pie-acceso">¿No tienes una cuenta? <Link to="/registro" className="enlace-acento">Regístrate gratis</Link></p>
     </PantallaAcceso>
   );
 }

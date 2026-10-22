@@ -1,0 +1,21 @@
+.despedida {
+  position: fixed; inset: 0; z-index: 50; display: grid; place-items: center; padding: 1rem;
+  background: rgb(8 58 95 / 55%);
+}
+.despedida__tarjeta {
+  width: min(100%, 24rem); overflow: hidden; background: var(--color-superficie); border-radius: 1.25rem;
+  box-shadow: 0 24px 48px rgb(0 0 0 / 25%); text-align: center;
+}
+.despedida__foto { position: relative; height: 10rem; }
+.despedida__foto img { width: 100%; height: 100%; object-fit: cover; object-position: center 70%; }
+.despedida__foto::after { content: ''; position: absolute; inset: 0; background: rgb(8 58 95 / 30%); }
+.despedida__check {
+  position: absolute; left: 50%; bottom: -1.75rem; z-index: 1; transform: translateX(-50%);
+  display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 3px solid #fff; border-radius: 50%;
+  background: var(--color-exito-fondo); color: var(--color-exito);
+}
+.despedida__contenido { padding: 2.5rem 1.5rem 1.5rem; }
+.despedida__contenido h2 { margin: 0; font-size: 1.3rem; }
+.despedida__contenido p#texto-despedida { margin: 0.4rem 0 1.25rem; color: var(--color-texto-secundario); font-size: 0.9rem; }
+.despedida__seguir { width: 100%; margin-top: 0.6rem; }
+.despedida__nota { margin: 1rem 0 0; font-size: 0.78rem; color: #8795a4; }

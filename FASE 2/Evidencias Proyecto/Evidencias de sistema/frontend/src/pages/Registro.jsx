@@ -4,6 +4,7 @@ import Alerta from '../components/Alerta.jsx';
 import BotonGoogle from '../components/BotonGoogle.jsx';
 import CampoFormulario from '../components/CampoFormulario.jsx';
 import Icono from '../components/Icono.jsx';
+import IndicadorContrasena from '../components/IndicadorContrasena.jsx';
 import PantallaAcceso from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
 import { ELEGIR_PERFIL } from '../services/navegacion.js';
@@ -41,8 +42,8 @@ export default function Registro() {
   return (
     <PantallaAcceso>
       <div className="acceso__encabezado">
-        <h1>Tu bienestar comienza <span className="texto-acento">aquí</span></h1>
-        <p className="texto-secundario">Regístrate y accede a profesionales, lugares y herramientas para cuidar tu salud y rendimiento.</p>
+        <h1>Crea tu <span className="texto-acento">cuenta</span></h1>
+        <p className="texto-secundario">Gratis y en menos de un minuto.</p>
       </div>
       <Alerta>{mensaje}</Alerta>
       <form onSubmit={enviar} noValidate>
@@ -50,15 +51,17 @@ export default function Registro() {
           value={datos.nombre} onChange={cambiar} error={errores.nombre} />
         <CampoFormulario id="correo" etiqueta="Correo electrónico" type="email" autoComplete="email" icono="correo" etiquetaOculta
           value={datos.correo} onChange={cambiar} error={errores.correo} />
-        <div className="fila-doble">
-          <CampoFormulario id="password" etiqueta="Contraseña (mínimo 8 caracteres)" placeholder="Contraseña" type="password"
-            autoComplete="new-password" icono="candado" etiquetaOculta value={datos.password} onChange={cambiar} error={errores.password} />
-          <CampoFormulario id="confirmacion" etiqueta="Confirmar contraseña" placeholder="Confirmar" type="password"
-            autoComplete="new-password" icono="candado" etiquetaOculta value={datos.confirmacion} onChange={cambiar} error={errores.confirmacion} />
-        </div>
+        <CampoFormulario id="password" etiqueta="Contraseña (mínimo 8 caracteres)" placeholder="Contraseña" type="password"
+          autoComplete="new-password" icono="candado" etiquetaOculta value={datos.password} onChange={cambiar} error={errores.password} />
+        {!errores.password && <IndicadorContrasena password={datos.password} />}
+        <CampoFormulario id="confirmacion" etiqueta="Confirmar contraseña" placeholder="Confirmar contraseña" type="password"
+          autoComplete="new-password" icono="candado" etiquetaOculta value={datos.confirmacion} onChange={cambiar} error={errores.confirmacion} />
+        {!errores.confirmacion && datos.confirmacion && datos.confirmacion === datos.password && (
+          <p className="coincidencia" role="status"><Icono nombre="check" tamano={16} /> Las contraseñas coinciden</p>
+        )}
 
         <button type="submit" className="boton boton--principal" disabled={enviando}>
-          {enviando ? 'Creando cuenta…' : <>Registrarse <Icono nombre="flecha" /></>}
+          {enviando ? <><span className="boton__carga" aria-hidden="true" /> Creando cuenta…</> : <>Registrarse <Icono nombre="flecha" /></>}
         </button>
       </form>
       <BotonGoogle separador="o regístrate con" textoGoogle="signup_with" />

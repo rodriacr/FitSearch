@@ -82,13 +82,13 @@ describe('Inicio de sesión (FS-HU-01)', () => {
 
   test('sin sesión, la ruta de perfil redirige al inicio de sesión', () => {
     renderizarApp('/perfil');
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
   });
 
   test('sin sesión, el Inicio también pide iniciar sesión y luego vuelve a él', async () => {
     simularApi(API_CON_SESION);
     renderizarApp('/inicio');
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
 
     await ingresar();
     expect(await screen.findByRole('heading', TITULO_INICIO)).toBeInTheDocument();

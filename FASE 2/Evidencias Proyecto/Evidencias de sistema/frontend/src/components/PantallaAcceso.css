@@ -1,0 +1,106 @@
+/* Pantallas de acceso: celular primero (foto arriba y tarjeta como hoja), tablet en dos columnas y computador en tres. */
+.ingreso {
+  position: relative; min-height: 100vh; overflow: hidden;
+  background: var(--color-primario-oscuro); color: #fff;
+}
+.ingreso::before {
+  content: ''; position: absolute; width: 26rem; height: 26rem; left: -11rem; top: -11rem;
+  border: 3.5rem solid var(--color-acento); border-radius: 50%; opacity: 0.14; pointer-events: none;
+}
+.ingreso::after {
+  content: ''; position: absolute; width: 18rem; height: 18rem; right: -6rem; bottom: -7rem;
+  background: var(--color-primario-claro); border-radius: 50%; opacity: 0.35; pointer-events: none;
+}
+.ingreso__marco { position: relative; z-index: 1; display: grid; grid-template-areas: 'foto' 'tarjeta'; min-height: 100vh; }
+
+.ingreso__presentacion {
+  grid-area: foto; z-index: 2; align-self: stretch; display: flex; flex-direction: column; justify-content: space-between;
+  padding: 1rem 1.25rem 3rem;
+}
+.ingreso__marca { display: inline-flex; align-items: center; gap: 0.5rem; color: #fff; font-weight: 600; font-size: 1.05rem; text-decoration: none; }
+.ingreso__marca-icono { width: 1.9rem; height: 1.9rem; padding: 2px; background: #fff; border-radius: 50%; object-fit: contain; }
+.ingreso__etiqueta {
+  align-self: flex-start; margin: auto 0 0.5rem; padding: 0.25rem 0.75rem; border-radius: 999px;
+  background: rgb(244 123 32 / 22%); color: var(--color-acento-claro); font-size: 0.75rem; font-weight: 500;
+}
+.ingreso__lema { margin: 0; font-size: 1.35rem; font-weight: 600; line-height: 1.25; text-shadow: 0 1px 4px rgb(0 0 0 / 35%); }
+.ingreso__lema span { color: var(--color-acento-claro); }
+.ingreso__descripcion, .ingreso__comunidad { display: none; }
+
+.ingreso__foto { grid-area: foto; position: relative; height: 15rem; margin: 0; overflow: hidden; }
+.ingreso__foto img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; }
+.ingreso__foto::after { content: ''; position: absolute; inset: 0; background: rgb(8 58 95 / 42%); }
+.ingreso__aviso-foto { display: none; }
+
+.ingreso__tarjeta {
+  grid-area: tarjeta; position: relative; z-index: 3; margin-top: -1.75rem; padding: 1.75rem 1.25rem 2rem;
+  background: var(--color-superficie); color: var(--color-texto); border-radius: 1.6rem 1.6rem 0 0;
+}
+.ingreso__tarjeta .acceso__encabezado { text-align: left; margin-bottom: 1.25rem; }
+.ingreso__tarjeta .acceso__encabezado h1 { font-size: 1.45rem; }
+.ingreso__tarjeta .volver { margin-bottom: 1rem; }
+
+/* Tablet: presentación y tarjeta lado a lado, sin la foto grande. */
+@media (min-width: 768px) {
+  .ingreso__marco {
+    grid-template-areas: 'presentacion tarjeta'; grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem);
+    align-items: center; gap: 2.5rem; max-width: 72rem; margin: 0 auto; padding: 2.5rem 2rem;
+  }
+  .ingreso__presentacion { grid-area: presentacion; padding: 0; gap: 0.9rem; justify-content: center; align-self: center; }
+  .ingreso__etiqueta { margin: 1.25rem 0 0; }
+  .ingreso__lema { font-size: 2rem; text-shadow: none; }
+  .ingreso__descripcion { display: block; margin: 0; color: #b5d4f4; line-height: 1.6; }
+  .ingreso__comunidad { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.5rem; color: #b5d4f4; font-size: 0.85rem; line-height: 1.35; }
+  .ingreso__avatares { display: flex; padding-left: 0.6rem; }
+  .ingreso__avatares > * {
+    width: 2.2rem; height: 2.2rem; margin-left: -0.6rem; border: 2px solid var(--color-primario-oscuro); border-radius: 50%; object-fit: cover;
+  }
+  .ingreso__avatares > span { display: grid; place-items: center; background: var(--color-acento); color: #fff; }
+  .ingreso__foto { display: none; }
+  .ingreso__tarjeta { margin: 0; padding: 2rem 1.75rem; border-radius: 1.25rem; box-shadow: 0 24px 48px rgb(0 0 0 / 22%); }
+}
+
+/* Computador: presentación, foto y tarjeta. */
+@media (min-width: 1100px) {
+  .ingreso__marco {
+    grid-template-areas: 'presentacion foto tarjeta';
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 19rem) minmax(23rem, 26rem); gap: 2rem;
+  }
+  .ingreso__lema { font-size: 2.15rem; }
+  .ingreso__foto {
+    display: block; grid-area: foto; align-self: stretch; height: auto; max-height: 36rem; min-height: 28rem;
+    border-radius: 1.4rem; box-shadow: 0 24px 48px rgb(0 0 0 / 25%);
+  }
+  .ingreso__foto::after { display: none; }
+  .ingreso__aviso-foto {
+    position: absolute; left: 0.75rem; right: 0.75rem; bottom: 0.75rem; z-index: 1; display: flex; align-items: center; gap: 0.6rem;
+    padding: 0.6rem 0.75rem; background: rgb(255 255 255 / 95%); border-radius: 0.9rem; color: var(--color-texto-secundario); font-size: 0.8rem; line-height: 1.35;
+  }
+  .ingreso__aviso-foto strong { display: block; color: var(--color-primario); font-weight: 600; }
+  .ingreso__aviso-icono { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; flex-shrink: 0; border-radius: 0.6rem; background: #fdf0e5; color: var(--color-acento-oscuro); }
+}
+
+/* Indicador de carga de los botones de envío. */
+.boton__carga {
+  width: 1.05rem; height: 1.05rem; border: 2px solid rgb(255 255 255 / 45%); border-top-color: #fff; border-radius: 50%;
+  animation: girar-carga 0.8s linear infinite;
+}
+@keyframes girar-carga { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .boton__carga { animation-duration: 2.4s; } }
+
+/* Aviso de Bloq Mayús y fortaleza de la contraseña. */
+.campo__mayusculas {
+  display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0; padding: 0.3rem 0.6rem; border-radius: 8px;
+  background: #faeeda; color: #854f0b; font-size: 0.8rem;
+}
+.fortaleza { margin: -0.5rem 0 1rem; font-size: 0.8rem; }
+.fortaleza__barras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; margin-bottom: 0.35rem; }
+.fortaleza__barras span { height: 0.3rem; border-radius: 999px; background: var(--color-borde); }
+.fortaleza--debil .fortaleza__barras span:nth-child(-n + 1) { background: var(--color-error); }
+.fortaleza--media .fortaleza__barras span:nth-child(-n + 2) { background: var(--color-acento); }
+.fortaleza--fuerte .fortaleza__barras span { background: var(--color-exito); }
+.fortaleza__nivel { margin: 0 0 0.25rem; font-weight: 500; color: var(--color-texto-secundario); }
+.fortaleza__requisitos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; color: var(--color-texto-secundario); }
+.fortaleza__requisitos li { display: flex; align-items: center; gap: 0.35rem; }
+.fortaleza__requisitos .cumple { color: var(--color-exito); }
+.coincidencia { display: flex; align-items: center; gap: 0.35rem; margin: -0.55rem 0 1rem; font-size: 0.8rem; color: var(--color-exito); }
