@@ -23,7 +23,7 @@ module.exports = {
   // Sin IA_API_KEY el asistente funciona en modo simulado, con respuestas de ejemplo.
   ia: {
     urlBase: (process.env.IA_URL_BASE || 'https://api.groq.com/openai/v1').replace(/\/$/, ''),
-    modelo: process.env.IA_MODELO || 'llama-3.3-70b-versatile',
+    modelo: process.env.IA_MODELO || 'openai/gpt-oss-120b',
     apiKey: process.env.IA_API_KEY || '',
     mensajesPorDia: Number(process.env.IA_MENSAJES_POR_DIA) || 30,
   },
