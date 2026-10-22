@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
-import IndicadorContrasena, { evaluarContrasena } from './IndicadorContrasena.jsx';
+import { evaluarContrasena } from '../services/contrasena.js';
+import IndicadorContrasena from './IndicadorContrasena.jsx';
 
 test('el nivel sube con los requisitos y es débil mientras no llega al largo mínimo', () => {
   expect(evaluarContrasena('abc12').nivel).toBe('debil');
