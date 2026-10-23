@@ -52,7 +52,7 @@ async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ..
   const { desde, distancia } = construirConsulta(filtros);
   const [filas, [{ total }]] = await Promise.all([
     prisma.$queryRaw`
-      SELECT p.id, u.nombre, p.especialidad, p.descripcion, p.comuna, p.modalidad, p.verificado,
+      SELECT p.id, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
         p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
         e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
         COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
@@ -70,7 +70,7 @@ async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ..
 async function buscarPorId(id, usuarioId) {
   const { desde, distancia } = construirConsulta({});
   const filas = await prisma.$queryRaw`
-    SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, p.descripcion, p.comuna, p.modalidad, p.verificado,
+    SELECT p.id, p.usuario_id AS usuarioId, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
       p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
       e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
       COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
@@ -96,7 +96,9 @@ async function filtros() {
 }
 
 // Ficha propia del profesional (FS-HU-04). La fila de "profesionales" no existe hasta que la completa por primera vez.
-const seleccionFicha = { id: true, especialidad: true, descripcion: true, comuna: true, modalidad: true, verificado: true, ubicacionLat: true, ubicacionLng: true };
+const seleccionFicha = {
+  id: true, especialidad: true, descripcion: true, comuna: true, direccion: true, modalidad: true, verificado: true, ubicacionLat: true, ubicacionLng: true,
+};
 
 function obtenerPorUsuario(usuarioId) {
   return prisma.profesional.findUnique({ where: { usuarioId }, select: seleccionFicha });

@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import reglas from '@shared/reglas.json';
 import Icono from '../Icono.jsx';
+import useBloquearScroll from '../diseno/useBloquearScroll.js';
 
 const { distanciasKm, calificacionesMinimas, filtroModalidad } = reglas.profesionales;
 
@@ -17,6 +18,7 @@ function textoUbicacion({ buscando, estado }) {
 // Filtros del buscador: columna lateral en escritorio y panel inferior en celular (FS-HU-22).
 // Cada cambio se aplica de inmediato y queda en la URL.
 export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo, ubicacion, onCambiar, onLimpiar, total, hayFiltros }) {
+  useBloquearScroll(abierto);
   useEffect(() => {
     if (!abierto) return undefined;
     const alTeclear = (evento) => { if (evento.key === 'Escape') onCerrar(); };
@@ -38,7 +40,8 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
 
   return (
     <>
-      {abierto && <div className="panel-filtros__fondo" onClick={onCerrar} aria-hidden="true" />}
+      {/* El fondo siempre está montado para fundirse junto con la hoja de filtros (al abrir y al cerrar). */}
+      <div className={`panel-filtros__fondo${abierto ? ' panel-filtros__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
       <aside id={id} className={`panel-filtros${abierto ? ' panel-filtros--abierto' : ''}`} aria-label="Filtros">
         <div className="panel-filtros__cabecera">
           <h2>Filtros</h2>

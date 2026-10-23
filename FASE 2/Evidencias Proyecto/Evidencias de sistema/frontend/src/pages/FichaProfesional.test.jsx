@@ -55,6 +55,22 @@ describe('Ficha', () => {
     expect(await screen.findByRole('heading', { name: 'No encontramos este profesional' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver profesionales' })).toHaveAttribute('href', '/profesionales');
   });
+
+  test('el lugar de atención muestra la dirección que el profesional indicó en su ficha, con su comuna (SC-24)', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({ direccion: 'Av. Ortúzar 120', establecimiento: null }) }) });
+    renderizarApp('/profesionales/1');
+    const lugar = within(await screen.findByRole('region', { name: 'Lugar de atención' }));
+    expect(lugar.getByText('Atención en Melipilla')).toBeInTheDocument();
+    expect(lugar.getByText('Av. Ortúzar 120, Melipilla')).toBeInTheDocument();
+  });
+
+  test('si atiende solo online y no indicó dirección, la ficha lo dice en vez de pedir consultarla (SC-24)', async () => {
+    simular({ ficha: fichaApi({ profesional: fichaProfesional({ modalidad: 'online', direccion: null, establecimiento: null }) }) });
+    renderizarApp('/profesionales/1');
+    const lugar = within(await screen.findByRole('region', { name: 'Lugar de atención' }));
+    expect(lugar.getByText('Atiende solo online.')).toBeInTheDocument();
+    expect(lugar.queryByText(/Consulta la dirección exacta/)).not.toBeInTheDocument();
+  });
 });
 
 describe('Calificar (FS-HU-24)', () => {

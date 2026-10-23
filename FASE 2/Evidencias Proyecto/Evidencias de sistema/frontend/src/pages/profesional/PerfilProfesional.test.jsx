@@ -5,7 +5,8 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL } from '../../tests/utilidades.jsx';
 
 const NUEVA = {
-  especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', modalidad: 'ambas', ubicacionLat: -33.4569, ubicacionLng: -70.5976,
+  especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 2401', modalidad: 'ambas',
+  ubicacionLat: -33.4569, ubicacionLng: -70.5976,
 };
 const RESUMEN_VACIO = { promedio: null, total: 0, distribucion: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
 
@@ -32,13 +33,14 @@ function simularServidor({ ficha = null, alGuardar } = {}) {
 const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([url, o]) => url === '/api/profesionales/mi-ficha' && o.method === 'PUT')[1].body);
 const huboPut = (fetch) => fetch.mock.calls.some(([, opciones = {}]) => opciones.method === 'PUT');
 
-async function completarFicha() {
+async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázaval 2401', lat = '-33.4569', lng = '-70.5976' } = {}) {
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
-  await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), 'ambas');
+  await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
   await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
-  await userEvent.type(screen.getByLabelText('Latitud'), '-33.4569');
-  await userEvent.type(screen.getByLabelText('Longitud'), '-70.5976');
+  if (direccion) await userEvent.type(screen.getByLabelText(/^Dirección de atención/), direccion);
+  await userEvent.type(screen.getByLabelText('Latitud'), lat);
+  await userEvent.type(screen.getByLabelText('Longitud'), lng);
 }
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
@@ -68,9 +70,38 @@ describe('Sin ficha', () => {
 
     // Los mensajes de error se anuncian como alertas (el de la especialidad también es la opción inicial del selector).
     expect(screen.getAllByRole('alert').map((alerta) => alerta.textContent)).toEqual(expect.arrayContaining([
-      'Selecciona tu especialidad', 'Selecciona cómo atiendes', 'Ingresa la comuna donde atiendes',
-      'La latitud debe estar entre -90 y 90', 'La longitud debe estar entre -180 y 180',
+      'Selecciona tu especialidad', 'Selecciona cómo atiendes', 'Ingresa la comuna donde atiendes', 'Ingresa la dirección donde atiendes',
+      'La latitud debe estar en Chile (entre -56,5 y -17)', 'La longitud debe estar en Chile (entre -81 y -65,5)',
     ]));
+    expect(huboPut(fetch)).toBe(false);
+  });
+
+  test('si atiende solo online la dirección es opcional y se guarda vacía (SC-24)', async () => {
+    const fetch = simularServidor();
+    renderizarApp('/profesional/perfil');
+    await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
+    expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveAttribute('autocomplete', 'street-address');
+
+    await completarFicha({ modalidad: 'online', direccion: '' });
+    expect(screen.getByLabelText('Dirección de atención (opcional si atiendes solo online)')).toHaveValue('');
+    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
+
+    expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
+    expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', direccion: '' });
+  });
+
+  test('no guarda coordenadas fuera de Chile (SC-24)', async () => {
+    const fetch = simularServidor();
+    renderizarApp('/profesional/perfil');
+    await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
+
+    // Buenos Aires: la latitud cae dentro del rango de Chile, la longitud no.
+    await completarFicha({ lat: '-34.6037', lng: '-58.3816' });
+    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
+
+    expect(screen.getByText('La longitud debe estar en Chile (entre -81 y -65,5)')).toBeInTheDocument();
+    expect(screen.queryByText(/La latitud debe estar/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Longitud')).toHaveAttribute('aria-invalid', 'true');
     expect(huboPut(fetch)).toBe(false);
   });
 
@@ -108,6 +139,20 @@ describe('Con ficha', () => {
     expect(screen.getByRole('link', { name: /Ver mi perfil público/ })).toHaveAttribute('href', '/profesional/perfil/publico');
   });
 
+  test('en "Atención" muestra su dirección; si atiende presencial y no la tiene, invita a agregarla (SC-24)', async () => {
+    simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
+    const { unmount } = renderizarApp('/profesional/perfil');
+    const atencion = within(await screen.findByRole('region', { name: 'Atención' }));
+    expect(atencion.getByText('Av. Italia 850, Providencia')).toBeInTheDocument();
+    expect(atencion.queryByText(/Agrega tu dirección/)).not.toBeInTheDocument();
+    unmount();
+
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    const sinDireccion = within(await screen.findByRole('region', { name: 'Atención' }));
+    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde «Editar perfil»/)).toBeInTheDocument();
+  });
+
   test('las pestañas que aún no existen lo dicen sin simular datos', async () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
@@ -142,12 +187,13 @@ describe('Con ficha', () => {
   });
 
   test('"Editar perfil" abre el formulario con sus datos y "Cancelar" vuelve sin guardar', async () => {
-    const fetch = simularServidor({ ficha: MI_FICHA });
+    const fetch = simularServidor({ ficha: { ...MI_FICHA, direccion: 'Av. Italia 850' } });
     renderizarApp('/profesional/perfil');
 
     await userEvent.click(await screen.findByRole('button', { name: /Editar perfil/ }));
     expect(screen.getByRole('heading', { name: 'Editar perfil profesional' })).toBeInTheDocument();
     expect(screen.getByLabelText('Comuna (obligatorio)')).toHaveValue('Providencia');
+    expect(screen.getByLabelText('Dirección de atención (obligatorio)')).toHaveValue('Av. Italia 850');
     expect(screen.getByLabelText('Especialidad (obligatorio)')).toHaveValue('Entrenamiento personal');
     await userEvent.click(screen.getByRole('button', { name: 'Cancelar' }));
 

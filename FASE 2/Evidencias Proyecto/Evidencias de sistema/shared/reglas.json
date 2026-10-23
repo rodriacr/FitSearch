@@ -250,6 +250,15 @@
     "comuna": {
       "max": 80
     },
+    "direccion": {
+      "max": 150
+    },
+    "ubicacionChile": {
+      "latMin": -56.5,
+      "latMax": -17,
+      "lngMin": -81,
+      "lngMax": -65.5
+    },
     "porPagina": 12,
     "modalidades": [
       {

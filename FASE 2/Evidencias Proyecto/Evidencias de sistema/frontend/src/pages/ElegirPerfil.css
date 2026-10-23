@@ -1,6 +1,6 @@
 /* "¿Cómo quieres usar FitSearch?" (mockup del PO del 08-10-2026): pantalla propia, fuera del asistente de perfil. */
 .elegir {
-  position: relative; min-height: 100vh; overflow: hidden; padding: 1rem 1rem 2.5rem;
+  position: relative; min-height: 100vh; min-height: 100dvh; overflow: hidden; padding: 1rem 1rem 2.5rem;
   background: linear-gradient(180deg, #f7fbfe 0%, #eef5fa 100%);
 }
 /* Curvas de la marca en las esquinas, como en las pantallas de acceso */
@@ -45,7 +45,10 @@
 .elegir__tarjeta {
   display: flex; flex-direction: column; overflow: hidden; border-radius: 20px; background: var(--color-superficie);
   box-shadow: var(--sombra-tarjeta); border: 1px solid #e3ecf3;
+  /* Pantalla que se ve una sola vez: las dos tarjetas entran escalonadas (60 ms entre una y otra). */
+  animation: aparecer 350ms var(--curva-salida) both;
 }
+.elegir__tarjeta:nth-child(2) { animation-delay: 60ms; }
 .elegir__foto { position: relative; height: 11.5rem; }
 .elegir__foto img { width: 100%; height: 100%; object-fit: cover; object-position: center 22%; border-radius: 20px 20px 0 0; }
 .elegir__tarjeta--profesional .elegir__foto img { object-position: center 18%; }
@@ -71,7 +74,9 @@
 }
 .elegir__tarjeta--usuario .elegir__boton { background: linear-gradient(180deg, #1565a0, var(--color-primario)); box-shadow: 0 8px 18px rgb(11 79 128 / 25%); }
 .elegir__tarjeta--profesional .elegir__boton { background: var(--degradado-acento); box-shadow: 0 8px 18px rgb(244 123 32 / 30%); }
-.elegir__boton:hover:not(:disabled) { filter: brightness(1.06); }
+@media (hover: hover) and (pointer: fine) {
+  .elegir__boton:hover:not(:disabled) { filter: brightness(1.06); }
+}
 .elegir__boton:disabled { opacity: 0.65; cursor: wait; }
 
 .elegir__seguridad { display: inline-flex; align-items: center; gap: 0.5rem; margin: 2rem 0 0; font-size: 0.85rem; color: var(--color-texto-secundario); }

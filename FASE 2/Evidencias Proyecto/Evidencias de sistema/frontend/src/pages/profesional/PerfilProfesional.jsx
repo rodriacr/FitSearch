@@ -7,7 +7,7 @@ import FormularioFicha from '../../components/profesional/FormularioFicha.jsx';
 import Certificaciones from '../../components/profesional/Certificaciones.jsx';
 import { HorariosProfesional } from '../Agenda.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
-import { etiquetaModalidad, iniciales } from '../../services/formato.js';
+import { direccionDe, etiquetaModalidad, iniciales } from '../../services/formato.js';
 import { obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
 import './PerfilProfesional.css';
 
@@ -48,7 +48,7 @@ function Pestanas({ activa, onCambiar }) {
 }
 
 function Informacion({ profesional }) {
-  const { descripcion, comuna, modalidad, establecimiento, ubicacionLat, ubicacionLng, nombre } = profesional;
+  const { descripcion, comuna, direccion, modalidad, establecimiento, ubicacionLat, ubicacionLng, nombre } = profesional;
   return (
     <>
       <section className="perfil-prof__bloque" aria-labelledby="titulo-sobre-mi">
@@ -58,7 +58,13 @@ function Informacion({ profesional }) {
       <section className="perfil-prof__bloque" aria-labelledby="titulo-atencion">
         <h3 id="titulo-atencion">Atención</h3>
         <ul className="perfil-prof__datos">
-          <li><Icono nombre="pin" tamano={18} /> {establecimiento?.nombre ? `${establecimiento.nombre}, ${comuna}` : comuna || 'Comuna por confirmar'}</li>
+          <li>
+            <Icono nombre="pin" tamano={18} />
+            <span>
+              {direccionDe(profesional) || (establecimiento?.nombre ? `${establecimiento.nombre}, ${comuna}` : comuna || 'Comuna por confirmar')}
+              {!direccion && modalidad !== 'online' && <> · Agrega tu dirección de atención desde «Editar perfil».</>}
+            </span>
+          </li>
           <li><Icono nombre="persona" tamano={18} /> Modalidad: {etiquetaModalidad(modalidad)}</li>
           <li>
             <Icono nombre="mira" tamano={18} />

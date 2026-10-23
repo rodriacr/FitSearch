@@ -1,43 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { solicitar } from '../services/api.js';
+import { ahoraChile, fechaHorario, fechaLarga, futura, minutosEntre, moverMes, sumarMinutos, textoDuracion } from '../services/agenda.js';
 import { useSesion } from '../context/SesionContext.jsx';
 import Icono from '../components/Icono.jsx';
+import CalendarioMes from '../components/reservas/CalendarioMes.jsx';
+import useAgenda from '../components/reservas/useAgenda.js';
 import './Agenda.css';
 
-const fechaHorario = (h) =>
-  `${new Intl.DateTimeFormat('es-CL', { dateStyle: 'full', timeZone: 'UTC' }).format(new Date(`${h.fecha}T12:00:00Z`))}, ${h.horaInicio}–${h.horaFin}`;
-const futura = (r) =>
-  `${r.horario.fecha}T${r.horario.horaInicio}` >
-  new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'America/Santiago',
-    dateStyle: 'short',
-    timeStyle: 'short',
-    hourCycle: 'h23',
-  })
-    .format(new Date())
-    .replace(' ', 'T');
-function useAgenda(ruta, revision) {
-  const [datos, setDatos] = useState(null);
-  const [error, setError] = useState('');
-  useEffect(() => {
-    let vigente = true;
-    solicitar(ruta)
-      .then((d) => {
-        if (vigente) {
-          setDatos(d);
-          setError('');
-        }
-      })
-      .catch((e) => {
-        if (vigente) setError(e.message);
-      });
-    return () => {
-      vigente = false;
-    };
-  }, [ruta, revision]);
-  return { datos, error };
-}
 function Avisos({ error, aviso, onReintentar }) {
   return (
     <>
@@ -54,6 +24,67 @@ function Avisos({ error, aviso, onReintentar }) {
   );
 }
 
+// Pregunta de confirmación dentro de la misma tarjeta, junto a lo que se va a cambiar. Antes aparecía al final de
+// la lista y, con varias citas, quedaba fuera de la pantalla. Recibe el foco al abrirse y Escape la cierra.
+function Confirmacion({ id, titulo, texto, accion, ocupado, onConfirmar, onVolver }) {
+  const caja = useRef(null);
+  useEffect(() => {
+    caja.current?.focus();
+  }, []);
+  return (
+    <div
+      ref={caja}
+      className="agenda__confirmacion"
+      role="group"
+      aria-labelledby={id}
+      tabIndex={-1}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') onVolver();
+      }}
+    >
+      <h4 id={id}>{titulo}</h4>
+      <p>{texto}</p>
+      <div className="agenda__acciones">
+        <button
+          type="button"
+          className="boton boton--principal boton--compacto"
+          disabled={ocupado}
+          onClick={onConfirmar}
+        >
+          {accion}
+        </button>
+        <button
+          type="button"
+          className="boton boton--secundario boton--compacto"
+          disabled={ocupado}
+          onClick={onVolver}
+        >
+          Volver
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// Al cerrar la pregunta con "Volver" o Escape, el foco regresa al botón que la abrió: mientras la pregunta está
+// abierta, las acciones de la tarjeta quedan ocultas (no desmontadas). Tras confirmar no se devuelve (la lista se recarga).
+function useVolverFoco(abierta) {
+  const disparador = useRef(null);
+  useEffect(() => {
+    if (abierta || !disparador.current) return;
+    if (disparador.current.isConnected) disparador.current.focus();
+    disparador.current = null;
+  }, [abierta]);
+  return {
+    recordar: (boton) => {
+      disparador.current = boton;
+    },
+    olvidar: () => {
+      disparador.current = null;
+    },
+  };
+}
+
 export function MisCitas({ compacto = false }) {
   const { sesion } = useSesion();
   const profesional = sesion.usuario.rol === 'profesional';
@@ -62,8 +93,13 @@ export function MisCitas({ compacto = false }) {
   const [error, setError] = useState('');
   const [aviso, setAviso] = useState('');
   const [confirmacion, setConfirmacion] = useState(null);
+  const foco = useVolverFoco(confirmacion);
   const [ocupado, setOcupado] = useState(false);
   const [filtro, setFiltro] = useState('proximas');
+  const preguntar = (e, id, estado) => {
+    foco.recordar(e.currentTarget);
+    setConfirmacion({ id, estado });
+  };
   async function decidir() {
     setOcupado(true);
     setError('');
@@ -77,6 +113,7 @@ export function MisCitas({ compacto = false }) {
           ? 'Reserva cancelada. El horario vuelve a estar disponible.'
           : 'Reserva confirmada.',
       );
+      foco.olvidar();
       setConfirmacion(null);
       setRevision((r) => r + 1);
     } catch (e) {
@@ -165,15 +202,16 @@ export function MisCitas({ compacto = false }) {
               <p className="agenda__mensaje">{r.mensaje}</p>
             </div>
             {!compacto && r.estado !== 'cancelada' && futura(r) && (
-              <div className="agenda__acciones">
+              <div
+                className="agenda__acciones"
+                hidden={confirmacion?.id === r.id}
+              >
                 {profesional && r.estado === 'pendiente' && (
                   <button
                     type="button"
-                    className="boton boton--primario boton--compacto"
+                    className="boton boton--principal boton--compacto"
                     disabled={ocupado}
-                    onClick={() =>
-                      setConfirmacion({ id: r.id, estado: 'confirmada' })
-                    }
+                    onClick={(e) => preguntar(e, r.id, 'confirmada')}
                   >
                     Confirmar reserva
                   </button>
@@ -182,48 +220,30 @@ export function MisCitas({ compacto = false }) {
                   type="button"
                   className="boton boton--secundario boton--compacto"
                   disabled={ocupado}
-                  onClick={() =>
-                    setConfirmacion({ id: r.id, estado: 'cancelada' })
-                  }
+                  onClick={(e) => preguntar(e, r.id, 'cancelada')}
                 >
                   Cancelar reserva
                 </button>
               </div>
             )}
+            {confirmacion?.id === r.id && (
+              <Confirmacion
+                id={`confirmar-reserva-${r.id}`}
+                titulo={`¿${confirmacion.estado === 'cancelada' ? 'Cancelar' : 'Confirmar'} esta reserva?`}
+                texto={
+                  confirmacion.estado === 'cancelada'
+                    ? 'Si cancelas, tendrás que reservar nuevamente para recuperar una hora.'
+                    : 'La solicitud quedará confirmada en ambas agendas.'
+                }
+                accion="Confirmar cambio"
+                ocupado={ocupado}
+                onConfirmar={decidir}
+                onVolver={() => setConfirmacion(null)}
+              />
+            )}
           </article>
         ))}
       </div>
-      {confirmacion && (
-        <div
-          className="agenda__confirmacion"
-          role="dialog"
-          aria-labelledby="confirmar-reserva"
-        >
-          <h3 id="confirmar-reserva">
-            ¿{confirmacion.estado === 'cancelada' ? 'Cancelar' : 'Confirmar'}{' '}
-            esta reserva?
-          </h3>
-          <p>
-            {confirmacion.estado === 'cancelada'
-              ? 'Si cancelas, tendrás que reservar nuevamente para recuperar una hora.'
-              : 'La solicitud quedará confirmada en ambas agendas.'}
-          </p>
-          <button
-            className="boton boton--primario boton--compacto"
-            disabled={ocupado}
-            onClick={decidir}
-          >
-            Confirmar cambio
-          </button>
-          <button
-            className="boton boton--secundario boton--compacto"
-            disabled={ocupado}
-            onClick={() => setConfirmacion(null)}
-          >
-            Volver
-          </button>
-        </div>
-      )}
     </section>
   );
 }
@@ -235,17 +255,38 @@ export function HorariosProfesional() {
   const [aviso, setAviso] = useState('');
   const [editando, setEditando] = useState(null);
   const [borrando, setBorrando] = useState(null);
+  const foco = useVolverFoco(borrando);
   const [ocupado, setOcupado] = useState(false);
   const [campos, setCampos] = useState({
     fecha: '',
     horaInicio: '',
     horaFin: '',
   });
+  // Calendario del formulario (SC-21): empieza en el mes actual y no deja elegir días pasados.
+  const hoy = ahoraChile().slice(0, 10);
+  const [mes, setMes] = useState(hoy.slice(0, 7));
+  const formulario = useRef(null);
+  const campoInicio = useRef(null);
+  const porDia = new Map();
+  for (const b of datos?.horarios || []) porDia.set(b.fecha, [...(porDia.get(b.fecha) || []), b]);
+  const delDia = (porDia.get(campos.fecha) || []).filter((b) => b.id !== editando);
+  const duracion = campos.horaInicio && campos.horaFin ? minutosEntre(campos.horaInicio, campos.horaFin) : null;
+  // Al editar un horario de la lista, el formulario queda a la vista con el calendario en su mes y el foco en la hora.
+  useEffect(() => {
+    if (!editando) return;
+    const suave = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    formulario.current?.scrollIntoView?.({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
+    campoInicio.current?.focus({ preventScroll: true });
+  }, [editando]);
   async function guardar(e) {
     e.preventDefault();
-    setOcupado(true);
     setError('');
     setAviso('');
+    if (campos.horaFin <= campos.horaInicio) {
+      setError('La hora de término debe ser posterior a la hora de inicio.');
+      return;
+    }
+    setOcupado(true);
     try {
       await solicitar(`/disponibilidades${editando ? `/${editando}` : ''}`, {
         metodo: editando ? 'PUT' : 'POST',
@@ -270,6 +311,7 @@ export function HorariosProfesional() {
         setEditando(null);
         setCampos({ fecha: '', horaInicio: '', horaFin: '' });
       }
+      foco.olvidar();
       setBorrando(null);
       setAviso(resultado.retirado
         ? 'Horario retirado. Ya no admite nuevas reservas; su historial se conserva.'
@@ -301,48 +343,81 @@ export function HorariosProfesional() {
           setRevision((r) => r + 1);
         }}
       />
-      <form className="agenda__formulario" onSubmit={guardar}>
+      <form ref={formulario} className="agenda__formulario agenda__publicar" onSubmit={guardar}>
         <h3>{editando ? 'Editar horario' : 'Publicar un horario'}</h3>
-        <div className="agenda__campos">
-          {[
-            ['fecha', 'Fecha', 'date'],
-            ['horaInicio', 'Hora de inicio', 'time'],
-            ['horaFin', 'Hora de término', 'time'],
-          ].map(([clave, texto, tipo]) => (
-            <label key={clave}>
-              {texto}
-              <input
-                className="campo__control"
-                required
-                type={tipo}
-                value={campos[clave]}
-                disabled={ocupado}
-                onChange={(e) =>
-                  setCampos({ ...campos, [clave]: e.target.value })
-                }
-              />
-            </label>
-          ))}
+        <div className="publicar">
+          <CalendarioMes id="mes-publicar" mes={mes} dia={campos.fecha} onMes={setMes}
+            onElegir={(fecha) => setCampos({ ...campos, fecha })}
+            anterior={mes > hoy.slice(0, 7) ? moverMes(mes, -1) : undefined} siguiente={moverMes(mes, 1)}
+            describirDia={(fecha) => {
+              const cantidad = porDia.get(fecha)?.length || 0;
+              const detalle = fecha < hoy ? 'día pasado'
+                : cantidad ? `${cantidad} ${cantidad === 1 ? 'horario publicado' : 'horarios publicados'}` : 'sin horarios publicados';
+              return { habilitado: fecha >= hoy, marcado: cantidad > 0, etiqueta: `${fechaLarga(fecha)}, ${detalle}` };
+            }} />
+          <div className="publicar__horas">
+            <p className="publicar__dia" aria-live="polite">
+              {campos.fecha ? fechaLarga(campos.fecha) : 'Elige un día en el calendario'}
+            </p>
+            {delDia.length > 0 && (
+              <p className="publicar__existentes">
+                Ya publicaste: {delDia.map((b) => `${b.horaInicio}–${b.horaFin}`).join(', ')}
+              </p>
+            )}
+            <div className="publicar__campos">
+              {[
+                ['horaInicio', 'Hora de inicio', campoInicio],
+                ['horaFin', 'Hora de término', null],
+              ].map(([clave, texto, ref]) => (
+                <label key={clave}>
+                  {texto}
+                  <input
+                    ref={ref}
+                    className="campo__control"
+                    required
+                    type="time"
+                    step="900"
+                    value={campos[clave]}
+                    disabled={ocupado}
+                    onChange={(e) =>
+                      setCampos({ ...campos, [clave]: e.target.value })
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="publicar__duraciones" role="group" aria-label="Duración del bloque">
+              {[30, 45, 60, 90].map((minutos) => {
+                const fin = campos.horaInicio && sumarMinutos(campos.horaInicio, minutos);
+                return (
+                  <button key={minutos} type="button" className="chip" aria-pressed={duracion === minutos}
+                    disabled={!fin || ocupado} onClick={() => setCampos({ ...campos, horaFin: fin })}>
+                    {textoDuracion(minutos)}
+                  </button>
+                );
+              })}
+            </div>
+            <button className="boton boton--principal" disabled={ocupado || !campos.fecha}>
+              {ocupado
+                ? 'Guardando…'
+                : editando
+                  ? 'Guardar horario'
+                  : 'Publicar horario'}
+            </button>
+            {editando && (
+              <button
+                type="button"
+                className="boton boton--secundario"
+                onClick={() => {
+                  setEditando(null);
+                  setCampos({ fecha: '', horaInicio: '', horaFin: '' });
+                }}
+              >
+                Cancelar edición
+              </button>
+            )}
+          </div>
         </div>
-        <button className="boton boton--primario" disabled={ocupado}>
-          {ocupado
-            ? 'Guardando…'
-            : editando
-              ? 'Guardar horario'
-              : 'Publicar horario'}
-        </button>
-        {editando && (
-          <button
-            type="button"
-            className="boton boton--secundario"
-            onClick={() => {
-              setEditando(null);
-              setCampos({ fecha: '', horaInicio: '', horaFin: '' });
-            }}
-          >
-            Cancelar edición
-          </button>
-        )}
       </form>
       {!datos && !errorCarga && <p role="status">Cargando horarios…</p>}
       {datos && !datos.horarios.length && (
@@ -357,13 +432,14 @@ export function HorariosProfesional() {
               </span>
               <h3>{fechaHorario(b)}</h3>
             </div>
-            <div className="agenda__acciones">
+            <div className="agenda__acciones" hidden={borrando === b.id}>
               <button
                 type="button"
                 className="boton boton--secundario boton--compacto"
                 disabled={b.ocupado || b.conHistorial || ocupado}
                 onClick={() => {
                   setEditando(b.id);
+                  setMes(b.fecha.slice(0, 7));
                   setCampos({
                     fecha: b.fecha,
                     horaInicio: b.horaInicio,
@@ -377,162 +453,32 @@ export function HorariosProfesional() {
                 type="button"
                 className="boton boton--secundario boton--compacto"
                 disabled={b.ocupado || ocupado}
-                onClick={() => setBorrando(b.id)}
+                onClick={(e) => {
+                  foco.recordar(e.currentTarget);
+                  setBorrando(b.id);
+                }}
               >
                 Retirar horario
               </button>
             </div>
+            {borrando === b.id && (
+              <Confirmacion
+                id={`retirar-horario-${b.id}`}
+                titulo="¿Retirar este horario?"
+                texto="El bloque dejará de aparecer para nuevas reservas. Los bloques con historial se conservan."
+                accion="Confirmar retiro"
+                ocupado={ocupado}
+                onConfirmar={borrar}
+                onVolver={() => setBorrando(null)}
+              />
+            )}
           </article>
         ))}
       </div>
-      {borrando && (
-        <div
-          className="agenda__confirmacion"
-          role="dialog"
-          aria-labelledby="eliminar-horario"
-        >
-          <h3 id="eliminar-horario">¿Retirar este horario?</h3>
-          <p>
-            El bloque dejará de aparecer para nuevas reservas. Los bloques con
-            historial se conservan.
-          </p>
-          <button
-            className="boton boton--primario"
-            disabled={ocupado}
-            onClick={borrar}
-          >
-            Confirmar retiro
-          </button>
-          <button
-            className="boton boton--secundario"
-            disabled={ocupado}
-            onClick={() => setBorrando(null)}
-          >
-            Volver
-          </button>
-        </div>
-      )}
     </section>
   );
 }
 
-export function ReservarHora({ profesionalId }) {
-  const [revision, setRevision] = useState(0);
-  const { datos, error: errorCarga } = useAgenda(
-    `/profesionales/${profesionalId}/disponibilidades`,
-    revision,
-  );
-  // Límite del PO: una reserva activa por usuario con cada profesional. Se avisa antes de escribir el mensaje.
-  const { datos: misReservas } = useAgenda('/reservas', revision);
-  const reservaActiva = misReservas?.reservas.find(
-    (r) =>
-      r.profesional.id === Number(profesionalId) &&
-      r.estado !== 'cancelada' &&
-      futura(r),
-  );
-  const [error, setError] = useState('');
-  const [bloque, setBloque] = useState('');
-  const [mensaje, setMensaje] = useState('');
-  const [ocupado, setOcupado] = useState(false);
-  const [aviso, setAviso] = useState('');
-  async function enviar(e) {
-    e.preventDefault();
-    setOcupado(true);
-    setError('');
-    try {
-      await solicitar('/reservas', {
-        metodo: 'POST',
-        cuerpo: { disponibilidadId: Number(bloque), mensaje },
-      });
-      setAviso(
-        'Solicitud de reserva enviada. El profesional podrá confirmarla.',
-      );
-      setBloque('');
-      setMensaje('');
-      setRevision((r) => r + 1);
-    } catch (e) {
-      setError(e.message);
-      if (e.estado === 409 && e.detalles?.motivo === 'limite_por_profesional') {
-        // El horario sigue libre: se conserva la selección y se recarga para mostrar la reserva activa.
-        setRevision((r) => r + 1);
-      } else if (e.estado === 409) {
-        setBloque('');
-        setRevision((r) => r + 1);
-      }
-    } finally {
-      setOcupado(false);
-    }
-  }
-  return (
-    <section className="agenda ficha__seccion">
-      <h2>Reservar una hora</h2>
-      <p>
-        Elige un horario y cuéntale brevemente al profesional qué necesitas.
-        Hora de Chile (Santiago).
-      </p>
-      <Avisos
-        error={error || errorCarga}
-        aviso={aviso}
-        onReintentar={() => {
-          setError('');
-          setRevision((r) => r + 1);
-        }}
-      />
-      {aviso && <Link to="/citas">Ver mis citas</Link>}
-      {reservaActiva && !aviso && (
-        <p className="agenda__vacio" role="status">
-          Ya tienes una reserva {reservaActiva.estado} con este profesional para
-          el {fechaHorario(reservaActiva.horario)}. Para pedir otra hora,
-          primero cancélala en <Link to="/citas">Mis citas</Link>.
-        </p>
-      )}
-      {!datos && !errorCarga && <p role="status">Cargando horarios…</p>}
-      {datos && !datos.horarios.length && (
-        <p>Este profesional no tiene horarios disponibles por ahora.</p>
-      )}
-      {datos?.horarios.length > 0 && !reservaActiva && (
-        <form className="agenda__formulario" onSubmit={enviar}>
-          <label>
-            Horario disponible
-            <select
-              className="campo__control"
-              required
-              value={bloque}
-              onChange={(e) => setBloque(e.target.value)}
-              disabled={ocupado}
-            >
-              <option value="">Selecciona una hora</option>
-              {datos.horarios.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {fechaHorario(b)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Qué necesitas consultar
-            <textarea
-              className="campo__control"
-              required
-              minLength={10}
-              maxLength={500}
-              value={mensaje}
-              onChange={(e) => setMensaje(e.target.value)}
-              disabled={ocupado}
-            />
-          </label>
-          <p className="texto-secundario">
-            Entre 10 y 500 caracteres. El mensaje solo lo verán tú y el
-            profesional.
-          </p>
-          <button className="boton boton--primario" disabled={ocupado}>
-            {ocupado ? 'Enviando…' : 'Enviar solicitud de reserva'}
-          </button>
-        </form>
-      )}
-    </section>
-  );
-}
 export default function AgendaProfesional() {
   return (
     <div>

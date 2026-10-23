@@ -1,0 +1,162 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) de las mejoras de interfaz SC-19 y de los defectos 30 a 34 contra la aplicación local (frontend 5173, API 3000, MySQL). Cuentas de prueba del proyecto; el favorito marcado se dejó como estaba y el horario temporal se retiró al terminar.",
+  "resultados": [
+    {
+      "caso": "7. Táctil: los efectos de hover no aplican",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "18. Destello al tocar desactivado",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "4. Campos del buscador y filtros a 16 px (sin zoom en iPhone)",
+      "ok": true,
+      "detalle": [
+        "16px",
+        "16px",
+        "16px",
+        "16px",
+        "16px"
+      ]
+    },
+    {
+      "caso": "3. Al filtrar se ven los resultados anteriores atenuados (sin \"Cargando…\")",
+      "ok": true,
+      "detalle": {
+        "tarjetasAntes": 12,
+        "tarjetasDurante": 12,
+        "actualizando": true,
+        "contador": "Actualizando resultados…",
+        "cargando": false,
+        "final": {
+          "actualizando": false,
+          "tarjetas": 8,
+          "contador": "8 profesionales encontrados",
+          "cargando": false
+        }
+      }
+    },
+    {
+      "caso": "9, 10 y 12. Hoja de filtros: curva de cajón, fondo que se funde y página de fondo quieta",
+      "ok": true,
+      "detalle": {
+        "aMitad": {
+          "transform": "matrix(1, 0, 0, 1, 0, 29.1604)",
+          "fondo": "0.826763"
+        },
+        "abierta": {
+          "overflowBody": "hidden",
+          "transicion": "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility",
+          "overscroll": "contain",
+          "fondo": "1"
+        }
+      }
+    },
+    {
+      "caso": "12. Al cerrar la hoja vuelve el scroll de la página",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "8. El corazón late una vez al marcar favorito (dejado como estaba)",
+      "ok": true,
+      "detalle": {
+        "clase": "icono icono--relleno boton-favorito__latido",
+        "animacion": "latido"
+      }
+    },
+    {
+      "caso": "1. Al entrar a otra pantalla la vista parte arriba",
+      "ok": true,
+      "detalle": {
+        "antes": 4419,
+        "despues": 0,
+        "ruta": "/profesionales/4"
+      }
+    },
+    {
+      "caso": "9, 10 y 12. Menú lateral: curva de cajón, fondo que se funde y página de fondo quieta",
+      "ok": true,
+      "detalle": {
+        "overflowBody": "hidden",
+        "transicion": "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), visibility",
+        "fondo": "1"
+      }
+    },
+    {
+      "caso": "10. Al cerrar, el fondo se desvanece (no desaparece de golpe)",
+      "ok": true,
+      "detalle": {
+        "opacidadA80ms": "0.372908"
+      }
+    },
+    {
+      "caso": "11. Menú de la cuenta entra con fundido desde el botón",
+      "ok": true,
+      "detalle": {
+        "origen": "288px 0px",
+        "opacidad": "0.795996",
+        "transform": "matrix(0.99388, 0, 0, 0.99388, 0, -0.816014)"
+      }
+    },
+    {
+      "caso": "16. \"Reducir movimiento\": sin escalas ni desplazamientos, menú sin deslizarse",
+      "ok": true,
+      "detalle": {
+        "presion": "1",
+        "desplazamiento": "0px",
+        "menu": "0s"
+      }
+    },
+    {
+      "caso": "2 y 5. La confirmación aparece en la tarjeta, visible, con el foco y el botón naranja de la app",
+      "ok": true,
+      "detalle": {
+        "dentroDeLaTarjeta": true,
+        "visible": true,
+        "foco": true,
+        "botonPrincipal": "Confirmar retiro",
+        "fondoBoton": "linear-gradient(rgb(247, 147, 30), rgb(2"
+      }
+    },
+    {
+      "caso": "2. \"Volver\" cierra la pregunta y devuelve el foco al botón",
+      "ok": true,
+      "detalle": {
+        "pregunta": false,
+        "focoEnRetirar": true
+      }
+    },
+    {
+      "caso": "Limpieza: el horario temporal ya no existe",
+      "ok": true,
+      "detalle": {
+        "bloqueId": 70
+      }
+    },
+    {
+      "caso": "13 a 15. Entradas de Elegir perfil y del asistente cargadas",
+      "ok": true,
+      "detalle": [
+        ".elegir__tarjeta → aparecer 350ms var(--curva-salida) both",
+        ".elegir__tarjeta:nth-child(2) → 60ms",
+        ".elegir__tarjeta--profesional .elegir__foto img → ",
+        ".elegir__tarjeta--usuario .elegir__insignia → ",
+        ".elegir__tarjeta--profesional .elegir__insignia → ",
+        ".elegir__tarjeta--usuario .elegir__beneficio-icono → ",
+        ".elegir__tarjeta--profesional .elegir__beneficio-icono → ",
+        ".elegir__tarjeta--usuario .elegir__boton → ",
+        ".elegir__tarjeta--profesional .elegir__boton → ",
+        ".asistente__paso → aparecer 250ms var(--curva-salida)",
+        ".paso-final__check → aparecer-escala 350ms var(--curva-salida) 120ms both"
+      ]
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 16,
+  "total": 16
+}

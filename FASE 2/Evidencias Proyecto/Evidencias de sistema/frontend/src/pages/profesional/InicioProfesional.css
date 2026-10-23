@@ -42,7 +42,9 @@
 .tarea__texto strong { color: var(--color-primario); font-weight: 600; }
 .tarea__texto span { color: var(--color-texto-secundario); font-size: 0.82rem; }
 .tarea__accion { display: inline-flex; align-items: center; gap: 0.3rem; flex: none; font-size: 0.85rem; font-weight: 600; color: var(--color-acento-oscuro); text-decoration: none; }
-.tarea__accion:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  .tarea__accion:hover { text-decoration: underline; }
+}
 
 .accesos-prof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
 .acceso-prof {
@@ -50,7 +52,9 @@
   border-radius: 14px; border: 1px solid var(--color-borde); background: var(--color-superficie-suave);
   color: var(--color-primario); font-size: 0.85rem; font-weight: 600; text-align: center; text-decoration: none;
 }
-.acceso-prof:hover { border-color: var(--color-primario); background: var(--color-info-fondo); }
+@media (hover: hover) and (pointer: fine) {
+  .acceso-prof:hover { border-color: var(--color-primario); background: var(--color-info-fondo); }
+}
 .acceso-prof .icono { color: var(--color-primario); }
 
 /* ---------- Resumen semanal (se activa con las reservas) ---------- */

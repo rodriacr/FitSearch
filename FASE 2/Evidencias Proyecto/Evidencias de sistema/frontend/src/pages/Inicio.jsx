@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Alerta from '../components/Alerta.jsx';
+import BuscadorGeneral from '../components/BuscadorGeneral.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
@@ -83,7 +84,6 @@ function TarjetaCitas() {
 // Inicio del usuario con sesión, según el mockup (FS-HU-21). Solo usa datos reales de la API:
 // lo que aún no existe se muestra como estado vacío o "Próximamente".
 export default function Inicio() {
-  const navegar = useNavigate();
   const { marcarRolPendiente } = useSesion();
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
@@ -114,11 +114,6 @@ export default function Inicio() {
   }, [rolPendiente, marcarRolPendiente]);
   if (rolPendiente) return null;
 
-  const buscar = (evento) => {
-    evento.preventDefault();
-    const texto = new FormData(evento.currentTarget).get('q').trim();
-    navegar(texto ? `/profesionales?q=${encodeURIComponent(texto)}` : '/profesionales');
-  };
   const cargandoPerfil = perfil?.intento !== intento;
   const cargandoDestacados = destacados?.intento !== intento;
   // Pasos pendientes del asistente del usuario (el tipo de cuenta no es parte de él).
@@ -139,12 +134,7 @@ export default function Inicio() {
         <div className="inicio__hero-texto">
           <h1 id="titulo-inicio">Tu salud y bienestar, en un solo lugar</h1>
           <p>Encuentra profesionales, centros de salud, gimnasios y más, cerca de ti.</p>
-          <form className="buscador-hero" role="search" onSubmit={buscar}>
-            <label htmlFor="busqueda-inicio" className="solo-lector">¿Qué necesitas hoy?</label>
-            <Icono nombre="buscar" tamano={20} />
-            <input id="busqueda-inicio" name="q" type="search" placeholder="¿Qué necesitas hoy?" maxLength={reglas.profesionales.busqueda.max} autoComplete="off" />
-            <button type="submit" aria-label="Buscar profesionales"><Icono nombre="buscar" tamano={20} /></button>
-          </form>
+          <BuscadorGeneral />
         </div>
         <ul className="inicio__categorias" aria-label="Lo que encontrarás en FitSearch">
           {CATEGORIAS_HERO.map(({ icono, nombre, detalle }) => (

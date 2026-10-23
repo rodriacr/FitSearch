@@ -13,3 +13,13 @@ export const textoResenas = (total) => `${total} ${total === 1 ? 'reseña' : 're
 
 const MODALIDADES = Object.fromEntries(reglas.profesionales.modalidades.map(({ valor, etiqueta }) => [valor, etiqueta]));
 export const etiquetaModalidad = (valor) => MODALIDADES[valor] || valor;
+
+// Dirección de atención (SC-24): la que el profesional indica en su ficha o, si no tiene, la de su establecimiento.
+// Si la dirección propia no menciona la comuna, se agrega al final ("Av. Italia 850, Providencia").
+export function direccionDe({ direccion, comuna, establecimiento }) {
+  if (direccion) {
+    const sinComuna = comuna && !direccion.toLocaleLowerCase('es').includes(comuna.toLocaleLowerCase('es'));
+    return sinComuna ? `${direccion}, ${comuna}` : direccion;
+  }
+  return establecimiento?.direccion || null;
+}

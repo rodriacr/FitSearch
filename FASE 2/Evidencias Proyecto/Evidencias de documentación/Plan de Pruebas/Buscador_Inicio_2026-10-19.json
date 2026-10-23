@@ -1,0 +1,82 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) del buscador general del Inicio (SC-23) contra la aplicación local con la cuenta de usuaria de prueba: secciones con el teclado y con el mouse, especialidad, búsqueda en profesionales y celular.",
+  "resultados": [
+    {
+      "caso": "\"perfil\" sugiere Mi perfil primero, con la lista visible completa (no la corta el hero)",
+      "ok": true,
+      "detalle": {
+        "expandido": "true",
+        "opciones": [
+          "Mi perfil",
+          "Buscar «perfil» en profesionales"
+        ],
+        "marcada": "sugerencia-seccion-perfil",
+        "visibleCompleta": true,
+        "bajoElHero": true
+      }
+    },
+    {
+      "caso": "Enter lleva a /perfil",
+      "ok": true,
+      "detalle": {
+        "ruta": "/perfil"
+      }
+    },
+    {
+      "caso": "\"chat ia\" y clic en Asistente IA lleva a /asistente (Próximamente)",
+      "ok": true,
+      "detalle": {
+        "titulo": "Asistente IA"
+      }
+    },
+    {
+      "caso": "\"salud\" + ↓ + Enter lleva a Centros de salud",
+      "ok": true,
+      "detalle": {
+        "marcada": "sugerencia-seccion-centros",
+        "opciones": [
+          "Mi perfil",
+          "Centros de salud",
+          "Buscar «salud» en profesionales"
+        ]
+      }
+    },
+    {
+      "caso": "\"nutri\" ofrece la especialidad Nutrición y la abre filtrada en Profesionales",
+      "ok": true,
+      "detalle": {
+        "nutri": [
+          "Ver profesionales de Nutrición",
+          "Buscar «nutri» en profesionales"
+        ],
+        "url": "?especialidad=Nutrición",
+        "especialidad": "Nutrición",
+        "contador": "4 profesionales encontrados"
+      }
+    },
+    {
+      "caso": "Sin coincidencias, Enter busca el texto en profesionales",
+      "ok": true,
+      "detalle": {
+        "url": "?q=dolor de rodilla"
+      }
+    },
+    {
+      "caso": "Celular: \"citas\" sugiere Mis citas, la lista cabe en el ancho y se ve completa",
+      "ok": true,
+      "detalle": {
+        "opciones": [
+          "Mis citas",
+          "Buscar «citas» en profesionales"
+        ],
+        "ancho": 352,
+        "desborde": false,
+        "visibleCompleta": true
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 7,
+  "total": 7
+}

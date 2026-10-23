@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import DisenoAplicacion from './components/diseno/DisenoAplicacion.jsx';
 import { SECCIONES, SECCIONES_PROFESIONAL, SECCIONES_PROXIMAMENTE, SECCIONES_PROXIMAMENTE_PROFESIONAL } from './components/diseno/secciones.js';
 import RutaProtegida from './components/RutaProtegida.jsx';
+import VolverArriba from './components/VolverArriba.jsx';
 import { useSesion } from './context/SesionContext.jsx';
 import ElegirPerfil from './pages/ElegirPerfil.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
@@ -33,56 +34,59 @@ export default function App() {
     ? <Navigate to={aviso?.destino || destinoTrasIngreso(state, sesion.usuario)} replace /> : pagina);
 
   return (
-    <Routes>
-      <Route path="/" element={soloInvitado(<Portada />)} />
-      <Route path="/registro" element={soloInvitado(<Registro />)} />
-      <Route path="/iniciar-sesion" element={soloInvitado(<InicioSesion />)} />
-      <Route path="/recuperar-contrasena" element={soloInvitado(<RecuperarContrasena />)} />
-      <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
-      <Route element={<RutaProtegida />}>
-        <Route path={ACCESO_NO_DISPONIBLE} element={<AccesoNoDisponible />} />
-        <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
-        <Route element={<RutaProtegida rol="administrador" />}>
-          <Route path="/admin" element={<DisenoAdministrador />}>
-            <Route index element={<Navigate to="dashboard" replace />} />
-            <Route path="dashboard" element={<ResumenAdministrador />} />
-            <Route path="profesionales" element={<ListadoAdministrador key="profesionales" tipo="profesionales" />} />
-            <Route path="verificaciones" element={<ListadoAdministrador key="verificaciones" tipo="verificaciones" />} />
-            <Route path="verificaciones/:id" element={<DetalleVerificacion key={pathname} />} />
-            <Route path="usuarios" element={<ListadoAdministrador key="usuarios" tipo="usuarios" />} />
-            <Route path="reportes" element={<ResumenAdministrador reporte />} />
+    <>
+      <VolverArriba />
+      <Routes>
+        <Route path="/" element={soloInvitado(<Portada />)} />
+        <Route path="/registro" element={soloInvitado(<Registro />)} />
+        <Route path="/iniciar-sesion" element={soloInvitado(<InicioSesion />)} />
+        <Route path="/recuperar-contrasena" element={soloInvitado(<RecuperarContrasena />)} />
+        <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
+        <Route element={<RutaProtegida />}>
+          <Route path={ACCESO_NO_DISPONIBLE} element={<AccesoNoDisponible />} />
+          <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
+          <Route element={<RutaProtegida rol="administrador" />}>
+            <Route path="/admin" element={<DisenoAdministrador />}>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<ResumenAdministrador />} />
+              <Route path="profesionales" element={<ListadoAdministrador key="profesionales" tipo="profesionales" />} />
+              <Route path="verificaciones" element={<ListadoAdministrador key="verificaciones" tipo="verificaciones" />} />
+              <Route path="verificaciones/:id" element={<DetalleVerificacion key={pathname} />} />
+              <Route path="usuarios" element={<ListadoAdministrador key="usuarios" tipo="usuarios" />} />
+              <Route path="reportes" element={<ResumenAdministrador reporte />} />
+            </Route>
+          </Route>
+          {/* Espacio del usuario */}
+          <Route element={<RutaProtegida rol="usuario" />}>
+            <Route element={<DisenoAplicacion />}>
+              <Route path="/inicio" element={<Inicio />} />
+              <Route path="/profesionales" element={<Profesionales />} />
+              <Route path="/profesionales/:id" element={<FichaProfesional />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/citas" element={<MisCitas />} />
+              <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
+              {SECCIONES_PROXIMAMENTE.map((clave) => (
+                <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />
+              ))}
+            </Route>
+          </Route>
+          {/* Espacio del profesional */}
+          <Route element={<RutaProtegida rol="profesional" />}>
+            <Route element={<DisenoAplicacion espacio="profesional" />}>
+              <Route path="/profesional" element={<Navigate to={SECCIONES_PROFESIONAL.inicio.ruta} replace />} />
+              <Route path={SECCIONES_PROFESIONAL.inicio.ruta} element={<InicioProfesional />} />
+              <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
+              <Route path="/profesional/agenda" element={<AgendaProfesional />} />
+              <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
+              {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (
+                <Route key={clave} path={SECCIONES_PROFESIONAL[clave].ruta}
+                  element={<Proximamente key={clave} seccion={clave} espacio="profesional" />} />
+              ))}
+            </Route>
           </Route>
         </Route>
-        {/* Espacio del usuario */}
-        <Route element={<RutaProtegida rol="usuario" />}>
-          <Route element={<DisenoAplicacion />}>
-            <Route path="/inicio" element={<Inicio />} />
-            <Route path="/profesionales" element={<Profesionales />} />
-            <Route path="/profesionales/:id" element={<FichaProfesional />} />
-            <Route path="/favoritos" element={<Favoritos />} />
-            <Route path="/citas" element={<MisCitas />} />
-            <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
-            {SECCIONES_PROXIMAMENTE.map((clave) => (
-              <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />
-            ))}
-          </Route>
-        </Route>
-        {/* Espacio del profesional */}
-        <Route element={<RutaProtegida rol="profesional" />}>
-          <Route element={<DisenoAplicacion espacio="profesional" />}>
-            <Route path="/profesional" element={<Navigate to={SECCIONES_PROFESIONAL.inicio.ruta} replace />} />
-            <Route path={SECCIONES_PROFESIONAL.inicio.ruta} element={<InicioProfesional />} />
-            <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
-            <Route path="/profesional/agenda" element={<AgendaProfesional />} />
-            <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
-            {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (
-              <Route key={clave} path={SECCIONES_PROFESIONAL[clave].ruta}
-                element={<Proximamente key={clave} seccion={clave} espacio="profesional" />} />
-            ))}
-          </Route>
-        </Route>
-      </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
   );
 }

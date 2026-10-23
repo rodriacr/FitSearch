@@ -8,10 +8,14 @@ export default function BotonFavorito({ profesional, onCambio, className = '' })
   const [esFavorito, setEsFavorito] = useState(Boolean(profesional.esFavorito));
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
+  // Cada vez que se marca como favorito el corazón "late" una vez (TarjetaProfesional.css): la clave vuelve a montar
+  // el ícono para repetir la animación. Al quitarlo o al cargar la lista no late.
+  const [latidos, setLatidos] = useState(0);
 
   const alternar = async () => {
     const nuevo = !esFavorito;
     setEsFavorito(nuevo);
+    if (nuevo) setLatidos((cantidad) => cantidad + 1);
     setGuardando(true);
     setError('');
     try {
@@ -30,7 +34,7 @@ export default function BotonFavorito({ profesional, onCambio, className = '' })
       <button type="button" className={`boton-favorito${esFavorito ? ' boton-favorito--activo' : ''}`} aria-pressed={esFavorito}
         aria-label={`Guardar a ${profesional.nombre} en favoritos`} title={esFavorito ? 'Quitar de favoritos' : 'Guardar en favoritos'}
         disabled={guardando} onClick={alternar}>
-        <Icono nombre="corazon" tamano={20} relleno={esFavorito} />
+        <Icono key={latidos} nombre="corazon" tamano={20} relleno={esFavorito} className={latidos ? 'boton-favorito__latido' : ''} />
       </button>
       {error && <span className="favorito__error" role="alert">{error}</span>}
     </span>

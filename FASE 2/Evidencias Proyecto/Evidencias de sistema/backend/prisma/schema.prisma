@@ -67,6 +67,8 @@ model Profesional {
   ubicacionLat      Decimal          @map("ubicacion_lat") @db.Decimal(10, 7)
   ubicacionLng      Decimal          @map("ubicacion_lng") @db.Decimal(10, 7)
   comuna            String?          @db.VarChar(80)
+  // Dirección de atención propia (SC-24): obligatoria si atiende presencial o de ambas formas; opcional si atiende solo online.
+  direccion         String?          @db.VarChar(150)
   modalidad         String           @default("presencial") @db.VarChar(20)
   usuario           Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   establecimiento   Establecimiento? @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)

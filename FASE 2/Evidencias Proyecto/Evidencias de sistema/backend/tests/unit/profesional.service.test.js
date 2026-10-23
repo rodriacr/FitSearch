@@ -22,7 +22,7 @@ test('la ficha convierte los tipos de MySQL y redondea la distancia', () => {
     distanciaKm: 12.349, esFavorito: 0n,
   });
   expect(ficha).toEqual({
-    id: 2, nombre: 'Diego Demo', especialidad: 'Kinesiología', descripcion: null, comuna: null, modalidad: 'ambas', verificado: true,
+    id: 2, nombre: 'Diego Demo', especialidad: 'Kinesiología', descripcion: null, comuna: null, direccion: null, modalidad: 'ambas', verificado: true,
     ubicacionLat: -33.689, ubicacionLng: -71.213, establecimiento: null, calificacion: { promedio: 3.7, total: 3 }, distanciaKm: 12.3, esFavorito: false,
   });
 });

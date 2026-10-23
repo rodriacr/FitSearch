@@ -1,0 +1,67 @@
+{
+  "fecha": "19-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) del calendario de \"Publicar un horario\" (SC-21) contra la aplicación local (frontend 5173, API 3000, MySQL). La profesional de prueba publicó y editó un horario desde la pantalla; al terminar se borró de MySQL.",
+  "resultados": [
+    {
+      "caso": "Abre en octubre de 2026: días pasados deshabilitados, sin mes anterior y \"Publicar\" desactivado hasta elegir un día",
+      "ok": true,
+      "detalle": {
+        "mes": "octubre 2026",
+        "anteriorDeshabilitado": true,
+        "ayer": true,
+        "hoy": false,
+        "publicarDeshabilitado": true,
+        "texto": "Elige un día en el calendario",
+        "columnas": "569.406px 304px"
+      }
+    },
+    {
+      "caso": "Elegir el 10 de noviembre y \"45 min\" completa la hora de término",
+      "ok": true,
+      "detalle": {
+        "dia": "martes 10 de noviembre",
+        "fin": "09:45",
+        "chip": "45 min"
+      }
+    },
+    {
+      "caso": "Se publica el horario (API) y el día queda marcado en el calendario",
+      "ok": true,
+      "detalle": {
+        "nuevos": [
+          {
+            "id": 86,
+            "fecha": "2026-11-10",
+            "horaInicio": "09:00",
+            "horaFin": "09:45",
+            "ocupado": false
+          }
+        ],
+        "marcado": "martes 10 de noviembre, 1 horario publicado"
+      }
+    },
+    {
+      "caso": "\"Editar horario\" lleva al formulario en noviembre, con el día elegido y el foco en la hora",
+      "ok": true,
+      "detalle": {
+        "titulo": "Editar horario",
+        "mes": "noviembre 2026",
+        "elegido": "2026-11-10",
+        "foco": "time",
+        "visible": true
+      }
+    },
+    {
+      "caso": "Celular: calendario y horas en una columna, sin scroll horizontal",
+      "ok": true,
+      "detalle": {
+        "columnas": 1,
+        "desborde": false,
+        "anchoDia": 41.484375
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "aprobadas": 5,
+  "total": 5
+}

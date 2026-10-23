@@ -40,3 +40,54 @@
     grid-template-columns: 1fr;
   }
 }
+/* Ventana del marcador (SC-22): nombre y detalle del profesional con la letra de la aplicación. */
+.ventana-mapa {
+  display: grid;
+  gap: 0.35rem;
+  font-family: 'Poppins', system-ui, sans-serif;
+  color: var(--color-texto);
+}
+.ventana-mapa__nombre {
+  font-size: 0.95rem;
+  color: var(--color-primario-oscuro);
+}
+.detalle-mapa {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+.detalle-mapa p {
+  margin: 0;
+}
+.detalle-mapa__tipo {
+  font-weight: 600;
+  color: var(--color-primario);
+}
+.detalle-mapa__dato {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+  color: var(--color-texto-secundario);
+}
+.detalle-mapa__dato .icono {
+  margin-top: 0.1rem;
+  color: var(--color-primario);
+}
+.detalle-mapa__dato--verificado {
+  font-weight: 600;
+  color: var(--color-exito);
+}
+.detalle-mapa__dato--verificado .icono {
+  color: var(--color-exito);
+}
+.detalle-mapa__dato--disponible {
+  color: var(--color-texto);
+}
+.detalle-mapa__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.9rem;
+  margin-top: 0.2rem;
+  font-weight: 600;
+}

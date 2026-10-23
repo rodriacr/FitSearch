@@ -31,7 +31,9 @@
   flex: none; padding: 0.7rem 0.9rem; border: 0; border-bottom: 3px solid transparent; background: none; font: inherit; font-size: 0.9rem;
   color: var(--color-texto-secundario); cursor: pointer;
 }
-.perfil-prof__pestana:hover { color: var(--color-primario); }
+@media (hover: hover) and (pointer: fine) {
+  .perfil-prof__pestana:hover { color: var(--color-primario); }
+}
 .perfil-prof__pestana--activa { color: var(--color-primario); font-weight: 600; border-bottom-color: var(--color-primario); }
 .perfil-prof__panel { display: grid; gap: 1.25rem; }
 .perfil-prof__bloque h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--color-primario); }
