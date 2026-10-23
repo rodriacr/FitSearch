@@ -41,16 +41,33 @@ async function usoDelDia(usuarioId, fecha) {
   return fila && fila.fecha.toISOString().slice(0, 10) === fecha ? fila.mensajes : 0;
 }
 
-// Suma un mensaje al día; si el día cambió, el contador parte de nuevo en 1.
-async function registrarUso(usuarioId, fecha) {
-  const { count } = await prisma.usoAsistente.updateMany({ where: { usuarioId, fecha: comoDia(fecha) }, data: { mensajes: { increment: 1 } } });
-  if (count) return;
-  await prisma.usoAsistente.upsert({
-    where: { usuarioId },
-    create: { usuarioId, fecha: comoDia(fecha), mensajes: 1 },
-    update: { fecha: comoDia(fecha), mensajes: 1 },
+// Reserva un mensaje del día y devuelve si quedaba cupo. Cada paso es un solo UPDATE o INSERT con la condición en la
+// misma sentencia, así que dos solicitudes simultáneas no pueden quedarse con el último cupo. Si el día cambió, el
+// contador parte de nuevo en 1.
+async function reservarUso(usuarioId, fecha, limite) {
+  const dia = comoDia(fecha);
+  const sumar = () => prisma.usoAsistente.updateMany({
+    where: { usuarioId, fecha: dia, mensajes: { lt: limite } },
+    data: { mensajes: { increment: 1 } },
   });
+  if ((await sumar()).count) return true;
+  const { count } = await prisma.usoAsistente.updateMany({ where: { usuarioId, fecha: { not: dia } }, data: { fecha: dia, mensajes: 1 } });
+  if (count) return true;
+  try {
+    await prisma.usoAsistente.create({ data: { usuarioId, fecha: dia, mensajes: 1 } });
+    return true;
+  } catch (error) {
+    // Otra solicitud creó la fila primero (clave duplicada): se intenta sumar sobre ella, sin pasar el límite.
+    if (error.code !== 'P2002') throw error;
+    return (await sumar()).count > 0;
+  }
 }
+
+// Devuelve un mensaje reservado que no se respondió. Si ya cambió el día, no hay nada que devolver.
+const liberarUso = (usuarioId, fecha) => prisma.usoAsistente.updateMany({
+  where: { usuarioId, fecha: comoDia(fecha), mensajes: { gt: 0 } },
+  data: { mensajes: { decrement: 1 } },
+});
 
 const contarFijadas = (usuarioId) => prisma.conversacion.count({ where: { usuarioId, fijada: true } });
 
@@ -75,6 +92,6 @@ const fijar = (id, usuarioId, fijada) => prisma.conversacion.updateMany({ where:
 const eliminar = (id, usuarioId) => prisma.conversacion.deleteMany({ where: { id, usuarioId } });
 
 module.exports = {
-  listarConversaciones, obtenerConversacion, ultimosMensajes, usoDelDia, registrarUso, contarFijadas,
+  listarConversaciones, obtenerConversacion, ultimosMensajes, usoDelDia, reservarUso, liberarUso, contarFijadas,
   crearConversacion, agregarMensajes, fijar, eliminar,
 };

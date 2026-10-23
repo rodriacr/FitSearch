@@ -22,12 +22,23 @@ async function restantesHoy(usuarioId, ahora = new Date()) {
   return Math.max(ia.mensajesPorDia - enviados, 0);
 }
 
-async function exigirCupo(usuarioId, ahora) {
-  const restantes = await restantesHoy(usuarioId, ahora);
-  if (restantes <= 0) {
+// El mensaje se reserva antes de llamar al proveedor y la reserva es atómica, así que varias solicitudes simultáneas no
+// pueden pasarse del límite. Si el proveedor o el guardado fallan, el cupo se devuelve y la persona puede reintentar.
+async function conCupo(usuarioId, ahora, responderYGuardar) {
+  const dia = fechaEnChile(ahora);
+  if (!(await modelo.reservarUso(usuarioId, dia, ia.mensajesPorDia))) {
     throw new ErrorHttp(429, `Llegaste al límite de ${ia.mensajesPorDia} mensajes de hoy. Vuelve a conversar mañana.`);
   }
-  return restantes;
+  try {
+    return await responderYGuardar();
+  } catch (error) {
+    try {
+      await modelo.liberarUso(usuarioId, dia);
+    } catch {
+      // Si tampoco se puede devolver el cupo, la persona debe ver el error original, no este.
+    }
+    throw error;
+  }
 }
 
 const mensaje = ({ id, remitente, contenido, especialidad = null, fecha }) => ({ id, remitente, contenido, especialidad, fecha });
@@ -54,28 +65,28 @@ async function obtener(usuarioId, id) {
 
 // Primer mensaje: se responde y recién entonces se crea la conversación, con el mensaje como título.
 async function iniciar(usuarioId, texto, ahora = new Date()) {
-  const restantes = await exigirCupo(usuarioId, ahora);
-  const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
-  const creada = await modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
-    { remitente: 'usuario', contenido: texto, fecha: ahora },
-    { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
-  ]);
-  await modelo.registrarUso(usuarioId, fechaEnChile(ahora));
-  return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: restantes - 1 };
+  const creada = await conCupo(usuarioId, ahora, async () => {
+    const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
+    return modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
+      { remitente: 'usuario', contenido: texto, fecha: ahora },
+      { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
+    ]);
+  });
+  return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
 }
 
 async function enviar(usuarioId, id, texto, ahora = new Date()) {
   const conversacion = await modelo.obtenerConversacion(id, usuarioId);
   if (!conversacion) throw noEncontrada();
-  const restantes = await exigirCupo(usuarioId, ahora);
-  const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
-  const { contenido, especialidad } = await proveedor.responder([...historial, { remitente: 'usuario', contenido: texto }]);
-  const guardados = await modelo.agregarMensajes(id, [
-    { remitente: 'usuario', contenido: texto, fecha: ahora },
-    { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
-  ]);
-  await modelo.registrarUso(usuarioId, fechaEnChile(ahora));
-  return { mensajes: guardados.map(mensaje), restantesHoy: restantes - 1 };
+  const guardados = await conCupo(usuarioId, ahora, async () => {
+    const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
+    const { contenido, especialidad } = await proveedor.responder([...historial, { remitente: 'usuario', contenido: texto }]);
+    return modelo.agregarMensajes(id, [
+      { remitente: 'usuario', contenido: texto, fecha: ahora },
+      { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
+    ]);
+  });
+  return { mensajes: guardados.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
 }
 
 async function fijar(usuarioId, id, fijada) {
