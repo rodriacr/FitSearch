@@ -18,7 +18,8 @@ beforeEach(() => {
   jest.resetAllMocks();
   jest.restoreAllMocks();
   modelo.usoDelDia.mockResolvedValue(0);
-  modelo.registrarUso.mockResolvedValue();
+  modelo.reservarUso.mockResolvedValue(true);
+  modelo.liberarUso.mockResolvedValue({ count: 1 });
 });
 
 describe('acceso', () => {
@@ -67,7 +68,7 @@ describe('estado e historial', () => {
 
 describe('conversar', () => {
   test('el primer mensaje crea la conversación con su respuesta y descuenta del límite', async () => {
-    modelo.usoDelDia.mockResolvedValue(2);
+    modelo.usoDelDia.mockResolvedValue(3);
     modelo.crearConversacion.mockImplementation(async (usuarioId, titulo, mensajes) => ({
       ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })),
     }));
@@ -81,15 +82,17 @@ describe('conversar', () => {
     const [usuarioId, , mensajes] = modelo.crearConversacion.mock.calls[0];
     expect(usuarioId).toBe(1);
     expect(mensajes[0]).toMatchObject({ remitente: 'usuario', contenido: '¿Cómo empiezo a trotar?' });
-    // El uso se registra una vez por mensaje respondido; borrar la conversación no lo devuelve.
-    expect(modelo.registrarUso).toHaveBeenCalledTimes(1);
-    expect(modelo.registrarUso).toHaveBeenCalledWith(1, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+    // El cupo se reserva una vez por mensaje, antes de responder; borrar la conversación no lo devuelve.
+    expect(modelo.reservarUso).toHaveBeenCalledTimes(1);
+    expect(modelo.reservarUso).toHaveBeenCalledWith(1, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), 30);
+    expect(modelo.liberarUso).not.toHaveBeenCalled();
   });
 
   test('un mensaje en una conversación envía al proveedor solo los últimos mensajes y guarda ambos', async () => {
     modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
     modelo.ultimosMensajes.mockResolvedValue([mensajeDe(1, 'usuario', 'Hola'), mensajeDe(2, 'asistente', '¡Hola!')]);
     modelo.agregarMensajes.mockImplementation(async (id, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+    modelo.usoDelDia.mockResolvedValue(1);
     const responder = jest.spyOn(proveedor, 'responder');
     const res = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: '¿Y si llueve?' });
     expect(res.status).toBe(201);
@@ -114,7 +117,7 @@ describe('conversar', () => {
   });
 
   test('al llegar al límite diario responde 429 sin llamar al proveedor', async () => {
-    modelo.usoDelDia.mockResolvedValue(30);
+    modelo.reservarUso.mockResolvedValue(false);
     const responder = jest.spyOn(proveedor, 'responder');
     const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Hola' });
     expect(res.status).toBe(429);
@@ -122,7 +125,7 @@ describe('conversar', () => {
     expect(responder).not.toHaveBeenCalled();
   });
 
-  test('si el proveedor falla responde 503 y no guarda el mensaje (se puede reintentar)', async () => {
+  test('si el proveedor falla responde 503, no guarda el mensaje y devuelve el cupo (se puede reintentar)', async () => {
     modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
     modelo.ultimosMensajes.mockResolvedValue([]);
     jest.spyOn(proveedor, 'responder').mockRejectedValue(new ErrorHttp(503, 'El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.'));
@@ -130,7 +133,8 @@ describe('conversar', () => {
     expect(res.status).toBe(503);
     expect(res.body.error).toMatch(/no está disponible/);
     expect(modelo.agregarMensajes).not.toHaveBeenCalled();
-    expect(modelo.registrarUso).not.toHaveBeenCalled();
+    expect(modelo.reservarUso).toHaveBeenCalledTimes(1);
+    expect(modelo.liberarUso).toHaveBeenCalledWith(1, modelo.reservarUso.mock.calls[0][1]);
   });
 
   test('la respuesta guarda y devuelve la especialidad recomendada del catálogo (FS-HU-08)', async () => {
@@ -149,6 +153,67 @@ describe('conversar', () => {
     modelo.crearConversacion.mockImplementation(async (u, titulo, mensajes) => ({ ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })) }));
     const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Tengo dolor en el pecho al correr' });
     expect(res.body.mensajes[1].contenido).toContain('SAMU (131)');
+  });
+});
+
+// Revisión del PR #29: con 29 de 30 mensajes usados, tres solicitudes simultáneas no pueden pasar todas. El contador
+// simulado reserva igual que el modelo (comprobar y sumar en un solo paso) y el proveedor tarda, para que se crucen.
+describe('límite diario con solicitudes simultáneas', () => {
+  let usados;
+  beforeEach(() => {
+    usados = 29;
+    modelo.reservarUso.mockImplementation(async (usuarioId, dia, limite) => {
+      if (usados >= limite) return false;
+      usados += 1;
+      return true;
+    });
+    modelo.liberarUso.mockImplementation(async () => { usados -= 1; });
+    modelo.usoDelDia.mockImplementation(async () => usados);
+    modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
+    modelo.ultimosMensajes.mockResolvedValue([]);
+    modelo.crearConversacion.mockImplementation(async (u, titulo, mensajes) => ({ ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })) }));
+    modelo.agregarMensajes.mockImplementation(async (id, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+  });
+
+  const responderLento = (falla = () => false) => {
+    let llamada = 0;
+    return jest.spyOn(proveedor, 'responder').mockImplementation(async () => {
+      const esta = (llamada += 1);
+      await new Promise((resolver) => setTimeout(resolver, 30));
+      if (falla(esta)) throw new ErrorHttp(503, 'El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.');
+      return { contenido: 'Respuesta', especialidad: null };
+    });
+  };
+  const enParalelo = (crear) => Promise.all([1, 2, 3].map(() => crear()));
+  const estados = (respuestas) => respuestas.map((r) => r.status).sort();
+
+  test('al iniciar conversaciones solo pasa una y el contador queda en 30', async () => {
+    const responder = responderLento();
+    const respuestas = await enParalelo(() => conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Hola' }));
+    expect(estados(respuestas)).toEqual([201, 429, 429]);
+    expect(responder).toHaveBeenCalledTimes(1);
+    expect(modelo.crearConversacion).toHaveBeenCalledTimes(1);
+    expect(usados).toBe(30);
+    expect(respuestas.find((r) => r.status === 201).body.restantesHoy).toBe(0);
+  });
+
+  test('al continuar una conversación solo pasa una y el contador queda en 30', async () => {
+    const responder = responderLento();
+    const respuestas = await enParalelo(() => conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: '¿Y si llueve?' }));
+    expect(estados(respuestas)).toEqual([201, 429, 429]);
+    expect(responder).toHaveBeenCalledTimes(1);
+    expect(modelo.agregarMensajes).toHaveBeenCalledTimes(1);
+    expect(usados).toBe(30);
+  });
+
+  test('si el proveedor falla, el cupo se devuelve y el siguiente mensaje puede usarlo', async () => {
+    responderLento((llamada) => llamada === 1);
+    const fallida = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Hola' });
+    expect(fallida.status).toBe(503);
+    expect(usados).toBe(29);
+    const reintento = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Hola' });
+    expect(reintento.status).toBe(201);
+    expect(usados).toBe(30);
   });
 });
 

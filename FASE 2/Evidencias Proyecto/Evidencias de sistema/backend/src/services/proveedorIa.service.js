@@ -64,7 +64,8 @@ function limpiar(texto) {
 const PARTES_DEL_CUERPO = '(pierna|brazo|pie|mano|tobillo|muneca|rodilla|cadera|clavicula|costilla|hueso|nariz|cuello|columna|craneo)';
 const RIESGO = [
   {
-    patron: /suicid|quitarme la vida|matarme|hacerme dano|autolesi|no quiero (seguir )?vivir|cortarme/,
+    // Incluye las formas directas de decirlo, como «me quiero matar» o «quiero morir», que antes no se reconocían.
+    patron: /suicid|quitarme la vida|matarme|me (quiero|voy a) matar|(quiero|ganas de) morir|(acabar|terminar) con mi vida|hacerme dano|autolesi|no quiero (seguir )?vivir|cortarme/,
     numero: '4141',
     aviso: 'Si estás pensando en hacerte daño, pide ayuda ahora: llama gratis al *4141, la línea de prevención del suicidio (24 horas).',
   },

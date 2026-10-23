@@ -2,7 +2,7 @@
 jest.mock('../../src/models/prisma', () => ({
   conversacion: { findMany: jest.fn(), findFirst: jest.fn(), count: jest.fn(), create: jest.fn(), update: jest.fn(), updateMany: jest.fn(), deleteMany: jest.fn() },
   mensaje: { findMany: jest.fn(), count: jest.fn(), create: jest.fn() },
-  usoAsistente: { findUnique: jest.fn(), updateMany: jest.fn(), upsert: jest.fn() },
+  usoAsistente: { findUnique: jest.fn(), updateMany: jest.fn(), create: jest.fn() },
   $transaction: jest.fn(),
 }));
 const prisma = require('../../src/models/prisma');
@@ -32,17 +32,52 @@ test('el uso del día solo cuenta si la fila es de hoy', async () => {
   expect(await modelo.usoDelDia(7, '2026-10-21')).toBe(0);
 });
 
-test('registrar uso suma uno el mismo día y parte de nuevo en 1 al cambiar de día', async () => {
-  prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 1 });
-  await modelo.registrarUso(7, '2026-10-21');
-  expect(prisma.usoAsistente.updateMany).toHaveBeenCalledWith({ where: { usuarioId: 7, fecha: new Date('2026-10-21T00:00:00Z') }, data: { mensajes: { increment: 1 } } });
-  expect(prisma.usoAsistente.upsert).not.toHaveBeenCalled();
+describe('reservar uso', () => {
+  const dia = new Date('2026-10-21T00:00:00Z');
+  const sumar = { where: { usuarioId: 7, fecha: dia, mensajes: { lt: 30 } }, data: { mensajes: { increment: 1 } } };
 
-  prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 0 });
-  await modelo.registrarUso(7, '2026-10-22');
-  const dia = new Date('2026-10-22T00:00:00Z');
-  expect(prisma.usoAsistente.upsert).toHaveBeenCalledWith({
-    where: { usuarioId: 7 }, create: { usuarioId: 7, fecha: dia, mensajes: 1 }, update: { fecha: dia, mensajes: 1 },
+  test('el mismo día suma uno solo si quedaba cupo, con la condición en la misma sentencia', async () => {
+    prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 1 });
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
+    expect(prisma.usoAsistente.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.usoAsistente.updateMany).toHaveBeenCalledWith(sumar);
+  });
+
+  test('si la fila es de otro día, el contador parte de nuevo en 1', async () => {
+    prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
+    expect(prisma.usoAsistente.updateMany).toHaveBeenLastCalledWith({ where: { usuarioId: 7, fecha: { not: dia } }, data: { fecha: dia, mensajes: 1 } });
+    expect(prisma.usoAsistente.create).not.toHaveBeenCalled();
+  });
+
+  test('el primer mensaje de la persona crea la fila', async () => {
+    prisma.usoAsistente.updateMany.mockResolvedValue({ count: 0 });
+    prisma.usoAsistente.create.mockResolvedValue({});
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
+    expect(prisma.usoAsistente.create).toHaveBeenCalledWith({ data: { usuarioId: 7, fecha: dia, mensajes: 1 } });
+  });
+
+  test('sin cupo responde false; si otra solicitud creó la fila primero, suma sobre ella sin pasar el límite', async () => {
+    const duplicada = Object.assign(new Error('Unique constraint failed'), { code: 'P2002' });
+    prisma.usoAsistente.updateMany.mockResolvedValue({ count: 0 });
+    prisma.usoAsistente.create.mockRejectedValue(duplicada);
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(false);
+    expect(prisma.usoAsistente.updateMany).toHaveBeenLastCalledWith(sumar);
+
+    prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
+  });
+
+  test('otro error al crear la fila no se oculta', async () => {
+    prisma.usoAsistente.updateMany.mockResolvedValue({ count: 0 });
+    prisma.usoAsistente.create.mockRejectedValue(new Error('sin conexión'));
+    await expect(modelo.reservarUso(7, '2026-10-21', 30)).rejects.toThrow('sin conexión');
+  });
+
+  test('liberar uso resta uno solo en la fila de ese día', async () => {
+    prisma.usoAsistente.updateMany.mockResolvedValue({ count: 1 });
+    await modelo.liberarUso(7, '2026-10-21');
+    expect(prisma.usoAsistente.updateMany).toHaveBeenCalledWith({ where: { usuarioId: 7, fecha: dia, mensajes: { gt: 0 } }, data: { mensajes: { decrement: 1 } } });
   });
 });
 
