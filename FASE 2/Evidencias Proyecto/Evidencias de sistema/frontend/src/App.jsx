@@ -5,6 +5,7 @@ import RutaProtegida from './components/RutaProtegida.jsx';
 import VolverArriba from './components/VolverArriba.jsx';
 import { useSesion } from './context/SesionContext.jsx';
 import ElegirPerfil from './pages/ElegirPerfil.jsx';
+import Asistente from './pages/Asistente.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
 import { DisenoAdministrador, ResumenAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
 import Favoritos from './pages/Favoritos.jsx';
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="/profesionales/:id" element={<FichaProfesional />} />
               <Route path="/favoritos" element={<Favoritos />} />
               <Route path="/citas" element={<MisCitas />} />
+              <Route path="/asistente/:id?" element={<Asistente />} />
               <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
               {SECCIONES_PROXIMAMENTE.map((clave) => (
                 <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />

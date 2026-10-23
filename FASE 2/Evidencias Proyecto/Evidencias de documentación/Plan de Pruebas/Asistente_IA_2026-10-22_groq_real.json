@@ -1,0 +1,66 @@
+{
+  "fecha": "22-10-2026",
+  "descripcion": "CP-109: el asistente IA (FS-HU-07) responde con Groq real (modelo openai/gpt-oss-120b) contra la API y MySQL locales, con la cuenta de usuaria de prueba. La clave está solo en backend/.env (no se sube a GitHub). La conversación de prueba y el uso del día se borraron al terminar. Antes, con el modelo anterior (llama-3.3-70b-versatile), Groq respondía 404 model_not_found (defecto 36).",
+  "modelo": "openai/gpt-oss-120b",
+  "resultados": [
+    {
+      "caso": "El backend usa el proveedor real (modo «ia», no simulado)",
+      "ok": true,
+      "detalle": {
+        "modo": "ia",
+        "limiteDiario": 30,
+        "restantesHoy": 28
+      }
+    },
+    {
+      "caso": "Primera pregunta: 201, respuesta real de Groq en español y en texto plano",
+      "ok": true,
+      "detalle": {
+        "estado": 201,
+        "segundos": 0.793,
+        "caracteres": 588,
+        "restantesHoy": 27,
+        "inicio": "Después de entrenar lo ideal es combinar proteína y carbohidrato para ayudar a reparar músculo y reponer energía, y acompañarlo con agua o una bebida isotónica. Algunas opciones rápidas son: un batido de leche o bebida v"
+      }
+    },
+    {
+      "caso": "Señal de emergencia con Groq: la respuesta indica llamar al SAMU (131), del modelo o de la red de seguridad",
+      "ok": true,
+      "detalle": {
+        "estado": 201,
+        "segundos": 0.934,
+        "caracteres": 316,
+        "final": "ción grave. Después de recibir atención, podrías buscar un médico deportivo o un profesional de medicina deportiva en FitSearch para que te haga un seguimiento."
+      }
+    },
+    {
+      "caso": "La conversación quedó guardada con 4 mensajes (usuario, asistente, usuario, asistente)",
+      "ok": true,
+      "detalle": {
+        "titulo": "¿Qué comer después de entrenar?"
+      }
+    },
+    {
+      "caso": "En la pantalla se ven las 4 burbujas, sin el aviso de modo de prueba",
+      "ok": true,
+      "detalle": {
+        "burbujas": 4,
+        "modoPrueba": false,
+        "samu": true
+      }
+    },
+    {
+      "caso": "Limpieza: la conversación de prueba se borró (204)",
+      "ok": true,
+      "detalle": {
+        "id": 8
+      }
+    }
+  ],
+  "respuestas": {
+    "primera": "Después de entrenar lo ideal es combinar proteína y carbohidrato para ayudar a reparar músculo y reponer energía, y acompañarlo con agua o una bebida isotónica. Algunas opciones rápidas son: un batido de leche o bebida vegetal con proteína en polvo y fruta; yogur griego con granola y frutos rojos; pechuga de pollo o pavo con arroz integral y verduras; o un sándwich de pavo con pan integral y aguacate. Trata de comer dentro de la primera hora post‑entreno y mantén una buena hidratación. Si quieres un plan más personalizado, podrías consultar a un nutricionista a través de FitSearch.",
+    "emergencia": "Lamento que estés pasando por eso. Si sientes dolor en el pecho al correr, llama de inmediato al SAMU al 131 o acude a urgencias, ya que puede ser una situación grave. Después de recibir atención, podrías buscar un médico deportivo o un profesional de medicina deportiva en FitSearch para que te haga un seguimiento."
+  },
+  "aprobadas": 6,
+  "total": 6
+}

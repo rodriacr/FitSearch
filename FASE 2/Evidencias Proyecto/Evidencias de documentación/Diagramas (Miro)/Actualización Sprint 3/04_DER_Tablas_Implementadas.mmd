@@ -110,6 +110,30 @@ erDiagram
   profesionales ||--o{ disponibilidades : "profesional_id (CASCADE)"
   disponibilidades ||--o{ reservas : "disponibilidad_id (RESTRICT)"
   usuarios ||--o{ reservas : "usuario_id (CASCADE)"
+  usuarios ||--o{ conversaciones : "usuario_id (CASCADE)"
+  conversaciones ||--o{ mensajes : "conversacion_id (CASCADE)"
+  usuarios ||--o| uso_asistente : "usuario_id (CASCADE)"
+  conversaciones {
+    INT id PK
+    INT usuario_id FK
+    VARCHAR80 titulo
+    BOOLEAN fijada "DEFAULT false"
+    DATETIME fecha_inicio
+    DATETIME fecha_actualizacion
+  }
+  mensajes {
+    INT id PK
+    INT conversacion_id FK
+    VARCHAR20 remitente "usuario, asistente"
+    TEXT contenido
+    VARCHAR100 especialidad "NULL"
+    DATETIME fecha
+  }
+  uso_asistente {
+    INT usuario_id PK,FK
+    DATE fecha
+    SMALLINT mensajes
+  }
   disponibilidades {
     INT id PK
     INT profesional_id FK

@@ -13,7 +13,9 @@ test('normaliza mayúsculas y tildes', () => {
 
 test('lleva a las secciones por su nombre o por palabras relacionadas', () => {
   expect(buscar('perfil')[0]).toMatchObject({ tipo: 'seccion', titulo: 'Mi perfil', ruta: '/perfil' });
-  expect(buscar('chat ia')[0]).toMatchObject({ titulo: 'Asistente IA', ruta: '/asistente', proximamente: true });
+  expect(buscar('chat ia')[0]).toMatchObject({ titulo: 'Asistente IA', ruta: '/asistente' });
+  // Desde FS-HU-07 el asistente está disponible: ya no se marca como «Próximamente».
+  expect(buscar('chat ia')[0].proximamente).toBeFalsy();
   expect(buscar('IA')[0].titulo).toBe('Asistente IA');
   expect(buscar('reservas')[0]).toMatchObject({ titulo: 'Mis citas', ruta: '/citas' });
   expect(buscar('CLÍNICA')[0].titulo).toBe('Centros de salud');

@@ -10,6 +10,7 @@ erDiagram
   usuarios ||--o{ reservas : "usuario_id"
   usuarios ||--o{ conversaciones : "usuario_id"
   conversaciones ||--o{ mensajes : "conversacion_id"
+  usuarios ||--o| uso_asistente : "usuario_id"
   usuarios ||--o{ registro_comida : "usuario_id"
   usuarios ||--o{ favoritos : "usuario_id"
   profesionales ||--o{ favoritos : "profesional_id"
@@ -106,14 +107,23 @@ erDiagram
   conversaciones {
     INT id PK
     INT usuario_id FK
+    VARCHAR80 titulo "FS-HU-07"
+    BOOLEAN fijada "DEFAULT false"
     DATETIME fecha_inicio
+    DATETIME fecha_actualizacion
   }
   mensajes {
     INT id PK
     INT conversacion_id FK
-    ENUM remitente "usuario, asistente"
+    VARCHAR20 remitente "usuario, asistente"
     TEXT contenido
+    VARCHAR100 especialidad "NULL, FS-HU-08"
     DATETIME fecha
+  }
+  uso_asistente {
+    INT usuario_id PK,FK
+    DATE fecha "día en Chile"
+    SMALLINT mensajes "límite diario"
   }
   registro_comida {
     INT id PK

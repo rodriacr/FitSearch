@@ -14,6 +14,7 @@ classDiagram
   class Reserva
   class Conversacion
   class Mensaje
+  class UsoAsistente
   class RegistroComida
   Rol "1" <-- "0..*" Usuario : tiene
   Usuario "1" *-- "0..1" PerfilUsuario : perfil
@@ -26,6 +27,7 @@ classDiagram
   Usuario "1" -- "0..*" Reserva : realiza
   Usuario "1" *-- "0..*" Conversacion : inicia
   Conversacion "1" *-- "1..*" Mensaje : contiene
+  Usuario "1" *-- "0..1" UsoAsistente : uso diario
   Usuario "1" *-- "0..*" RegistroComida : registra
   Usuario "1" *-- "0..*" Favorito : guarda
   Favorito "0..*" --> "1" Profesional : marca

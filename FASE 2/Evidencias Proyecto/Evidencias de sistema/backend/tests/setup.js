@@ -5,6 +5,9 @@ process.env.JWT_EXPIRES_IN = '1h';
 process.env.BCRYPT_COST = '4';
 // ID de cliente de Google de prueba (FS-HU-16): la librería de Google se simula en las pruebas.
 process.env.GOOGLE_CLIENT_ID = 'pruebas.apps.googleusercontent.com';
+// El asistente IA (FS-HU-07) responde en modo simulado: las pruebas nunca llaman al proveedor real aunque
+// backend/.env tenga una clave. Las pruebas del proveedor simulan fetch.
+process.env.IA_API_KEY = '';
 // Las pruebas existentes usan sesiones firmadas y modelos simulados, sin consultar MySQL.
 // La invalidación de cuentas y versiones se prueba explícitamente en sesion.api.test.js.
 jest.mock('../src/models/sesion.model', () => ({ estadoCuenta: async () => ({ activo: true, versionSesion: 0 }) }));

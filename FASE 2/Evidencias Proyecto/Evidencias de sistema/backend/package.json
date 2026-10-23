@@ -12,6 +12,7 @@
     "start": "node src/server.js",
     "test": "jest",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
+    "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",

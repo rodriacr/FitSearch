@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1500" height="1160" viewBox="0 0 1500 1160" font-family="Poppins, Arial, sans-serif">
 <defs><marker id="flecha" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#5f6f80"/></marker><marker id="abierta" viewBox="0 0 12 12" refX="11" refY="6" markerWidth="10" markerHeight="10" orient="auto-start-reverse"><path d="M0 0 L11 6 L0 12" fill="none" stroke="#0b4f80" stroke-width="1.6"/></marker></defs>
 <rect width="1500" height="1160" fill="#ffffff"/>
-<text x="24" y="25" font-size="17" fill="#0b4f80">DAS 1.23 (15-10-2026): casos de uso vigentes; mapa con MapLibre y OpenFreeMap (SC-18)</text>
-<text x="24" y="49" font-size="14" fill="#5f6f80">IA y alimentación son diseño previsto. Configuración y contenido quedan fuera del panel.</text>
+<text x="24" y="25" font-size="17" fill="#0b4f80">DAS 1.25 (21-10-2026): casos de uso vigentes; asistente IA con Groq (FS-HU-07, D33)</text>
+<text x="24" y="49" font-size="14" fill="#5f6f80">El registro de alimentación (CU-06) es diseño previsto. Configuración y contenido quedan fuera del panel.</text>
 <rect x="310.0" y="80" width="855.0" height="1030.0" rx="10" fill="#fbfcfe" stroke="#0b4f80" stroke-width="2"/>
 <text x="737.5" y="114" text-anchor="middle" font-size="18" font-weight="700" fill="#0b4f80">Sistema FitSearch</text>
 <line x1="132" y1="391.0" x2="350.0" y2="175" stroke="#5f6f80" stroke-width="1.4"/>
@@ -96,7 +96,7 @@
 <text x="1370" y="297" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">OpenFreeMap (OSM)</text>
 <rect x="1265.0" y="421.0" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
 <text x="1370" y="441.0" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
-<text x="1370" y="459.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">API de Claude</text>
+<text x="1370" y="459.0" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Groq (API de IA)</text>
 <rect x="1265.0" y="515" width="210" height="48" rx="6" fill="#f3f6f9" stroke="#5f6f80" stroke-dasharray="5 3"/>
 <text x="1370" y="535" text-anchor="middle" font-size="11" fill="#5f6f80">«sistema externo»</text>
 <text x="1370" y="553" text-anchor="middle" font-size="13.5" font-weight="600" fill="#1c2b39">Servidor de correo SMTP</text>

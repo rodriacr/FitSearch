@@ -51,8 +51,7 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) 
             <span className="tarjeta-recomendacion__icono"><Icono nombre="chispa" tamano={22} /></span>
             <p className="tarjeta-recomendacion__titulo">¿Necesitas una recomendación?</p>
             <p className="tarjeta-recomendacion__texto">Pregunta a nuestro asistente IA y encuentra el profesional ideal para ti.</p>
-            <Link to={SECCIONES.asistente.ruta} className="tarjeta-recomendacion__boton">Abrir chat <Icono nombre="flecha" tamano={16} /></Link>
-            <span className="etiqueta-proximamente etiqueta-proximamente--clara">Próximamente</span>
+            <Link to={`${SECCIONES.asistente.ruta}/nuevo?inicio=profesional`} className="tarjeta-recomendacion__boton">Abrir chat <Icono nombre="flecha" tamano={16} /></Link>
           </div>
         )}
       </nav>

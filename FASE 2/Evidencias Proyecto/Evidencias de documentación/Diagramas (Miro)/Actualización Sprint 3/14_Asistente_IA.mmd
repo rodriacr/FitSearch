@@ -1,0 +1,30 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario
+  participant F as Frontend /asistente
+  participant B as API FitSearch
+  participant D as MySQL
+  participant G as Groq (compatible con OpenAI)
+  U->>F: Escribe un mensaje y presiona Enviar
+  F->>B: POST /api/asistente/conversaciones/:id/mensajes (JWT, rol usuario)
+  B->>D: Conversación propia y uso del día (uso_asistente)
+  alt Llegó al límite diario
+    B-->>F: 429 Llegaste al límite de mensajes de hoy
+  else Hay cupo
+    B->>D: Últimos 10 mensajes de la conversación
+    B->>G: chat/completions: instrucciones con el catálogo de especialidades + últimos mensajes (sin perfil ni datos de salud)
+    alt Groq falla, tarda más de 20 s o sin cuota
+      G-->>B: Error o sin respuesta
+      B-->>F: 503 y no guarda nada (el texto vuelve al campo)
+    else Respuesta
+      G-->>B: Texto de la respuesta
+      B->>B: Limpia el formato, valida la especialidad marcada contra el catálogo y la quita del texto (D34)
+      B->>B: Agrega SAMU 131 solo ante una situación crítica, o *4141 ante señales de riesgo (SC-26)
+      B->>D: Guarda mensaje y respuesta con su especialidad, suma 1 al uso del día
+      B-->>F: 201 mensajes, especialidad recomendada y mensajes restantes hoy
+      F-->>U: Muestra la respuesta como texto y, si hay especialidad, la tarjeta Ver profesionales
+      opt Toca la tarjeta
+        F->>B: GET /api/profesionales?especialidad=... (buscador, FS-HU-22)
+      end
+    end
+  end
