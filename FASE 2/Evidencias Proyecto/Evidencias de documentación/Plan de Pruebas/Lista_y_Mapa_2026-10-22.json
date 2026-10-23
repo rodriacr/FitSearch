@@ -1,0 +1,190 @@
+{
+  "fecha": "22-10-2026",
+  "cambio": "SC-27 Lista y mapa juntos en /profesionales",
+  "navegador": "Microsoft Edge (CDP)",
+  "total": 15,
+  "aprobados": 15,
+  "resultados": [
+    {
+      "caso": "Escritorio: carga la lista y el mapa con marcadores",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "Escritorio: lista a la izquierda y mapa fijo a la derecha, un marcador por tarjeta con «Ver en el mapa»",
+      "ok": true,
+      "detalle": {
+        "conMapa": true,
+        "columnas": 2,
+        "fija": "sticky",
+        "listaIzquierda": true,
+        "tarjetas": 12,
+        "conBoton": 11,
+        "marcadores": 11,
+        "pista": "flex",
+        "contador": "14 profesionales encontrados",
+        "accesos": [
+          "Todas",
+          "Entrenamiento personal",
+          "Kinesiología",
+          "Medicina deportiva",
+          "+2 más"
+        ],
+        "filtros": [
+          "Comuna",
+          "Distancia máxima",
+          "Especialidad",
+          "Modalidad",
+          "Calificación mínima"
+        ],
+        "barraFiltros": 101
+      }
+    },
+    {
+      "caso": "Escritorio: el mouse sobre una tarjeta resalta su marcador",
+      "ok": true,
+      "detalle": {
+        "marcador": "Ana Demo, Nutrición",
+        "tarjeta": "Ana Demo"
+      }
+    },
+    {
+      "caso": "Escritorio: clic en un marcador muestra su detalle entero a la vista y marca su tarjeta",
+      "ok": true,
+      "detalle": {
+        "elegido": "Matías Demo, Entrenamiento personal",
+        "detalle": "Matías Demo",
+        "detalleVisible": true,
+        "tarjeta": "Matías Demo",
+        "tarjetaVisible": true,
+        "marcador": "Matías Demo, Entrenamiento personal",
+        "pulsado": "true",
+        "scrollY": 2232
+      }
+    },
+    {
+      "caso": "Escritorio: «Ver en el mapa» elige al profesional, lleva el mapa a su marcador y deja el detalle a la vista",
+      "ok": true,
+      "detalle": {
+        "boton": "Ana Demo",
+        "marcadorEnMapa": true,
+        "detalle": "Ana Demo",
+        "detalleVisible": true,
+        "tarjeta": "Ana Demo",
+        "tarjetaVisible": true,
+        "marcador": "Ana Demo, Nutrición",
+        "pulsado": "true",
+        "scrollY": 425
+      }
+    },
+    {
+      "caso": "Escritorio: con el teclado, el foco resalta el marcador y Enter lo elige",
+      "ok": true,
+      "detalle": {
+        "teclado": {
+          "nombre": "Benjamín Demo, Entrenamiento personal",
+          "foco": true,
+          "resaltado": true
+        },
+        "detalle": "Benjamín Demo",
+        "detalleVisible": true,
+        "tarjeta": "Benjamín Demo",
+        "tarjetaVisible": true,
+        "marcador": "Benjamín Demo, Entrenamiento personal",
+        "pulsado": "true",
+        "scrollY": 425
+      }
+    },
+    {
+      "caso": "Escritorio: «Cerrar detalle» quita la selección de la tarjeta y del marcador",
+      "ok": true,
+      "detalle": {
+        "detalle": false,
+        "pista": true,
+        "seleccionadas": 0
+      }
+    },
+    {
+      "caso": "Escritorio: el acceso «Nutrición» (tras «+2 más») filtra la lista y el mapa a la vez",
+      "ok": true,
+      "detalle": {
+        "url": "?especialidad=Nutrición",
+        "select": "Nutrición",
+        "pulsado": "Nutrición",
+        "especialidades": [
+          "Nutrición"
+        ],
+        "tarjetas": 4,
+        "marcadores": 4,
+        "conBoton": 4
+      }
+    },
+    {
+      "caso": "Escritorio: «Ocultar mapa» deja solo la lista a todo el ancho y lo guarda en la URL",
+      "ok": true,
+      "detalle": {
+        "url": "?mapa=oculto",
+        "mapaOculto": true,
+        "columnas": 3,
+        "boton": "Mostrar mapa"
+      }
+    },
+    {
+      "caso": "Escritorio: «Mostrar mapa» lo vuelve a mostrar con sus marcadores",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "Celular: carga la lista y el mapa",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "Celular: el mapa va arriba de la lista, sin desborde horizontal, sin la pista y con la atribución plegada",
+      "ok": true,
+      "detalle": {
+        "mapaArriba": true,
+        "altoMapa": 272,
+        "anchoPagina": 390,
+        "pista": "none",
+        "atribucionPlegada": true
+      }
+    },
+    {
+      "caso": "Celular: tocar un marcador muestra el detalle completo sobre la barra inferior",
+      "ok": true,
+      "detalle": {
+        "tocado": "Fernanda Demo, Nutrición",
+        "detalle": "Fernanda Demo",
+        "detalleVisible": true,
+        "tarjeta": "Fernanda Demo",
+        "tarjetaVisible": false,
+        "marcador": "Fernanda Demo, Nutrición",
+        "pulsado": "true",
+        "scrollY": 486
+      }
+    },
+    {
+      "caso": "Celular: «Ver en el mapa» sube hasta el mapa y muestra el detalle del profesional",
+      "ok": true,
+      "detalle": {
+        "boton": "Matías Demo",
+        "mapaVisible": true,
+        "detalle": "Matías Demo",
+        "detalleVisible": false,
+        "tarjeta": "Matías Demo",
+        "tarjetaVisible": false,
+        "marcador": "Matías Demo, Entrenamiento personal",
+        "pulsado": "true",
+        "scrollY": 462
+      }
+    },
+    {
+      "caso": "Sin errores de JavaScript en la página",
+      "ok": true,
+      "detalle": []
+    }
+  ],
+  "descripcion": "SC-27 (lista y mapa juntos en Profesionales, FS-HU-06) comprobada en Microsoft Edge contra la API y MySQL locales, con la cuenta de usuaria de prueba (la sesión la inició el usuario en la ventana; Claude no escribe contraseñas), en escritorio (1440x900) y en celular (390x844).",
+  "defecto37": "Comprobado en la misma ventana de Edge: minimizada (document.visibilityState = hidden) la pantalla quedó en «Cargando mapa…» sin el aviso «El mapa está tardando en cargar»; al mostrar la ventana, el mapa terminó de cargar con sus 11 marcadores sin recargar la página."
+}

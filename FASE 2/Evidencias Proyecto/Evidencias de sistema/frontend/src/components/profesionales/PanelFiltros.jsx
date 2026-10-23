@@ -15,8 +15,9 @@ function textoUbicacion({ buscando, estado }) {
   return 'Sin acceso a tu ubicación.';
 }
 
-// Filtros del buscador: columna lateral en escritorio y panel inferior en celular (FS-HU-22).
-// Cada cambio se aplica de inmediato y queda en la URL.
+// Filtros del buscador (FS-HU-22): barra horizontal sobre la lista y el mapa en escritorio, y panel inferior en celular.
+// Desde la SC-27 todos son listas desplegables (antes la calificación y la modalidad eran opciones en columna), para
+// que quepan en una sola franja y dejen el ancho a la lista y al mapa. Cada cambio se aplica de inmediato y queda en la URL.
 export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo, ubicacion, onCambiar, onLimpiar, total, hayFiltros }) {
   useBloquearScroll(abierto);
   useEffect(() => {
@@ -26,17 +27,23 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
     return () => document.removeEventListener('keydown', alTeclear);
   }, [abierto, onCerrar]);
 
-  const opcionesRadio = (nombre, leyenda, opciones) => (
-    <fieldset className="grupo-opciones panel-filtros__grupo">
-      <legend>{leyenda}</legend>
-      {opciones.map(([valor, etiqueta]) => (
-        <label key={valor || 'todas'} className="casilla casilla--opcion">
-          <input type="radio" name={`filtro-${nombre}`} value={valor} checked={filtros[nombre] === valor} onChange={() => onCambiar({ [nombre]: valor })} />
-          {etiqueta}
-        </label>
-      ))}
-    </fieldset>
+  const lista = (nombre, etiqueta, opciones, extra = {}) => (
+    <div className="campo">
+      <label className="campo__etiqueta" htmlFor={`filtro-${nombre}`}>{etiqueta}</label>
+      <select className="campo__control" id={`filtro-${nombre}`} value={filtros[nombre]} {...extra}
+        onChange={(evento) => onCambiar({ [nombre]: evento.target.value })}>
+        {opciones.map(([valor, texto]) => <option key={valor || 'todas'} value={valor}>{texto}</option>)}
+      </select>
+      {/* El aviso previo («te pediremos permiso…») en la barra de escritorio solo lo lee el lector de pantalla
+          (Profesionales.css): ocupaba tres líneas y alargaba la barra. El estado real de la ubicación sí se ve. */}
+      {nombre === 'distancia' && (
+        <p id="estado-ubicacion" className={`panel-filtros__ubicacion${ubicacion.estado === 'inactiva' && !ubicacion.buscando ? ' panel-filtros__ubicacion--previa' : ''}`}>
+          <Icono nombre="mira" tamano={15} /> {textoUbicacion(ubicacion)}
+        </p>
+      )}
+    </div>
   );
+  const valores = (catalogoActual, actual) => conValorActual(catalogoActual, actual).map((valor) => [valor, valor]);
 
   return (
     <>
@@ -47,31 +54,12 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
           <h2>Filtros</h2>
           <button type="button" className="boton-icono panel-filtros__cerrar" aria-label="Cerrar filtros" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
         </div>
-        <div className="campo">
-          <label className="campo__etiqueta" htmlFor="filtro-especialidad">Especialidad</label>
-          <select className="campo__control" id="filtro-especialidad" value={filtros.especialidad} onChange={(evento) => onCambiar({ especialidad: evento.target.value })}>
-            <option value="">Todas</option>
-            {conValorActual(catalogo.especialidades, filtros.especialidad).map((valor) => <option key={valor} value={valor}>{valor}</option>)}
-          </select>
-        </div>
-        <div className="campo">
-          <label className="campo__etiqueta" htmlFor="filtro-comuna">Comuna</label>
-          <select className="campo__control" id="filtro-comuna" value={filtros.comuna} onChange={(evento) => onCambiar({ comuna: evento.target.value })}>
-            <option value="">Todas</option>
-            {conValorActual(catalogo.comunas, filtros.comuna).map((valor) => <option key={valor} value={valor}>{valor}</option>)}
-          </select>
-        </div>
-        <div className="campo">
-          <label className="campo__etiqueta" htmlFor="filtro-distancia">Distancia máxima</label>
-          <select className="campo__control" id="filtro-distancia" value={filtros.distancia} aria-describedby="estado-ubicacion"
-            onChange={(evento) => onCambiar({ distancia: evento.target.value })}>
-            <option value="">Sin límite</option>
-            {distanciasKm.map((km) => <option key={km} value={String(km)}>Hasta {km} km</option>)}
-          </select>
-          <p id="estado-ubicacion" className="panel-filtros__ubicacion"><Icono nombre="mira" tamano={15} /> {textoUbicacion(ubicacion)}</p>
-        </div>
-        {opcionesRadio('calificacion', 'Calificación mínima', [['', 'Cualquiera'], ...calificacionesMinimas.map((n) => [String(n), `${n} estrellas o más`])])}
-        {opcionesRadio('modalidad', 'Modalidad', [['', 'Todas'], ...filtroModalidad.map(({ valor, etiqueta }) => [valor, etiqueta])])}
+        {lista('comuna', 'Comuna', [['', 'Todas'], ...valores(catalogo.comunas, filtros.comuna)])}
+        {lista('distancia', 'Distancia máxima', [['', 'Sin límite'], ...distanciasKm.map((km) => [String(km), `Hasta ${km} km`])],
+          { 'aria-describedby': 'estado-ubicacion' })}
+        {lista('especialidad', 'Especialidad', [['', 'Todas'], ...valores(catalogo.especialidades, filtros.especialidad)])}
+        {lista('modalidad', 'Modalidad', [['', 'Todas'], ...filtroModalidad.map(({ valor, etiqueta }) => [valor, etiqueta])])}
+        {lista('calificacion', 'Calificación mínima', [['', 'Cualquiera'], ...calificacionesMinimas.map((n) => [String(n), `${n} estrellas o más`])])}
         <div className="panel-filtros__pie">
           {hayFiltros && <button type="button" className="boton boton--secundario" onClick={onLimpiar}>Limpiar filtros</button>}
           <button type="button" className="boton boton--principal panel-filtros__ver" onClick={onCerrar}>

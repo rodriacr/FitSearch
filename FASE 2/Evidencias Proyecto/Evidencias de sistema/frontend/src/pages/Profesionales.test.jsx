@@ -6,6 +6,10 @@ import {
   fichaProfesional, FILTROS, listado, llamadasA, parametrosDe, renderizarApp, respuestaJson, SESION, simularApi, simularUbicacion,
 } from '../tests/utilidades.jsx';
 
+// El mapa va junto a la lista (SC-27); sus pruebas están en MapaProfesionales.test.jsx. Aquí MapLibre no termina de
+// cargar, como en un navegador sin conexión a la CDN, para probar solo la búsqueda.
+vi.mock('../services/mapas.js', () => ({ cargarMapLibre: () => new Promise(() => {}), ESTILO_MAPA: 'https://estilo.prueba/style.json' }));
+
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
 const camila = fichaProfesional({
@@ -74,7 +78,7 @@ describe('Resultados', () => {
     renderizarApp('/profesionales');
     await screen.findByRole('heading', { name: 'Ana Demo' });
 
-    await userEvent.click(screen.getByRole('radio', { name: 'Online' }));
+    await userEvent.selectOptions(screen.getByLabelText('Modalidad'), 'Online');
     expect(screen.getByText('Actualizando resultados…')).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: 'Ana Demo' })).toBeInTheDocument();
     expect(screen.queryByText('Cargando profesionales…')).not.toBeInTheDocument();
@@ -130,8 +134,8 @@ describe('Filtros y orden', () => {
 
     await userEvent.selectOptions(screen.getByLabelText('Especialidad'), 'Kinesiología');
     await userEvent.selectOptions(screen.getByLabelText('Comuna'), 'Ñuñoa');
-    await userEvent.click(screen.getByRole('radio', { name: '4 estrellas o más' }));
-    await userEvent.click(screen.getByRole('radio', { name: 'Online' }));
+    await userEvent.selectOptions(screen.getByLabelText('Calificación mínima'), '4 estrellas o más');
+    await userEvent.selectOptions(screen.getByLabelText('Modalidad'), 'Online');
 
     await esperarConsulta(fetch, { especialidad: 'Kinesiología', comuna: 'Ñuñoa', calificacionMin: '4', modalidad: 'online' });
     const aplicados = screen.getByRole('group', { name: 'Filtros aplicados' });
@@ -142,6 +146,29 @@ describe('Filtros y orden', () => {
 
     await userEvent.click(within(aplicados).getByRole('button', { name: 'Quitar filtro: Ñuñoa' }));
     await waitFor(() => expect(ultimaConsulta(fetch).comuna).toBeUndefined());
+  });
+
+  test('los accesos por especialidad aplican el filtro y «+N más» muestra las demás (SC-27)', async () => {
+    const catalogo = { ...FILTROS, especialidades: ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva'] };
+    const fetch = simularApi({ '/api/profesionales/filtros': catalogo, '/api/profesionales': listado() });
+    renderizarApp('/profesionales');
+    const accesos = within(await screen.findByRole('group', { name: 'Especialidades' }));
+    expect(accesos.getByRole('button', { name: 'Todas' })).toHaveAttribute('aria-pressed', 'true');
+    expect(accesos.queryByRole('button', { name: 'Nutrición' })).not.toBeInTheDocument();
+
+    await userEvent.click(accesos.getByRole('button', { name: '+2 más' }));
+    await userEvent.click(accesos.getByRole('button', { name: 'Nutrición' }));
+    await esperarConsulta(fetch, { especialidad: 'Nutrición' });
+    expect(accesos.getByRole('button', { name: 'Nutrición' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByLabelText('Especialidad')).toHaveValue('Nutrición');
+
+    // Al plegar la lista, la especialidad elegida sigue a la vista para que se vea marcada.
+    await userEvent.click(accesos.getByRole('button', { name: 'Ver menos' }));
+    expect(accesos.getByRole('button', { name: 'Nutrición' })).toHaveAttribute('aria-pressed', 'true');
+    expect(accesos.getByRole('button', { name: '+1 más' })).toHaveAttribute('aria-expanded', 'false');
+
+    await userEvent.click(accesos.getByRole('button', { name: 'Todas' }));
+    await waitFor(() => expect(ultimaConsulta(fetch).especialidad).toBeUndefined());
   });
 
   test('ordena por mejor calificados o por más reseñas', async () => {

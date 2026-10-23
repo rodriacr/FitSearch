@@ -40,6 +40,29 @@
 .tarjeta-profesional--completa .tarjeta-profesional__portada { height: 5.25rem; }
 .tarjeta-profesional--completa .tarjeta-profesional__iniciales { width: 3.5rem; height: 3.5rem; font-size: 1.1rem; }
 
+/* Buscador junto al mapa (SC-27): tarjeta horizontal. Se marca con el acento cuando está elegida en el mapa y con el
+   azul claro mientras el mouse o el foco están sobre ella o sobre su marcador. */
+.tarjeta-profesional--fila { flex-direction: row; align-items: flex-start; gap: 0.9rem; padding: 1rem; transition: box-shadow 0.15s, transform 0.15s, border-color 0.15s; }
+.tarjeta-profesional--fila .tarjeta-profesional__iniciales { flex-shrink: 0; width: 3.75rem; height: 3.75rem; font-size: 1.05rem; border-width: 3px; }
+.tarjeta-profesional--fila .tarjeta-profesional__cuerpo { gap: 0.45rem; min-width: 0; padding: 0; }
+.tarjeta-profesional--fila .tarjeta-profesional__nombre { margin: 0; padding-right: 2.75rem; }
+.tarjeta-profesional__linea { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem; margin: 0; }
+.tarjeta-profesional--fila .tarjeta-profesional__descripcion { margin: 0; -webkit-line-clamp: 2; line-clamp: 2; }
+.tarjeta-profesional__acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding-top: 0.25rem; }
+.tarjeta-profesional__ver-mapa {
+  position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; padding: 0.3rem 0.8rem;
+  border: 1px solid #bfd6e5; border-radius: 999px; font: inherit; font-size: 0.8rem; font-weight: 600; color: var(--color-primario);
+  background: var(--color-superficie); cursor: pointer;
+}
+.tarjeta-profesional__ver-mapa[aria-pressed='true'] { border-color: var(--color-primario); color: #fff; background: var(--color-primario); }
+@media (hover: hover) and (pointer: fine) {
+  .tarjeta-profesional__ver-mapa:hover { border-color: var(--color-primario); }
+}
+.tarjeta-profesional--fila .tarjeta-profesional__ver {
+  margin: 0 0 0 auto; padding: 0.4rem 0.95rem; border-radius: 999px; color: #fff; background: var(--color-primario);
+}
+.tarjeta-profesional--resaltada { border-color: var(--color-primario-claro); }
+.tarjeta-profesional--seleccionada { border-color: var(--color-acento); box-shadow: 0 0 0 2px rgb(244 123 32 / 30%), 0 6px 18px rgb(11 79 128 / 7%); }
 .favorito { position: relative; display: inline-flex; }
 .boton-favorito {
   display: grid; place-items: center; width: 2.5rem; height: 2.5rem; padding: 0; border: 1px solid var(--color-borde); border-radius: 50%;

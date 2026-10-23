@@ -44,12 +44,13 @@ input, select, textarea { font: inherit; }
    Todo lo que se presiona se achica apenas mientras se mantiene presionado: confirma que la app recibió el toque.
    La transición base (:where, sin peso) la reemplazan los componentes que ya declaran la suya. */
 :where(.boton, .boton-social, .boton-icono, .campo__ojo, .chip, .selector-estrellas__opcion, .acceso-prof, .elegir__boton,
-  .tarjeta-recomendacion__boton, .menu-usuario__boton, .buscador-hero button, .admin button, .admin__boton, .certificaciones button) {
+  .tarjeta-recomendacion__boton, .menu-usuario__boton, .buscador-hero button, .admin button, .admin__boton, .certificaciones button,
+  .acceso-especialidad, .tarjeta-profesional__ver-mapa) {
   transition: transform 160ms var(--curva-salida), background-color 150ms ease, border-color 150ms ease, color 150ms ease;
 }
 :is(.boton, .boton-social, .boton-icono, .campo__ojo, .chip, .selector-rol__opcion, .tarjeta-objetivo, .selector-estrellas__opcion,
   .acceso-rapido, .acceso-prof, .elegir__boton, .tarjeta-recomendacion__boton, .menu-usuario__boton, .buscador-hero button,
-  .admin button, .admin__boton, .certificaciones button):active:not(:disabled) {
+  .admin button, .admin__boton, .certificaciones button, .acceso-especialidad, .tarjeta-profesional__ver-mapa):active:not(:disabled) {
   transform: scale(var(--escala-presion));
 }
 
