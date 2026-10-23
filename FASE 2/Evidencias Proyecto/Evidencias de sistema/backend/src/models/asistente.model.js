@@ -51,7 +51,8 @@ async function reservarUso(usuarioId, fecha, limite) {
     data: { mensajes: { increment: 1 } },
   });
   if ((await sumar()).count) return true;
-  const { count } = await prisma.usoAsistente.updateMany({ where: { usuarioId, fecha: { not: dia } }, data: { fecha: dia, mensajes: 1 } });
+  // Solo se avanza de día: una solicitud que llegó tarde no debe reiniciar el contador del día nuevo.
+  const { count } = await prisma.usoAsistente.updateMany({ where: { usuarioId, fecha: { lt: dia } }, data: { fecha: dia, mensajes: 1 } });
   if (count) return true;
   try {
     await prisma.usoAsistente.create({ data: { usuarioId, fecha: dia, mensajes: 1 } });

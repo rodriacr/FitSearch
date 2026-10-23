@@ -1,0 +1,133 @@
+{
+  "fecha": "2026-10-23T18:34:57.127Z",
+  "alcance": "API Express y modelo reales contra MySQL local; cuenta temporal propia; proveedor IA simulado; sin modificar cuentas existentes",
+  "casos": [
+    {
+      "caso": "Iniciar tres conversaciones con un cupo",
+      "resultado": [
+        201,
+        429,
+        429
+      ]
+    },
+    {
+      "caso": "Un solo llamado al proveedor",
+      "resultado": 1
+    },
+    {
+      "caso": "Contador final al iniciar",
+      "resultado": 30
+    },
+    {
+      "caso": "Continuar tres mensajes con un cupo",
+      "resultado": [
+        201,
+        429,
+        429
+      ]
+    },
+    {
+      "caso": "Contador final al continuar",
+      "resultado": 30
+    },
+    {
+      "caso": "Solo una consulta al continuar",
+      "resultado": 1
+    },
+    {
+      "caso": "Solicitudes mixtas con un cupo",
+      "resultado": [
+        201,
+        429,
+        429
+      ]
+    },
+    {
+      "caso": "Contador final mixto",
+      "resultado": 30
+    },
+    {
+      "caso": "Primer uso concurrente",
+      "resultado": [
+        201,
+        201,
+        201
+      ]
+    },
+    {
+      "caso": "Primer uso no pierde consumos",
+      "resultado": 3
+    },
+    {
+      "caso": "Reinicio del día concurrente",
+      "resultado": [
+        201,
+        201,
+        201
+      ]
+    },
+    {
+      "caso": "Reinicio conserva los tres consumos",
+      "resultado": 3
+    },
+    {
+      "caso": "Fallo del proveedor responde 503",
+      "resultado": 503
+    },
+    {
+      "caso": "Fallo devuelve el cupo",
+      "resultado": 29
+    },
+    {
+      "caso": "Reintento usa el cupo",
+      "resultado": 201
+    },
+    {
+      "caso": "Reintento termina en 30",
+      "resultado": 30
+    },
+    {
+      "caso": "Cupo agotado rechaza antes del proveedor",
+      "resultado": 429
+    },
+    {
+      "caso": "Cupo agotado no llama al proveedor",
+      "resultado": 0
+    },
+    {
+      "caso": "Fallo de guardado responde 503",
+      "resultado": 503
+    },
+    {
+      "caso": "Fallo de guardado devuelve el cupo",
+      "resultado": 29
+    },
+    {
+      "caso": "Devolución anterior no afecta otro día",
+      "resultado": 7
+    },
+    {
+      "caso": "Solicitud anterior no reinicia el día nuevo",
+      "resultado": false
+    },
+    {
+      "caso": "Solicitud anterior conserva el contador nuevo",
+      "resultado": {
+        "fecha": "2026-10-24",
+        "mensajes": 7
+      }
+    }
+  ],
+  "solicitudDeDiaAnterior": {
+    "aceptada": false,
+    "fechaFinal": "2026-10-24",
+    "consumosFinales": 7,
+    "esperado": {
+      "aceptada": false,
+      "fechaFinal": "2026-10-24",
+      "consumosFinales": 7
+    }
+  },
+  "resultado": "COMPROBADO",
+  "cuentaTemporalEliminada": true
+}

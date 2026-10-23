@@ -43,10 +43,10 @@ describe('reservar uso', () => {
     expect(prisma.usoAsistente.updateMany).toHaveBeenCalledWith(sumar);
   });
 
-  test('si la fila es de otro día, el contador parte de nuevo en 1', async () => {
+  test('si la fila es de un día anterior, el contador parte de nuevo en 1', async () => {
     prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
     expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
-    expect(prisma.usoAsistente.updateMany).toHaveBeenLastCalledWith({ where: { usuarioId: 7, fecha: { not: dia } }, data: { fecha: dia, mensajes: 1 } });
+    expect(prisma.usoAsistente.updateMany).toHaveBeenLastCalledWith({ where: { usuarioId: 7, fecha: { lt: dia } }, data: { fecha: dia, mensajes: 1 } });
     expect(prisma.usoAsistente.create).not.toHaveBeenCalled();
   });
 
