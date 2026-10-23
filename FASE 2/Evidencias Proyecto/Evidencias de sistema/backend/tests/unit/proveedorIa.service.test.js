@@ -117,6 +117,14 @@ describe('red de seguridad', () => {
     expect(proveedor.agregarAvisos(texto, 'Ok.')).toBe('Ok.');
   });
 
+  test('reconoce las formas directas de expresar riesgo suicida y agrega el *4141', () => {
+    for (const texto of ['Me quiero matar', 'me voy a matar', 'Quiero morir', 'tengo ganas de morir', 'quiero acabar con mi vida',
+      'Voy a terminar con mi vida']) {
+      expect(proveedor.agregarAvisos(texto, 'Ok.')).toContain('*4141');
+    }
+    expect(proveedor.agregarAvisos('Me muero de hambre después de entrenar', 'Come algo.')).toBe('Come algo.');
+  });
+
   test('no repite el aviso si la respuesta ya incluye el número', () => {
     const respuesta = 'Llama al SAMU (131) ahora.';
     expect(proveedor.agregarAvisos('me desmayé', respuesta)).toBe(respuesta);
