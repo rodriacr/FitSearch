@@ -3,17 +3,22 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL } from '../../tests/utilidades.jsx';
+// El mapa de la ficha (SC-28) se prueba en FormularioFicha.test.jsx: aquí queda cargando.
+vi.mock('../../services/mapas.js', () => ({ cargarMapLibre: () => new Promise(() => {}), ESTILO_MAPA: 'https://estilo.prueba/style.json' }));
 
 const NUEVA = {
   especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 2401', modalidad: 'ambas',
   ubicacionLat: -33.4569, ubicacionLng: -70.5976,
 };
+// Lo que entrega la búsqueda de la ubicación (SC-28): el profesional ya no escribe coordenadas.
+const UBICACION = { lat: -33.4569, lng: -70.5976, precision: 'exacta', encontrada: 'Avenida Irarrázaval 2401, Ñuñoa' };
 const RESUMEN_VACIO = { promedio: null, total: 0, distribucion: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
 
 // Servidor simulado: la ficha propia (null hasta que se guarda) y su ficha pública por id.
 function simularServidor({ ficha = null, alGuardar } = {}) {
   const estado = { ficha };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
+    if (url.startsWith('/api/profesionales/mi-ficha/ubicacion')) return respuestaJson(200, UBICACION);
     if (url === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
       if (alGuardar) return alGuardar();
       estado.ficha = { id: 3, ...JSON.parse(opciones.body) };
@@ -33,14 +38,12 @@ function simularServidor({ ficha = null, alGuardar } = {}) {
 const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([url, o]) => url === '/api/profesionales/mi-ficha' && o.method === 'PUT')[1].body);
 const huboPut = (fetch) => fetch.mock.calls.some(([, opciones = {}]) => opciones.method === 'PUT');
 
-async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázaval 2401', lat = '-33.4569', lng = '-70.5976' } = {}) {
+async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázaval 2401' } = {}) {
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
   await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), 'Ñuñoa');
   if (direccion) await userEvent.type(screen.getByLabelText(/^Dirección de atención/), direccion);
-  await userEvent.type(screen.getByLabelText('Latitud'), lat);
-  await userEvent.type(screen.getByLabelText('Longitud'), lng);
 }
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
@@ -71,7 +74,6 @@ describe('Sin ficha', () => {
     // Los mensajes de error se anuncian como alertas (el de la especialidad también es la opción inicial del selector).
     expect(screen.getAllByRole('alert').map((alerta) => alerta.textContent)).toEqual(expect.arrayContaining([
       'Selecciona tu especialidad', 'Selecciona cómo atiendes', 'Ingresa la comuna donde atiendes', 'Ingresa la dirección donde atiendes',
-      'La latitud debe estar en Chile (entre -56,5 y -17)', 'La longitud debe estar en Chile (entre -81 y -65,5)',
     ]));
     expect(huboPut(fetch)).toBe(false);
   });
@@ -88,21 +90,6 @@ describe('Sin ficha', () => {
 
     expect(await screen.findByText('Tu ficha profesional se guardó correctamente.')).toBeInTheDocument();
     expect(cuerpoPut(fetch)).toMatchObject({ modalidad: 'online', direccion: '' });
-  });
-
-  test('no guarda coordenadas fuera de Chile (SC-24)', async () => {
-    const fetch = simularServidor();
-    renderizarApp('/profesional/perfil');
-    await screen.findByRole('heading', { name: 'Configura tu perfil profesional' });
-
-    // Buenos Aires: la latitud cae dentro del rango de Chile, la longitud no.
-    await completarFicha({ lat: '-34.6037', lng: '-58.3816' });
-    await userEvent.click(screen.getByRole('button', { name: /Guardar perfil/ }));
-
-    expect(screen.getByText('La longitud debe estar en Chile (entre -81 y -65,5)')).toBeInTheDocument();
-    expect(screen.queryByText(/La latitud debe estar/)).not.toBeInTheDocument();
-    expect(screen.getByLabelText('Longitud')).toHaveAttribute('aria-invalid', 'true');
-    expect(huboPut(fetch)).toBe(false);
   });
 
   test('los errores de la API se muestran en su campo', async () => {

@@ -27,14 +27,20 @@
 .ficha-prof__contador { align-self: flex-end; }
 
 .ficha-prof__ubicacion { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+/* Columna del mapa (SC-28): el mapa (o su recuadro mientras no hay ubicación), qué se encontró y cómo ajustarlo. */
+.ficha-prof__mapa-columna { display: grid; grid-template-rows: minmax(17rem, 1fr) auto auto; gap: 0.5rem; min-width: 0; }
 .ficha-prof__mapa {
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem;
-  min-height: 12.5rem; padding: 1rem; text-align: center;
+  min-height: 17rem; padding: 1rem; text-align: center;
   color: var(--color-texto-secundario); background: var(--color-superficie-suave);
   border: 1px dashed var(--color-borde); border-radius: var(--radio-control);
 }
 .ficha-prof__mapa .icono { color: var(--color-primario); }
-.ficha-prof__mapa p { margin: 0; font-size: 0.92rem; font-weight: 500; }
+.ficha-prof__mapa p { max-width: 22rem; margin: 0; font-size: 0.92rem; font-weight: 500; }
+.ficha-prof__estado-mapa { margin: 0; font-size: 0.88rem; line-height: 1.45; color: var(--color-texto); }
+.ficha-prof__estado-mapa:empty { display: none; }
+.ficha-prof__estado-mapa--error { color: var(--color-error); }
+.ficha-prof__pista-mapa { margin: 0; }
 
 .ficha-prof__acciones {
   display: flex; flex-direction: column-reverse; align-items: stretch; gap: 0.75rem;
