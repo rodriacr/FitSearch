@@ -1,0 +1,28 @@
+{
+  "fecha": "24-10-2026",
+  "caso": "CP-078 Mapa real (MapLibre GL JS con OpenFreeMap) con marcadores por página",
+  "rama": "main (269f1ea, después de fusionar los PR #29 y #30)",
+  "navegador": "Navegador integrado de Claude (Chromium), vista de escritorio emulada de 1440 x 900",
+  "sesion": "Cuenta de usuario iniciada por Rodrigo Cárcamo (rol usuario)",
+  "mapa": { "maplibre": "5.24.0", "estilo": "https://tiles.openfreemap.org/styles/liberty", "clave": "no requiere" },
+  "datos": "14 fichas de demostración en MySQL local (12 en la página 1 y 2 en la página 2)",
+  "total": 9,
+  "aprobados": 9,
+  "resultados": [
+    { "paso": "1. Página 1 sin filtros", "ok": true, "detalle": { "url": "/profesionales", "tarjetas": 12, "marcadores": 12, "mismosNombres": true, "pagina": "Página 1 de 2", "contador": "14 profesionales encontrados" } },
+    { "paso": "2a. Clic en un marcador de la zona de Santiago", "ok": true, "detalle": { "elegido": "Matías Demo (su marcador queda encima del de Javiera Morales)", "anuncio": "Seleccionado: Matías Demo, Entrenamiento personal. Su detalle está bajo el mapa.", "enlace": "Ver ficha y reservar → /profesionales/4", "tarjetaMarcada": true } },
+    { "paso": "2b. Elegir con el teclado (foco + Enter) el marcador de Javiera Morales", "ok": true, "detalle": { "ariaPressed": "true", "anuncio": "Seleccionado: Javiera Morales, Nutrición. Su detalle está bajo el mapa.", "enlace": "Ver ficha y reservar → /profesionales/33", "fichaDeSuTarjeta": "/profesionales/33" } },
+    { "paso": "3. Página 2", "ok": true, "detalle": { "url": "/profesionales?pagina=2", "tarjetas": 2, "marcadores": 2, "nombres": ["Tomás Demo", "Valentina Demo"], "seleccionAnteriorLimpia": true } },
+    { "paso": "4. Filtro Especialidad = Kinesiología", "ok": true, "detalle": { "url": "/profesionales?especialidad=Kinesiolog%C3%ADa", "tarjetas": 4, "marcadores": 4, "nombres": ["Catalina Demo", "Diego Demo", "Felipe Demo", "juanito"], "vuelveAPagina1": true } },
+    { "paso": "5. Filtros Kinesiología + comuna Melipilla", "ok": true, "detalle": { "tarjetas": 1, "marcadores": 1, "nombres": ["Diego Demo"] } },
+    { "paso": "6. Ocultar mapa", "ok": true, "detalle": { "url": "…&mapa=oculto", "mapaOculto": true, "filtrosConservados": true, "boton": "Mostrar mapa" } },
+    { "paso": "7. Mostrar mapa con los filtros", "ok": true, "detalle": { "tarjetas": 1, "marcadores": 1, "contador": "1 profesional encontrado" } },
+    { "paso": "8. «Ver ficha y reservar» desde el detalle del mapa", "ok": true, "detalle": { "url": "/profesionales/2", "titulo": "Diego Demo" } }
+  ],
+  "observaciones": [
+    "Al comenzar, dos de las tres primeras cargas mostraron «El mapa está tardando en cargar» a los 15 s: MapLibre (unpkg) y el estilo de OpenFreeMap respondieron en menos de 0,3 s, pero las teselas no llegaron dentro del plazo. «Reintentar mapa» cargó el mapa con sus 12 marcadores. Es el comportamiento previsto ante un proveedor lento (CP-077).",
+    "En las 13 cargas siguientes el mapa cargó sin reintento (a 280, 375 y 1440 px de ancho), una de ellas en unos 4 s por la demora de las teselas.",
+    "Con /api/profesionales retrasada 2 s, el mapa también cargó: se descartó que la falla viniera de crear el mapa con el contenedor oculto. No se registra defecto porque no se pudo reproducir.",
+    "Captura: Mapa_Real_CP078_2026-10-24_escritorio.jpg (mapa real con calles y los 12 marcadores de la página 1)."
+  ]
+}
