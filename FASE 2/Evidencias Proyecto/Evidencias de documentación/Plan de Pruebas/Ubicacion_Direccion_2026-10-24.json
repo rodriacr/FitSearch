@@ -1,0 +1,97 @@
+{
+  "fecha": "24-10-2026",
+  "descripcion": "Verificación en Edge sin interfaz (CDP) de la ubicación de la ficha profesional por comuna y dirección (SC-28) contra la aplicación local, MySQL y Nominatim (OpenStreetMap) real, con una cuenta profesional temporal creada para la prueba y borrada después: el formulario sin latitud ni longitud, la ubicación guardada al editar, la calle sin número, la dirección no encontrada, la comuna inexistente, la dirección exacta con oficina, el ajuste del marcador con un clic y con las flechas, el guardado del punto ajustado y el celular (390×844).",
+  "resultados": [
+    {
+      "caso": "sin campos de latitud ni longitud",
+      "ok": true,
+      "detalle": {}
+    },
+    {
+      "caso": "edición: ubicación guardada sin buscar",
+      "ok": true,
+      "detalle": {
+        "estado": "Esta es la ubicación guardada en tu ficha. Si cambias tu comuna o tu dirección, la buscamos de nuevo."
+      }
+    },
+    {
+      "caso": "calle sin número",
+      "ok": true,
+      "detalle": {
+        "estado": "Encontramos la calle (Avenida Barros Luco, San Antonio), pero no el número: mueve el marcador hasta tu lugar de atención."
+      }
+    },
+    {
+      "caso": "dirección no encontrada → centro de la comuna",
+      "ok": true,
+      "detalle": {
+        "estado": "No encontramos esa dirección en San Antonio: el marcador quedó en el centro de la comuna. Revisa la dirección o mueve el marcador hasta tu lugar de atención."
+      }
+    },
+    {
+      "caso": "comuna inexistente",
+      "ok": true,
+      "detalle": {
+        "mensaje": "No encontramos esa comuna en Chile. Revisa cómo está escrita."
+      }
+    },
+    {
+      "caso": "dirección exacta (con oficina)",
+      "ok": true,
+      "detalle": {
+        "estado": "Encontramos Avenida Providencia 1234, Providencia."
+      }
+    },
+    {
+      "caso": "clic en el mapa mueve el marcador",
+      "ok": true,
+      "detalle": {
+        "dx": 70,
+        "dy": 40
+      }
+    },
+    {
+      "caso": "flechas del teclado",
+      "ok": true,
+      "detalle": {
+        "dx": -10,
+        "dy": -20
+      }
+    },
+    {
+      "caso": "guardar envía el punto ajustado",
+      "ok": true,
+      "detalle": {
+        "comuna": "Providencia",
+        "direccion": "Av. Providencia 1234, oficina 501",
+        "ubicacionLat": -33.4291907,
+        "ubicacionLng": -70.6204643
+      }
+    },
+    {
+      "caso": "celular sin scroll horizontal",
+      "ok": true,
+      "detalle": {
+        "ancho": [
+          390,
+          390
+        ]
+      }
+    }
+  ],
+  "errores_de_consola": [],
+  "busquedas_a_la_api": [
+    "/api/profesionales/mi-ficha/ubicacion?comuna=san+antonio&direccion=Av.+Providencia+1234%2C+oficina+501",
+    "/api/profesionales/mi-ficha/ubicacion?comuna=san+antonio&direccion=Barros+Luco+1500",
+    "/api/profesionales/mi-ficha/ubicacion?comuna=san+antonio&direccion=Calle+Inventada+99999",
+    "/api/profesionales/mi-ficha/ubicacion?comuna=Comuna+Falsa&direccion=Calle+Inventada+99999",
+    "/api/profesionales/mi-ficha/ubicacion?comuna=Providencia&direccion=Calle+Inventada+99999",
+    "/api/profesionales/mi-ficha/ubicacion?comuna=Providencia&direccion=Av.+Providencia+1234%2C+oficina+501"
+  ],
+  "aprobadas": 10,
+  "total": 10,
+  "pruebas_automatizadas": {
+    "backend": "316/316 (Jest; 12 nuevas en geocodificacion.api.test.js)",
+    "frontend": "277/277 (Vitest; 14 nuevas en FormularioFicha.test.jsx)"
+  }
+}

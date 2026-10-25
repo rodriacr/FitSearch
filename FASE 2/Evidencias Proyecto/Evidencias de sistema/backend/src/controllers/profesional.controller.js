@@ -1,4 +1,5 @@
 const servicio = require('../services/profesional.service');
+const geocodificacion = require('../services/geocodificacion.service');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
 
 // Express 5 entrega req.query de solo lectura: los valores ya validados se normalizan aquí.
@@ -37,9 +38,16 @@ async function guardarMiFicha(req, res) {
   }));
 }
 
+// SC-28: la comuna y la dirección se convierten en coordenadas en el backend (DAS, D36).
+async function ubicarDireccion(req, res) {
+  res.json(await geocodificacion.ubicar({ comuna: texto(req.query.comuna), direccion: texto(req.query.direccion) }));
+}
+
 // FS-HU-12: Administrador verifica un perfil profesional
 async function verificarPerfil(req, res) {
   res.json(await servicio.verificarPerfil(Number(req.params.id), req.usuario.id));
 }
 
-module.exports = { listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha, verificarPerfil };
+module.exports = {
+  listar, ficha, filtros, filtrosDesdeConsulta, obtenerMiFicha, guardarMiFicha, ubicarDireccion, verificarPerfil,
+};

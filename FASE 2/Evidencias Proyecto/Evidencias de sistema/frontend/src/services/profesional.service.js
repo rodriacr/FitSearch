@@ -28,3 +28,9 @@ export const eliminarResena = (id) => solicitar(`/profesionales/${id}/resenas`, 
 // Ficha propia del profesional (FS-HU-04).
 export const obtenerMiFicha = () => solicitar('/profesionales/mi-ficha');
 export const guardarMiFicha = (ficha) => solicitar('/profesionales/mi-ficha', { metodo: 'PUT', cuerpo: ficha });
+// SC-28: coordenadas de la comuna y la dirección de atención; las busca el backend (DAS, D36).
+export function ubicarDireccion({ comuna, direccion }) {
+  const parametros = new URLSearchParams({ comuna });
+  if (direccion) parametros.set('direccion', direccion);
+  return solicitar(`/profesionales/mi-ficha/ubicacion?${parametros}`);
+}

@@ -1,0 +1,32 @@
+/* Mapa de la ficha del profesional (SC-28): ocupa el recuadro de la vista previa. El mapa y los avisos (cargando,
+   error) comparten la misma celda, así el recuadro no cambia de alto mientras el mapa carga. MapLibre fija
+   position: relative en su contenedor: por eso el mapa se estira con la grilla y no con position: absolute. */
+.mapa-ubicacion {
+  display: grid; min-height: 17rem; height: 100%;
+  overflow: hidden; border: 1px solid #c9dde9; border-radius: var(--radio-control); background: #e8f2f8;
+}
+.mapa-ubicacion__mapa, .mapa-ubicacion__aviso { grid-area: 1 / 1; }
+.mapa-ubicacion__mapa { width: 100%; height: 100%; min-height: 17rem; }
+.mapa-ubicacion__mapa[hidden] { display: none; }
+.mapa-ubicacion__aviso {
+  z-index: 1; align-self: center; justify-self: center; margin: 0; padding: 1rem; font-size: 0.85rem; text-align: center;
+}
+
+/* Marcador movible: mismo alfiler que el mapa de profesionales, en color de acento. Al tomarlo crece desde la punta
+   (MapLibre mueve el botón con transform, por eso la escala va en el SVG). */
+.mapa-ubicacion__marcador {
+  display: block; width: 32px; height: 42px; padding: 0; border: 0; color: var(--color-acento); background: none;
+  cursor: grab; touch-action: none;
+}
+.mapa-ubicacion__marcador svg {
+  display: block; transform-origin: 50% 100%; transition: transform 160ms var(--curva-salida);
+  filter: drop-shadow(0 2px 3px rgb(6 38 63 / 35%));
+}
+.mapa-ubicacion__marcador:active { cursor: grabbing; }
+.mapa-ubicacion__marcador:active svg { transform: scale(1.15); }
+.mapa-ubicacion__marcador:focus-visible {
+  outline: 3px solid rgb(244 123 32 / 70%); outline-offset: 2px; border-radius: 50% 50% 50% 50% / 40% 40% 60% 60%;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mapa-ubicacion__marcador svg { transition: none; }
+}

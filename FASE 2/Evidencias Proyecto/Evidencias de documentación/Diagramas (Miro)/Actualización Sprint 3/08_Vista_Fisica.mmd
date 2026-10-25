@@ -7,6 +7,7 @@ flowchart LR
   F -->|"ID token"| I["Google Identity Services"]
   B -->|"Verifica ID token por HTTPS"| I
   B -->|"HTTPS; caché 30 minutos; sin clave"| O["Open-Meteo"]
+  B -->|"HTTPS; 1 consulta por segundo; caché 24 horas; sin clave (D36)"| NM["Nominatim (OpenStreetMap)<br/>Comuna y dirección a coordenadas"]
   B -.->|"SMTP/TLS; requiere configuración"| S["Servidor SMTP"]
   F --> G["MapLibre GL JS y OpenFreeMap<br/>Teselas por HTTPS; sin clave (SC-18)"]
   B -->|"HTTPS; Bearer; plan gratuito; sin datos de perfil (D33)"| C["Groq<br/>API compatible con OpenAI"]

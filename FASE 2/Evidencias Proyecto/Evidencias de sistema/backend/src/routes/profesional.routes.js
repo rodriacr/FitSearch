@@ -14,6 +14,8 @@ router.get('/filtros', autorizarRoles('usuario'), controlador.filtros);
 // Ficha propia del profesional (FS-HU-04). Va antes de "/:id" para que "mi-ficha" no se lea como un id.
 router.get('/mi-ficha', autorizarRoles('profesional'), controlador.obtenerMiFicha);
 router.put('/mi-ficha', autorizarRoles('profesional'), validadoresFicha, validar, controlador.guardarMiFicha);
+// SC-28: coordenadas de la comuna y la dirección que escribe en su ficha (el profesional ya no las ingresa a mano).
+router.get('/mi-ficha/ubicacion', autorizarRoles('profesional'), validadores.ubicar, validar, controlador.ubicarDireccion);
 // FS-HU-12: Administrador verifica un perfil profesional
 router.patch('/:id/verificar', autorizarRoles('administrador'), validadores.id(), validar, controlador.verificarPerfil);
 router.get('/', autorizarRoles('usuario'), validadores.listar, validar, controlador.listar);

@@ -56,4 +56,13 @@ const guardarResena = [
     .isLength({ max: resena.comentario.max }).withMessage(`El comentario admite hasta ${resena.comentario.max} caracteres`),
 ];
 
-module.exports = { listar, pagina, id, guardarResena };
+// Ubicar en el mapa la comuna y la dirección que escribe el profesional en su ficha (SC-28).
+const ubicar = [
+  query('comuna').custom((valor) => typeof valor === 'string').withMessage('Ingresa la comuna donde atiendes').bail()
+    .trim().notEmpty().withMessage('Ingresa la comuna donde atiendes').bail()
+    .isLength({ max: reglas.comuna.max }).withMessage(`La comuna admite hasta ${reglas.comuna.max} caracteres`),
+  unico('direccion', 'Indica una sola dirección').trim().isLength({ max: reglas.direccion.max })
+    .withMessage(`La dirección admite hasta ${reglas.direccion.max} caracteres`),
+];
+
+module.exports = { listar, pagina, id, guardarResena, ubicar };
