@@ -1,3 +1,4 @@
+import useAnimacionesScroll from '../services/useAnimacionesScroll.js';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
@@ -81,6 +82,7 @@ function TarjetaCitas() {
 // Inicio del usuario con sesión, según el mockup (FS-HU-21). Solo usa datos reales de la API:
 // lo que aún no existe se muestra como estado vacío o "Próximamente".
 export default function Inicio() {
+  const animaciones = useAnimacionesScroll();
   const { sesion, marcarRolPendiente } = useSesion();
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
@@ -118,8 +120,8 @@ export default function Inicio() {
     ? [perfil.datos.pasos.datosPersonales, perfil.datos.pasos.objetivos, perfil.datos.pasos.salud].filter((hecho) => !hecho).length : 0;
 
   return (
-    <div className="inicio">
-      <div className="inicio__saludo"><h1>Hola, {primerNombre(sesion.usuario.nombre)}.<br />¿Cómo quieres cuidarte hoy?</h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
+    <div className="inicio" ref={animaciones}>
+      <div data-revelar className="inicio__saludo"><h1>Hola, {primerNombre(sesion.usuario.nombre)}.<br />¿Cómo quieres cuidarte hoy?</h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
       {pendientes > 0 && (
         <div className="inicio__aviso">
           <Icono nombre="info" tamano={20} />
@@ -129,15 +131,15 @@ export default function Inicio() {
       )}
 
       <section className="inicio__hero" aria-labelledby="titulo-inicio">
-        <img className="inicio__foto" src={fotoInicio} alt="" width={1280} height={853} fetchPriority="high" />
-        <div className="inicio__hero-texto">
+        <img data-paralaje className="inicio__foto" src={fotoInicio} alt="" width={1280} height={853} fetchPriority="high" />
+        <div data-revelar className="inicio__hero-texto">
           <h2 id="titulo-inicio">Tu próximo paso<br /><span>empieza aquí.</span></h2>
           <p>Conecta con profesionales y encuentra el apoyo que necesitas para una vida más saludable.</p>
           <BuscadorGeneral />
         </div>
       </section>
 
-      <section className="inicio__accesos" aria-labelledby="titulo-accesos">
+      <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
         <ul className="accesos-rapidos">
           {['profesionales', 'citas', 'asistente', ...ACCESOS_RAPIDOS.filter((clave) => SECCIONES[clave].proximamente)].map((clave) => {
@@ -161,7 +163,7 @@ export default function Inicio() {
         <Especialidades variante="inicio" />
       </section>
 
-      <div className="inicio__panel">
+      <div data-revelar className="inicio__panel">
         {cargandoPerfil ? <p className="panel-tarjeta texto-secundario" role="status">Cargando tu información…</p> : perfil.error ? (
           <div className="panel-tarjeta">
             <Alerta>{perfil.error}</Alerta>
@@ -176,7 +178,7 @@ export default function Inicio() {
         <TarjetaCitas />
       </div>
 
-      <section className="inicio__destacados" aria-labelledby="titulo-destacados">
+      <section data-revelar className="inicio__destacados" aria-labelledby="titulo-destacados">
         <div className="inicio__titulo-seccion">
           <h2 id="titulo-destacados">Profesionales destacados</h2>
           <Link to="/profesionales" className="enlace-panel">Ver todos <Icono nombre="flecha" tamano={16} /></Link>
@@ -200,7 +202,7 @@ export default function Inicio() {
         )}
       </section>
 
-      <section className="banner-asistente" aria-labelledby="titulo-banner">
+      <section data-revelar className="banner-asistente" aria-labelledby="titulo-banner">
         <span className="banner-asistente__icono"><Icono nombre="chispa" tamano={26} /></span>
         <div className="banner-asistente__texto">
           <h2 id="titulo-banner">¿No sabes por dónde empezar?</h2>

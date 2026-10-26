@@ -12,11 +12,19 @@ Fecha: 25-10-2026. Base: `fb6dbbd` (PR #32 fusionado). Cambio de presentación p
 
 ## Validación
 
-- Frontend: 279 pruebas en 32 archivos, todas aprobadas. Incluyen conservación de filtros tras el ingreso, acceso desde tarjetas de especialidades y regresión de roles, favoritos, citas, perfil y sugerencias por teclado.
+- Frontend: 282 pruebas en 33 archivos, todas aprobadas. Incluyen conservación de filtros tras el ingreso, acceso desde tarjetas de especialidades y regresión de roles, favoritos, citas, perfil y sugerencias por teclado.
 - ESLint y compilación de producción correctos.
 - Navegador con API y MySQL locales: búsqueda Nutrición/Ñuñoa desde portada, ingreso con cuenta temporal y filtros conservados en el directorio; Inicio con destacados reales, estados vacíos del perfil y citas, sugerencias del buscador y cierre de sesión.
 - Revisión visual en 1440, 390 y 320 px. Sin desborde horizontal en ambas vistas; ajuste flexible del logo del encabezado para la pantalla de 320 px. Se preservan menú móvil, navegación inferior y estilos de foco.
 - La cuenta temporal se eliminó al terminar. No se modificaron cuentas existentes ni credenciales.
+
+## Efectos al desplazarse
+
+Se agregan apariciones de una sola vez al entrar los bloques en pantalla, con entrada escalonada de las tarjetas de especialidades y herramientas. Las fotografías principales tienen un desplazamiento máximo de 18 px ligado al scroll, sin alterar la posición de la página ni los enlaces.
+
+La preferencia de movimiento reducido desactiva los efectos, incluso si cambia con la página abierta. El foco sobre un control cancela la animación de su bloque. Sin las APIs de animación, el contenido permanece visible. Se limpian observadores, cuadros y escuchas al salir de la vista. No se agregan dependencias.
+
+Las tres pruebas específicas cubren la animación única, el acceso por foco, el movimiento reducido y su cambio en tiempo real, además de la limpieza al desmontar. Se comprobó en navegador el desplazamiento de la portada y la lectura de las secciones posteriores. Las capturas estáticas muestran la composición final; el movimiento se aprecia al recorrer la página.
 
 ## Capturas
 

@@ -15,8 +15,8 @@ const ESPECIALIDADES = [
 export default function Especialidades({ variante = 'publica' }) {
   return (
     <div className={`especialidades especialidades--${variante}`}>
-      {ESPECIALIDADES.map(({ nombre, imagen, descripcion }) => (
-        <Link key={nombre} to={`/profesionales?${new URLSearchParams({ especialidad: nombre })}`}
+      {ESPECIALIDADES.map(({ nombre, imagen, descripcion }, indice) => (
+        <Link data-revelar data-revelar-retardo={indice * 90} key={nombre} to={`/profesionales?${new URLSearchParams({ especialidad: nombre })}`}
           className="especialidad" aria-label={`Explorar ${nombre}`}>
           <img className="especialidad__foto" src={imagen} alt="" width={640} height={720} loading="lazy" decoding="async" />
           <div className="especialidad__contenido">

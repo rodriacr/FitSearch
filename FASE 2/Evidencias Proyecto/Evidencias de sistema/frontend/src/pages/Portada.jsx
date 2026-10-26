@@ -1,3 +1,4 @@
+import useAnimacionesScroll from '../services/useAnimacionesScroll.js';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
@@ -27,6 +28,7 @@ const OFERTA = [
 // Portada pública, solo para invitados: con sesión iniciada App redirige al Inicio (FS-HU-20, DAS D20).
 // Las funciones futuras se presentan como "Próximamente", sin simular servicios ni resultados.
 export default function Portada() {
+  const animaciones = useAnimacionesScroll();
   const { aviso: avisoSesion, limpiarAviso } = useSesion();
   // El aviso de cierre de sesión se muestra una sola vez: la portada lo conserva y lo descarta del contexto
   // para que no reaparezca en otra pantalla (seguro con StrictMode, que repite los efectos en desarrollo).
@@ -47,7 +49,7 @@ export default function Portada() {
   }
 
   return (
-    <div className="portada">
+    <div className="portada" ref={animaciones}>
       <a className="portada__saltar" href="#contenido">Saltar al contenido</a>
       <header className="portada__encabezado">
         <div className="portada__ancho portada__barra">
@@ -65,8 +67,8 @@ export default function Portada() {
 
       <main id="contenido" tabIndex={-1}>
         <section className="portada__hero portada__ancho" aria-labelledby="titulo-portada">
-          <img className="portada__foto" src={fotoPortada} width={1440} height={960} alt="" fetchPriority="high" />
-          <div className="portada__presentacion">
+          <img data-paralaje className="portada__foto" src={fotoPortada} width={1440} height={960} alt="" fetchPriority="high" />
+          <div data-revelar className="portada__presentacion">
             {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
             <p className="portada__antetitulo">SALUD · DEPORTE · BIENESTAR</p>
             <h1 id="titulo-portada">Tu bienestar,<br /><span>a tu ritmo.</span></h1>
@@ -77,7 +79,7 @@ export default function Portada() {
             </div>
           </div>
         </section>
-        <section className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
+        <section data-revelar className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
           <div><h2 id="titulo-busqueda-portada">¿Qué necesitas hoy?</h2><p>Encuentra profesionales cerca de ti.</p></div>
           <form role="search" aria-label="Buscar profesionales por especialidad y comuna" onSubmit={buscar}>
             <label className="portada__filtro"><Icono nombre="medico" tamano={24} /><span><span>Especialidad</span>
@@ -91,7 +93,7 @@ export default function Portada() {
           </form>
         </section>
         <section id="especialidades" className="portada__seccion portada__ancho" aria-labelledby="titulo-especialidades">
-          <div className="portada__titulo-seccion">
+          <div data-revelar className="portada__titulo-seccion">
             <div><p className="portada__antetitulo">APOYO PARA CADA ETAPA DE TU VIDA</p><h2 id="titulo-especialidades">El apoyo que necesitas,<br />en un solo lugar.</h2></div>
             <p>Desde cuidar tus hábitos hasta encontrar tu próximo desafío. Explora las especialidades y elige a quién consultar.</p>
           </div>
@@ -102,10 +104,10 @@ export default function Portada() {
 
 
         <section id="que-ofrecemos" className="portada__seccion portada__ancho" aria-labelledby="titulo-oferta">
-          <div className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas para tu bienestar.</h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
+          <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas para tu bienestar.</h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
           <div className="portada__herramientas">
-            {OFERTA.map(({ icono, nombre, texto, disponible }) => (
-              <article key={nombre} className={`portada__herramienta${disponible ? ' portada__herramienta--disponible' : ''}`}>
+            {OFERTA.map(({ icono, nombre, texto, disponible }, indice) => (
+              <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${disponible ? ' portada__herramienta--disponible' : ''}`}>
                 <div className="portada__herramienta-superior"><span className="portada__icono-herramienta"><Icono nombre={icono} tamano={26} /></span><span className={`portada__estado${disponible ? ' portada__estado--disponible' : ''}`}>{disponible ? 'Disponible' : 'Próximamente'}</span></div>
                 <h3>{nombre}</h3><p>{texto}</p>
                 {disponible && <Link to={nombre === 'Asistente IA' ? '/asistente' : '/profesionales'} className="portada__enlace">Explorar <Icono nombre="flecha" tamano={18} /></Link>}
@@ -116,22 +118,22 @@ export default function Portada() {
 
         <section id="como-funciona" className="portada__pasos-fondo" aria-labelledby="titulo-pasos">
           <div className="portada__ancho portada__seccion portada__pasos-contenido">
-            <div className="portada__titulo-seccion"><p className="portada__antetitulo">CÓMO FUNCIONA</p><h2 id="titulo-pasos">Empieza a cuidarte en tres pasos</h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
+            <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">CÓMO FUNCIONA</p><h2 id="titulo-pasos">Empieza a cuidarte en tres pasos</h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
             <ol className="portada__pasos">
-              <li><span>01</span><div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo o con tu cuenta de Google.</p></div></li>
-              <li><span>02</span><div><h3>Completa tu perfil</h3><p>Elige tu tipo de cuenta y cuéntanos tus datos, tus objetivos y tu información de salud.</p></div></li>
-              <li><span>03</span><div><h3>Encuentra apoyo</h3><p>Busca profesionales cerca de ti, revisa sus reseñas y guarda tus favoritos.</p></div></li>
+              <li data-revelar><span>01</span><div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo o con tu cuenta de Google.</p></div></li>
+              <li data-revelar><span>02</span><div><h3>Completa tu perfil</h3><p>Elige tu tipo de cuenta y cuéntanos tus datos, tus objetivos y tu información de salud.</p></div></li>
+              <li data-revelar><span>03</span><div><h3>Encuentra apoyo</h3><p>Busca profesionales cerca de ti, revisa sus reseñas y guarda tus favoritos.</p></div></li>
             </ol>
           </div>
         </section>
 
-        <section className="portada__areas portada__ancho" aria-label="Áreas de bienestar">
+        <section data-revelar className="portada__areas portada__ancho" aria-label="Áreas de bienestar">
           {AREAS.map(({ icono, nombre, texto }) => (
             <div className="portada__area" key={nombre}><span className="portada__icono-area"><Icono nombre={icono} tamano={26} /></span><div><h2>{nombre}</h2><p>{texto}</p></div></div>
           ))}
         </section>
 
-        <section className="portada__ancho portada__cierre" aria-labelledby="titulo-cierre">
+        <section data-revelar className="portada__ancho portada__cierre" aria-labelledby="titulo-cierre">
           <div><p className="portada__antetitulo">AQUÍ COMIENZA TU CAMINO</p><h2 id="titulo-cierre">Un pequeño paso hoy.<br /><span>Más bienestar mañana.</span></h2><p>Haz espacio para ti. Nosotros te acompañamos a empezar.</p></div>
           <Link to="/registro" className="boton boton--principal boton--compacto">Registrarse <Icono nombre="flecha" /></Link>
         </section>
