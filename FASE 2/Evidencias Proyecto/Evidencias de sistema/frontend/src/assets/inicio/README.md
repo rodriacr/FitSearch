@@ -10,3 +10,7 @@ Prompts de producción resumidos:
 - `kinesiologia.webp`: kinesiólogo ayudando con movilidad de rodilla en una consulta luminosa; personas vestidas, gesto de acompañamiento, retrato vertical sin textos ni logotipos.
 
 No se usan como avatares, testimonios, calificaciones ni evidencia de atención clínica.
+
+## Centro de bienestar · ajuste 26-10-2026
+
+`centro-bienestar.webp`: imagen arquitectónica generada de un centro multidisciplinario de bienestar en Santiago, perspectiva central, consulta de nutrición a la izquierda, kinesiología a la derecha y estudio de movimiento al fondo, materiales cálidos y mobiliario azul. Sin personas, marcas ni textos. La interfaz añade las puertas y anima su apertura; el escenario no representa un centro real afiliado. WebP de 315 KB, guardado localmente.

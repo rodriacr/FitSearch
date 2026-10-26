@@ -12,7 +12,7 @@ Fecha: 25-10-2026. Base: `fb6dbbd` (PR #32 fusionado). Cambio de presentación p
 
 ## Validación
 
-- Frontend: 282 pruebas en 33 archivos, todas aprobadas. Incluyen conservación de filtros tras el ingreso, acceso desde tarjetas de especialidades y regresión de roles, favoritos, citas, perfil y sugerencias por teclado.
+- Frontend: 285 pruebas en 34 archivos, todas aprobadas. Incluyen conservación de filtros tras el ingreso, acceso desde tarjetas de especialidades y regresión de roles, favoritos, citas, perfil y sugerencias por teclado.
 - ESLint y compilación de producción correctos.
 - Navegador con API y MySQL locales: búsqueda Nutrición/Ñuñoa desde portada, ingreso con cuenta temporal y filtros conservados en el directorio; Inicio con destacados reales, estados vacíos del perfil y citas, sugerencias del buscador y cierre de sesión.
 - Revisión visual en 1440, 390 y 320 px. Sin desborde horizontal en ambas vistas; ajuste flexible del logo del encabezado para la pantalla de 320 px. Se preservan menú móvil, navegación inferior y estilos de foco.
@@ -26,13 +26,31 @@ La preferencia de movimiento reducido desactiva los efectos, incluso si cambia c
 
 Las tres pruebas específicas cubren la animación única, el acceso por foco, el movimiento reducido y su cambio en tiempo real, además de la limpieza al desmontar. Se comprobó en navegador el desplazamiento de la portada y la lectura de las secciones posteriores. Las capturas estáticas muestran la composición final; el movimiento se aprecia al recorrer la página.
 
-## Capturas
+## Recorrido inmersivo del centro de bienestar · 26-10-2026
 
-Portada pública:
+La portada usa ahora una escena fija durante el recorrido, con puertas en perspectiva que se abren conforme baja la página. La imagen del interior se acerca y aparecen tres momentos: bienvenida, especialidades y asistente IA. Al subir se recorre la secuencia en sentido inverso. El acceso «Ir al buscador» permite omitirla.
 
-![Portada](evidencias-home/portada-implementada.jpg)
+La escena es ilustrativa del espacio digital; no representa un establecimiento afiliado. La imagen nueva se genera para este proyecto y pesa 315 KB en WebP. El mensaje del asistente se limita a capacidades existentes: orientación a partir de las consultas, conversaciones guardadas y recomendaciones de especialidades. No afirma seguimiento clínico ni recordatorios automáticos. El Inicio con sesión también destaca la posibilidad de retomar consultas.
 
-Inicio con cuenta temporal y datos reales de la API:
+Con movimiento reducido o altura de pantalla de 600 px o menos, el relato se presenta en flujo normal, con todos sus enlaces disponibles. En el modo animado, los capítulos inactivos quedan fuera del foco mediante inert y aria-hidden. Las tres pruebas específicas del hero cubren avance y retroceso, destinos de enlaces, acceso sin animación y cambio de preferencia/limpieza. Se mantienen las pruebas de búsqueda e ingreso con filtros.
+
+Revisión en navegador: capítulos de especialidades e IA, enlace directo al buscador, anchuras de 390 y 320 px sin desborde, y alternativa estática a 900 × 500 px. La suite final tiene 285 pruebas en 34 archivos; lint y build correctos. No hay cambios en los contratos de API, la base de datos ni las funciones del asistente.
+
+## Capturas actuales
+
+Entrada:
+
+![Entrada al centro](evidencias-home/centro-entrada.jpg)
+
+Especialidades:
+
+![Especialidades](evidencias-home/centro-especialidades.jpg)
+
+Asistente IA:
+
+![Asistente IA](evidencias-home/centro-asistente-ia.jpg)
+
+Inicio con cuenta temporal y datos reales de la API (composición general del rediseño):
 
 ![Inicio](evidencias-home/inicio-implementado.jpg)
 

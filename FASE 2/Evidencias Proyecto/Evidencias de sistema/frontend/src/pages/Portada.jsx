@@ -3,8 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Especialidades from '../components/inicio/Especialidades.jsx';
-import fotoPortada from '../assets/inicio/bienestar-parque.webp';
-import Alerta from '../components/Alerta.jsx';
+import HeroBienestar from '../components/inicio/HeroBienestar.jsx';
 import Icono from '../components/Icono.jsx';
 import { Logo } from '../components/PantallaAcceso.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
@@ -22,7 +21,7 @@ const OFERTA = [
   { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
   { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
   { icono: 'comida', nombre: 'Comidas', texto: 'Anota lo que comes y sigue tus calorías y macronutrientes del día, la semana y el mes.' },
-  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Recibe orientación general y explora qué profesional podría ayudarte.', disponible: true },
+  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Conversa sobre tus objetivos, retoma tu historial y encuentra orientación sobre qué profesional podría ayudarte.', disponible: true },
 ];
 
 // Portada pública, solo para invitados: con sesión iniciada App redirige al Inicio (FS-HU-20, DAS D20).
@@ -66,20 +65,8 @@ export default function Portada() {
       </header>
 
       <main id="contenido" tabIndex={-1}>
-        <section className="portada__hero portada__ancho" aria-labelledby="titulo-portada">
-          <img data-paralaje className="portada__foto" src={fotoPortada} width={1440} height={960} alt="" fetchPriority="high" />
-          <div data-revelar className="portada__presentacion">
-            {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
-            <p className="portada__antetitulo">SALUD · DEPORTE · BIENESTAR</p>
-            <h1 id="titulo-portada">Tu bienestar,<br /><span>a tu ritmo.</span></h1>
-            <p className="portada__introduccion">Conecta con profesionales de la salud y el deporte cerca de ti.</p>
-            <div className="portada__acciones">
-              <Link to="/profesionales" className="boton boton--principal">Encuentra tu profesional <Icono nombre="flecha" tamano={19} /></Link>
-              <a href="#como-funciona" className="portada__conocer">Conoce FitSearch <span><Icono nombre="flecha" tamano={16} /></span></a>
-            </div>
-          </div>
-        </section>
-        <section data-revelar className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
+        <HeroBienestar aviso={aviso} />
+        <section id="explorar-fitsearch" tabIndex={-1} data-revelar className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
           <div><h2 id="titulo-busqueda-portada">¿Qué necesitas hoy?</h2><p>Encuentra profesionales cerca de ti.</p></div>
           <form role="search" aria-label="Buscar profesionales por especialidad y comuna" onSubmit={buscar}>
             <label className="portada__filtro"><Icono nombre="medico" tamano={24} /><span><span>Especialidad</span>

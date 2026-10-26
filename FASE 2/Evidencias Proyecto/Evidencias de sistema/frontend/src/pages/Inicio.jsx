@@ -205,8 +205,8 @@ export default function Inicio() {
       <section data-revelar className="banner-asistente" aria-labelledby="titulo-banner">
         <span className="banner-asistente__icono"><Icono nombre="chispa" tamano={26} /></span>
         <div className="banner-asistente__texto">
-          <h2 id="titulo-banner">¿No sabes por dónde empezar?</h2>
-          <p>El asistente puede orientarte para encontrar apoyo.</p>
+          <h2 id="titulo-banner">Tu asistente IA, para seguir avanzando.</h2>
+          <p>Conversa sobre tus objetivos, revisa tu historial y retoma tus consultas cuando lo necesites.</p>
         </div>
         <Link to={SECCIONES.asistente.ruta} className="boton boton--principal boton--compacto">Abrir asistente <Icono nombre="flecha" tamano={18} /></Link>
       </section>
