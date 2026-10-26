@@ -19,10 +19,10 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Comidas', 'Asistente IA']) {
       expect(screen.getByRole('heading', { level: 3, name: oferta })).toBeInTheDocument();
     }
-    // El directorio y el asistente están disponibles; las otras áreas mantienen su aviso.
-    expect(screen.getAllByText('Próximamente')).toHaveLength(3);
+    // El directorio, el asistente y Comidas están disponibles; centros de salud y gimnasios mantienen su aviso.
+    expect(screen.getAllByText('Próximamente')).toHaveLength(2);
     expect(screen.queryByText('Farmacias')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Disponible')).toHaveLength(2);
+    expect(screen.getAllByText('Disponible')).toHaveLength(3);
     expect(screen.getAllByRole('link', { name: /Registrarse/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();

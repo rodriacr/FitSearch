@@ -3,7 +3,7 @@
 const prisma = require('./prisma');
 
 const CONVERSACION = { id: true, titulo: true, fijada: true, fechaInicio: true, fechaActualizacion: true };
-const MENSAJE = { id: true, remitente: true, contenido: true, especialidad: true, fecha: true };
+const MENSAJE = { id: true, remitente: true, contenido: true, especialidad: true, comidasAgregadas: true, fecha: true };
 
 // Historial con el último mensaje de cada conversación (para la vista previa): primero las fijadas, luego las recientes.
 function listarConversaciones(usuarioId, limite) {

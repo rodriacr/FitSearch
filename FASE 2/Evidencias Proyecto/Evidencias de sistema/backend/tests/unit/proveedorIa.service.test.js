@@ -92,6 +92,47 @@ describe('con proveedor configurado', () => {
   });
 });
 
+// FS-HU-09: el modelo puede pedir agregar alimentos con la función agregar_alimentos; el backend valida y registra.
+describe('agregar alimentos (FS-HU-09)', () => {
+  const conLlamada = (argumentos, contenido = null) => respuestaJson(200, { choices: [{ message: {
+    role: 'assistant', content: contenido, tool_calls: [{ id: 'c1', type: 'function', function: { name: 'agregar_alimentos', arguments: argumentos } }],
+  } }] });
+
+  test('ofrece la función al proveedor y devuelve el pedido del modelo', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(conLlamada(JSON.stringify({ alimentos: [{ nombre: 'pechuga de pollo', gramos: 100 }], momento: 'cena' })));
+    const respuesta = await proveedor.responder([{ remitente: 'usuario', contenido: 'Añade 100 g de pollo a mi cena' }]);
+    expect(respuesta).toEqual({ pedido: { alimentos: [{ nombre: 'pechuga de pollo', gramos: 100 }], momento: 'cena' } });
+    const cuerpo = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(cuerpo.tool_choice).toBe('auto');
+    expect(cuerpo.tools[0].function.name).toBe('agregar_alimentos');
+    expect(cuerpo.tools[0].function.parameters.properties.momento.enum).toEqual(['desayuno', 'media_manana', 'almuerzo', 'merienda', 'cena']);
+    expect(proveedor.INSTRUCCIONES).toContain('agregar_alimentos');
+  });
+
+  test('un momento fuera del catálogo se ignora; argumentos mal formados caen en el texto o responden 503', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    const fetch = jest.spyOn(globalThis, 'fetch');
+    fetch.mockResolvedValueOnce(conLlamada(JSON.stringify({ alimentos: [{ nombre: 'arroz', gramos: 150 }], momento: 'brunch' })));
+    expect((await proveedor.responder([{ remitente: 'usuario', contenido: 'agrega arroz' }])).pedido.momento).toBeNull();
+    fetch.mockResolvedValueOnce(conLlamada('{no es json', '¿Cuántos gramos de arroz comiste?'));
+    expect(await proveedor.responder([{ remitente: 'usuario', contenido: 'agrega arroz' }])).toEqual({ contenido: '¿Cuántos gramos de arroz comiste?', especialidad: null });
+    fetch.mockResolvedValueOnce(conLlamada(JSON.stringify({ alimentos: [] })));
+    await expect(proveedor.responder([{ remitente: 'usuario', contenido: 'agrega' }])).rejects.toMatchObject({ estado: 503 });
+  });
+
+  test('en modo de prueba reconoce «N g de alimento» y el momento del día', async () => {
+    const pedido = async (texto) => (await proveedor.responder([{ remitente: 'usuario', contenido: texto }])).pedido;
+    expect(await pedido('Añádeme 100 g de pollo y 150g de arroz al almuerzo')).toEqual({
+      alimentos: [{ nombre: 'pollo', gramos: 100 }, { nombre: 'arroz', gramos: 150 }], momento: 'almuerzo',
+    });
+    expect(await pedido('anota 120,5 gramos de plátano a mi media mañana')).toEqual({ alimentos: [{ nombre: 'platano', gramos: 120.5 }], momento: 'media_manana' });
+    expect(await pedido('registra 30 g de almendras')).toEqual({ alimentos: [{ nombre: 'almendras', gramos: 30 }], momento: null });
+    expect(await pedido('agrega pollo a mis comidas')).toBeUndefined();
+    expect(await pedido('¿100 g de pollo tienen mucha proteína?')).toBeUndefined();
+  });
+});
+
 describe('red de seguridad', () => {
   test('ante señales de riesgo agrega a quién llamar, aunque el modelo no lo diga', () => {
     expect(proveedor.agregarAvisos('Ya no quiero vivir', 'Lamento que te sientas así.')).toContain('*4141');

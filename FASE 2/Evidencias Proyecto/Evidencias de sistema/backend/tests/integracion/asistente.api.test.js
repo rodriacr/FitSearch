@@ -1,10 +1,12 @@
 // Asistente IA (FS-HU-07, DAS D33; recomendación FS-HU-08, D34). El acceso a datos se simula y el proveedor responde
 // en modo simulado.
 jest.mock('../../src/models/asistente.model');
+jest.mock('../../src/models/comida.model');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../../src/app');
 const modelo = require('../../src/models/asistente.model');
+const comidaModel = require('../../src/models/comida.model');
 const proveedor = require('../../src/services/proveedorIa.service');
 const ErrorHttp = require('../../src/utils/ErrorHttp');
 
@@ -214,6 +216,54 @@ describe('límite diario con solicitudes simultáneas', () => {
     const reintento = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Hola' });
     expect(reintento.status).toBe(201);
     expect(usados).toBe(30);
+  });
+});
+
+// FS-HU-09: en modo de prueba, «agrega 100 g de pollo…» se reconoce sin proveedor y registra los alimentos de hoy.
+describe('agregar alimentos desde el chat', () => {
+  const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6' };
+  const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+  beforeEach(() => {
+    comidaModel.buscarAlimentos.mockImplementation(async ([palabra]) => ({ pollo: [POLLO], arroz: [ARROZ] }[palabra] ?? []));
+    let id = 40;
+    comidaModel.crear.mockImplementation(async (datos) => ({ id: (id += 1), ...datos }));
+    modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
+    modelo.ultimosMensajes.mockResolvedValue([]);
+    modelo.agregarMensajes.mockImplementation(async (cid, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+    modelo.crearConversacion.mockImplementation(async (u, titulo, mensajes) => ({ ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })) }));
+  });
+
+  test('agrega los alimentos con sus gramos al almuerzo de hoy y la respuesta los muestra', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Añádeme 100 g de pollo y 150g de arroz al almuerzo' });
+    expect(res.status).toBe(201);
+    expect(comidaModel.crear).toHaveBeenCalledTimes(2);
+    expect(comidaModel.crear).toHaveBeenCalledWith(expect.objectContaining({
+      usuarioId: 1, momento: 'almuerzo', alimentoId: 1, gramos: 100, calorias: 165, origen: 'asistente', fecha: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    }));
+    const respuesta = res.body.mensajes[1];
+    expect(respuesta.contenido).toMatch(/^Listo, agregué a tu almuerzo de hoy: 100 g de pechuga de pollo cocida \(165 kcal\) y 150 g de arroz blanco cocido \(195 kcal\)/);
+    expect(respuesta.comidasAgregadas).toEqual([
+      { id: 41, nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
+      { id: 42, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
+    ]);
+    expect(modelo.agregarMensajes.mock.calls[0][1][1]).toMatchObject({ remitente: 'asistente', comidasAgregadas: respuesta.comidasAgregadas });
+    // Agregar comidas usa un mensaje del límite diario, como cualquier otro.
+    expect(modelo.reservarUso).toHaveBeenCalledTimes(1);
+  });
+
+  test('un alimento que no está en el catálogo no se agrega y el asistente lo explica', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'anota 80 g de unicornio' });
+    expect(res.status).toBe(201);
+    expect(comidaModel.crear).not.toHaveBeenCalled();
+    expect(res.body.mensajes[1].contenido).toMatch(/^No encontré «unicornio» en la tabla de alimentos de FitSearch/);
+    expect(res.body.mensajes[1].comidasAgregadas).toBeNull();
+    expect(modelo.crearConversacion.mock.calls[0][2][1]).not.toHaveProperty('comidasAgregadas');
+  });
+
+  test('sin gramos o sin pedido de agregar, responde como un mensaje normal', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: '¿Cuántas calorías tiene 100 g de pollo?' });
+    expect(res.body.mensajes[1].contenido).toMatch(/^Modo de prueba/);
+    expect(comidaModel.crear).not.toHaveBeenCalled();
   });
 });
 

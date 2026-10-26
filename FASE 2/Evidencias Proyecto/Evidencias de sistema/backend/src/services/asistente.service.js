@@ -1,21 +1,16 @@
 // Asistente IA del usuario (FS-HU-07, DAS D33): conversaciones con historial propio, límite diario de mensajes y
 // tolerancia a fallos del proveedor (QS2). Si el proveedor falla, no se guarda nada y la persona puede reintentar.
 // FS-HU-08 (D34): cada respuesta guarda la especialidad recomendada (o null) para mostrarla al reabrir la conversación.
+// FS-HU-09: si la persona pide agregar alimentos, se registran en sus comidas y la respuesta guarda lo agregado.
 const { asistente: reglas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const modelo = require('../models/asistente.model');
 const proveedor = require('./proveedorIa.service');
+const comidas = require('./comida.service');
+const { fechaEnChile } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 const noEncontrada = () => new ErrorHttp(404, 'No encontramos esta conversación');
-
-// Día de hoy en Chile ('AAAA-MM-DD'): el límite diario se reinicia a medianoche de Santiago.
-function fechaEnChile(ahora = new Date()) {
-  const partes = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago', year: 'numeric', month: '2-digit', day: '2-digit' })
-    .formatToParts(ahora);
-  const p = Object.fromEntries(partes.map(({ type, value }) => [type, value]));
-  return `${p.year}-${p.month}-${p.day}`;
-}
 
 async function restantesHoy(usuarioId, ahora = new Date()) {
   const enviados = await modelo.usoDelDia(usuarioId, fechaEnChile(ahora));
@@ -41,7 +36,24 @@ async function conCupo(usuarioId, ahora, responderYGuardar) {
   }
 }
 
-const mensaje = ({ id, remitente, contenido, especialidad = null, fecha }) => ({ id, remitente, contenido, especialidad, fecha });
+const mensaje = ({ id, remitente, contenido, especialidad = null, comidasAgregadas = null, fecha }) => ({
+  id, remitente, contenido, especialidad, comidasAgregadas, fecha,
+});
+
+// Respuesta del asistente. Si la persona pidió agregar alimentos (FS-HU-09), se registran en sus comidas de hoy y el
+// backend arma el texto con lo agregado, sin una segunda consulta al proveedor; la red de seguridad se aplica igual.
+async function responderConComidas(usuarioId, mensajes, ahora) {
+  const respuesta = await proveedor.responder(mensajes);
+  if (!respuesta.pedido) return { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, fecha: new Date() };
+  const resultado = await comidas.agregarDesdeAsistente(usuarioId, respuesta.pedido, ahora);
+  return {
+    remitente: 'asistente',
+    contenido: proveedor.agregarAvisos(mensajes.at(-1).contenido, comidas.textoAgregados(resultado)),
+    especialidad: null,
+    ...(resultado.agregados.length > 0 ? { comidasAgregadas: resultado.agregados } : {}),
+    fecha: new Date(),
+  };
+}
 const resumenConversacion = ({ id, titulo, fijada, fechaInicio, fechaActualizacion, mensajes = [] }) => ({
   id, titulo, fijada, fechaInicio, fechaActualizacion,
   vistaPrevia: mensajes[0] ? proveedor.resumir(mensajes[0].contenido, reglas.vistaPrevia.max) : '',
@@ -66,10 +78,10 @@ async function obtener(usuarioId, id) {
 // Primer mensaje: se responde y recién entonces se crea la conversación, con el mensaje como título.
 async function iniciar(usuarioId, texto, ahora = new Date()) {
   const creada = await conCupo(usuarioId, ahora, async () => {
-    const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
+    const respuesta = await responderConComidas(usuarioId, [{ remitente: 'usuario', contenido: texto }], ahora);
     return modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
-      { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
+      respuesta,
     ]);
   });
   return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
@@ -80,10 +92,10 @@ async function enviar(usuarioId, id, texto, ahora = new Date()) {
   if (!conversacion) throw noEncontrada();
   const guardados = await conCupo(usuarioId, ahora, async () => {
     const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
-    const { contenido, especialidad } = await proveedor.responder([...historial, { remitente: 'usuario', contenido: texto }]);
+    const respuesta = await responderConComidas(usuarioId, [...historial, { remitente: 'usuario', contenido: texto }], ahora);
     return modelo.agregarMensajes(id, [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
-      { remitente: 'asistente', contenido, especialidad, fecha: new Date() },
+      respuesta,
     ]);
   });
   return { mensajes: guardados.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };

@@ -23,7 +23,7 @@ const OFERTA = [
   { icono: 'profesional', nombre: 'Profesionales', texto: 'Explora especialidades, reseñas y profesionales cerca de ti.', disponible: true },
   { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
   { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
-  { icono: 'comida', nombre: 'Comidas', texto: 'Registro de alimentación y hábitos para tu bienestar.' },
+  { icono: 'comida', nombre: 'Comidas', texto: 'Registra lo que comes con sus gramos y sigue tus calorías y macronutrientes del día.', disponible: true },
   { icono: 'chispa', nombre: 'Asistente IA', texto: 'Orientación e historial para continuar tus consultas.', disponible: true },
 ];
 
