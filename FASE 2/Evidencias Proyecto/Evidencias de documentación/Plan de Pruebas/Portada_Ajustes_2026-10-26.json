@@ -1,0 +1,41 @@
+{
+  "fecha": "26-10-2026",
+  "cambio": "Ajustes de la revisión del PR #33 (SC-29): defectos 40 y 41 de la portada",
+  "rama": "fix/portada-inicio-ajustes (sobre c7321fa del PR #33)",
+  "navegador": "Navegador integrado de Claude (Chromium), sin sesión",
+  "validacion": { "frontend": "286/286 (34 archivos)", "lint": "correcto", "build": "correcto", "consola": "sin errores" },
+  "total": 4,
+  "aprobados": 4,
+  "resultados": [
+    {
+      "caso": "CP-128 (defecto 40): ningún tirador visible cruza una línea de texto del primer paso",
+      "ok": true,
+      "metodo": "Intersección entre getBoundingClientRect de cada tirador visible y getClientRects de cada línea de texto del paso de bienvenida",
+      "detalle": [
+        { "ancho": 375, "tiradoresVisibles": 0, "cruces": 0, "fuenteTitulo": "41.6px", "lineasTitulo": 2, "desborde": false },
+        { "ancho": 700, "tiradoresVisibles": 0, "cruces": 0, "fuenteTitulo": "42px", "lineasTitulo": 2, "desborde": false },
+        { "ancho": 800, "tiradoresVisibles": 2, "cruces": 0, "fuenteTitulo": "48px", "lineasTitulo": 2, "desborde": false },
+        { "ancho": 1024, "tiradoresVisibles": 2, "cruces": 0, "fuenteTitulo": "61.44px", "lineasTitulo": 2, "desborde": false },
+        { "ancho": 1440, "tiradoresVisibles": 2, "cruces": 0, "fuenteTitulo": "83.2px", "lineasTitulo": 2, "desborde": false },
+        { "ancho": 1920, "tiradoresVisibles": 2, "cruces": 0, "fuenteTitulo": "83.2px", "lineasTitulo": 2, "desborde": false }
+      ],
+      "antes": "En la rama del PR #33, a 375 px los dos tiradores cruzaban el título «a tu ritmo.» y el párrafo; a 1024 px, el párrafo ocupaba de x=24 a x=488 y el tirador izquierdo de x=475 a x=480 a la misma altura"
+    },
+    {
+      "caso": "CP-129 (defecto 41): con la escena en el paso 3 hay un solo h1 accesible",
+      "ok": true,
+      "detalle": { "pasos": ["false", "false", "true"], "h1": [{ "texto": "Tu bienestar, a tu ritmo.", "clase": "solo-lector", "ocultoAlLector": false }], "tituloVisibleAriaHidden": "true" },
+      "antes": "En la rama del PR #33, con la escena en el paso 2 o 3 el h1 quedaba dentro de un elemento con inert y aria-hidden"
+    },
+    {
+      "caso": "CP-126: la escena avanza y retrocede con el scroll",
+      "ok": true,
+      "detalle": { "alBajar": "pasos 1 → 2 → 3", "alSubir": "vuelve al paso 1", "enlaceAsistente": "/asistente" }
+    },
+    {
+      "caso": "CP-127: el buscador de la portada conserva los filtros al pasar por el inicio de sesión",
+      "ok": true,
+      "detalle": { "destino": "/profesionales?especialidad=Nutrici%C3%B3n&comuna=Melipilla", "redirige": "/iniciar-sesion", "desde": "/profesionales?especialidad=Nutrici%C3%B3n&comuna=Melipilla" }
+    }
+  ]
+}
