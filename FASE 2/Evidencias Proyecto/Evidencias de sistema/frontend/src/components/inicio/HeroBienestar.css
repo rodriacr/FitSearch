@@ -1,0 +1,68 @@
+.hero-bienestar { position: relative; --apertura: 1; --avance: 0; color: #fff; background: #092e3c; }
+.hero-bienestar__escena { position: relative; isolation: isolate; overflow: clip; padding: 5rem max(1.5rem, calc((100vw - 1200px) / 2)); }
+.hero-bienestar__interior { position: absolute; inset: 0; z-index: -3; width: 100%; height: 100%; object-fit: cover; object-position: 50% 50%; transform: scale(calc(1 + var(--avance) * 0.16)); }
+.hero-bienestar__sombra { position: absolute; inset: 0; z-index: -2; background: linear-gradient(90deg, rgb(3 24 34 / 89%), rgb(3 24 34 / 70%) 36%, rgb(3 24 34 / 10%) 80%), linear-gradient(0deg, rgb(3 24 34 / 70%), transparent 28%); }
+.hero-bienestar__puertas { display: none; }
+.hero-bienestar__superior { display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 0.65rem; letter-spacing: 0.13em; }
+.hero-bienestar__superior > span { display: flex; align-items: center; gap: 0.65rem; }
+.hero-bienestar__punto { width: 7px; height: 7px; background: #ff941c; border-radius: 50%; box-shadow: 0 0 18px #ff941c; }
+.hero-bienestar__superior a { display: flex; align-items: center; gap: 0.5rem; padding: 0.7rem 0; color: #fff; font-size: 0.75rem; letter-spacing: 0; text-decoration: none; }
+.hero-bienestar__relato { position: relative; }
+.hero-bienestar__paso { max-width: 40rem; padding-block: 3rem; }
+.hero-bienestar__ceja { margin: 0 0 1.5rem; font-size: 0.65rem; letter-spacing: 0.17em; color: #e1cfb9; }
+.hero-bienestar h1, .hero-bienestar h2 { margin: 0; max-width: 12ch; color: #fff; font-size: clamp(2.5rem, 5.9vw, 5.7rem); line-height: 1.02; letter-spacing: -0.055em; }
+.hero-bienestar h1 span, .hero-bienestar h2 span { color: #ffa43c; }
+.hero-bienestar h2 { max-width: 16ch; font-size: clamp(2.1rem, 4.2vw, 4.1rem); }
+.hero-bienestar__paso > p:not(.hero-bienestar__ceja):not(.hero-bienestar__nota) { max-width: 29rem; margin: 1.5rem 0 1.7rem; font-size: clamp(0.9rem, 1.2vw, 1.1rem); line-height: 1.8; color: #ecf2f5; }
+.hero-bienestar .boton { width: fit-content; max-width: 100%; min-width: 0; border-radius: 999px; padding-inline: 1.4rem; font-size: 0.85rem; }
+.hero-bienestar__especialidades { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.hero-bienestar__especialidades a { display: inline-flex; align-items: center; gap: 0.5rem; min-height: 2.8rem; padding: 0.65rem 0.85rem; border: 1px solid #ffffff50; border-radius: 12px; background: #062c42c9; color: #fff; font-size: 0.8rem; text-decoration: none; }
+.hero-bienestar__especialidades a:hover { background: #075583; }
+.hero-bienestar__insignia { display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1.2rem; color: #ffb25a; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.14em; }
+.hero-bienestar__beneficios { display: grid; gap: 0.75rem; margin: 0 0 1.8rem; padding: 0; list-style: none; font-size: 0.85rem; color: #e8f3fa; }
+.hero-bienestar__beneficios li { display: flex; align-items: center; gap: 0.7rem; }
+.hero-bienestar__beneficios .icono { flex-shrink: 0; color: #ffb25a; }
+.hero-bienestar__nota { max-width: 29rem; margin: 1rem 0 0; color: #c8d9e0; font-size: 0.68rem; line-height: 1.65; }
+.hero-bienestar .hero-bienestar__paso > .hero-bienestar__invitacion { margin-top: 1.2rem; font-size: 0.7rem; color: #e3ceac; }
+.hero-bienestar__invitacion span { display: inline-block; margin-left: 0.8rem; color: #ffac49; }
+.hero-bienestar__inferior { display: none; }
+.hero-bienestar a:focus-visible { outline: 3px solid #ffb25a; outline-offset: 5px; }
+.hero-bienestar--animado { height: 280svh; --apertura: 0; }
+.hero-bienestar--animado .hero-bienestar__escena { position: sticky; top: 0; height: 100svh; min-height: 620px; padding-block: 1.5rem; display: flex; flex-direction: column; justify-content: space-between; }
+.hero-bienestar--animado .hero-bienestar__relato { display: grid; align-items: center; flex: 1; padding-block: 1rem; }
+.hero-bienestar--animado .hero-bienestar__paso { grid-area: 1 / 1; opacity: 0; translate: 0 22px; visibility: hidden; pointer-events: none; transition: opacity 450ms ease, translate 650ms cubic-bezier(0.22, 1, 0.36, 1); padding-block: 1rem; }
+.hero-bienestar--animado .hero-bienestar__paso[data-activo="true"] { opacity: 1; translate: 0 0; visibility: visible; pointer-events: auto; }
+.hero-bienestar--animado .hero-bienestar__puertas { display: block; position: absolute; z-index: -1; inset: 0; pointer-events: none; perspective: 1300px; }
+.hero-bienestar__puerta { position: absolute; top: -2%; width: 50%; height: 104%; background: repeating-linear-gradient(90deg, transparent 0 40px, #0000000f 41px 43px), linear-gradient(100deg, #103341 0%, #204a52 60%, #153a42 100%); box-shadow: inset 0 0 70px #00182580; border-inline: 1px solid #b8a37980; backface-visibility: hidden; }
+.hero-bienestar__puerta--izquierda { left: 0; transform-origin: left center; transform: translateX(calc(var(--apertura) * -35%)) rotateY(calc(var(--apertura) * -85deg)); }
+.hero-bienestar__puerta--derecha { right: 0; transform-origin: right center; transform: translateX(calc(var(--apertura) * 35%)) rotateY(calc(var(--apertura) * 85deg)); }
+.hero-bienestar__puerta > span { position: absolute; top: 45%; height: 16%; width: 5px; border-radius: 5px; background: linear-gradient(90deg, #755729, #e5c98f, #997841); box-shadow: 2px 1px 10px #0006; }
+.hero-bienestar__puerta--izquierda > span { right: 1.5rem; }
+.hero-bienestar__puerta--derecha > span { left: 1.5rem; }
+.hero-bienestar--animado .hero-bienestar__inferior { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding-block: 1rem; color: #d6e3e7; font-size: 0.7rem; }
+.hero-bienestar__inferior > span > span { margin-left: 1rem; color: #ffac49; }
+.hero-bienestar__capitulos { display: flex; gap: 1.4rem; }
+.hero-bienestar__capitulos span { padding-bottom: 0.6rem; border-bottom: 2px solid #ffffff30; opacity: 0.55; }
+.hero-bienestar__capitulos [data-actual="true"] { border-color: #ff941c; color: #fff; opacity: 1; }
+@media (max-width: 639px) {
+  .hero-bienestar__escena { padding-inline: 1.5rem; }
+  .hero-bienestar--animado { height: 250svh; }
+  .hero-bienestar--animado .hero-bienestar__escena { min-height: 560px; }
+  .hero-bienestar__superior { font-size: 0.5rem; letter-spacing: 0.07em; }
+  .hero-bienestar__superior > span { max-width: 10rem; }
+  .hero-bienestar__superior a { font-size: 0.65rem; white-space: nowrap; }
+  .hero-bienestar__capitulos { gap: 0.5rem; }
+  .hero-bienestar__capitulos span { font-size: 0; width: 1.5rem; }
+  .hero-bienestar__sombra { background: linear-gradient(90deg, #03222ceb, #03222cc9 55%, #03222c73); }
+  .hero-bienestar__beneficios { font-size: 0.75rem; gap: 0.5rem; }
+  .hero-bienestar__paso > p:not(.hero-bienestar__ceja):not(.hero-bienestar__nota) { margin-block: 1rem; line-height: 1.65; }
+  .hero-bienestar__ceja { font-size: 0.55rem; }
+}
+@media (max-height: 600px), (prefers-reduced-motion: reduce) {
+  .hero-bienestar--animado { height: auto; }
+  .hero-bienestar--animado .hero-bienestar__escena { position: relative; height: auto; min-height: 0; padding-block: 2rem; }
+  .hero-bienestar--animado .hero-bienestar__relato { display: block; }
+  .hero-bienestar--animado .hero-bienestar__paso { opacity: 1; translate: none; visibility: visible; transition: none; pointer-events: auto; padding-block: 2rem; }
+  .hero-bienestar--animado .hero-bienestar__puertas, .hero-bienestar--animado .hero-bienestar__inferior { display: none; }
+  .hero-bienestar__interior { transform: none; }
+}

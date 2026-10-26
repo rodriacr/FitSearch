@@ -14,8 +14,8 @@
   min-height: 4.25rem; padding: 0.5rem 0.75rem 0.5rem 1rem; background: var(--color-superficie);
   border-bottom: 1px solid var(--color-borde); box-shadow: 0 2px 10px rgb(11 79 128 / 6%);
 }
-.encabezado__marca { display: block; margin-right: auto; line-height: 0; }
-.encabezado__marca .logo { width: 8.75rem; }
+.encabezado__marca { display: block; min-width: 0; margin-right: auto; line-height: 0; }
+.encabezado__marca .logo { width: 8.75rem; max-width: 100%; }
 .encabezado__acciones { display: flex; align-items: center; gap: 0.25rem; }
 
 .boton-icono {

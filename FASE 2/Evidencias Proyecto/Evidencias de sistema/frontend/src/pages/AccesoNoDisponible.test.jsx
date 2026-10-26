@@ -16,7 +16,7 @@ test.each(['/', '/inicio', '/profesional/perfil'])('una cuenta administrativa en
 });
 
 test.each([
-  ['usuario', 'Tu salud y bienestar, en un solo lugar'],
+  ['usuario', /¿Cómo quieres cuidarte hoy\?/],
   ['profesional', '¡Hola, Ana!'],
 ])('el rol %s sale del aviso hacia su propio Inicio', async (rol, titulo) => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify({

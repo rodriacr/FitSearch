@@ -1,3 +1,4 @@
+import useAnimacionesScroll from '../services/useAnimacionesScroll.js';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
@@ -5,23 +6,20 @@ import Alerta from '../components/Alerta.jsx';
 import BuscadorGeneral from '../components/BuscadorGeneral.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
+import Especialidades from '../components/inicio/Especialidades.jsx';
+import fotoInicio from '../assets/inicio/bienestar-inicio.webp';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
 import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
-import { formatearNumero } from '../services/formato.js';
+import { formatearNumero, primerNombre } from '../services/formato.js';
 import { obtenerPerfil } from '../services/perfil.service.js';
 import { buscarProfesionales } from '../services/profesional.service.js';
 import { MisCitas } from './Agenda.jsx';
 import { ubicacionSiHayPermiso } from '../services/ubicacion.js';
 import './Inicio.css';
+import './InicioRedisenado.css';
 
 const OBJETIVOS = Object.fromEntries(reglas.perfil.objetivoPrincipal.map(({ valor, etiqueta }) => [valor, etiqueta]));
-const CATEGORIAS_HERO = [
-  { icono: 'profesional', nombre: 'Profesionales', detalle: 'de la salud y deporte' },
-  { icono: 'hospital', nombre: 'Centros de salud', detalle: 'y clínicas' },
-  { icono: 'mancuerna', nombre: 'Gimnasios', detalle: 'y centros deportivos' },
-];
-
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
 
 function TarjetaObjetivo({ objetivo }) {
@@ -77,14 +75,15 @@ function TarjetaProgreso({ kcal }) {
 
 function TarjetaCitas() {
   return (
-    <div className="panel-tarjeta"><MisCitas compacto /></div>
+    <div className="panel-tarjeta inicio__citas"><MisCitas compacto /></div>
   );
 }
 
 // Inicio del usuario con sesión, según el mockup (FS-HU-21). Solo usa datos reales de la API:
 // lo que aún no existe se muestra como estado vacío o "Próximamente".
 export default function Inicio() {
-  const { marcarRolPendiente } = useSesion();
+  const animaciones = useAnimacionesScroll();
+  const { sesion, marcarRolPendiente } = useSesion();
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
   const [destacados, setDestacados] = useState(null);
@@ -121,7 +120,8 @@ export default function Inicio() {
     ? [perfil.datos.pasos.datosPersonales, perfil.datos.pasos.objetivos, perfil.datos.pasos.salud].filter((hecho) => !hecho).length : 0;
 
   return (
-    <div className="inicio">
+    <div className="inicio" ref={animaciones}>
+      <div data-revelar className="inicio__saludo"><h1>Hola, {primerNombre(sesion.usuario.nombre)}.<br />¿Cómo quieres cuidarte hoy?</h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
       {pendientes > 0 && (
         <div className="inicio__aviso">
           <Icono nombre="info" tamano={20} />
@@ -131,29 +131,22 @@ export default function Inicio() {
       )}
 
       <section className="inicio__hero" aria-labelledby="titulo-inicio">
-        <div className="inicio__hero-texto">
-          <h1 id="titulo-inicio">Tu salud y bienestar, en un solo lugar</h1>
-          <p>Encuentra profesionales, centros de salud, gimnasios y más, cerca de ti.</p>
+        <img data-paralaje className="inicio__foto" src={fotoInicio} alt="" width={1280} height={853} fetchPriority="high" />
+        <div data-revelar className="inicio__hero-texto">
+          <h2 id="titulo-inicio">Tu próximo paso<br /><span>empieza aquí.</span></h2>
+          <p>Conecta con profesionales y encuentra el apoyo que necesitas para una vida más saludable.</p>
           <BuscadorGeneral />
         </div>
-        <ul className="inicio__categorias" aria-label="Lo que encontrarás en FitSearch">
-          {CATEGORIAS_HERO.map(({ icono, nombre, detalle }) => (
-            <li key={nombre}><Icono nombre={icono} tamano={26} /><p><strong>{nombre}</strong>{detalle}</p></li>
-          ))}
-        </ul>
-        <svg className="inicio__ola" viewBox="0 0 400 60" preserveAspectRatio="none" aria-hidden="true">
-          <path d="M0 40 C120 75 250 10 400 35 L400 60 L0 60 Z" className="ola--naranja" />
-        </svg>
       </section>
 
-      <section className="inicio__accesos" aria-labelledby="titulo-accesos">
+      <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
         <ul className="accesos-rapidos">
-          {ACCESOS_RAPIDOS.map((clave) => {
+          {['profesionales', 'citas', 'asistente', ...ACCESOS_RAPIDOS.filter((clave) => SECCIONES[clave].proximamente)].map((clave) => {
             const { ruta, nombre, icono, proximamente } = SECCIONES[clave];
             return (
               <li key={clave}>
-                <Link to={ruta} className={`acceso-rapido acceso-rapido--${clave}`}>
+                <Link to={ruta} className={`acceso-rapido acceso-rapido--${clave}${proximamente ? ' acceso-rapido--proximamente' : ''}`}>
                   <span className="acceso-rapido__icono"><Icono nombre={icono} tamano={26} /></span>
                   <span className="acceso-rapido__nombre">{nombre}</span>
                   {proximamente ? <Proximamente /> : <Icono nombre="flecha" tamano={16} className="acceso-rapido__flecha" />}
@@ -164,7 +157,13 @@ export default function Inicio() {
         </ul>
       </section>
 
-      <div className="inicio__panel">
+      <section className="inicio__especialidades" aria-labelledby="titulo-especialidades-inicio">
+        <div className="inicio__titulo-seccion"><h2 id="titulo-especialidades-inicio">Encuentra a tu profesional</h2><Link to="/profesionales" className="enlace-panel">Todas las especialidades <Icono nombre="flecha" tamano={16} /></Link></div>
+        <p className="inicio__bajada">Explora las principales áreas y elige el apoyo para ti.</p>
+        <Especialidades variante="inicio" />
+      </section>
+
+      <div data-revelar className="inicio__panel">
         {cargandoPerfil ? <p className="panel-tarjeta texto-secundario" role="status">Cargando tu información…</p> : perfil.error ? (
           <div className="panel-tarjeta">
             <Alerta>{perfil.error}</Alerta>
@@ -179,7 +178,7 @@ export default function Inicio() {
         <TarjetaCitas />
       </div>
 
-      <section className="inicio__destacados" aria-labelledby="titulo-destacados">
+      <section data-revelar className="inicio__destacados" aria-labelledby="titulo-destacados">
         <div className="inicio__titulo-seccion">
           <h2 id="titulo-destacados">Profesionales destacados</h2>
           <Link to="/profesionales" className="enlace-panel">Ver todos <Icono nombre="flecha" tamano={16} /></Link>
@@ -203,11 +202,11 @@ export default function Inicio() {
         )}
       </section>
 
-      <section className="banner-asistente" aria-labelledby="titulo-banner">
+      <section data-revelar className="banner-asistente" aria-labelledby="titulo-banner">
         <span className="banner-asistente__icono"><Icono nombre="chispa" tamano={26} /></span>
         <div className="banner-asistente__texto">
-          <h2 id="titulo-banner">¿Dudas sobre tu salud o entrenamiento?</h2>
-          <p>Pregunta a nuestro asistente IA, te ayudará a encontrar la mejor opción para ti.</p>
+          <h2 id="titulo-banner">Tu asistente IA, para seguir avanzando.</h2>
+          <p>Conversa sobre tus objetivos, revisa tu historial y retoma tus consultas cuando lo necesites.</p>
         </div>
         <Link to={SECCIONES.asistente.ruta} className="boton boton--principal boton--compacto">Abrir asistente <Icono nombre="flecha" tamano={18} /></Link>
       </section>

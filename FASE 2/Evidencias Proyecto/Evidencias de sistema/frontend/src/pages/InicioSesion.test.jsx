@@ -12,7 +12,7 @@ const API_CON_SESION = {
   '/api/profesionales/filtros': { especialidades: [], comunas: [] },
   '/api/profesionales': listado([]),
 };
-const TITULO_INICIO = { level: 1, name: 'Tu salud y bienestar, en un solo lugar' };
+const TITULO_INICIO = { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ };
 
 async function ingresar({ recordar = false } = {}) {
   await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');

@@ -1,0 +1,70 @@
+.inicio { gap: 1.25rem; grid-template-areas: "saludo" "aviso" "hero" "accesos" "especialidades" "panel" "destacados" "banner"; }
+.inicio__saludo { grid-area: saludo; }
+.inicio__saludo h1 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.25rem); line-height: 1.2; letter-spacing: -0.045em; color: #10273a; }
+.inicio__saludo p { margin: 0.6rem 0 0; max-width: 40rem; color: #607587; font-size: 0.9rem; line-height: 1.7; }
+.inicio__aviso { padding: 0.75rem 1rem; font-size: 0.8rem; }
+.inicio__hero { isolation: isolate; grid-template-columns: 1fr; display: block; padding: 2.5rem 1.4rem; min-height: 21rem; background: #073b58; border-radius: 20px; }
+.inicio__foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: 70% calc(20% + var(--desplazamiento-hero, 0px)); }
+.inicio__hero::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(90deg, #073b58, rgb(7 59 88 / 91%) 25%, rgb(7 59 88 / 75%) 55%, rgb(7 59 88 / 15%)); }
+.inicio__hero-texto { max-width: 34rem; }
+.inicio__hero h2 { margin: 0 0 1rem; color: #fff; font-size: clamp(2.1rem, 4vw, 3.7rem); line-height: 1.08; letter-spacing: -0.05em; }
+.inicio__hero h2 span { color: #ff922b; }
+.inicio__hero-texto > p { max-width: 27rem; margin-bottom: 1.5rem; color: #e0edf6; line-height: 1.7; }
+.inicio__hero .buscador-hero { max-width: 33rem; min-height: 3.7rem; box-shadow: 0 5px 20px rgb(0 0 0 / 10%); }
+.inicio__hero .buscador-hero input { font-size: 0.85rem; }
+.inicio__hero .buscador-hero button { width: 2.9rem; height: 2.9rem; }
+.inicio__accesos { gap: 0.6rem; }
+.inicio__accesos > h2 { font-size: 0.9rem; color: #4e6a7d; }
+.accesos-rapidos { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; }
+.acceso-rapido { min-height: 6.5rem; border-color: transparent; border-radius: 18px; background: #fff; }
+.acceso-rapido__icono { color: #075583; background: #eaf5fc; }
+.acceso-rapido--asistente .acceso-rapido__icono { color: #075583; background: #eaf5fc; }
+.acceso-rapido--proximamente { min-height: 0; padding: 0.65rem; flex-direction: row; flex-wrap: wrap; justify-content: center; gap: 0.45rem; background: #f7fafc; color: #587084; border: 1px dashed #dce8f0; }
+.acceso-rapido--proximamente .acceso-rapido__icono { width: auto; height: auto; background: none; }
+.acceso-rapido--proximamente .acceso-rapido__icono .icono { width: 18px; height: 18px; }
+.acceso-rapido--proximamente .etiqueta-proximamente { margin: 0; }
+.inicio__especialidades { grid-area: especialidades; min-width: 0; padding: 1.2rem; border-radius: 20px; background: #fff; }
+.inicio__especialidades .inicio__titulo-seccion { flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.inicio__especialidades h2, .inicio__destacados h2 { color: #10273a; font-size: 1.25rem; letter-spacing: -0.035em; }
+.inicio__especialidades .enlace-panel { font-size: 0.72rem; }
+.inicio__bajada { margin: 0.55rem 0 1rem; color: #607587; font-size: 0.8rem; }
+.inicio__panel { gap: 1rem; }
+.inicio__panel .panel-tarjeta { border-radius: 20px; border-color: #e6eef4; box-shadow: none; }
+.inicio__citas { order: -1; }
+.inicio__citas .agenda { margin: 0; }
+.inicio__citas .agenda__cabecera { gap: 0.5rem; }
+.inicio__citas .agenda__cabecera h2 { font-size: 0.95rem; }
+.inicio__citas .agenda__cabecera > a { font-size: 0.75rem; }
+.inicio__citas .texto-secundario { font-size: 0.75rem; line-height: 1.6; }
+.inicio__citas .agenda__vacio { padding: 1rem; font-size: 0.8rem; line-height: 1.65; }
+.inicio__citas .agenda__vacio h3 { margin-top: 0; font-size: 0.95rem; }
+.inicio__citas .agenda__lista:empty { display: none; }
+.inicio__destacados { padding: 1.2rem; border-radius: 20px; background: #fff; }
+.inicio__titulo-seccion { flex-wrap: wrap; }
+.inicio__lista-destacados { gap: 0.8rem; }
+.inicio .banner-asistente { background: linear-gradient(110deg, #fff0dd, #ffead3); border: 0; border-radius: 20px; padding: 1.4rem; }
+.inicio .banner-asistente__icono { width: 3.8rem; height: 3.8rem; color: #ef7908; background: #ffe1bc; }
+.inicio .banner-asistente h2 { font-size: 1.25rem; color: #10273a; letter-spacing: -0.035em; }
+.inicio .banner-asistente .boton { border-radius: 999px; background: #075583; box-shadow: none; }
+@media (min-width: 40rem) {
+  .inicio__hero { min-height: 23rem; padding: 3rem 2.2rem; }
+  .inicio__hero-texto { max-width: 62%; }
+  .inicio__hero::before { background: linear-gradient(90deg, #073b58, rgb(7 59 88 / 93%) 27%, rgb(7 59 88 / 55%) 57%, transparent 78%); }
+  .accesos-rapidos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .acceso-rapido:not(.acceso-rapido--proximamente) { flex-direction: row; align-items: center; justify-content: flex-start; min-height: 5rem; padding: 1rem; text-align: left; gap: 0.8rem; }
+  .acceso-rapido:not(.acceso-rapido--proximamente) .acceso-rapido__nombre { flex: 1; }
+  .acceso-rapido__flecha { margin-top: 0; }
+  .inicio__panel { grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); }
+  .inicio__lista-destacados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 75rem) {
+  .inicio { grid-template-columns: minmax(0, 1fr) 18rem; grid-template-areas: "saludo saludo" "aviso aviso" "hero hero" "accesos accesos" "especialidades panel" "destacados panel" "banner banner"; grid-template-rows: none; }
+  .inicio__hero { min-height: 24rem; padding: 3rem; }
+  .inicio__hero-texto { max-width: 57%; }
+  .inicio__panel { grid-template-columns: 1fr; }
+  .inicio__lista-destacados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inicio__foto { object-position: 70% 20%; }
+}
