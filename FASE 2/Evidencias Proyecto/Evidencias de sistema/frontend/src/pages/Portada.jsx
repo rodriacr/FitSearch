@@ -5,23 +5,26 @@ import reglas from '@shared/reglas.json';
 import Especialidades from '../components/inicio/Especialidades.jsx';
 import HeroBienestar from '../components/inicio/HeroBienestar.jsx';
 import Icono from '../components/Icono.jsx';
-import { Logo } from '../components/PantallaAcceso.jsx';
+import iconoMarca from '../assets/logo-fitsearch-icono.png';
 import { useSesion } from '../context/SesionContext.jsx';
 import './Portada.css';
 import './PortadaRedisenada.css';
 
-const AREAS = [
-  { icono: 'corazon', nombre: 'Salud y bienestar', texto: 'Dale espacio a tu bienestar físico y emocional.' },
-  { icono: 'actividad', nombre: 'Deporte y movimiento', texto: 'Encuentra tu ritmo y avanza hacia tus objetivos.' },
-  { icono: 'balanza', nombre: 'Alimentación', texto: 'Conoce tus necesidades y construye mejores hábitos.' },
-];
+function MarcaPortada() {
+  return (
+    <span className="portada__logotipo" role="img" aria-label="FitSearch — Plataforma inteligente de salud, deporte y bienestar">
+      <img src={iconoMarca} alt="" width={44} height={44} />
+      <span>Fit<span>Search</span></span>
+    </span>
+  );
+}
 
 const OFERTA = [
-  { icono: 'profesional', nombre: 'Profesionales', texto: 'Busca nutricionistas, kinesiólogos, entrenadores y más. Filtra por comuna, modalidad, distancia y calificación, y lee las reseñas de otras personas.', disponible: true },
+  { icono: 'profesional', nombre: 'Profesionales', texto: 'Explora especialidades, reseñas y profesionales cerca de ti.', disponible: true },
   { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
   { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
-  { icono: 'comida', nombre: 'Comidas', texto: 'Anota lo que comes y sigue tus calorías y macronutrientes del día, la semana y el mes.' },
-  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Conversa sobre tus objetivos, retoma tu historial y encuentra orientación sobre qué profesional podría ayudarte.', disponible: true },
+  { icono: 'comida', nombre: 'Comidas', texto: 'Registro de alimentación y hábitos para tu bienestar.' },
+  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Orientación e historial para continuar tus consultas.', disponible: true },
 ];
 
 // Portada pública, solo para invitados: con sesión iniciada App redirige al Inicio (FS-HU-20, DAS D20).
@@ -52,7 +55,7 @@ export default function Portada() {
       <a className="portada__saltar" href="#contenido">Saltar al contenido</a>
       <header className="portada__encabezado">
         <div className="portada__ancho portada__barra">
-          <Link to="/" className="portada__marca" aria-label="FitSearch, portada"><Logo /></Link>
+          <Link to="/" className="portada__marca" aria-label="FitSearch, portada"><MarcaPortada /></Link>
           <nav className="portada__navegacion" aria-label="Navegación principal">
             <a href="#especialidades">Especialidades</a><a href="#que-ofrecemos">Qué ofrecemos</a>
             <a href="#como-funciona">Cómo funciona</a>
@@ -66,6 +69,7 @@ export default function Portada() {
 
       <main id="contenido" tabIndex={-1}>
         <HeroBienestar aviso={aviso} />
+        <div className="portada__contenido">
         <section id="explorar-fitsearch" tabIndex={-1} data-revelar className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
           <div><h2 id="titulo-busqueda-portada">¿Qué necesitas hoy?</h2><p>Encuentra profesionales cerca de ti.</p></div>
           <form role="search" aria-label="Buscar profesionales por especialidad y comuna" onSubmit={buscar}>
@@ -81,7 +85,7 @@ export default function Portada() {
         </section>
         <section id="especialidades" className="portada__seccion portada__ancho" aria-labelledby="titulo-especialidades">
           <div data-revelar className="portada__titulo-seccion">
-            <div><p className="portada__antetitulo">APOYO PARA CADA ETAPA DE TU VIDA</p><h2 id="titulo-especialidades">El apoyo que necesitas,<br />en un solo lugar.</h2></div>
+            <div><p className="portada__antetitulo">APOYO PARA CADA ETAPA DE TU VIDA</p><h2 id="titulo-especialidades">El apoyo que necesitas,<br /><span>en un solo lugar.</span></h2></div>
             <p>Desde cuidar tus hábitos hasta encontrar tu próximo desafío. Explora las especialidades y elige a quién consultar.</p>
           </div>
           <Especialidades />
@@ -90,8 +94,33 @@ export default function Portada() {
 
 
 
+        <section data-revelar className="portada__asistente portada__ancho" aria-labelledby="titulo-asistente-portada">
+          <div className="portada__asistente-texto">
+            <p className="portada__antetitulo"><Icono nombre="chispa" tamano={20} /> ASISTENTE IA</p>
+            <h2 id="titulo-asistente-portada">Tu camino continúa.<br /><span>Con apoyo, paso a paso.</span></h2>
+            <p>Conversa sobre tus objetivos, revisa tu historial y retoma tus consultas cuando lo necesites.</p>
+            <Link to="/asistente" className="boton boton--principal">Conoce al asistente IA <Icono nombre="flecha" tamano={18} /></Link>
+          </div>
+          <ul className="portada__asistente-beneficios">
+            <li><span><Icono nombre="chispa" tamano={24} /></span><div><h3>Orientación</h3><p>Según tus consultas</p></div></li>
+            <li><span><Icono nombre="chat" tamano={24} /></span><div><h3>Historial de consultas</h3><p>Retoma tus conversaciones guardadas</p></div></li>
+            <li><span><Icono nombre="profesional" tamano={24} /></span><div><h3>Especialidades recomendadas</h3><p>Encuentra el apoyo adecuado para ti</p></div></li>
+          </ul>
+        </section>
+
+        <section id="como-funciona" className="portada__pasos-fondo" aria-labelledby="titulo-pasos">
+          <div className="portada__ancho portada__seccion portada__pasos-contenido">
+            <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">CÓMO FUNCIONA</p><h2 id="titulo-pasos">Empieza a cuidarte <span>en tres pasos</span></h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
+            <ol className="portada__pasos">
+              <li data-revelar><span>01</span><div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo o con tu cuenta de Google.</p></div></li>
+              <li data-revelar><span>02</span><div><h3>Completa tu perfil</h3><p>Elige tu tipo de cuenta y completa el perfil correspondiente para comenzar.</p></div></li>
+              <li data-revelar><span>03</span><div><h3>Encuentra apoyo</h3><p>Busca profesionales cerca de ti, revisa sus reseñas y guarda tus favoritos.</p></div></li>
+            </ol>
+          </div>
+        </section>
+
         <section id="que-ofrecemos" className="portada__seccion portada__ancho" aria-labelledby="titulo-oferta">
-          <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas para tu bienestar.</h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
+          <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas <span>para tu bienestar.</span></h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
           <div className="portada__herramientas">
             {OFERTA.map(({ icono, nombre, texto, disponible }, indice) => (
               <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${disponible ? ' portada__herramienta--disponible' : ''}`}>
@@ -103,31 +132,11 @@ export default function Portada() {
           </div>
         </section>
 
-        <section id="como-funciona" className="portada__pasos-fondo" aria-labelledby="titulo-pasos">
-          <div className="portada__ancho portada__seccion portada__pasos-contenido">
-            <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">CÓMO FUNCIONA</p><h2 id="titulo-pasos">Empieza a cuidarte en tres pasos</h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
-            <ol className="portada__pasos">
-              <li data-revelar><span>01</span><div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo o con tu cuenta de Google.</p></div></li>
-              <li data-revelar><span>02</span><div><h3>Completa tu perfil</h3><p>Elige tu tipo de cuenta y cuéntanos tus datos, tus objetivos y tu información de salud.</p></div></li>
-              <li data-revelar><span>03</span><div><h3>Encuentra apoyo</h3><p>Busca profesionales cerca de ti, revisa sus reseñas y guarda tus favoritos.</p></div></li>
-            </ol>
-          </div>
-        </section>
-
-        <section data-revelar className="portada__areas portada__ancho" aria-label="Áreas de bienestar">
-          {AREAS.map(({ icono, nombre, texto }) => (
-            <div className="portada__area" key={nombre}><span className="portada__icono-area"><Icono nombre={icono} tamano={26} /></span><div><h2>{nombre}</h2><p>{texto}</p></div></div>
-          ))}
-        </section>
-
-        <section data-revelar className="portada__ancho portada__cierre" aria-labelledby="titulo-cierre">
-          <div><p className="portada__antetitulo">AQUÍ COMIENZA TU CAMINO</p><h2 id="titulo-cierre">Un pequeño paso hoy.<br /><span>Más bienestar mañana.</span></h2><p>Haz espacio para ti. Nosotros te acompañamos a empezar.</p></div>
-          <Link to="/registro" className="boton boton--principal boton--compacto">Registrarse <Icono nombre="flecha" /></Link>
-        </section>
+        </div>
       </main>
 
       <footer className="portada__pie">
-        <div className="portada__ancho portada__pie-contenido"><div><Logo /><p>Salud, deporte y bienestar.<br />Más cerca de ti.</p></div><nav aria-label="Enlaces del pie de página"><a href="#que-ofrecemos">Qué ofrecemos</a><a href="#como-funciona">Cómo funciona</a><Link to="/iniciar-sesion">Iniciar sesión</Link><Link to="/registro">Registrarse</Link></nav><p className="portada__aviso-salud">FitSearch entrega orientación general y no reemplaza la atención de un profesional de salud.</p></div>
+        <div className="portada__ancho portada__pie-contenido"><div><MarcaPortada /><p>Salud, deporte y bienestar.<br />Más cerca de ti.</p></div><nav aria-label="Enlaces del pie de página"><a href="#que-ofrecemos">Qué ofrecemos</a><a href="#como-funciona">Cómo funciona</a><Link to="/iniciar-sesion">Iniciar sesión</Link><Link to="/registro">Registrarse</Link></nav><p className="portada__aviso-salud">FitSearch entrega orientación general y no reemplaza la atención de un profesional de salud.</p></div>
         <div className="portada__ancho portada__creditos"><span>© {new Date().getFullYear()} FitSearch</span><span>Proyecto Capstone · Duoc UC</span></div>
       </footer>
     </div>
