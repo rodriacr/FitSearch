@@ -1,7 +1,7 @@
 flowchart LR
   U["Navegador<br/>Usuario, profesional<br/>o administrador"] --> F["React y Vite<br/>Desarrollo local"]
   F -->|"HTTP /api y Bearer JWT"| B["Express, Node.js"]
-  B -->|"Prisma compartido; TCP 3306"| D[("MySQL<br/>15 tablas implementadas")]
+  B -->|"Prisma compartido; TCP 3306"| D[("MySQL<br/>17 tablas implementadas")]
   B -->|"Lectura y escritura; dueño o administrador"| A[("Documentos privados<br/>PDF, PNG y JPEG")]
   A --- P["VERIFICATION_STORAGE_DIR<br/>Persistencia y acceso restringido<br/>Respaldo junto con MySQL"]
   F -->|"ID token"| I["Google Identity Services"]
@@ -12,4 +12,4 @@ flowchart LR
   F --> G["MapLibre GL JS y OpenFreeMap<br/>Teselas por HTTPS; sin clave (SC-18)"]
   B -->|"HTTPS; Bearer; plan gratuito; sin datos de perfil (D33)"| C["Groq<br/>API compatible con OpenAI"]
   N["Objetivo: Docker, Nginx y HTTPS<br/>FS-HU-11 pendiente"]
-  M["Modelo completo: 16 tablas<br/>15 implementadas y 1 prevista"]
+  M["Modelo completo: 17 tablas<br/>todas implementadas"]

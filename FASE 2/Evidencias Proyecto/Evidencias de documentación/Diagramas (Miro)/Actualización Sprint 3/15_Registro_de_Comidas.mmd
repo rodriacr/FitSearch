@@ -1,0 +1,33 @@
+sequenceDiagram
+  autonumber
+  actor U as Usuario
+  participant F as Frontend /comidas y /asistente
+  participant B as API FitSearch
+  participant D as MySQL
+  participant G as Groq (compatible con OpenAI)
+  Note over U,D: Registro en la pantalla Comidas (FS-HU-10)
+  U->>F: Busca un alimento y escribe los gramos
+  F->>B: GET /api/comidas/alimentos?q=texto (JWT, rol usuario)
+  B->>D: Busca en alimentos por nombre o sinónimos, sin tildes
+  B-->>F: Alimentos con su aporte por 100 g
+  F-->>U: Muestra el cálculo de la porción antes de guardar
+  U->>F: Agregar a mis comidas
+  F->>B: POST /api/comidas (fecha, momento, alimentoId, gramos)
+  B->>B: Valida gramos (1 a 2000), momento del catálogo y que la fecha no sea futura
+  B->>D: Guarda en registro_comida el aporte calculado (origen manual)
+  B-->>F: 201 registro
+  F->>B: GET /api/comidas y GET /api/comidas/semana
+  B->>D: Registros del día, perfil y calorías de la semana
+  B-->>F: Consumo, objetivo (Mifflin-St Jeor y reparto 30/45/25) y momentos
+  F-->>U: Anillo de calorías, macros, progreso semanal y comidas del día
+  Note over U,G: Pedido desde el chat (FS-HU-09)
+  U->>F: «Añade 100 g de pollo a mi almuerzo»
+  F->>B: POST /api/asistente/conversaciones/:id/mensajes (JWT)
+  B->>D: Reserva 1 mensaje del cupo diario (uso_asistente)
+  B->>G: chat/completions con la función agregar_alimentos (sin perfil ni datos de salud)
+  G-->>B: Pide agregar_alimentos con alimentos, gramos y momento
+  B->>D: Busca cada alimento en el catálogo y lo guarda en registro_comida (origen asistente)
+  B->>B: Arma la respuesta con lo agregado y lo no encontrado, sin otra consulta a Groq
+  B->>D: Guarda el mensaje y la respuesta con comidas_agregadas
+  B-->>F: 201 respuesta y alimentos agregados
+  F-->>U: Texto y tarjeta «Agregado a tus comidas de hoy» con Ver mis comidas
