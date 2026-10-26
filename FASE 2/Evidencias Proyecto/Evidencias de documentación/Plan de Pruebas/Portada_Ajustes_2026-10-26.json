@@ -4,8 +4,8 @@
   "rama": "fix/portada-inicio-ajustes (sobre c7321fa del PR #33)",
   "navegador": "Navegador integrado de Claude (Chromium), sin sesión",
   "validacion": { "frontend": "286/286 (34 archivos)", "lint": "correcto", "build": "correcto", "consola": "sin errores" },
-  "total": 4,
-  "aprobados": 4,
+  "total": 5,
+  "aprobados": 5,
   "resultados": [
     {
       "caso": "CP-128 (defecto 40): ningún tirador visible cruza una línea de texto del primer paso",
@@ -36,6 +36,43 @@
       "caso": "CP-127: el buscador de la portada conserva los filtros al pasar por el inicio de sesión",
       "ok": true,
       "detalle": { "destino": "/profesionales?especialidad=Nutrici%C3%B3n&comuna=Melipilla", "redirige": "/iniciar-sesion", "desde": "/profesionales?especialidad=Nutrici%C3%B3n&comuna=Melipilla" }
+    },
+    {
+      "caso": "CP-128 (defecto 40): apertura y cierre sin cruce de tiradores durante el scroll",
+      "ok": true,
+      "navegador": "Chromium del navegador integrado de Codex",
+      "metodo": "Desplazamiento real de rueda en ambos sentidos; intersección de los rectángulos de tiradores visibles con párrafos y enlaces del paso de entrada activo",
+      "correccion": "Los tiradores se desvanecen durante el primer 1 % de apertura y reaparecen al cerrar; no se modifica el giro de las puertas",
+      "reproduccionOriginal": {
+        "ancho": 1440,
+        "alto": 900,
+        "avance": 0.233580243145978,
+        "opacidadTiradores": [
+          0,
+          0
+        ],
+        "cruces": 0
+      },
+      "evidencia": "Portada_Tiradores_CP128_2026-10-26.jpg",
+      "resumen": {
+        "posiciones": 84,
+        "anchos": [
+          375,
+          700,
+          800,
+          1024,
+          1440,
+          1920
+        ],
+        "alto": 900,
+        "sentidos": [
+          "bajar",
+          "subir"
+        ],
+        "cruces": 0,
+        "desbordes": 0
+      },
+      "mediciones": "Portada_Tiradores_CP128_2026-10-26.json"
     }
   ]
 }

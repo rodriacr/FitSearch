@@ -37,11 +37,11 @@
 .hero-bienestar__puerta { position: absolute; top: -2%; width: 50%; height: 104%; background: repeating-linear-gradient(90deg, transparent 0 40px, #0000000f 41px 43px), linear-gradient(100deg, #103341 0%, #204a52 60%, #153a42 100%); box-shadow: inset 0 0 70px #00182580; border-inline: 1px solid #b8a37980; backface-visibility: hidden; }
 .hero-bienestar__puerta--izquierda { left: 0; transform-origin: left center; transform: translateX(calc(var(--apertura) * -35%)) rotateY(calc(var(--apertura) * -85deg)); }
 .hero-bienestar__puerta--derecha { right: 0; transform-origin: right center; transform: translateX(calc(var(--apertura) * 35%)) rotateY(calc(var(--apertura) * 85deg)); }
-.hero-bienestar__puerta > span { position: absolute; top: 45%; height: 16%; width: 5px; border-radius: 5px; background: linear-gradient(90deg, #755729, #e5c98f, #997841); box-shadow: 2px 1px 10px #0006; }
+.hero-bienestar__puerta > span { position: absolute; top: 45%; height: 16%; width: 5px; border-radius: 5px; background: linear-gradient(90deg, #755729, #e5c98f, #997841); box-shadow: 2px 1px 10px #0006; opacity: clamp(0, calc(1 - var(--apertura) * 100), 1); }
 .hero-bienestar__puerta--izquierda > span { right: 1.5rem; }
 .hero-bienestar__puerta--derecha > span { left: 1.5rem; }
-/* Los tiradores no cruzan el texto de bienvenida: en pantallas anchas el texto ocupa solo la puerta izquierda y,
-   bajo 800 px, donde el texto usa todo el ancho, los tiradores se ocultan (quedan las puertas y su unión). */
+/* El ancho protege el texto con las puertas cerradas. Los tiradores se desvanecen al comenzar
+   la apertura para no atravesarlo durante el giro, y reaparecen al cerrar siguiendo el mismo progreso. */
 @media (min-width: 800px) {
   .hero-bienestar--animado .hero-bienestar__paso--entrada { max-width: calc(50vw - max(1.5rem, (100vw - 1200px) / 2) - 3.5rem); }
   .hero-bienestar--animado .hero-bienestar__titulo { font-size: clamp(2.5rem, 5.9vw, 5.2rem); }
