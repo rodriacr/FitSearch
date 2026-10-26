@@ -1,0 +1,70 @@
+/* Composición fotográfica de la portada; mantiene los componentes y colores de FitSearch. */
+.portada { color: #10273a; }
+.portada__ancho { width: min(100% - 2rem, 1320px); }
+.portada__encabezado { border: 0; }
+.portada__barra { padding-block: 1.2rem; }
+.portada__hero { isolation: isolate; overflow: hidden; padding: 0; border-radius: 24px; background: #073b58; }
+.portada__foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; object-position: 70% 20%; }
+.portada__hero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, #073b58 0%, rgb(7 59 88 / 96%) 20%, rgb(7 59 88 / 83%) 50%, rgb(7 59 88 / 25%)); }
+.portada__presentacion { padding: 3.3rem 1.5rem; }
+.portada h1 { font-size: clamp(2.7rem, 6vw, 5.7rem); line-height: 1.04; letter-spacing: -0.055em; }
+.portada h1 > span { color: #ff922b; }
+.portada__introduccion { max-width: 25rem; margin-block: 1.3rem 1.8rem; font-size: 1rem; line-height: 1.65; }
+.portada__hero .portada__antetitulo { color: #d6e8f3; }
+.portada__acciones .boton, .portada__cierre .boton { width: fit-content; max-width: 100%; min-width: 0; padding-inline: 1.3rem; border-radius: 999px; font-size: 0.83rem; }
+.portada__conocer { display: inline-flex; gap: 0.6rem; align-items: center; font-size: 0.78rem; color: #fff; text-decoration: none; }
+.portada__conocer > span { display: grid; place-items: center; width: 1.8rem; height: 1.8rem; border: 1px solid #d5e9f0; border-radius: 50%; }
+.portada__busqueda { position: relative; z-index: 1; display: grid; gap: 1.2rem; padding: 1.4rem; margin-top: -0.5rem; background: #fff; border: 1px solid #ecf2f6; border-radius: 22px; box-shadow: 0 10px 35px rgb(8 61 88 / 7%); }
+.portada__busqueda h2 { margin: 0; font-size: 1.25rem; letter-spacing: -0.04em; }
+.portada__busqueda p { margin: 0.3rem 0 0; color: #607587; font-size: 0.78rem; }
+.portada__busqueda form { display: grid; gap: 0.7rem; }
+.portada__busqueda .boton { min-width: 0; min-height: 3.65rem; font-size: 0.8rem; white-space: nowrap; }
+.portada__filtro { display: flex; align-items: center; gap: 0.8rem; min-width: 0; padding: 0.65rem 0.8rem; border: 1px solid #dce7ef; border-radius: 12px; }
+.portada__filtro > .icono { flex-shrink: 0; color: #08608c; }
+.portada__filtro > span { flex: 1; min-width: 0; }
+.portada__filtro > span > span { display: block; color: #253d51; font-size: 0.72rem; }
+.portada__filtro input, .portada__filtro select { width: 100%; min-height: 1.5rem; padding: 0; border: 0; background: none; font: inherit; font-size: 0.76rem; color: #536c80; }
+.portada__filtro:focus-within { outline: 2px solid #f58a21; outline-offset: 2px; }
+.portada__filtro input:focus, .portada__filtro select:focus { outline: none; }
+.portada__titulo-seccion { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 1rem 3rem; max-width: none; margin-bottom: 1.7rem; }
+.portada__titulo-seccion h2 { font-size: clamp(1.65rem, 3vw, 2.45rem); line-height: 1.2; color: #10273a; }
+.portada__titulo-seccion > p:not(.portada__antetitulo) { max-width: 24rem; margin: 0; font-size: 0.85rem; }
+.portada__titulo-seccion > .portada__antetitulo { flex-basis: 100%; margin-bottom: 0; }
+.portada__ver-especialidades { margin-top: 1.4rem; }
+.portada__herramientas { margin-top: 0; }
+.portada__herramienta { padding: 1.1rem; background: #f7fafc; border-color: #e4edf3; }
+.portada__herramienta h3 { margin-top: 0.75rem; }
+.portada__estado--disponible { color: #075583; background: #e4f2fa; }
+.portada__pasos-fondo { width: min(100% - 2rem, 1320px); margin-inline: auto; border: 0; border-radius: 24px; background: linear-gradient(120deg, #edf7fc, #f6fbfd); }
+.portada__pasos-contenido { width: 100%; padding: 2rem 1.5rem; }
+.portada__pasos-contenido .portada__titulo-seccion { display: block; }
+.portada__pasos li > span { width: auto; height: auto; border: 0; background: none; border-radius: 0; color: #5b9ab7; font-size: 2.4rem; font-weight: 700; }
+.portada__areas { border: 0; }
+.portada__cierre { position: relative; overflow: hidden; padding: 2.3rem 1.5rem; background: linear-gradient(90deg, #073b58, rgb(7 59 88 / 85%) 50%, rgb(7 59 88 / 22%)), url('../assets/inicio/bienestar-inicio.webp') 70% 40% / cover; }
+.portada__cierre h2 span { color: #ff922b; }
+.portada__cierre .boton { flex-shrink: 0; }
+.portada__pie { margin-top: 1rem; }
+@media (min-width: 40rem) {
+  .portada__ancho { width: min(100% - 3rem, 1320px); }
+  .portada__marca .logo { width: 11.5rem; }
+  .portada__presentacion { padding: 4.2rem 2.5rem; }
+  .portada__hero::after { background: linear-gradient(90deg, #073b58 0%, rgb(7 59 88 / 95%) 23%, rgb(7 59 88 / 65%) 49%, transparent 76%); }
+  .portada__introduccion { font-size: 1.15rem; }
+  .portada__busqueda form { grid-template-columns: 1fr 1fr; }
+  .portada__busqueda .boton { grid-column: 1 / -1; }
+  .portada__pasos-fondo { width: min(100% - 3rem, 1320px); }
+  .portada__pasos-contenido { padding: 2.5rem; }
+  .portada__cierre { padding: 3rem; }
+}
+@media (min-width: 64rem) {
+  .portada__ancho { width: min(100% - 4rem, 1320px); }
+  .portada__presentacion { padding: 5.1rem 3.5rem 5.5rem; }
+  .portada__busqueda { width: min(100% - 5rem, 1296px); grid-template-columns: 0.95fr 2.4fr; align-items: center; margin-top: -1.3rem; padding: 1.5rem 1.7rem; }
+  .portada__busqueda form { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; }
+  .portada__busqueda .boton { grid-column: auto; }
+  .portada__herramientas { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .portada__pasos-fondo { width: min(100% - 4rem, 1320px); }
+  .portada__pasos-contenido { display: block; padding: 3rem; }
+  .portada__pasos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .portada__pasos li + li { border-left: 1px solid #d7e8f1; padding-left: 1.5rem; }
+}

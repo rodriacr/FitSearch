@@ -112,7 +112,7 @@ describe('Elegir perfil', () => {
     renderizarApp('/elegir-perfil');
 
     expect(screen.queryByRole('heading', TITULO)).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 1, name: 'Tu salud y bienestar, en un solo lugar' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ })).toBeInTheDocument();
   });
 
   test('mientras no elige, las pantallas con menú lo devuelven aquí', () => {

@@ -1,0 +1,28 @@
+.especialidades { display: grid; gap: 1rem; }
+.especialidad {
+  position: relative; display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+  border: 1px solid #e3edf2; border-radius: 20px; background: #fff; color: #0a263d; text-decoration: none;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.especialidad__foto { display: block; width: 100%; height: 15rem; object-fit: cover; object-position: center 10%; }
+.especialidad:nth-child(3) .especialidad__foto { object-position: 72% center; }
+.especialidad__contenido { display: flex; flex: 1; flex-direction: column; padding: 1.3rem; }
+.especialidad h3 { margin: 0; color: inherit; font-size: 1.15rem; line-height: 1.3; letter-spacing: -0.03em; }
+.especialidad p { margin: 0.6rem 0 1.2rem; color: #597085; font-size: 0.88rem; line-height: 1.65; }
+.especialidad__enlace { display: inline-flex; align-items: center; gap: 0.6rem; margin-top: auto; color: #075583; font-size: 0.88rem; font-weight: 600; }
+.especialidad:focus-visible { outline: 3px solid var(--color-acento); outline-offset: 4px; }
+@media (hover: hover) and (pointer: fine) {
+  .especialidad:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgb(8 61 88 / 10%); }
+}
+@media (min-width: 40rem) {
+  .especialidades { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .especialidad__foto { height: 17rem; }
+  .especialidades--inicio .especialidad { min-height: 21rem; border: 0; color: #fff; }
+  .especialidades--inicio .especialidad__foto { position: absolute; inset: 0; height: 100%; }
+  .especialidades--inicio .especialidad__contenido { position: relative; justify-content: flex-end; padding: 6rem 1rem 1.2rem; background: linear-gradient(0deg, #062638 0%, rgb(6 38 56 / 83%) 28%, transparent 75%); }
+  .especialidades--inicio .especialidad h3 { font-size: 1.05rem; }
+  .especialidades--inicio .especialidad p { margin-bottom: 1rem; color: #e0edf5; font-size: 0.78rem; }
+  .especialidades--inicio .especialidad__enlace { margin-top: 0; color: #fff; }
+  .especialidades--inicio .especialidad__enlace .icono { color: #ff9b3d; }
+}
+@media (prefers-reduced-motion: reduce) { .especialidad { transition: none; } }

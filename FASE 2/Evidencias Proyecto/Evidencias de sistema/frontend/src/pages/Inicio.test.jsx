@@ -26,7 +26,7 @@ describe('Inicio con datos', () => {
     const fetch = simular();
     renderizarApp('/inicio');
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Tu salud y bienestar, en un solo lugar' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ })).toBeInTheDocument();
     const accesos = screen.getByRole('heading', { name: 'Tus accesos rápidos' }).closest('section');
     for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
@@ -46,6 +46,17 @@ describe('Inicio con datos', () => {
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 4 reseñas' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver todos/ })).toHaveAttribute('href', '/profesionales');
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toEqual({ orden: 'destacados', limite: '4' });
+  });
+
+
+  test('la tarjeta de especialidad abre el directorio con el filtro elegido', async () => {
+    const fetch = simular({ extra: {
+      '/api/profesionales/filtros': { especialidades: ['Kinesiología'], comunas: [] },
+    } });
+    renderizarApp('/inicio');
+    await userEvent.click(screen.getByRole('link', { name: 'Explorar Kinesiología' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
+    await waitFor(() => expect(llamadasA(fetch, '/api/profesionales?').some(([url]) => parametrosDe(url).especialidad === 'Kinesiología')).toBe(true));
   });
 
   test('las próximas citas consultan la agenda y muestran su estado vacío con acción', async () => {

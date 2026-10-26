@@ -1,9 +1,9 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, test, vi } from 'vitest';
-import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../tests/utilidades.jsx';
+import { listado, llamadasA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../tests/utilidades.jsx';
 
-const TITULO = { level: 1, name: 'Tu salud y bienestar, en un solo lugar' };
+const TITULO = { level: 1, name: /Tu bienestar,\s*a tu ritmo\./ };
 const API_CON_SESION = {
   '/api/auth/logout': () => [204],
   '/api/perfil': respuestaPerfil(PERFIL_COMPLETO),
@@ -19,13 +19,32 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Comidas', 'Asistente IA']) {
       expect(screen.getByRole('heading', { level: 3, name: oferta })).toBeInTheDocument();
     }
-    // Solo el directorio de profesionales está disponible; el resto se anuncia sin simular resultados.
-    expect(screen.getAllByText('Próximamente')).toHaveLength(4);
+    // El directorio y el asistente están disponibles; las otras áreas mantienen su aviso.
+    expect(screen.getAllByText('Próximamente')).toHaveLength(3);
     expect(screen.queryByText('Farmacias')).not.toBeInTheDocument();
-    expect(screen.getByText('Disponible')).toBeInTheDocument();
+    expect(screen.getAllByText('Disponible')).toHaveLength(2);
     expect(screen.getAllByRole('link', { name: /Registrarse/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();
+  });
+
+
+  test('la búsqueda pública conserva especialidad y comuna después de iniciar sesión', async () => {
+    const fetch = simularApi({
+      ...API_CON_SESION,
+      '/api/auth/login': SESION,
+      '/api/profesionales/filtros': { especialidades: ['Nutrición'], comunas: ['Ñuñoa'] },
+    });
+    renderizarApp('/');
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Especialidad' }), 'Nutrición');
+    await userEvent.type(screen.getByRole('textbox', { name: 'Comuna' }), '  Ñuñoa  ');
+    await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
+    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Profesionales' })).toBeInTheDocument();
+    expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toMatchObject({ especialidad: 'Nutrición', comuna: 'Ñuñoa' });
   });
 
   test('"Registrarse" lleva al registro', async () => {

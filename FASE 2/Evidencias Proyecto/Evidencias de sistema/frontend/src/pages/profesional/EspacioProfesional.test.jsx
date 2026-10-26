@@ -26,7 +26,7 @@ describe('Separación por rol', () => {
     sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
     simularApi({ '/api/perfil': respuestaPerfil(PERFIL_COMPLETO), '/api/profesionales': listado([]) });
     renderizarApp('/profesional/inicio');
-    expect(await screen.findByRole('heading', { level: 1, name: 'Tu salud y bienestar, en un solo lugar' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ })).toBeInTheDocument();
     expect(screen.queryByRole('heading', SALUDO)).not.toBeInTheDocument();
   });
 });
