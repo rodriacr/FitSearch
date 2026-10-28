@@ -1,0 +1,23 @@
+{
+  "fecha": "28-10-2026",
+  "descripcion": "Verificación del nuevo login (PR #36) en el entorno de desarrollo con Node y MySQL 8.4 en Docker: pruebas automatizadas del frontend, lint y build, y revisión en el navegador de inicio de sesión, registro y despedida en 1366 × 768 y 360 px, con una cuenta temporal creada para la prueba y borrada después.",
+  "automatizadas": {
+    "archivos": 36,
+    "pruebas": 294,
+    "aprobadas": 294,
+    "lint": "sin errores",
+    "build": "correcto"
+  },
+  "resultados": [
+    { "caso": "CP-130 pestañas Ingresar y Crear cuenta", "ok": true, "detalle": { "inicioSesion": "Ingresar con aria-current=page", "registro": "Crear cuenta con aria-current=page" } },
+    { "caso": "CP-131 seguridad de la contraseña", "ok": true, "detalle": { "ejecucion": "IndicadorContrasena.test.jsx y Registro.test.jsx" } },
+    { "caso": "CP-132 coincidencia de contraseñas", "ok": true, "detalle": { "ejecucion": "Registro.test.jsx" } },
+    { "caso": "CP-133 aviso de Bloq Mayús", "ok": true, "detalle": { "ejecucion": "CampoFormulario.test.jsx" } },
+    { "caso": "CP-134 despedida al cerrar sesión", "ok": true, "detalle": { "titulo": "Hasta pronto, Camila", "ruta": "/", "dialogo": "aria-modal=true", "foco": "Volver a iniciar sesión" } },
+    { "caso": "CP-135 cerrar la despedida", "ok": true, "detalle": { "ejecucion": "Portada.test.jsx (Seguir en la portada y Escape)" } },
+    { "caso": "CP-136 computador 1366 × 768", "ok": true, "detalle": { "capturas": ["evidencias-login/inicio-sesion-1366.jpg", "evidencias-login/registro-1366.jpg"] } },
+    { "caso": "CP-137 celular 360 px", "ok": true, "detalle": { "inicioSesion": { "scrollWidth": 345, "clientWidth": 345 }, "registro": { "scrollWidth": 345, "clientWidth": 345 }, "captura": "evidencias-login/acceso-celular-360.jpg" } }
+  ],
+  "ajuste": "Portada.test.jsx esperaba el título antiguo «¡Bienvenido!» del inicio de sesión; se actualizó a «Inicia sesión».",
+  "limpieza": "Cuenta temporal eliminada; no se modificaron cuentas existentes ni credenciales."
+}

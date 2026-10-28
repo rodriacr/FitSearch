@@ -39,7 +39,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Especialidad' }), 'Nutrición');
     await userEvent.type(screen.getByRole('textbox', { name: 'Comuna' }), '  Ñuñoa  ');
     await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
     await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
