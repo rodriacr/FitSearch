@@ -16,14 +16,14 @@ Fecha: 28-10-2026. Rama `feat/nuevo-login` (PR #36), sobre `798a9fa` (PR #33 fus
 
 | Caso | Historia | Qué se prueba | Resultado esperado | Cómo se ejecutó | Resultado |
 |---|---|---|---|---|---|
-| CP-130 | FS-HU-01 | Pestañas de acceso | «Ingresar» marcada en inicio de sesión; «Crear cuenta» lleva al registro y queda marcada | `InicioSesion.test.jsx` y navegador | Aprobado |
-| CP-131 | FS-HU-17 | Seguridad de la contraseña al registrarse | Muestra débil, media o fuerte y los requisitos cumplidos o pendientes | `IndicadorContrasena.test.jsx` y `Registro.test.jsx` | Aprobado |
-| CP-132 | FS-HU-17 | Coincidencia de contraseñas | «Las contraseñas coinciden» solo cuando la confirmación es igual; con contraseñas distintas no se envía el registro | `Registro.test.jsx` | Aprobado |
-| CP-133 | FS-HU-01 | Aviso de Bloq Mayús | Con Bloq Mayús activado en un campo de contraseña aparece el aviso; al salir del campo desaparece | `CampoFormulario.test.jsx` | Aprobado |
-| CP-134 | FS-HU-20 | Despedida al cerrar sesión | Diálogo «Hasta pronto, {nombre}» sobre la portada, con el foco en «Volver a iniciar sesión» | `Portada.test.jsx` y navegador | Aprobado |
-| CP-135 | FS-HU-20 | Cerrar la despedida | «Seguir en la portada» y Escape cierran el diálogo | `Portada.test.jsx` | Aprobado |
-| CP-136 | FS-HU-01 | Diseño en computador (1366 × 768) | Presentación a la izquierda y tarjeta a la derecha, sin cortes | Navegador | Aprobado |
-| CP-137 | FS-HU-01 | Diseño en celular (360 px) | Foto arriba, tarjeta como hoja y sin desborde horizontal | Navegador | Aprobado |
+| CP-131 | FS-HU-01 | Pestañas de acceso | «Ingresar» marcada en inicio de sesión; «Crear cuenta» lleva al registro y queda marcada | `InicioSesion.test.jsx` y navegador | Aprobado |
+| CP-132 | FS-HU-17 | Seguridad de la contraseña al registrarse | Muestra débil, media o fuerte y los requisitos cumplidos o pendientes | `IndicadorContrasena.test.jsx` y `Registro.test.jsx` | Aprobado |
+| CP-133 | FS-HU-17 | Coincidencia de contraseñas | «Las contraseñas coinciden» solo cuando la confirmación es igual; con contraseñas distintas no se envía el registro | `Registro.test.jsx` | Aprobado |
+| CP-134 | FS-HU-01 | Aviso de Bloq Mayús | Con Bloq Mayús activado en un campo de contraseña aparece el aviso; al salir del campo desaparece | `CampoFormulario.test.jsx` | Aprobado |
+| CP-135 | FS-HU-20 | Despedida al cerrar sesión | Diálogo «Hasta pronto, {nombre}» sobre la portada, con el foco en «Volver a iniciar sesión» | `Portada.test.jsx` y navegador | Aprobado |
+| CP-136 | FS-HU-20 | Cerrar la despedida | «Seguir en la portada» y Escape cierran el diálogo | `Portada.test.jsx` | Aprobado |
+| CP-137 | FS-HU-01 | Diseño en computador (1366 × 768) | Presentación a la izquierda y tarjeta a la derecha, sin cortes | Navegador | Aprobado |
+| CP-138 | FS-HU-01 | Diseño en celular (360 px) | Foto arriba, tarjeta como hoja y sin desborde horizontal | Navegador | Aprobado |
 
 ## Validación
 
@@ -51,4 +51,4 @@ Despedida al cerrar sesión (1366 × 768):
 
 ![Despedida](evidencias-login/despedida-1366.jpg)
 
-Los casos CP-130 a CP-137 se agregan a la Planilla de Casos de Prueba al consolidar la documentación después de la fusión del PR. Estas comprobaciones no equivalen a aceptación del PO.
+Los casos CP-131 a CP-138 continúan la numeración del PR #34 (CP-126 a CP-130) y se agregan a la Planilla de Casos de Prueba al consolidar la documentación después de la fusión del PR. Estas comprobaciones no equivalen a aceptación del PO.
