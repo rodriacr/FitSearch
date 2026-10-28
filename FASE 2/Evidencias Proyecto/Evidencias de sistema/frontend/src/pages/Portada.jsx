@@ -19,12 +19,14 @@ function MarcaPortada() {
   );
 }
 
+// Cada herramienta disponible lleva a su propia sección; sin sesión, primero pasa por el inicio de sesión y después
+// vuelve a ella. Sin destino, se muestra como «Próximamente».
 const OFERTA = [
-  { icono: 'profesional', nombre: 'Profesionales', texto: 'Explora especialidades, reseñas y profesionales cerca de ti.', disponible: true },
+  { icono: 'profesional', nombre: 'Profesionales', texto: 'Explora especialidades, reseñas y profesionales cerca de ti.', destino: '/profesionales' },
   { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
   { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
-  { icono: 'comida', nombre: 'Comidas', texto: 'Registra lo que comes con sus gramos y sigue tus calorías y macronutrientes del día.', disponible: true },
-  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Orientación e historial para continuar tus consultas.', disponible: true },
+  { icono: 'comida', nombre: 'Comidas', texto: 'Registra lo que comes con sus gramos y sigue tus calorías y macronutrientes del día.', destino: '/comidas' },
+  { icono: 'chispa', nombre: 'Asistente IA', texto: 'Orientación e historial para continuar tus consultas.', destino: '/asistente' },
 ];
 
 // Portada pública, solo para invitados: con sesión iniciada App redirige al Inicio (FS-HU-20, DAS D20).
@@ -122,11 +124,11 @@ export default function Portada() {
         <section id="que-ofrecemos" className="portada__seccion portada__ancho" aria-labelledby="titulo-oferta">
           <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas <span>para tu bienestar.</span></h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
           <div className="portada__herramientas">
-            {OFERTA.map(({ icono, nombre, texto, disponible }, indice) => (
-              <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${disponible ? ' portada__herramienta--disponible' : ''}`}>
-                <div className="portada__herramienta-superior"><span className="portada__icono-herramienta"><Icono nombre={icono} tamano={26} /></span><span className={`portada__estado${disponible ? ' portada__estado--disponible' : ''}`}>{disponible ? 'Disponible' : 'Próximamente'}</span></div>
+            {OFERTA.map(({ icono, nombre, texto, destino }, indice) => (
+              <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${destino ? ' portada__herramienta--disponible' : ''}`}>
+                <div className="portada__herramienta-superior"><span className="portada__icono-herramienta"><Icono nombre={icono} tamano={26} /></span><span className={`portada__estado${destino ? ' portada__estado--disponible' : ''}`}>{destino ? 'Disponible' : 'Próximamente'}</span></div>
                 <h3>{nombre}</h3><p>{texto}</p>
-                {disponible && <Link to={nombre === 'Asistente IA' ? '/asistente' : '/profesionales'} className="portada__enlace">Explorar <Icono nombre="flecha" tamano={18} /></Link>}
+                {destino && <Link to={destino} className="portada__enlace">Explorar <Icono nombre="flecha" tamano={18} /></Link>}
               </article>
             ))}
           </div>

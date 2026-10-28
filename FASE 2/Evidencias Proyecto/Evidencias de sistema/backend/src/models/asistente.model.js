@@ -72,21 +72,26 @@ const liberarUso = (usuarioId, fecha) => prisma.usoAsistente.updateMany({
 
 const contarFijadas = (usuarioId) => prisma.conversacion.count({ where: { usuarioId, fijada: true } });
 
+// Guardar alimentos pedidos en el chat junto con los mensajes (FS-HU-09): todo se confirma o nada.
+const enTransaccion = (trabajo) => prisma.$transaction(trabajo);
+
 // La conversación nace con su primer mensaje y la respuesta: nunca quedan conversaciones vacías.
-function crearConversacion(usuarioId, titulo, mensajes) {
-  return prisma.conversacion.create({
+// `db` es la transacción en curso, si la hay.
+function crearConversacion(usuarioId, titulo, mensajes, db = prisma) {
+  return db.conversacion.create({
     data: { usuarioId, titulo, mensajes: { create: mensajes } },
     select: { ...CONVERSACION, mensajes: { orderBy: [{ fecha: 'asc' }, { id: 'asc' }], select: MENSAJE } },
   });
 }
 
-// Guarda el mensaje y la respuesta juntos y mueve la conversación al inicio del historial.
-async function agregarMensajes(conversacionId, mensajes) {
-  const creados = await prisma.$transaction([
-    ...mensajes.map((datos) => prisma.mensaje.create({ data: { conversacionId, ...datos }, select: MENSAJE })),
-    prisma.conversacion.update({ where: { id: conversacionId }, data: { fechaActualizacion: mensajes.at(-1).fecha } }),
-  ]);
-  return creados.slice(0, mensajes.length);
+// Guarda el mensaje y la respuesta juntos y mueve la conversación al inicio del historial. Sin una transacción en curso
+// (`db`), abre una propia.
+async function agregarMensajes(conversacionId, mensajes, db) {
+  if (!db) return prisma.$transaction((tx) => agregarMensajes(conversacionId, mensajes, tx));
+  const creados = [];
+  for (const datos of mensajes) creados.push(await db.mensaje.create({ data: { conversacionId, ...datos }, select: MENSAJE }));
+  await db.conversacion.update({ where: { id: conversacionId }, data: { fechaActualizacion: mensajes.at(-1).fecha } });
+  return creados;
 }
 
 const fijar = (id, usuarioId, fijada) => prisma.conversacion.updateMany({ where: { id, usuarioId }, data: { fijada } });
@@ -94,5 +99,5 @@ const eliminar = (id, usuarioId) => prisma.conversacion.deleteMany({ where: { id
 
 module.exports = {
   listarConversaciones, obtenerConversacion, ultimosMensajes, usoDelDia, reservarUso, liberarUso, contarFijadas,
-  crearConversacion, agregarMensajes, fijar, eliminar,
+  enTransaccion, crearConversacion, agregarMensajes, fijar, eliminar,
 };

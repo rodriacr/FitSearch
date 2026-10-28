@@ -40,19 +40,26 @@ const mensaje = ({ id, remitente, contenido, especialidad = null, comidasAgregad
   id, remitente, contenido, especialidad, comidasAgregadas, fecha,
 });
 
-// Respuesta del asistente. Si la persona pidió agregar alimentos (FS-HU-09), se registran en sus comidas de hoy y el
-// backend arma el texto con lo agregado, sin una segunda consulta al proveedor; la red de seguridad se aplica igual.
-async function responderConComidas(usuarioId, mensajes, ahora) {
+// Respuesta del asistente, pedida fuera de cualquier transacción. Si la persona pidió agregar alimentos (FS-HU-09), se
+// buscan en el catálogo sin guardarlos todavía y el backend arma el texto con lo que se agregará, sin una segunda
+// consulta al proveedor; la red de seguridad se aplica igual.
+async function responder(mensajes, ahora) {
   const respuesta = await proveedor.responder(mensajes);
-  if (!respuesta.pedido) return { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, fecha: new Date() };
-  const resultado = await comidas.agregarDesdeAsistente(usuarioId, respuesta.pedido, ahora);
-  return {
-    remitente: 'asistente',
-    contenido: proveedor.agregarAvisos(mensajes.at(-1).contenido, comidas.textoAgregados(resultado)),
-    especialidad: null,
-    ...(resultado.agregados.length > 0 ? { comidasAgregadas: resultado.agregados } : {}),
-    fecha: new Date(),
-  };
+  if (!respuesta.pedido) {
+    return { respuesta: { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, fecha: new Date() }, comidasPedidas: null };
+  }
+  const comidasPedidas = await comidas.prepararDesdeAsistente(respuesta.pedido, ahora);
+  const contenido = proveedor.agregarAvisos(mensajes.at(-1).contenido, comidas.textoAgregados(comidasPedidas));
+  return { respuesta: { remitente: 'asistente', contenido, especialidad: null, fecha: new Date() }, comidasPedidas };
+}
+
+// Los alimentos y los mensajes se guardan en una sola transacción: si falla cualquier escritura no queda nada a medias,
+// y al reintentar no se duplican las comidas.
+function guardar(usuarioId, { respuesta, comidasPedidas }, guardarMensajes) {
+  return modelo.enTransaccion(async (tx) => {
+    const agregados = comidasPedidas ? await comidas.guardarDesdeAsistente(usuarioId, comidasPedidas, tx) : [];
+    return guardarMensajes(agregados.length > 0 ? { ...respuesta, comidasAgregadas: agregados } : respuesta, tx);
+  });
 }
 const resumenConversacion = ({ id, titulo, fijada, fechaInicio, fechaActualizacion, mensajes = [] }) => ({
   id, titulo, fijada, fechaInicio, fechaActualizacion,
@@ -78,11 +85,11 @@ async function obtener(usuarioId, id) {
 // Primer mensaje: se responde y recién entonces se crea la conversación, con el mensaje como título.
 async function iniciar(usuarioId, texto, ahora = new Date()) {
   const creada = await conCupo(usuarioId, ahora, async () => {
-    const respuesta = await responderConComidas(usuarioId, [{ remitente: 'usuario', contenido: texto }], ahora);
-    return modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
+    const resultado = await responder([{ remitente: 'usuario', contenido: texto }], ahora);
+    return guardar(usuarioId, resultado, (respuesta, tx) => modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
       respuesta,
-    ]);
+    ], tx));
   });
   return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
 }
@@ -92,11 +99,11 @@ async function enviar(usuarioId, id, texto, ahora = new Date()) {
   if (!conversacion) throw noEncontrada();
   const guardados = await conCupo(usuarioId, ahora, async () => {
     const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
-    const respuesta = await responderConComidas(usuarioId, [...historial, { remitente: 'usuario', contenido: texto }], ahora);
-    return modelo.agregarMensajes(id, [
+    const resultado = await responder([...historial, { remitente: 'usuario', contenido: texto }], ahora);
+    return guardar(usuarioId, resultado, (respuesta, tx) => modelo.agregarMensajes(id, [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
       respuesta,
-    ]);
+    ], tx));
   });
   return { mensajes: guardados.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
 }

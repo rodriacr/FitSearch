@@ -39,7 +39,8 @@ function caloriasPorDia(usuarioId, desde, hasta) {
   });
 }
 
-const crear = ({ fecha, ...datos }) => prisma.registroComida.create({ data: { ...datos, fecha: comoDia(fecha) }, select: REGISTRO });
+// `db` es la transacción en curso, si la hay (alimentos agregados desde el chat).
+const crear = ({ fecha, ...datos }, db = prisma) => db.registroComida.create({ data: { ...datos, fecha: comoDia(fecha) }, select: REGISTRO });
 const obtener = (id, usuarioId) => prisma.registroComida.findFirst({ where: { id, usuarioId }, select: REGISTRO });
 const actualizar = (id, datos) => prisma.registroComida.update({ where: { id }, data: datos, select: REGISTRO });
 const eliminar = (id, usuarioId) => prisma.registroComida.deleteMany({ where: { id, usuarioId } });

@@ -1,7 +1,7 @@
 // Gestor de alimentación (FS-HU-09 y FS-HU-10; DAS CU-06). La persona registra alimentos del catálogo con sus gramos y
 // el sistema calcula calorías y macronutrientes; el resumen del día se compara con su objetivo diario, que sale del
 // requerimiento calórico del perfil (Mifflin-St Jeor) y del reparto de macronutrientes de shared/reglas.json.
-// El asistente IA también puede agregar alimentos (agregarDesdeAsistente) con el mismo cálculo.
+// El asistente IA también puede agregar alimentos (prepararDesdeAsistente y guardarDesdeAsistente) con el mismo cálculo.
 const { comidas: reglas, perfil: reglasPerfil } = require('../../../shared/reglas.json');
 const modelo = require('../models/comida.model');
 const usuarioModel = require('../models/usuario.model');
@@ -193,9 +193,10 @@ async function resolverAlimento(texto) {
   return exacto ?? [...candidatos].sort((a, b) => a.nombre.length - b.nombre.length)[0] ?? null;
 }
 
-// Alimentos pedidos en el chat (FS-HU-09): se agregan al día de hoy en Chile, en el momento indicado o según la hora.
-// Devuelve lo agregado y lo que no se encontró en el catálogo, para que el asistente lo diga.
-async function agregarDesdeAsistente(usuarioId, { alimentos, momento }, ahora = new Date()) {
+// Alimentos pedidos en el chat (FS-HU-09), para el día de hoy en Chile, en el momento indicado o según la hora.
+// Solo los busca en el catálogo y calcula su aporte, sin guardar: el asistente los guarda junto con los mensajes
+// (guardarDesdeAsistente). Devuelve lo que se va a agregar y lo que no se encontró, para que el asistente lo diga.
+async function prepararDesdeAsistente({ alimentos, momento }, ahora = new Date()) {
   const fecha = fechaEnChile(ahora);
   const momentoFinal = MOMENTOS.includes(momento) ? momento : momentoSegunHora(ahora);
   const agregados = [];
@@ -209,12 +210,20 @@ async function agregarDesdeAsistente(usuarioId, { alimentos, momento }, ahora = 
       noEncontrados.push(nombre);
       continue;
     }
-    const registro = await modelo.crear({
-      usuarioId, fecha, momento: momentoFinal, alimentoId: alimento.id, descripcionAlimento: alimento.nombre, gramos, origen: 'asistente', ...aporte(alimento, gramos),
-    });
-    agregados.push({ id: registro.id, nombre: alimento.nombre, gramos, calorias: registro.calorias, momento: momentoFinal });
+    const datos = { fecha, momento: momentoFinal, alimentoId: alimento.id, descripcionAlimento: alimento.nombre, gramos, origen: 'asistente', ...aporte(alimento, gramos) };
+    agregados.push({ nombre: alimento.nombre, gramos, calorias: datos.calorias, momento: momentoFinal, datos });
   }
   return { agregados, noEncontrados, momento: momentoFinal };
+}
+
+// Guarda lo preparado dentro de la transacción del asistente (`db`) y devuelve lo agregado con sus ids.
+async function guardarDesdeAsistente(usuarioId, { agregados }, db) {
+  const guardados = [];
+  for (const { datos, ...agregado } of agregados) {
+    const registro = await modelo.crear({ usuarioId, ...datos }, db);
+    guardados.push({ id: registro.id, ...agregado });
+  }
+  return guardados;
 }
 
 const enumerar = (elementos) => (elementos.length < 2 ? elementos.join('') : `${elementos.slice(0, -1).join(', ')} y ${elementos.at(-1)}`);
@@ -238,5 +247,5 @@ function textoAgregados({ agregados, noEncontrados, momento }) {
 
 module.exports = {
   buscarAlimentos, delDia, semana, agregar, actualizar, eliminar, objetivoDiario,
-  agregarDesdeAsistente, textoAgregados, resolverAlimento, aporte, momentoSegunHora, MOMENTOS,
+  prepararDesdeAsistente, guardarDesdeAsistente, textoAgregados, resolverAlimento, aporte, momentoSegunHora, MOMENTOS,
 };

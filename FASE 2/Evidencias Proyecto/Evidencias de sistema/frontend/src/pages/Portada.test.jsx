@@ -47,6 +47,33 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toMatchObject({ especialidad: 'Nutrición', comuna: 'Ñuñoa' });
   });
 
+  test('cada herramienta disponible lleva a su sección; Comidas vuelve a Comidas después de iniciar sesión', async () => {
+    const fetch = simularApi({
+      ...API_CON_SESION,
+      '/api/auth/login': SESION,
+      '/api/comidas/semana': { desde: '2026-10-26', hasta: '2026-11-01', objetivoCalorias: null, dias: [] },
+      '/api/comidas': {
+        fecha: '2026-10-27', hoy: '2026-10-27', momentos: [],
+        objetivo: { calorias: null, proteinasG: null, carbohidratosG: null, grasasG: null, perfil: {} },
+        consumo: { calorias: 0, proteinasG: 0, carbohidratosG: 0, grasasG: 0 },
+      },
+    });
+    renderizarApp('/');
+    const destinoDe = (nombre) => screen.getByRole('heading', { level: 3, name: nombre }).closest('article').querySelector('a')?.getAttribute('href');
+    expect(destinoDe('Profesionales')).toBe('/profesionales');
+    expect(destinoDe('Comidas')).toBe('/comidas');
+    expect(destinoDe('Asistente IA')).toBe('/asistente');
+    expect(destinoDe('Gimnasios')).toBeUndefined();
+
+    await userEvent.click(screen.getByRole('heading', { level: 3, name: 'Comidas' }).closest('article').querySelector('a'));
+    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
+    await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
+    await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Comidas' })).toBeInTheDocument();
+    expect(llamadasA(fetch, '/api/profesionales?')).toHaveLength(0);
+  });
+
   test('"Registrarse" lleva al registro', async () => {
     renderizarApp();
     await userEvent.click(screen.getAllByRole('link', { name: /Registrarse/ })[0]);

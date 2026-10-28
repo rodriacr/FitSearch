@@ -129,28 +129,42 @@ test('un texto libre se resuelve primero por nombre o sinónimo exacto y si no, 
 });
 
 describe('alimentos pedidos en el chat (FS-HU-09)', () => {
-  test('se agregan hoy en Chile, en el momento indicado o según la hora, con origen asistente', async () => {
+  test('se preparan para hoy en Chile, en el momento indicado o según la hora, sin guardar nada', async () => {
     modelo.buscarAlimentos.mockImplementation(async ([palabra]) => (palabra === 'pollo' ? [POLLO] : palabra === 'arroz' ? [ARROZ] : []));
-    const resultado = await servicio.agregarDesdeAsistente(1, { alimentos: [{ nombre: 'pollo', gramos: 100 }, { nombre: 'arroz', gramos: 150 }] }, AHORA);
-    expect(resultado).toEqual({
+    const resultado = await servicio.prepararDesdeAsistente({ alimentos: [{ nombre: 'pollo', gramos: 100 }, { nombre: 'arroz', gramos: 150 }] }, AHORA);
+    expect(resultado).toMatchObject({
       momento: 'almuerzo',
       noEncontrados: [],
       agregados: [
-        { id: 50, nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
-        { id: 50, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
+        { nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
+        { nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
       ],
     });
-    expect(modelo.crear).toHaveBeenCalledWith(expect.objectContaining({ usuarioId: 1, fecha: '2026-10-26', momento: 'almuerzo', origen: 'asistente', alimentoId: 1 }));
+    expect(modelo.crear).not.toHaveBeenCalled();
     expect(servicio.textoAgregados(resultado)).toBe('Listo, agregué a tu almuerzo de hoy: 100 g de pechuga de pollo cocida (165 kcal) y '
       + '150 g de arroz blanco cocido (195 kcal). En total suman 360 kcal.\nPuedes revisarlo o cambiar los gramos en Comidas.');
 
-    const cena = await servicio.agregarDesdeAsistente(1, { alimentos: [{ nombre: 'pollo', gramos: 120.04 }], momento: 'cena' }, AHORA);
+    const cena = await servicio.prepararDesdeAsistente({ alimentos: [{ nombre: 'pollo', gramos: 120.04 }], momento: 'cena' }, AHORA);
     expect(cena.agregados[0]).toMatchObject({ momento: 'cena', gramos: 120 });
+  });
+
+  test('lo preparado se guarda con la transacción recibida, con origen asistente, y devuelve los ids', async () => {
+    modelo.buscarAlimentos.mockImplementation(async ([palabra]) => (palabra === 'pollo' ? [POLLO] : palabra === 'arroz' ? [ARROZ] : []));
+    const pedido = await servicio.prepararDesdeAsistente({ alimentos: [{ nombre: 'pollo', gramos: 100 }, { nombre: 'arroz', gramos: 150 }] }, AHORA);
+    let id = 49;
+    modelo.crear.mockImplementation(async (datos) => ({ id: (id += 1), ...datos }));
+    expect(await servicio.guardarDesdeAsistente(1, pedido, 'tx')).toEqual([
+      { id: 50, nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
+      { id: 51, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
+    ]);
+    expect(modelo.crear).toHaveBeenCalledWith(expect.objectContaining({
+      usuarioId: 1, fecha: '2026-10-26', momento: 'almuerzo', origen: 'asistente', alimentoId: 1, gramos: 100, calorias: 165,
+    }), 'tx');
   });
 
   test('lo que no está en el catálogo o tiene gramos inválidos no se agrega y se informa', async () => {
     modelo.buscarAlimentos.mockImplementation(async ([palabra]) => (palabra === 'pollo' ? [POLLO] : []));
-    const resultado = await servicio.agregarDesdeAsistente(1, {
+    const resultado = await servicio.prepararDesdeAsistente({
       alimentos: [{ nombre: 'unicornio', gramos: 100 }, { nombre: 'pollo', gramos: 0 }, { nombre: 'pollo', gramos: 'mucho' }, { gramos: 10 }, null],
     }, AHORA);
     expect(resultado.agregados).toEqual([]);
@@ -163,7 +177,7 @@ describe('alimentos pedidos en el chat (FS-HU-09)', () => {
   test('no agrega más alimentos de los permitidos por mensaje', async () => {
     modelo.buscarAlimentos.mockResolvedValue([POLLO]);
     const alimentos = Array.from({ length: 12 }, () => ({ nombre: 'pollo', gramos: 10 }));
-    const { agregados } = await servicio.agregarDesdeAsistente(1, { alimentos }, AHORA);
+    const { agregados } = await servicio.prepararDesdeAsistente({ alimentos }, AHORA);
     expect(agregados).toHaveLength(8);
   });
 });

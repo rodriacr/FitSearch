@@ -26,8 +26,8 @@ sequenceDiagram
   B->>D: Reserva 1 mensaje del cupo diario (uso_asistente)
   B->>G: chat/completions con la función agregar_alimentos (sin perfil ni datos de salud)
   G-->>B: Pide agregar_alimentos con alimentos, gramos y momento
-  B->>D: Busca cada alimento en el catálogo y lo guarda en registro_comida (origen asistente)
+  B->>D: Busca cada alimento en el catálogo, todavía sin guardar
   B->>B: Arma la respuesta con lo agregado y lo no encontrado, sin otra consulta a Groq
-  B->>D: Guarda el mensaje y la respuesta con comidas_agregadas
+  B->>D: Una sola transacción: alimentos en registro_comida (origen asistente), mensaje y respuesta con comidas_agregadas. Si algo falla, no queda nada y se devuelve el cupo
   B-->>F: 201 respuesta y alimentos agregados
   F-->>U: Texto y tarjeta «Agregado a tus comidas de hoy» con Ver mis comidas
