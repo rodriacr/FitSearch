@@ -42,10 +42,10 @@ export default function InicioSesion() {
   };
 
   return (
-    <PantallaAcceso>
+    <PantallaAcceso pestana="ingreso">
       <div className="acceso__encabezado">
         <h1>Inicia sesión</h1>
-        <p className="texto-secundario">Tu plan de bienestar te espera.</p>
+        <p className="texto-secundario">Hola de nuevo, tu plan de bienestar te espera.</p>
       </div>
       {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
       <Alerta>{mensaje}</Alerta>
@@ -66,7 +66,6 @@ export default function InicioSesion() {
         </button>
       </form>
       <BotonGoogle recordar={datos.recordar} />
-      <p className="pie-acceso">¿No tienes una cuenta? <Link to="/registro" className="enlace-acento">Regístrate gratis</Link></p>
     </PantallaAcceso>
   );
 }

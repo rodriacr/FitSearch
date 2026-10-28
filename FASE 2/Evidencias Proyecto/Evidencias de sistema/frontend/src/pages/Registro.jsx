@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import BotonGoogle from '../components/BotonGoogle.jsx';
 import CampoFormulario from '../components/CampoFormulario.jsx';
@@ -40,7 +40,7 @@ export default function Registro() {
   };
 
   return (
-    <PantallaAcceso>
+    <PantallaAcceso pestana="registro">
       <div className="acceso__encabezado">
         <h1>Crea tu <span className="texto-acento">cuenta</span></h1>
         <p className="texto-secundario">Gratis y en menos de un minuto.</p>
@@ -65,7 +65,6 @@ export default function Registro() {
         </button>
       </form>
       <BotonGoogle separador="o regístrate con" textoGoogle="signup_with" />
-      <p className="pie-acceso">¿Ya tienes una cuenta? <Link to="/iniciar-sesion" className="enlace-acento">Inicia sesión</Link></p>
     </PantallaAcceso>
   );
 }

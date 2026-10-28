@@ -135,4 +135,16 @@ describe('Inicio de sesión (FS-HU-01)', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
   });
+
+  test('las pestañas cambian entre ingresar y crear cuenta', async () => {
+    renderizarApp('/iniciar-sesion');
+    const pestanas = screen.getByRole('navigation', { name: 'Elige cómo entrar' });
+    expect(screen.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('aria-current', 'page');
+    expect(pestanas).toContainElement(screen.getByRole('link', { name: 'Crear cuenta' }));
+
+    await userEvent.click(screen.getByRole('link', { name: 'Crear cuenta' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Crea tu cuenta' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('aria-current', 'page');
+  });
 });
