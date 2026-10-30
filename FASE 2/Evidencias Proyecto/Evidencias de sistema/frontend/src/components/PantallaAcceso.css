@@ -1,0 +1,117 @@
+/* Pantallas de acceso con el estilo de la portada: celular primero (foto arriba y tarjeta como hoja) y, desde tablet,
+   la foto de fondo a pantalla completa con la presentación a la izquierda y la tarjeta a la derecha. */
+.ingreso { position: relative; min-height: 100vh; overflow: hidden; background: #0a1a26; color: #fff; }
+.ingreso__fondo { position: absolute; inset: 0 0 auto; height: 19rem; }
+.ingreso__fondo img { width: 100%; height: 100%; object-fit: cover; object-position: center 35%; }
+.ingreso__fondo::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, rgb(6 22 34 / 55%) 0%, rgb(6 22 34 / 30%) 55%, #0a1a26 100%);
+}
+
+.ingreso__barra {
+  position: absolute; top: 0.75rem; left: 50%; z-index: 4; transform: translateX(-50%);
+  display: flex; align-items: center; justify-content: space-between; width: min(74rem, calc(100% - 1.5rem));
+  padding: 0.5rem 0.75rem; border: 1px solid rgb(255 255 255 / 14%); border-radius: 1.1rem;
+  background: rgb(20 50 72 / 45%); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+}
+.ingreso__marca { display: inline-flex; align-items: center; gap: 0.5rem; color: #fff; font-weight: 700; font-size: 1.1rem; text-decoration: none; }
+.ingreso__marca > span > span { color: var(--color-acento-claro); }
+.ingreso__marca-icono { width: 2rem; height: 2rem; padding: 2px; background: #fff; border-radius: 50%; object-fit: contain; }
+.ingreso__volver { display: inline-flex; align-items: center; gap: 0.35rem; color: rgb(255 255 255 / 85%); font-size: 0.85rem; text-decoration: none; }
+.ingreso__volver:hover { color: #fff; }
+.ingreso__volver span { display: none; }
+
+.ingreso__marco { position: relative; z-index: 2; display: grid; min-height: 100vh; padding-top: 5.5rem; }
+.ingreso__presentacion { padding: 0 1.25rem 1.5rem; }
+.ingreso__etiqueta {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0; color: rgb(255 255 255 / 75%);
+  font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase;
+}
+.ingreso__etiqueta::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-acento); }
+.ingreso__lema { margin: 0.6rem 0 0; font-size: 1.9rem; font-weight: 800; line-height: 1.05; letter-spacing: -0.02em; }
+.ingreso__lema span { color: var(--color-acento-claro); }
+.ingreso__descripcion, .ingreso__especialidades { display: none; }
+
+.ingreso__tarjeta {
+  position: relative; align-self: stretch; padding: 0.9rem 1.25rem 1.75rem;
+  background: var(--color-superficie); color: var(--color-texto); border-radius: 1.6rem 1.6rem 0 0;
+}
+.ingreso__tarjeta::before { content: ''; display: block; width: 2.75rem; height: 0.3rem; margin: 0 auto 1rem; border-radius: 999px; background: var(--color-borde); }
+.ingreso__tarjeta .acceso__encabezado { text-align: left; margin-bottom: 1.25rem; }
+.ingreso__tarjeta .acceso__encabezado h1 { font-size: 1.5rem; color: var(--color-primario-oscuro); }
+.ingreso__tarjeta .acceso__encabezado h1 span { color: var(--color-acento); }
+.ingreso__tarjeta .volver { margin-bottom: 1rem; }
+
+.ingreso__pestanas { display: grid; grid-template-columns: 1fr 1fr; padding: 0.25rem; margin-bottom: 1.4rem; border-radius: 0.9rem; background: #eef3f7; }
+.ingreso__pestanas a {
+  padding: 0.6rem; border-radius: 0.7rem; text-align: center; font-weight: 600; font-size: 0.9rem;
+  color: var(--color-texto-secundario); text-decoration: none; transition: background-color 0.2s, color 0.2s;
+}
+.ingreso__pestanas a[aria-current='page'] { background: #fff; color: var(--color-primario-oscuro); box-shadow: 0 2px 8px rgb(11 79 128 / 14%); }
+.ingreso__pestanas a:not([aria-current]):hover { color: var(--color-primario); }
+
+.ingreso__seguridad {
+  display: flex; align-items: center; justify-content: center; gap: 0.35rem; margin: 1.25rem 0 0;
+  color: var(--color-texto-secundario); font-size: 0.78rem;
+}
+
+/* Tablet y computador: foto a pantalla completa, presentación a la izquierda y tarjeta translúcida a la derecha. */
+@media (min-width: 768px) {
+  .ingreso__fondo { inset: 0; height: auto; }
+  .ingreso__fondo img { object-position: center 40%; }
+  .ingreso__fondo::after {
+    background: linear-gradient(100deg, rgb(6 22 34 / 88%) 0%, rgb(6 22 34 / 62%) 42%, rgb(6 22 34 / 25%) 70%, rgb(6 22 34 / 55%) 100%);
+  }
+  .ingreso__barra { top: 1.1rem; padding: 0.6rem 1.1rem; }
+  .ingreso__volver span { display: inline; }
+  .ingreso__marco {
+    grid-template-columns: minmax(0, 1fr) minmax(22rem, 26rem); align-items: center; gap: 3rem;
+    width: min(74rem, calc(100% - 3rem)); margin: 0 auto; padding: 7rem 0 2.5rem;
+  }
+  .ingreso__presentacion { padding: 0; }
+  .ingreso__lema { margin: 1.1rem 0; font-size: clamp(2.3rem, 4.4vw, 3.9rem); line-height: 1.02; letter-spacing: -0.03em; }
+  .ingreso__descripcion { display: block; max-width: 28rem; margin: 0; color: rgb(255 255 255 / 82%); line-height: 1.6; }
+  .ingreso__especialidades { display: flex; flex-wrap: wrap; gap: 0.6rem; margin: 1.75rem 0 0; padding: 0; list-style: none; }
+  .ingreso__especialidades li {
+    display: flex; align-items: center; gap: 0.6rem; padding: 0.45rem 0.9rem 0.45rem 0.45rem; border-radius: 999px;
+    border: 1px solid rgb(255 255 255 / 16%); background: rgb(255 255 255 / 10%); backdrop-filter: blur(10px);
+    font-size: 0.75rem; color: rgb(255 255 255 / 72%); line-height: 1.25;
+  }
+  .ingreso__especialidades img { width: 1.9rem; height: 1.9rem; border-radius: 50%; object-fit: cover; }
+  .ingreso__especialidades strong { display: block; color: #fff; font-size: 0.82rem; font-weight: 600; }
+  .ingreso__tarjeta {
+    align-self: center; padding: 1.9rem 1.75rem 1.6rem; border-radius: 1.6rem;
+    border: 1px solid rgb(255 255 255 / 60%); background: rgb(255 255 255 / 93%);
+    box-shadow: 0 30px 70px rgb(0 0 0 / 35%); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  }
+  .ingreso__tarjeta::before { display: none; }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .ingreso__especialidades li:nth-child(3) { display: none; }
+}
+
+/* Indicador de carga de los botones de envío. */
+.boton__carga {
+  width: 1.05rem; height: 1.05rem; border: 2px solid rgb(255 255 255 / 45%); border-top-color: #fff; border-radius: 50%;
+  animation: girar-carga 0.8s linear infinite;
+}
+@keyframes girar-carga { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .boton__carga { animation-duration: 2.4s; } }
+
+/* Aviso de Bloq Mayús y fortaleza de la contraseña. */
+.campo__mayusculas {
+  display: flex; align-items: center; gap: 0.4rem; margin: 0.35rem 0 0; padding: 0.3rem 0.6rem; border-radius: 8px;
+  background: #faeeda; color: #854f0b; font-size: 0.8rem;
+}
+.fortaleza { margin: -0.5rem 0 1rem; font-size: 0.8rem; }
+.fortaleza__barras { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.3rem; margin-bottom: 0.35rem; }
+.fortaleza__barras span { height: 0.3rem; border-radius: 999px; background: var(--color-borde); }
+.fortaleza--debil .fortaleza__barras span:nth-child(-n + 1) { background: var(--color-error); }
+.fortaleza--media .fortaleza__barras span:nth-child(-n + 2) { background: var(--color-acento); }
+.fortaleza--fuerte .fortaleza__barras span { background: var(--color-exito); }
+.fortaleza__nivel { margin: 0 0 0.25rem; font-weight: 500; color: var(--color-texto-secundario); }
+.fortaleza__requisitos { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.15rem; color: var(--color-texto-secundario); }
+.fortaleza__requisitos li { display: flex; align-items: center; gap: 0.35rem; }
+.fortaleza__requisitos .cumple { color: var(--color-exito); }
+.coincidencia { display: flex; align-items: center; gap: 0.35rem; margin: -0.55rem 0 1rem; font-size: 0.8rem; color: var(--color-exito); }

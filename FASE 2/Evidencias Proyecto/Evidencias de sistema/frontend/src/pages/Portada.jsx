@@ -1,9 +1,10 @@
 import useAnimacionesScroll from '../services/useAnimacionesScroll.js';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Especialidades from '../components/inicio/Especialidades.jsx';
 import HeroBienestar from '../components/inicio/HeroBienestar.jsx';
+import Despedida from '../components/Despedida.jsx';
 import Icono from '../components/Icono.jsx';
 import iconoMarca from '../assets/logo-fitsearch-icono.png';
 import { useSesion } from '../context/SesionContext.jsx';
@@ -34,9 +35,11 @@ export default function Portada() {
   const { aviso: avisoSesion, limpiarAviso } = useSesion();
   // El aviso de cierre de sesión se muestra una sola vez: la portada lo conserva y lo descarta del contexto
   // para que no reaparezca en otra pantalla (seguro con StrictMode, que repite los efectos en desarrollo).
-  const [aviso] = useState(avisoSesion);
+  const [aviso, setAviso] = useState(avisoSesion);
   const navegar = useNavigate();
   useEffect(() => { limpiarAviso(); }, [limpiarAviso]);
+  const cerrarDespedida = useCallback(() => setAviso(null), []);
+  const esDespedida = aviso?.origen === 'cierre';
 
   function buscar(evento) {
     evento.preventDefault();
@@ -52,6 +55,7 @@ export default function Portada() {
 
   return (
     <div className="portada" ref={animaciones}>
+      {esDespedida && <Despedida nombre={aviso.nombre} texto={aviso.texto} onCerrar={cerrarDespedida} />}
       <a className="portada__saltar" href="#contenido">Saltar al contenido</a>
       <header className="portada__encabezado">
         <div className="portada__ancho portada__barra">
@@ -68,7 +72,7 @@ export default function Portada() {
       </header>
 
       <main id="contenido" tabIndex={-1}>
-        <HeroBienestar aviso={aviso} />
+        <HeroBienestar aviso={esDespedida ? null : aviso} />
         <div className="portada__contenido">
         <section id="explorar-fitsearch" tabIndex={-1} data-revelar className="portada__busqueda portada__ancho" aria-labelledby="titulo-busqueda-portada">
           <div><h2 id="titulo-busqueda-portada">¿Qué necesitas hoy?</h2><p>Encuentra profesionales cerca de ti.</p></div>

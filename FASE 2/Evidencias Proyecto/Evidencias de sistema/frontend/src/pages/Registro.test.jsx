@@ -11,6 +11,18 @@ async function completarFormulario({ confirmacion = 'ClaveSegura123' } = {}) {
 }
 
 describe('Registro (FS-HU-01 y FS-HU-17)', () => {
+  test('mientras se escribe muestra la seguridad de la contraseña y avisa cuando ambas coinciden', async () => {
+    renderizarApp('/registro');
+    await userEvent.type(screen.getByLabelText('Contraseña (mínimo 8 caracteres)'), 'ClaveSegura123');
+    expect(screen.getByText('Seguridad: media')).toBeInTheDocument();
+    expect(screen.queryByText('Las contraseñas coinciden')).not.toBeInTheDocument();
+
+    await userEvent.type(screen.getByLabelText('Confirmar contraseña'), 'ClaveSegura12');
+    expect(screen.queryByText('Las contraseñas coinciden')).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Confirmar contraseña'), '3');
+    expect(screen.getByText('Las contraseñas coinciden')).toBeInTheDocument();
+  });
+
   // El registro no pregunta el rol: se elige justo después, en "Elegir perfil" (DAS, D25).
   test('FS-HU-17 escenario 1: registra la cuenta y lleva a elegir cómo usar FitSearch', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => (url === '/api/auth/registro'

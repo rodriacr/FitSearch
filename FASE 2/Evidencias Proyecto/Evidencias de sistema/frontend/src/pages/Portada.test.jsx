@@ -39,7 +39,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Especialidad' }), 'Nutrición');
     await userEvent.type(screen.getByRole('textbox', { name: 'Comuna' }), '  Ñuñoa  ');
     await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
     await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
@@ -56,7 +56,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
   test('"Iniciar sesión" abre el inicio de sesión', async () => {
     renderizarApp();
     await userEvent.click(screen.getAllByRole('link', { name: 'Iniciar sesión' })[0]);
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
   });
 
   test('el paso a paso ya no dice que el rol se elige al registrarse (DAS, D21)', () => {
@@ -93,12 +93,41 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(await screen.findByRole('heading', TITULO)).toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();
     expect(screen.getByText('Cerraste sesión correctamente.')).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Hasta pronto, Ana' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver a iniciar sesión' })).toHaveAttribute('href', '/iniciar-sesion');
     expect(localStorage.getItem('fitsearch_sesion')).toBeNull();
     expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
     expect(fetch).toHaveBeenCalledWith('/api/auth/logout', expect.objectContaining({ method: 'POST' }));
 
     await userEvent.click(screen.getAllByRole('link', { name: 'Iniciar sesión' })[0]);
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(screen.queryByText('Cerraste sesión correctamente.')).not.toBeInTheDocument();
+  });
+
+  test('la despedida enfoca "Volver a iniciar sesión" y se cierra con "Seguir en la portada"', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    expect(await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver a iniciar sesión' })).toHaveFocus();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Seguir en la portada' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
+  });
+
+  test('la despedida también se cierra con Escape', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });

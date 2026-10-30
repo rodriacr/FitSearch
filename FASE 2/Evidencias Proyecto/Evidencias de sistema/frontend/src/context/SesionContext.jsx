@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { actualizarSesionGuardada, guardarSesion, leerSesionGuardada, registrarManejadorSesionExpirada } from '../services/api.js';
 import * as authService from '../services/auth.service.js';
+import { primerNombre } from '../services/formato.js';
 import { ELEGIR_PERFIL } from '../services/navegacion.js';
 import { olvidarUbicacion } from '../services/ubicacion.js';
 
@@ -69,6 +70,7 @@ export function SesionProvider({ children }) {
       setSesion(nuevaSesion);
     },
     cerrarSesion: async () => {
+      const nombre = sesion ? primerNombre(sesion.usuario.nombre) : '';
       try {
         await authService.cerrarSesion();
       } catch {
@@ -77,7 +79,8 @@ export function SesionProvider({ children }) {
       establecer(null);
       olvidarUbicacion();
       // "cierre" le indica a RutaProtegida que la salida fue voluntaria y debe volver a la portada.
-      setAviso({ tipo: 'exito', texto: 'Cerraste sesión correctamente.', origen: 'cierre' });
+      // "nombre" lo usa la despedida de la portada.
+      setAviso({ tipo: 'exito', texto: 'Cerraste sesión correctamente.', origen: 'cierre', nombre });
     },
   }), [sesion, aviso, establecer, limpiarAviso]);
 
