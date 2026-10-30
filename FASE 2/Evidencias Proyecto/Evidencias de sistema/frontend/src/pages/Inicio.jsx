@@ -11,6 +11,7 @@ import fotoInicio from '../assets/inicio/bienestar-inicio.webp';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
 import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
+import { obtenerDia } from '../services/comidas.service.js';
 import { formatearNumero, primerNombre } from '../services/formato.js';
 import { obtenerPerfil } from '../services/perfil.service.js';
 import { buscarProfesionales } from '../services/profesional.service.js';
@@ -29,9 +30,7 @@ function TarjetaObjetivo({ objetivo }) {
       {objetivo ? (
         <>
           <p className="objetivo__nombre">{OBJETIVOS[objetivo] || objetivo}</p>
-          {/* La barra de avance se calculará con el gestor de alimentación (FS-HU-09 y FS-HU-10). */}
-          <div className="barra-progreso barra-progreso--pendiente" aria-hidden="true"><span /></div>
-          <p className="objetivo__nota"><Proximamente /> Tu avance se calculará con el registro de tus comidas.</p>
+          <p className="objetivo__nota">Sigue tus calorías y macronutrientes de cada día en <Link to="/comidas">Comidas</Link>.</p>
           <Link to="/perfil" className="enlace-panel">Ver detalle de objetivos <Icono nombre="flecha" tamano={16} /></Link>
         </>
       ) : (
@@ -44,7 +43,8 @@ function TarjetaObjetivo({ objetivo }) {
   );
 }
 
-function TarjetaProgreso({ kcal }) {
+// consumidas: calorías registradas hoy en Comidas (FS-HU-10), o null si aún no se cargan o no se pudieron cargar.
+function TarjetaProgreso({ kcal, consumidas }) {
   return (
     <section className="panel-tarjeta" aria-labelledby="titulo-progreso">
       <h2 id="titulo-progreso" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Tu progreso</h2>
@@ -53,10 +53,12 @@ function TarjetaProgreso({ kcal }) {
           <span className="progreso__icono progreso__icono--calorias"><Icono nombre="fuego" tamano={22} /></span>
           <div>
             <span className="progreso__nombre">Calorías hoy</span>
-            {kcal
-              ? <strong className="progreso__valor"><span aria-hidden="true">—</span> <small>/ {formatearNumero(kcal)} kcal</small></strong>
-              : <Link to="/perfil" className="progreso__enlace">Completa tus datos para estimar tu meta</Link>}
-            <Proximamente />
+            <strong className="progreso__valor">
+              {consumidas === null ? <span aria-hidden="true">—</span> : formatearNumero(consumidas)}
+              {kcal ? <small> / {formatearNumero(kcal)} kcal</small> : <small> kcal</small>}
+            </strong>
+            {!kcal && <Link to="/perfil" className="progreso__enlace">Completa tus datos para estimar tu meta</Link>}
+            <Link to="/comidas" className="progreso__enlace">Registrar comida</Link>
           </div>
         </li>
         <li>
@@ -68,7 +70,7 @@ function TarjetaProgreso({ kcal }) {
           <div><span className="progreso__nombre">Agua hoy</span><Proximamente /></div>
         </li>
       </ul>
-      {kcal && <p className="progreso__nota">Tu meta diaria de calorías se estima con tus datos personales. El registro de comidas llegará pronto.</p>}
+      {kcal && <p className="progreso__nota">Tu meta diaria de calorías se estima con tus datos personales; las calorías de hoy salen de lo que registras en Comidas.</p>}
     </section>
   );
 }
@@ -87,6 +89,16 @@ export default function Inicio() {
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
   const [destacados, setDestacados] = useState(null);
+  const [caloriasHoy, setCaloriasHoy] = useState(null);
+
+  useEffect(() => {
+    let activo = true;
+    // Si las comidas no cargan, la tarjeta muestra «—» y el resto del Inicio sigue igual.
+    obtenerDia()
+      .then(({ consumo }) => activo && setCaloriasHoy(consumo.calorias))
+      .catch(() => activo && setCaloriasHoy(null));
+    return () => { activo = false; };
+  }, [intento]);
 
   useEffect(() => {
     let activo = true;
@@ -142,7 +154,7 @@ export default function Inicio() {
       <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
         <ul className="accesos-rapidos">
-          {['profesionales', 'citas', 'asistente', ...ACCESOS_RAPIDOS.filter((clave) => SECCIONES[clave].proximamente)].map((clave) => {
+          {['profesionales', 'citas', 'asistente', 'comidas', ...ACCESOS_RAPIDOS.filter((clave) => SECCIONES[clave].proximamente)].map((clave) => {
             const { ruta, nombre, icono, proximamente } = SECCIONES[clave];
             return (
               <li key={clave}>
@@ -172,7 +184,7 @@ export default function Inicio() {
         ) : (
           <>
             <TarjetaObjetivo objetivo={perfil.datos.objetivos.objetivoPrincipal} />
-            <TarjetaProgreso kcal={perfil.datos.requerimientoCaloricoKcal} />
+            <TarjetaProgreso kcal={perfil.datos.requerimientoCaloricoKcal} consumidas={caloriasHoy} />
           </>
         )}
         <TarjetaCitas />

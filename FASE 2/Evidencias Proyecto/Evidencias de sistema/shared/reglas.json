@@ -333,6 +333,50 @@
       "asistente"
     ]
   },
+  "comidas": {
+    "momentos": [
+      {
+        "valor": "desayuno",
+        "etiqueta": "Desayuno"
+      },
+      {
+        "valor": "media_manana",
+        "etiqueta": "Media mañana"
+      },
+      {
+        "valor": "almuerzo",
+        "etiqueta": "Almuerzo"
+      },
+      {
+        "valor": "merienda",
+        "etiqueta": "Merienda"
+      },
+      {
+        "valor": "cena",
+        "etiqueta": "Cena"
+      }
+    ],
+    "gramos": {
+      "min": 1,
+      "max": 2000
+    },
+    "busqueda": {
+      "min": 2,
+      "max": 60,
+      "resultados": 12
+    },
+    "macrosObjetivo": {
+      "proteinas": 0.3,
+      "carbohidratos": 0.45,
+      "grasas": 0.25
+    },
+    "kcalPorGramo": {
+      "proteinas": 4,
+      "carbohidratos": 4,
+      "grasas": 9
+    },
+    "alimentosPorMensaje": 8
+  },
   "resena": {
     "puntaje": {
       "min": 1,

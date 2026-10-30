@@ -117,16 +117,31 @@ classDiagram
     +Remitente remitente
     +string contenido
     +string especialidad [opcional]
+    +json comidasAgregadas [opcional]
     +datetime fecha
   }
   class RegistroComida {
     +int id
     +date fecha
+    +Momento momento
     +string descripcionAlimento
+    +decimal gramos
     +int calorias
     +decimal proteinasG
     +decimal carbohidratosG
     +decimal grasasG
+    +Origen origen
+    +datetime fechaCreacion
+  }
+  class Alimento {
+    +int id
+    +string nombre
+    +string sinonimos
+    +decimal calorias100g
+    +decimal proteinas100g
+    +decimal carbohidratos100g
+    +decimal grasas100g
+    +aporte(gramos) Aporte
   }
   Rol "1" <-- "0..*" Usuario : tiene
   Usuario "1" *-- "0..1" PerfilUsuario : perfil
@@ -141,6 +156,7 @@ classDiagram
   Conversacion "1" *-- "1..*" Mensaje : contiene
   Usuario "1" *-- "0..1" UsoAsistente : uso diario
   Usuario "1" *-- "0..*" RegistroComida : registra
+  RegistroComida "0..*" --> "0..1" Alimento : se calcula con
   Usuario "1" *-- "0..*" Favorito : guarda
   Favorito "0..*" --> "1" Profesional : marca
   Usuario "1" *-- "0..*" Resena : escribe

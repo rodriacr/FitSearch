@@ -113,6 +113,8 @@ erDiagram
   usuarios ||--o{ conversaciones : "usuario_id (CASCADE)"
   conversaciones ||--o{ mensajes : "conversacion_id (CASCADE)"
   usuarios ||--o| uso_asistente : "usuario_id (CASCADE)"
+  usuarios ||--o{ registro_comida : "usuario_id (CASCADE)"
+  alimentos |o--o{ registro_comida : "alimento_id (SET NULL)"
   conversaciones {
     INT id PK
     INT usuario_id FK
@@ -127,12 +129,37 @@ erDiagram
     VARCHAR20 remitente "usuario, asistente"
     TEXT contenido
     VARCHAR100 especialidad "NULL"
+    JSON comidas_agregadas "NULL"
     DATETIME fecha
   }
   uso_asistente {
     INT usuario_id PK,FK
     DATE fecha
     SMALLINT mensajes
+  }
+  registro_comida {
+    INT id PK
+    INT usuario_id FK
+    DATE fecha
+    VARCHAR20 momento "desayuno a cena"
+    INT alimento_id FK "NULL"
+    VARCHAR255 descripcion_alimento
+    DECIMAL gramos "1 a 2000"
+    INT calorias
+    DECIMAL proteinas_g
+    DECIMAL carbohidratos_g
+    DECIMAL grasas_g
+    VARCHAR20 origen "manual, asistente"
+    DATETIME fecha_creacion
+  }
+  alimentos {
+    INT id PK
+    VARCHAR80 nombre UK
+    VARCHAR255 sinonimos
+    DECIMAL calorias "por 100 g"
+    DECIMAL proteinas_g "por 100 g"
+    DECIMAL carbohidratos_g "por 100 g"
+    DECIMAL grasas_g "por 100 g"
   }
   disponibilidades {
     INT id PK

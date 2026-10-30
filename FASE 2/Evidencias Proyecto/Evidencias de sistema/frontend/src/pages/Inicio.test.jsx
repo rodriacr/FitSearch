@@ -17,6 +17,7 @@ function simular({ perfil = respuestaPerfil(PERFIL_COMPLETO), profesionales = li
     '/api/perfil': perfil,
     '/api/profesionales/filtros': { especialidades: [], comunas: [] },
     '/api/profesionales': profesionales,
+    '/api/comidas': { consumo: { calorias: 1420, proteinasG: 85, carbohidratosG: 150, grasasG: 45 } },
     ...extra,
   });
 }
@@ -31,16 +32,20 @@ describe('Inicio con datos', () => {
     for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
     }
-    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Centros, Gimnasios y Comidas llegan como "Próximamente";
-    // el Asistente IA ya está disponible (FS-HU-07).
+    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Centros y Gimnasios llegan como "Próximamente";
+    // el Asistente IA (FS-HU-07) y Comidas (FS-HU-09 y FS-HU-10) ya están disponibles.
     expect(within(accesos).queryByRole('link', { name: /Farmacias/ })).not.toBeInTheDocument();
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(3);
+    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
 
     expect(await screen.findByText('Bajar de peso')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver detalle de objetivos/ })).toHaveAttribute('href', '/perfil');
+    const objetivo = screen.getByRole('heading', { name: /Tu objetivo actual/ }).closest('section');
+    expect(within(objetivo).getByRole('link', { name: 'Comidas' })).toHaveAttribute('href', '/comidas');
     const progreso = screen.getByRole('heading', { name: 'Tu progreso' }).closest('section');
-    expect(within(progreso).getByText('/ 2.556 kcal')).toBeInTheDocument();
-    expect(within(progreso).getAllByText('Próximamente')).toHaveLength(3);
+    // Calorías registradas hoy en Comidas frente a la meta estimada con el perfil.
+    await waitFor(() => expect(progreso).toHaveTextContent('1.420 / 2.556 kcal'));
+    expect(within(progreso).getByRole('link', { name: 'Registrar comida' })).toHaveAttribute('href', '/comidas');
+    expect(within(progreso).getAllByText('Próximamente')).toHaveLength(2);
 
     expect(await screen.findByRole('heading', { name: 'Matías Demo' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 4 reseñas' })).toBeInTheDocument();

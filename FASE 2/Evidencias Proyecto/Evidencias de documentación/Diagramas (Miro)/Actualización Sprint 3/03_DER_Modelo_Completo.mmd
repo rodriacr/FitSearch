@@ -12,6 +12,7 @@ erDiagram
   conversaciones ||--o{ mensajes : "conversacion_id"
   usuarios ||--o| uso_asistente : "usuario_id"
   usuarios ||--o{ registro_comida : "usuario_id"
+  alimentos |o--o{ registro_comida : "alimento_id"
   usuarios ||--o{ favoritos : "usuario_id"
   profesionales ||--o{ favoritos : "profesional_id"
   usuarios ||--o{ resenas : "usuario_id"
@@ -118,6 +119,7 @@ erDiagram
     VARCHAR20 remitente "usuario, asistente"
     TEXT contenido
     VARCHAR100 especialidad "NULL, FS-HU-08"
+    JSON comidas_agregadas "NULL, FS-HU-09"
     DATETIME fecha
   }
   uso_asistente {
@@ -129,11 +131,25 @@ erDiagram
     INT id PK
     INT usuario_id FK
     DATE fecha
+    VARCHAR20 momento "desayuno a cena"
+    INT alimento_id FK "NULL"
     VARCHAR255 descripcion_alimento
+    DECIMAL gramos
     INT calorias
     DECIMAL proteinas_g
     DECIMAL carbohidratos_g
     DECIMAL grasas_g
+    VARCHAR20 origen "manual, asistente"
+    DATETIME fecha_creacion
+  }
+  alimentos {
+    INT id PK
+    VARCHAR80 nombre UK
+    VARCHAR255 sinonimos
+    DECIMAL calorias "por 100 g"
+    DECIMAL proteinas_g "por 100 g"
+    DECIMAL carbohidratos_g "por 100 g"
+    DECIMAL grasas_g "por 100 g"
   }
   favoritos {
     INT id PK
