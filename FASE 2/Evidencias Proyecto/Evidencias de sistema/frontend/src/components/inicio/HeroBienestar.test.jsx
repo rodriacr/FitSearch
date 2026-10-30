@@ -5,7 +5,7 @@ import HeroBienestar from './HeroBienestar.jsx';
 
 afterEach(() => vi.unstubAllGlobals());
 
-function preparar(estatico = false) {
+function preparar(estatico = false, aviso = null) {
   let cambiar;
   let cuadro;
   const preferencia = {
@@ -17,7 +17,7 @@ function preparar(estatico = false) {
   vi.stubGlobal('innerHeight', 720);
   vi.stubGlobal('requestAnimationFrame', vi.fn((callback) => { cuadro = callback; return 10; }));
   vi.stubGlobal('cancelAnimationFrame', vi.fn());
-  const vista = render(<MemoryRouter><HeroBienestar /></MemoryRouter>);
+  const vista = render(<MemoryRouter><HeroBienestar aviso={aviso} /></MemoryRouter>);
   const raiz = vista.container.querySelector('.hero-bienestar');
   return { ...vista, raiz, preferencia,
     avanzar: (progreso) => {
@@ -34,13 +34,23 @@ test('el scroll presenta las especialidades y el asistente, y vuelve a la entrad
   expect(screen.queryByRole('link', { name: 'Conoce al asistente IA' })).not.toBeInTheDocument();
   vista.avanzar(0.5);
   expect(screen.getByRole('link', { name: 'Nutrición' })).toHaveAttribute('href', '/profesionales?especialidad=Nutrici%C3%B3n');
-  expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+  expect(screen.queryByRole('link', { name: /Encuentra tu profesional/ })).not.toBeInTheDocument();
   vista.avanzar(0.9);
   expect(screen.getByRole('link', { name: 'Conoce al asistente IA' })).toHaveAttribute('href', '/asistente');
   expect(screen.getByText(/Conversa sobre tus objetivos/)).toBeVisible();
   expect(screen.getByRole('link', { name: /Ir al buscador/ })).toHaveAttribute('href', '#explorar-fitsearch');
   vista.avanzar(0);
   expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+});
+
+test('al avanzar la escena siguen disponibles el único h1 de la portada y el aviso de sesión', () => {
+  const vista = preparar(false, { tipo: 'exito', texto: 'Cerraste sesión correctamente.' });
+  vista.avanzar(0.9);
+  const titulo = screen.getByRole('heading', { level: 1, name: 'Tu bienestar, a tu ritmo.' });
+  expect(titulo.closest('[inert], [aria-hidden="true"]')).toBeNull();
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  expect(screen.getByRole('status')).toHaveTextContent('Cerraste sesión correctamente.');
+  expect(screen.getByRole('status').closest('[inert], [aria-hidden="true"]')).toBeNull();
 });
 
 test('movimiento reducido o poca altura presenta todo sin retener el scroll ni ocultar enlaces', () => {

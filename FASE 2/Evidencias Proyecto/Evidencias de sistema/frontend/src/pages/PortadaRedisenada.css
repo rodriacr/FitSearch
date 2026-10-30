@@ -20,7 +20,7 @@
 .portada .hero-bienestar { background: #042536; }
 .portada .hero-bienestar__escena { padding-top: 8.5rem; }
 .portada .hero-bienestar__inferior { padding-bottom: 3.2rem; }
-.portada .hero-bienestar h1 { font-size: clamp(2.6rem, 6vw, 5.5rem); }
+.portada .hero-bienestar__titulo { font-size: clamp(2.6rem, 6vw, 5.2rem); line-height: 1.1; letter-spacing: -0.045em; }
 .portada__contenido {
   position: relative; isolation: isolate; padding-bottom: 2rem;
   background: radial-gradient(ellipse at 90% 9%, #92734b30, transparent 32%), radial-gradient(ellipse at 10% 45%, #28759e2b, transparent 45%), linear-gradient(180deg, #072e42, #031f30);
@@ -142,7 +142,7 @@
   .portada .hero-bienestar__superior > span { display: none; }
   .portada .hero-bienestar__superior { justify-content: flex-end; }
   .portada .hero-bienestar h2 { font-size: 1.85rem; }
-  .portada .hero-bienestar__paso > p:not(.hero-bienestar__ceja):not(.hero-bienestar__nota):not(.hero-bienestar__invitacion) { font-size: 0.85rem; }
+  .portada .hero-bienestar__paso > p:not(.hero-bienestar__ceja):not(.hero-bienestar__nota):not(.hero-bienestar__invitacion):not(.hero-bienestar__titulo) { font-size: 0.85rem; }
   .portada .hero-bienestar__beneficios { font-size: 0.7rem; }
   .portada .hero-bienestar__inferior { padding-bottom: 2.5rem; }
   .portada__asistente { padding: 1.35rem; }
@@ -154,7 +154,7 @@
 }
 
 .portada section[id] { scroll-margin-top: 8rem; }
-.portada .hero-bienestar h1 > span { color: #ff9c3a; }
+.portada .hero-bienestar__titulo > span { color: #ff9c3a; }
 @media (min-width: 56rem) {
   .portada__barra { flex-wrap: nowrap; }
   .portada__navegacion { order: 0; width: auto; font-size: 0.72rem; gap: 1rem; }

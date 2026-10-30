@@ -70,11 +70,15 @@ export default function HeroBienestar({ aviso }) {
           <span><span className="hero-bienestar__punto" /> TU ESPACIO DE BIENESTAR DIGITAL</span>
           <a href="#explorar-fitsearch">Ir al buscador <Icono nombre="flecha" tamano={16} /></a>
         </div>
+        {/* El título y el aviso de sesión quedan fuera de los pasos: al avanzar la escena, los pasos inactivos se
+            vuelven inert y un lector de pantalla perdía el h1 de la portada y el aviso. El título visible del paso 0
+            se oculta al lector para que no se lea dos veces. */}
+        <h1 className="solo-lector">Tu bienestar, a tu ritmo.</h1>
+        {aviso && <div className="hero-bienestar__aviso"><Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta></div>}
         <div className="hero-bienestar__relato">
           <div className="hero-bienestar__paso hero-bienestar__paso--entrada" {...atributos(0)}>
-            {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
             <p className="hero-bienestar__ceja">ABRE LA PUERTA A TU BIENESTAR</p>
-            <h1>Tu bienestar,<br /><span>a tu ritmo.</span></h1>
+            <p className="hero-bienestar__titulo" aria-hidden="true">Tu bienestar,<br /><span>a tu ritmo.</span></p>
             <p>Profesionales, orientación y un asistente de IA para acompañar tus objetivos. Todo comienza contigo.</p>
             <Link to="/profesionales" className="boton boton--principal">Encuentra tu profesional <Icono nombre="flecha" tamano={18} /></Link>
             {animado && <p className="hero-bienestar__invitacion">Desliza para abrir el centro <span aria-hidden="true">↓</span></p>}
