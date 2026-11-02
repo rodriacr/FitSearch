@@ -46,6 +46,7 @@ model Usuario {
   reservas           Reserva[]
   conversaciones     Conversacion[]
   usoAsistente       UsoAsistente?
+  registrosComida    RegistroComida[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -54,30 +55,30 @@ model Usuario {
 // FS-HU-03: directorio según el diccionario de datos del DAS.
 // FS-HU-22: comuna y modalidad de atención (presencial, online o ambas; catálogo en shared/reglas.json).
 model Profesional {
-  id                Int              @id @default(autoincrement())
-  usuarioId         Int              @unique @map("usuario_id")
-  establecimientoId Int?             @map("establecimiento_id")
-  especialidad      String           @db.VarChar(100)
-  descripcion       String?          @db.Text
-  verificado        Boolean          @default(false)
-  estadoVerificacion String          @default("sin_solicitud") @map("estado_verificacion") @db.VarChar(20)
-  motivoRechazo     String?          @map("motivo_rechazo") @db.VarChar(500)
-  historialVerificacion Json?       @map("historial_verificacion")
-  revisionVerificacion Int          @default(0) @map("revision_verificacion")
-  rut               String?         @db.VarChar(12)
-  telefono          String?         @db.VarChar(20)
-  ubicacionLat      Decimal          @map("ubicacion_lat") @db.Decimal(10, 7)
-  ubicacionLng      Decimal          @map("ubicacion_lng") @db.Decimal(10, 7)
-  comuna            String?          @db.VarChar(80)
+  id                    Int                    @id @default(autoincrement())
+  usuarioId             Int                    @unique @map("usuario_id")
+  establecimientoId     Int?                   @map("establecimiento_id")
+  especialidad          String                 @db.VarChar(100)
+  descripcion           String?                @db.Text
+  verificado            Boolean                @default(false)
+  estadoVerificacion    String                 @default("sin_solicitud") @map("estado_verificacion") @db.VarChar(20)
+  motivoRechazo         String?                @map("motivo_rechazo") @db.VarChar(500)
+  historialVerificacion Json?                  @map("historial_verificacion")
+  revisionVerificacion  Int                    @default(0) @map("revision_verificacion")
+  rut                   String?                @db.VarChar(12)
+  telefono              String?                @db.VarChar(20)
+  ubicacionLat          Decimal                @map("ubicacion_lat") @db.Decimal(10, 7)
+  ubicacionLng          Decimal                @map("ubicacion_lng") @db.Decimal(10, 7)
+  comuna                String?                @db.VarChar(80)
   // Dirección de atención propia (SC-24): obligatoria si atiende presencial o de ambas formas; opcional si atiende solo online.
-  direccion         String?          @db.VarChar(150)
-  modalidad         String           @default("presencial") @db.VarChar(20)
-  usuario           Usuario          @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  establecimiento   Establecimiento? @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)
-  favoritos         Favorito[]
-  resenas           Resena[]
-  documentos        DocumentoProfesional[]
-  disponibilidades  Disponibilidad[]
+  direccion             String?                @db.VarChar(150)
+  modalidad             String                 @default("presencial") @db.VarChar(20)
+  usuario               Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  establecimiento       Establecimiento?       @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)
+  favoritos             Favorito[]
+  resenas               Resena[]
+  documentos            DocumentoProfesional[]
+  disponibilidades      Disponibilidad[]
 
   @@index([especialidad])
   @@index([comuna])
@@ -85,15 +86,15 @@ model Profesional {
 }
 
 model DocumentoProfesional {
-  id                Int         @id @default(autoincrement())
-  profesionalId     Int         @map("profesional_id")
-  tipo              String      @db.VarChar(30)
-  nombre            String      @db.VarChar(150)
-  clave             String      @unique @db.VarChar(50)
-  mime              String      @db.VarChar(40)
-  tamano            Int
-  fechaCreacion     DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
-  profesional       Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+  id            Int         @id @default(autoincrement())
+  profesionalId Int         @map("profesional_id")
+  tipo          String      @db.VarChar(30)
+  nombre        String      @db.VarChar(150)
+  clave         String      @unique @db.VarChar(50)
+  mime          String      @db.VarChar(40)
+  tamano        Int
+  fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
 
   @@index([profesionalId])
   @@map("documentos_profesionales")
@@ -147,14 +148,16 @@ model Conversacion {
 
 // Mensajes de cada conversación. remitente: usuario o asistente (catálogo en shared/reglas.json).
 model Mensaje {
-  id             Int          @id @default(autoincrement())
-  conversacionId Int          @map("conversacion_id")
-  remitente      String       @db.VarChar(20)
-  contenido      String       @db.Text
+  id               Int          @id @default(autoincrement())
+  conversacionId   Int          @map("conversacion_id")
+  remitente        String       @db.VarChar(20)
+  contenido        String       @db.Text
   // FS-HU-08: especialidad del catálogo que el asistente recomendó en esta respuesta (solo mensajes del asistente).
-  especialidad   String?      @db.VarChar(100)
-  fecha          DateTime     @default(now()) @db.DateTime(0)
-  conversacion   Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
+  especialidad     String?      @db.VarChar(100)
+  // FS-HU-09: alimentos que el asistente agregó a las comidas en esta respuesta ([{ id, nombre, gramos, calorias, momento }]).
+  comidasAgregadas Json?        @map("comidas_agregadas")
+  fecha            DateTime     @default(now()) @db.DateTime(0)
+  conversacion     Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
 
   @@index([conversacionId, fecha])
   @@map("mensajes")
@@ -169,6 +172,45 @@ model UsoAsistente {
   usuario   Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("uso_asistente")
+}
+
+// Catálogo de alimentos con su aporte por 100 g (FS-HU-09 y FS-HU-10). Se carga en la migración; valores de referencia
+// aproximados de USDA FoodData Central. sinonimos: palabras de uso común separadas por coma.
+model Alimento {
+  id             Int              @id @default(autoincrement())
+  nombre         String           @unique @db.VarChar(80)
+  sinonimos      String           @default("") @db.VarChar(255)
+  calorias       Decimal          @db.Decimal(6, 1)
+  proteinasG     Decimal          @map("proteinas_g") @db.Decimal(5, 1)
+  carbohidratosG Decimal          @map("carbohidratos_g") @db.Decimal(5, 1)
+  grasasG        Decimal          @map("grasas_g") @db.Decimal(5, 1)
+  registros      RegistroComida[]
+
+  @@map("alimentos")
+}
+
+// Alimentos que cada usuario registró por día y momento (DAS, tabla registro_comida). El aporte se calcula al registrar
+// y se guarda, para que el historial no cambie si se corrige el catálogo. origen: manual o asistente (catálogo en reglas).
+model RegistroComida {
+  id                  Int       @id @default(autoincrement())
+  usuarioId           Int       @map("usuario_id")
+  fecha               DateTime  @db.Date
+  momento             String    @db.VarChar(20)
+  alimentoId          Int?      @map("alimento_id")
+  descripcionAlimento String    @map("descripcion_alimento") @db.VarChar(255)
+  gramos              Decimal   @db.Decimal(6, 1)
+  calorias            Int?
+  proteinasG          Decimal?  @map("proteinas_g") @db.Decimal(6, 2)
+  carbohidratosG      Decimal?  @map("carbohidratos_g") @db.Decimal(6, 2)
+  grasasG             Decimal?  @map("grasas_g") @db.Decimal(6, 2)
+  origen              String    @default("manual") @db.VarChar(20)
+  fechaCreacion       DateTime  @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario             Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  alimento            Alimento? @relation(fields: [alimentoId], references: [id], onDelete: SetNull)
+
+  @@index([usuarioId, fecha])
+  @@index([alimentoId])
+  @@map("registro_comida")
 }
 
 // Profesionales que cada usuario guarda para volver a encontrarlos (FS-HU-23).

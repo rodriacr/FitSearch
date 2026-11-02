@@ -89,13 +89,24 @@ test('los últimos mensajes llegan en orden cronológico', async () => {
 
 test('agregar mensajes los guarda en una transacción y actualiza la fecha de la conversación', async () => {
   const fecha = new Date('2026-10-21T15:00:00Z');
-  prisma.mensaje.create.mockImplementation(({ data }) => ({ creado: data.remitente }));
-  prisma.conversacion.update.mockImplementation((args) => ({ actualizada: args }));
-  prisma.$transaction.mockImplementation(async (operaciones) => operaciones);
-  const guardados = await modelo.agregarMensajes(5, [
-    { remitente: 'usuario', contenido: 'Hola', fecha },
-    { remitente: 'asistente', contenido: '¡Hola!', fecha },
-  ]);
-  expect(guardados).toEqual([{ creado: 'usuario' }, { creado: 'asistente' }]);
+  const mensajes = [{ remitente: 'usuario', contenido: 'Hola', fecha }, { remitente: 'asistente', contenido: '¡Hola!', fecha }];
+  prisma.mensaje.create.mockImplementation(async ({ data }) => ({ creado: data.remitente }));
+  prisma.conversacion.update.mockResolvedValue({});
+  prisma.$transaction.mockImplementation(async (trabajo) => trabajo(prisma));
+  expect(await modelo.agregarMensajes(5, mensajes)).toEqual([{ creado: 'usuario' }, { creado: 'asistente' }]);
+  expect(prisma.$transaction).toHaveBeenCalledTimes(1);
   expect(prisma.conversacion.update).toHaveBeenCalledWith({ where: { id: 5 }, data: { fechaActualizacion: fecha } });
+
+  // Dentro de una transacción en curso (alimentos pedidos en el chat) escribe con ella y no abre otra.
+  const tx = { mensaje: { create: jest.fn(async ({ data }) => ({ creado: data.remitente })) }, conversacion: { update: jest.fn() } };
+  expect(await modelo.agregarMensajes(5, mensajes, tx)).toEqual([{ creado: 'usuario' }, { creado: 'asistente' }]);
+  expect(tx.conversacion.update).toHaveBeenCalledWith({ where: { id: 5 }, data: { fechaActualizacion: fecha } });
+  expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+});
+
+test('crear una conversación usa la transacción en curso si la hay', async () => {
+  const tx = { conversacion: { create: jest.fn().mockResolvedValue({ id: 9 }) } };
+  await modelo.crearConversacion(7, 'Hola', [], tx);
+  expect(tx.conversacion.create).toHaveBeenCalledWith(expect.objectContaining({ data: { usuarioId: 7, titulo: 'Hola', mensajes: { create: [] } } }));
+  expect(prisma.conversacion.create).not.toHaveBeenCalled();
 });

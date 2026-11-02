@@ -113,6 +113,17 @@
 .burbuja__cuerpo .recomendacion-ia__texto { white-space: normal; font-size: 0.88rem; }
 .recomendacion-ia__texto strong { display: block; color: var(--color-primario-oscuro); }
 .recomendacion-ia__boton { grid-column: 1 / -1; justify-self: start; gap: 0.35rem; }
+/* FS-HU-09: alimentos que el asistente agregó a las comidas de hoy. */
+.comidas-ia {
+  display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 0.35rem 0.6rem; padding: 0.6rem 0.75rem;
+  border-radius: var(--radio-control); background: var(--color-superficie); border: 1px solid var(--color-borde);
+}
+.comidas-ia__icono {
+  display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: 50%; color: var(--color-exito); background: var(--color-exito-fondo);
+}
+.burbuja__cuerpo .comidas-ia__texto p { margin: 0; white-space: normal; font-size: 0.88rem; font-weight: 700; color: var(--color-exito); }
+.burbuja__cuerpo .comidas-ia__texto ul { margin: 0.2rem 0 0; padding-left: 1.1rem; font-size: 0.85rem; }
+.comidas-ia__boton { grid-column: 1 / -1; justify-self: start; gap: 0.35rem; }
 .burbuja--pendiente .burbuja__cuerpo { opacity: 0.7; }
 .chat-ia__escribiendo { display: flex; align-items: center; gap: 0.5rem; margin: 0.85rem 0 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
 .chat-ia__puntos { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--color-primario-claro); animation: latido-escribiendo 1s ease-in-out infinite alternate; }

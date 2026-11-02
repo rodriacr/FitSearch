@@ -12,17 +12,17 @@ flowchart TB
     R["Rutas del dominio<br/>administrador<br/>verificaciones"]
     M["JWT y roles<br/>Cuenta activa<br/>Versión de sesión"]
     K["Controladores<br/>Rutas administrativas"]
-    V["Servicios<br/>Agenda, reservas<br/>Ficha y su ubicación, documentos,<br/>clima y asistente IA"]
+    V["Servicios<br/>Agenda, reservas<br/>Ficha y su ubicación, documentos,<br/>clima, asistente IA y comidas"]
     D["Modelos<br/>Dominio, admin,<br/>sesión, agenda y verificación"]
     R --> M --> K --> V --> D
   end
   SPA -->|"HTTP /api; Bearer JWT"| API
   API --> PR["models/prisma.js<br/>Conexión compartida"]
-  PR --> DB[("MySQL<br/>15 tablas implementadas")]
-  API --> G["shared/reglas.json<br/>Nutrición y catálogos"]
+  PR --> DB[("MySQL<br/>17 tablas implementadas")]
+  API --> G["shared/reglas.json<br/>Nutrición, comidas y catálogos"]
   API --> O["Open-Meteo<br/>HTTPS; caché 30 min"]
   API --> NM["Nominatim (OpenStreetMap)<br/>Dirección a coordenadas de la ficha<br/>1 consulta/s; caché 24 h (D36)"]
-  API --> IA["Groq, compatible con OpenAI<br/>Asistente IA; plan gratuito (D33)"]
+  API --> IA["Groq, compatible con OpenAI<br/>Asistente IA y comidas por chat;<br/>plan gratuito (D33, D37)"]
   API --> F[("Archivos privados<br/>PDF, PNG, JPEG; 5 MB")]
   API --> N["Aprobar, rechazar, revocar<br/>Historial y revisión<br/>contra concurrencia"]
   SPA --> GM["MapLibre GL JS<br/>Teselas de OpenFreeMap<br/>Sin clave ni facturación (SC-18)"]
