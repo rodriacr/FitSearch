@@ -1,10 +1,12 @@
 // Asistente IA (FS-HU-07, DAS D33; recomendación FS-HU-08, D34). El acceso a datos se simula y el proveedor responde
 // en modo simulado.
 jest.mock('../../src/models/asistente.model');
+jest.mock('../../src/models/comida.model');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../../src/app');
 const modelo = require('../../src/models/asistente.model');
+const comidaModel = require('../../src/models/comida.model');
 const proveedor = require('../../src/services/proveedorIa.service');
 const ErrorHttp = require('../../src/utils/ErrorHttp');
 
@@ -20,6 +22,7 @@ beforeEach(() => {
   modelo.usoDelDia.mockResolvedValue(0);
   modelo.reservarUso.mockResolvedValue(true);
   modelo.liberarUso.mockResolvedValue({ count: 1 });
+  modelo.enTransaccion.mockImplementation((trabajo) => trabajo('tx'));
 });
 
 describe('acceso', () => {
@@ -104,7 +107,7 @@ describe('conversar', () => {
     expect(modelo.agregarMensajes).toHaveBeenCalledWith(5, [
       expect.objectContaining({ remitente: 'usuario', contenido: '¿Y si llueve?' }),
       expect.objectContaining({ remitente: 'asistente' }),
-    ]);
+    ], 'tx');
   });
 
   test('valida el mensaje: vacío, demasiado largo o no texto responde 400', async () => {
@@ -214,6 +217,115 @@ describe('límite diario con solicitudes simultáneas', () => {
     const reintento = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Hola' });
     expect(reintento.status).toBe(201);
     expect(usados).toBe(30);
+  });
+});
+
+// FS-HU-09: en modo de prueba, «agrega 100 g de pollo…» se reconoce sin proveedor y registra los alimentos de hoy.
+describe('agregar alimentos desde el chat', () => {
+  const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6' };
+  const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+  beforeEach(() => {
+    comidaModel.buscarAlimentos.mockImplementation(async ([palabra]) => ({ pollo: [POLLO], arroz: [ARROZ] }[palabra] ?? []));
+    let id = 40;
+    comidaModel.crear.mockImplementation(async (datos) => ({ id: (id += 1), ...datos }));
+    modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
+    modelo.ultimosMensajes.mockResolvedValue([]);
+    modelo.agregarMensajes.mockImplementation(async (cid, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+    modelo.crearConversacion.mockImplementation(async (u, titulo, mensajes) => ({ ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })) }));
+  });
+
+  test('agrega los alimentos con sus gramos al almuerzo de hoy y la respuesta los muestra', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Añádeme 100 g de pollo y 150g de arroz al almuerzo' });
+    expect(res.status).toBe(201);
+    expect(comidaModel.crear).toHaveBeenCalledTimes(2);
+    expect(comidaModel.crear).toHaveBeenCalledWith(expect.objectContaining({
+      usuarioId: 1, momento: 'almuerzo', alimentoId: 1, gramos: 100, calorias: 165, origen: 'asistente', fecha: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    }), 'tx');
+    const respuesta = res.body.mensajes[1];
+    expect(respuesta.contenido).toMatch(/^Listo, agregué a tu almuerzo de hoy: 100 g de pechuga de pollo cocida \(165 kcal\) y 150 g de arroz blanco cocido \(195 kcal\)/);
+    expect(respuesta.comidasAgregadas).toEqual([
+      { id: 41, nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
+      { id: 42, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
+    ]);
+    expect(modelo.agregarMensajes.mock.calls[0][1][1]).toMatchObject({ remitente: 'asistente', comidasAgregadas: respuesta.comidasAgregadas });
+    // Agregar comidas usa un mensaje del límite diario, como cualquier otro.
+    expect(modelo.reservarUso).toHaveBeenCalledTimes(1);
+  });
+
+  test('un alimento que no está en el catálogo no se agrega y el asistente lo explica', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'anota 80 g de unicornio' });
+    expect(res.status).toBe(201);
+    expect(comidaModel.crear).not.toHaveBeenCalled();
+    expect(res.body.mensajes[1].contenido).toMatch(/^No encontré «unicornio» en la tabla de alimentos de FitSearch/);
+    expect(res.body.mensajes[1].comidasAgregadas).toBeNull();
+    expect(modelo.crearConversacion.mock.calls[0][2][1]).not.toHaveProperty('comidasAgregadas');
+  });
+
+  test('sin gramos o sin pedido de agregar, responde como un mensaje normal', async () => {
+    const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: '¿Cuántas calorías tiene 100 g de pollo?' });
+    expect(res.body.mensajes[1].contenido).toMatch(/^Modo de prueba/);
+    expect(comidaModel.crear).not.toHaveBeenCalled();
+  });
+
+  // Revisión del PR #35 (Luis Méndez): los alimentos y los mensajes se guardan en una sola transacción. La transacción
+  // simulada solo confirma las comidas si todo el guardado termina bien, como MySQL; los fallos son inducidos.
+  describe('si falla el guardado no quedan comidas a medias', () => {
+    const PEDIDO = 'Agrega 150 g de arroz y 100 g de pollo al almuerzo';
+    const iniciar = () => conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: PEDIDO });
+    const continuar = () => conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: PEDIDO });
+    const falla = () => new ErrorHttp(503, 'Fallo de guardado simulado');
+    let confirmadas;
+
+    beforeEach(() => {
+      confirmadas = [];
+      let id = 60;
+      modelo.enTransaccion.mockImplementation(async (trabajo) => {
+        const tx = { pendientes: [] };
+        const resultado = await trabajo(tx);
+        confirmadas.push(...tx.pendientes);
+        return resultado;
+      });
+      comidaModel.crear.mockImplementation(async (datos, tx) => {
+        tx.pendientes.push(datos);
+        return { id: (id += 1), ...datos };
+      });
+    });
+
+    test('al iniciar una conversación: no queda ninguna comida, se devuelve el cupo y el reintento no duplica', async () => {
+      modelo.crearConversacion.mockRejectedValueOnce(falla());
+      expect((await iniciar()).status).toBe(503);
+      expect(confirmadas).toEqual([]);
+      expect(modelo.liberarUso).toHaveBeenCalledTimes(1);
+
+      const reintento = await iniciar();
+      expect(reintento.status).toBe(201);
+      expect(confirmadas.map(({ alimentoId }) => alimentoId)).toEqual([17, 1]);
+      expect(reintento.body.mensajes[1].comidasAgregadas.map(({ id }) => id)).toEqual([63, 64]);
+    });
+
+    test('al continuar una conversación existente: no queda ninguna comida y el reintento no duplica', async () => {
+      modelo.agregarMensajes.mockRejectedValueOnce(falla());
+      expect((await continuar()).status).toBe(503);
+      expect(confirmadas).toEqual([]);
+      expect(modelo.liberarUso).toHaveBeenCalledTimes(1);
+
+      expect((await continuar()).status).toBe(201);
+      expect(confirmadas).toHaveLength(2);
+      expect(modelo.agregarMensajes).toHaveBeenLastCalledWith(5, [
+        expect.objectContaining({ remitente: 'usuario', contenido: PEDIDO }),
+        expect.objectContaining({ remitente: 'asistente', comidasAgregadas: expect.any(Array) }),
+      ], expect.objectContaining({ pendientes: expect.any(Array) }));
+    });
+
+    test('si falla el segundo alimento, el primero tampoco queda guardado ni se guardan los mensajes', async () => {
+      comidaModel.crear
+        .mockImplementationOnce(async (datos, tx) => { tx.pendientes.push(datos); return { id: 61, ...datos }; })
+        .mockRejectedValueOnce(falla());
+      expect((await iniciar()).status).toBe(503);
+      expect(confirmadas).toEqual([]);
+      expect(modelo.crearConversacion).not.toHaveBeenCalled();
+      expect(modelo.liberarUso).toHaveBeenCalledTimes(1);
+    });
   });
 });
 

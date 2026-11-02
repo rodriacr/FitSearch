@@ -1,0 +1,85 @@
+{
+  "fecha": "2026-10-28T00:18:30.361Z",
+  "alcance": "API Express, servicios y modelos reales contra MySQL local; cuenta temporal propia; proveedor IA simulado; fallos de guardado inducidos",
+  "casos": [
+    {
+      "caso": "Fallo al crear la conversación responde 503",
+      "resultado": 503
+    },
+    {
+      "caso": "Sin comidas guardadas tras el fallo al crear",
+      "resultado": 0
+    },
+    {
+      "caso": "Sin conversación creada",
+      "resultado": 0
+    },
+    {
+      "caso": "El cupo se devuelve",
+      "resultado": 0
+    },
+    {
+      "caso": "El reintento crea la conversación",
+      "resultado": 201
+    },
+    {
+      "caso": "El reintento guarda los dos alimentos una sola vez",
+      "resultado": 2
+    },
+    {
+      "caso": "Los ids de comidasAgregadas existen en registro_comida",
+      "resultado": 2
+    },
+    {
+      "caso": "Fallo al continuar responde 503",
+      "resultado": 503
+    },
+    {
+      "caso": "Las comidas no cambian tras el fallo al continuar",
+      "resultado": 2
+    },
+    {
+      "caso": "La conversación conserva sus 2 mensajes",
+      "resultado": 2
+    },
+    {
+      "caso": "El reintento al continuar responde 201",
+      "resultado": 201
+    },
+    {
+      "caso": "El reintento suma solo 2 comidas",
+      "resultado": 4
+    },
+    {
+      "caso": "La conversación queda con 4 mensajes",
+      "resultado": 4
+    },
+    {
+      "caso": "Fallo del segundo alimento responde 503",
+      "resultado": 503
+    },
+    {
+      "caso": "El primer alimento no queda guardado",
+      "resultado": 4
+    },
+    {
+      "caso": "No se crea otra conversación",
+      "resultado": 1
+    },
+    {
+      "caso": "El reintento guarda los dos alimentos",
+      "resultado": 201
+    },
+    {
+      "caso": "Total final de comidas",
+      "resultado": 6
+    },
+    {
+      "caso": "Mensajes usados: solo las 3 respuestas guardadas",
+      "resultado": 3
+    }
+  ],
+  "resultado": "COMPROBADO",
+  "cuentaTemporalEliminada": true,
+  "comidasTemporalesRestantes": 0
+}

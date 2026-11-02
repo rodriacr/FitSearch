@@ -1,0 +1,51 @@
+{
+  "fecha": "26-10-2026",
+  "cambio": "Gestor de alimentación: FS-HU-09 y FS-HU-10 (SC-30, DAS 1.29, D37)",
+  "rama": "feat/comidas (commit 1d31bff)",
+  "pruebas_automatizadas": {
+    "backend": "345/345 (Jest; 29 nuevas: comida.service, comida.model, comidas.api, asistente.api y proveedorIa)",
+    "frontend": "294/294 (Vitest; 9 nuevas: Comidas.test.jsx, Asistente.test.jsx, Inicio y Portada actualizadas)",
+    "lint": "correcto en backend y frontend",
+    "build": "correcto (aviso de tamaño del paquete principal mayor a 500 kB)"
+  },
+  "mysql_real": {
+    "migracion": "20261026120000_comidas aplicada en MySQL 8 local",
+    "total": 11,
+    "aprobados": 11,
+    "resultados": [
+      "Catálogo con 58 alimentos",
+      "«platano» encuentra «Plátano» (la búsqueda ignora tildes)",
+      "«pechuga de pollo» se busca por palabras",
+      "«pollo» se resuelve a Pechuga de pollo cocida (sinónimo exacto)",
+      "«palta» se resuelve a Palta",
+      "150 g de arroz blanco cocido = 195 kcal, 4,1 g P, 42,3 g C, 0,5 g G (guardado)",
+      "Desde el chat: 100 g de pollo = 165 kcal; «unicornio» no se agrega",
+      "El resumen del día agrupa ambos en el almuerzo con su origen",
+      "La semana suma las calorías del día",
+      "Editar a 300 g recalcula 390 kcal",
+      "La base rechaza un momento fuera del catálogo (CHECK)"
+    ],
+    "limpieza": "los registros de prueba se borraron"
+  },
+  "navegador": {
+    "sesion": "Cuenta de usuario de Rodrigo Cárcamo (iniciada por él); proveedor de IA: Groq real (modelo openai/gpt-oss-120b)",
+    "resultados": [
+      { "paso": "Registrar desde la pantalla", "ok": true, "detalle": "Búsqueda «pollo»: Pechuga de pollo cocida y Trutro de pollo; 150 g = 248 kcal · 46,5 g P · 0 g C · 5,4 g G antes de guardar; quedó en el almuerzo y en el anillo" },
+      { "paso": "«Abrir asistente» desde Comidas", "ok": true, "detalle": "El campo queda con «Agrega a mis comidas de hoy » y el cursor al final" },
+      { "paso": "Agregar desde el chat con Groq real", "ok": true, "detalle": "«150 g de arroz blanco y media palta al almuerzo» → 150 g de arroz (195 kcal) y 100 g de palta (160 kcal), 355 kcal; tarjeta «Agregado a tus comidas de hoy» con «Ver mis comidas»; usó 1 de los 30 mensajes" },
+      { "paso": "Resumen", "ok": true, "detalle": "603 de 2.755 kcal; proteínas 52,6/207 g (25 %), carbohidratos 50,8/310 g (16 %), grasas 20,6/77 g (27 %); la semana marca 603 kcal el lunes 26/10" },
+      { "paso": "Pestaña Comidas: editar", "ok": true, "detalle": "Palta de 100 g a 50 g (80 kcal) y movida a la cena; el almuerzo baja a 443 kcal" },
+      { "paso": "Pestaña Comidas: quitar", "ok": true, "detalle": "Se quitaron los 3 alimentos de prueba; el día queda sin registros" },
+      { "paso": "Celular (375 px) y escritorio (1100 y 1280 px)", "ok": true, "detalle": "Sin desborde horizontal después de las correcciones" },
+      { "paso": "Cuenta profesional", "ok": true, "detalle": "403 en /api/comidas y /api/comidas/alimentos; el menú del profesional no muestra Comidas" }
+    ],
+    "corregido_durante_la_revision": [
+      "Los macros caían debajo del anillo a 1100 px: el anillo ahora se achica con la tarjeta",
+      "La fecha decía «Lunes, 26 De Octubre»: ahora «Lunes, 26 de octubre» (y «Hoy · lunes, 26 de octubre»)",
+      "«Registrar comida» salía naranja: ahora azul, como el mockup",
+      "Desborde horizontal: la tabla oculta para lectores de pantalla y la lista «Comidas de hoy» en grilla sin minmax(0, 1fr)",
+      "La altura se mostraba como «1,8 m»: ahora «1,75 m»"
+    ]
+  },
+  "pendiente": "Registrar los casos de prueba en la Planilla y la SC-30 en la Matriz después de fusionar el PR #34 (los Excel están en ese PR). En la cuenta de Rodrigo queda la conversación de prueba del asistente."
+}

@@ -194,6 +194,33 @@ describe('recomendación de profesional (FS-HU-08)', () => {
   });
 });
 
+describe('agregar alimentos desde el chat (FS-HU-09)', () => {
+  test('bajo la respuesta muestra los alimentos agregados con acceso a Comidas', async () => {
+    const { servidor } = simularAsistente();
+    servidor.mensajes[5].push(mensajeDe(8, 'usuario', 'Añade 100 g de pollo y 150 g de arroz a mi almuerzo'), {
+      ...mensajeDe(9, 'asistente', 'Listo, agregué a tu almuerzo de hoy: 100 g de pechuga de pollo cocida (165 kcal) y 150 g de arroz blanco cocido (195 kcal).'),
+      comidasAgregadas: [
+        { id: 41, nombre: 'Pechuga de pollo cocida', gramos: 100, calorias: 165, momento: 'almuerzo' },
+        { id: 42, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195, momento: 'almuerzo' },
+      ],
+    });
+    renderizarApp('/asistente/5');
+    const tarjeta = (await within(mensajes()).findByText('Agregado a tus comidas de hoy')).closest('.comidas-ia');
+    expect(within(tarjeta).getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      '100 g de pechuga de pollo cocida · 165 kcal', '150 g de arroz blanco cocido · 195 kcal',
+    ]);
+    expect(within(tarjeta).getByRole('link', { name: /Ver mis comidas/ })).toHaveAttribute('href', '/comidas');
+    expect(within(mensajes()).getAllByText('Agregado a tus comidas de hoy')).toHaveLength(1);
+  });
+
+  test('con ?inicio=comida (desde Comidas) el campo trae el comienzo del pedido', async () => {
+    simularAsistente();
+    renderizarApp('/asistente/nuevo?inicio=comida');
+    await waitFor(() => expect(campo()).toHaveValue('Agrega a mis comidas de hoy '));
+    await waitFor(() => expect(campo()).toHaveFocus());
+  });
+});
+
 describe('fijar y borrar', () => {
   test('fija una conversación (pasa a Chats fijados) y la borra después de confirmar', async () => {
     const { fetch } = simularAsistente();

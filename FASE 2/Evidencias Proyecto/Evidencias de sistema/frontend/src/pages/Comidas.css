@@ -1,0 +1,195 @@
+/* Gestor de alimentación (FS-HU-09 y FS-HU-10), según el mockup del PO del 26-10-2026. */
+.comidas { width: 100%; max-width: 76rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+.comidas__encabezado { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.comidas__icono {
+  display: grid; place-items: center; flex-shrink: 0; width: 3.5rem; height: 3.5rem; border: 2px solid var(--color-primario);
+  border-radius: 50%; color: var(--color-primario); background: var(--color-superficie);
+}
+.comidas__titulos { flex: 1; min-width: 12rem; }
+.comidas__titulos h1 { margin: 0; font-size: 1.85rem; color: var(--color-primario-oscuro); }
+.comidas__titulos p { margin: 0.15rem 0 0; color: var(--color-texto-secundario); }
+.comidas .comidas__registrar { gap: 0.4rem; background: var(--color-primario); box-shadow: 0 8px 18px rgb(11 79 128 / 22%); }
+@media (hover: hover) and (pointer: fine) {
+  .comidas .comidas__registrar:hover { background: var(--color-primario-oscuro); }
+}
+
+.comidas__pestanas {
+  display: flex; gap: 0.25rem; padding: 0.3rem; overflow-x: auto; background: var(--color-superficie); border: 1px solid var(--color-borde);
+  border-radius: 14px; scrollbar-width: none;
+}
+.comidas__pestana {
+  display: inline-flex; align-items: center; gap: 0.4rem; flex-shrink: 0; min-height: 2.6rem; padding: 0 1.1rem; border: 0; border-radius: 10px;
+  background: transparent; color: var(--color-texto-secundario); font: inherit; font-size: 0.9rem; font-weight: 600; white-space: nowrap; cursor: pointer;
+}
+.comidas__pestana[aria-pressed="true"] { background: var(--color-primario); color: #fff; }
+.comidas__pestana--proximamente { cursor: default; opacity: 0.75; }
+.comidas__pestana--proximamente .etiqueta-proximamente { margin: 0; font-size: 0.65rem; }
+
+.comidas__dia { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.comidas__dia p { margin: 0; }
+.comidas__anterior { transform: rotate(90deg); }
+.comidas__siguiente { transform: rotate(-90deg); }
+.comidas__estado { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1rem 0; }
+
+.comidas__resumen { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+.comidas__resumen .panel-tarjeta { border-radius: 20px; }
+.comidas__nota { margin: 0; font-size: 0.8rem; }
+.comidas__pie { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 40rem) {
+  .comidas__pie { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (min-width: 64rem) {
+  .comidas__resumen {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    grid-template-areas: "calorias semana" "comidas nutricional" "comidas pie" "nota nota";
+    align-items: start;
+  }
+  .tarjeta-calorias { grid-area: calorias; }
+  .tarjeta-semana { grid-area: semana; }
+  .tarjeta-comidas { grid-area: comidas; }
+  .tarjeta-nutricional { grid-area: nutricional; }
+  .comidas__pie { grid-area: pie; }
+  .comidas__nota { grid-area: nota; }
+}
+
+/* Calorías del día */
+.tarjeta-calorias__fecha { margin: -0.5rem 0 0.75rem; font-size: 0.8rem; }
+/* El anillo se achica con la tarjeta para que los macros queden a su lado, como en el mockup. */
+.tarjeta-calorias__cuerpo { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.tarjeta-calorias__cuerpo .anillo-calorias { width: clamp(7rem, 38%, 9.5rem); }
+.tarjeta-calorias__macros { flex: 1; min-width: 9.5rem; display: grid; gap: 0.9rem; margin: 0; padding: 0; list-style: none; }
+.tarjeta-calorias__macros li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; column-gap: 0.5rem; font-size: 0.85rem; }
+.tarjeta-calorias__macros li > span:nth-child(3) { grid-column: 2; color: var(--color-texto-secundario); }
+.tarjeta-calorias__macros li > strong { grid-row: 1 / span 2; grid-column: 3; color: var(--color-texto); font-size: 0.85rem; }
+.tarjeta-calorias__punto { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--color-nutriente); }
+.tarjeta-calorias__nombre { font-weight: 600; }
+
+.anillo-calorias { position: relative; width: 9.5rem; aspect-ratio: 1; flex-shrink: 0; }
+.anillo-calorias svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.anillo-calorias circle { fill: none; stroke-width: 12; }
+.anillo-calorias__fondo { stroke: #e6eef4; }
+.anillo-calorias__avance { stroke-linecap: round; transition: stroke-dashoffset 600ms var(--curva-salida); }
+.anillo-calorias__texto { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; line-height: 1.1; }
+.anillo-calorias__texto strong { font-size: 1.7rem; color: var(--color-primario-oscuro); }
+.anillo-calorias__texto span { font-size: 0.85rem; font-weight: 600; color: var(--color-primario-oscuro); }
+.anillo-calorias__texto small { margin-top: 0.2rem; font-size: 0.72rem; color: var(--color-texto-secundario); }
+
+/* Progreso semanal */
+.tarjeta-semana__encabezado, .tarjeta-comidas__encabezado, .tarjeta-objetivo__encabezado { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
+.tarjeta-semana__leyenda { display: flex; gap: 1rem; margin: 0 0 0.75rem; font-size: 0.75rem; color: var(--color-texto-secundario); }
+.tarjeta-semana__leyenda span::before { content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.35rem; border-radius: 50%; }
+.tarjeta-semana__consumidas::before { background: #1f8f84; }
+.tarjeta-semana__objetivo::before { background: #c8dae8; }
+.progreso-semanal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+.progreso-semanal__dia { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.35rem 0; border-radius: 12px; }
+.progreso-semanal__dia--actual { background: var(--color-info-fondo); }
+.progreso-semanal__barras { display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 100%; height: 9rem; }
+.progreso-semanal__barras span { display: block; width: min(0.75rem, 32%); border-radius: 6px 6px 2px 2px; }
+.progreso-semanal__consumo { background: linear-gradient(180deg, #1fa37a, #1c6f9e); min-height: 2px; }
+.progreso-semanal__objetivo { background: #c8dae8; }
+.progreso-semanal__dia--futuro .progreso-semanal__consumo { opacity: 0; }
+.progreso-semanal__nombre { font-size: 0.75rem; font-weight: 600; color: var(--color-texto-secundario); }
+.progreso-semanal__fecha { font-size: 0.68rem; color: var(--color-texto-secundario); }
+.progreso-semanal__dia--actual .progreso-semanal__nombre, .progreso-semanal__dia--actual .progreso-semanal__fecha { color: var(--color-primario); }
+
+/* Comidas del día */
+/* minmax(0, 1fr): sin él, la descripción larga (en una línea con «…») estiraba la fila y la página en celular. */
+.comidas-del-dia { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.comidas-del-dia--compacta { margin: 0; padding: 0; list-style: none; }
+.comida-del-dia { display: flex; align-items: center; gap: 0.85rem; padding: 0.7rem; border: 1px solid #e6eef4; border-radius: 14px; }
+.comida-del-dia__icono { display: grid; place-items: center; flex-shrink: 0; width: 3rem; height: 3rem; border-radius: 12px; }
+.comida-del-dia__icono--desayuno { color: #b7791f; background: #fdf3e1; }
+.comida-del-dia__icono--media_manana { color: #2a7de1; background: #e8f1fc; }
+.comida-del-dia__icono--almuerzo { color: #1f8f5a; background: #e6f5ec; }
+.comida-del-dia__icono--merienda { color: #c2410c; background: #fdece2; }
+.comida-del-dia__icono--cena { color: #5b4bb7; background: #efecfb; }
+.comida-del-dia__texto { flex: 1; min-width: 0; }
+.comida-del-dia__titulo, .momento-comida h3 { display: flex; align-items: baseline; gap: 0.5rem; margin: 0; font-size: 0.9rem; font-weight: 700; }
+.comida-del-dia__titulo time, .momento-comida h3 time { font-size: 0.75rem; font-weight: 500; color: var(--color-texto-secundario); }
+.comida-del-dia__descripcion { margin: 0.15rem 0; overflow: hidden; color: var(--color-texto-secundario); font-size: 0.8rem; text-overflow: ellipsis; white-space: nowrap; }
+.comida-del-dia__detalle { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; margin: 0; font-size: 0.78rem; }
+.comida-del-dia__macros { display: inline-flex; gap: 0.6rem; color: var(--color-texto-secundario); }
+.comida-del-dia__estado { display: grid; place-items: center; flex-shrink: 0; width: 1.6rem; height: 1.6rem; border-radius: 50%; color: #fff; background: var(--color-exito); }
+
+.momento-comida { display: grid; gap: 0.6rem; }
+.momento-comida__encabezado { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.momento-comida__encabezado h3 { flex: 1; font-size: 1rem; }
+.momento-comida__total { margin: 0; font-weight: 700; color: var(--color-primario-oscuro); }
+.momento-comida__encabezado .boton { gap: 0.3rem; min-width: 0; }
+.momento-comida__vacio { margin: 0; font-size: 0.85rem; }
+.momento-comida__lista { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.registro-comida { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; padding: 0.6rem 0.75rem; border-radius: 12px; background: var(--color-superficie-suave); }
+.registro-comida__datos { flex: 1; min-width: 12rem; }
+.registro-comida__nombre { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin: 0; font-weight: 600; font-size: 0.9rem; }
+.registro-comida__origen {
+  display: inline-flex; align-items: center; gap: 0.2rem; padding: 0.1rem 0.45rem; border-radius: 999px; color: var(--color-primario);
+  background: var(--color-info-fondo); font-size: 0.7rem; font-weight: 600;
+}
+.registro-comida__detalle { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 0.15rem 0 0; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.registro-comida__acciones { display: flex; gap: 0.25rem; }
+.registro-comida__edicion { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.registro-comida__edicion input { width: 5.5rem; }
+.registro-comida__edicion input, .registro-comida__edicion select { min-height: 2.5rem; padding: 0 0.6rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control); font: inherit; }
+.registro-comida .alerta { flex-basis: 100%; margin: 0; }
+
+/* Resumen nutricional */
+.tarjeta-nutricional { display: grid; gap: 1rem; }
+.tarjeta-nutricional .panel-tarjeta__titulo { margin-bottom: 0; }
+.barra-nutriente { display: grid; grid-template-columns: 1fr auto; column-gap: 0.75rem; row-gap: 0.35rem; align-items: center; }
+.barra-nutriente__titulo { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 0.75rem; margin: 0; font-size: 0.85rem; }
+.barra-nutriente__titulo span:first-child { font-weight: 600; }
+.barra-nutriente__titulo span:last-child { color: var(--color-texto-secundario); }
+.barra-nutriente__titulo strong { color: var(--color-texto); }
+.barra-nutriente__pista { height: 0.55rem; overflow: hidden; border-radius: 999px; background: #e8eef4; }
+.barra-nutriente__pista span { display: block; height: 100%; border-radius: inherit; background: var(--color-nutriente); transition: width 600ms var(--curva-salida); }
+.barra-nutriente small { color: var(--color-texto-secundario); font-size: 0.75rem; }
+
+/* Objetivo y asistente */
+.tarjeta-objetivo__meta { margin: 0 0 0.75rem; font-weight: 700; color: var(--color-primario-oscuro); }
+.tarjeta-objetivo__datos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0; }
+.tarjeta-objetivo__datos dt { display: flex; flex-direction: column; gap: 0.3rem; color: var(--color-texto-secundario); font-size: 0.75rem; }
+.tarjeta-objetivo__datos dd { margin: 0.15rem 0 0; font-weight: 700; font-size: 0.85rem; }
+.tarjeta-asistente-comidas {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; padding: 1.25rem; border-radius: 20px; color: #fff;
+  background: linear-gradient(135deg, var(--color-primario-oscuro), #1c6f9e);
+}
+.tarjeta-asistente-comidas h2 { margin: 0; color: #fff; font-size: 1.1rem; }
+.tarjeta-asistente-comidas p { margin: 0; color: #d9e8f3; font-size: 0.85rem; line-height: 1.55; }
+.tarjeta-asistente-comidas .boton { margin-top: auto; gap: 0.35rem; }
+
+/* Registrar comida */
+.registrar-comida { display: grid; gap: 0.75rem; border-radius: 20px; }
+.registrar-comida__encabezado { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.registrar-comida__encabezado h2 { margin: 0; font-size: 1.1rem; }
+.registrar-comida form { display: grid; gap: 0.75rem; }
+.registrar-comida__campos { display: grid; gap: 0.75rem; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 48rem) {
+  .registrar-comida__campos { grid-template-columns: minmax(10rem, 0.8fr) minmax(0, 2fr) minmax(7rem, 0.6fr); align-items: end; }
+}
+.registrar-comida__campo { display: flex; flex-direction: column; gap: 0.35rem; font-size: 0.85rem; font-weight: 600; }
+.registrar-comida__campo input, .registrar-comida__campo select {
+  min-height: 2.9rem; padding: 0 0.8rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control); font: inherit; font-weight: 400;
+  background: var(--color-superficie);
+}
+.registrar-comida__elegido { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; min-height: 2.9rem; margin: 0; padding: 0 0.8rem; border: 1px solid var(--color-primario); border-radius: var(--radio-control); background: var(--color-info-fondo); font-weight: 400; }
+.registrar-comida__resultados p { margin: 0; font-size: 0.85rem; }
+.registrar-comida__resultados ul { display: grid; gap: 0.35rem; max-height: 16rem; margin: 0; padding: 0; overflow-y: auto; list-style: none; }
+.registrar-comida__resultados button {
+  display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; width: 100%; padding: 0.6rem 0.8rem; border: 1px solid #e6eef4;
+  border-radius: 10px; background: var(--color-superficie); color: var(--color-texto); font: inherit; font-size: 0.9rem; text-align: left; cursor: pointer;
+}
+.registrar-comida__resultados small { flex-shrink: 0; color: var(--color-texto-secundario); }
+@media (hover: hover) and (pointer: fine) {
+  .registrar-comida__resultados button:hover { border-color: var(--color-primario); background: var(--color-superficie-suave); }
+}
+.registrar-comida__calculo { margin: 0; padding: 0.7rem 0.85rem; border-radius: 10px; background: var(--color-exito-fondo); color: var(--color-exito); font-size: 0.85rem; }
+.registrar-comida__acciones { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.registrar-comida__acciones p { flex: 1; min-width: 14rem; margin: 0; font-size: 0.75rem; }
+
+@media (max-width: 39.99rem) {
+  .comidas__titulos h1 { font-size: 1.5rem; }
+  .comidas__icono { width: 2.9rem; height: 2.9rem; }
+  .comidas__registrar { width: 100%; }
+  .anillo-calorias { width: 8rem; }
+  .progreso-semanal__barras { height: 6.5rem; }
+}

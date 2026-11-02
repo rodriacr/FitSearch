@@ -14,10 +14,8 @@ export const SECCIONES = {
   },
   // El historial de chats vive dentro del asistente IA, no en el menú (decisión del PO del 05-10-2026; FS-HU-07).
   asistente: { ruta: '/asistente', nombre: 'Asistente IA', icono: 'chispa' },
-  comidas: {
-    ruta: '/comidas', nombre: 'Comidas', icono: 'comida', proximamente: true,
-    descripcion: 'Pronto podrás anotar lo que comes, ver tus calorías y macronutrientes del día y revisar cómo te fue en la semana y el mes.',
-  },
+  // Gestor de alimentación (FS-HU-09 y FS-HU-10).
+  comidas: { ruta: '/comidas', nombre: 'Comidas', icono: 'comida' },
   perfil: { ruta: '/perfil', nombre: 'Mi perfil', icono: 'usuario' },
   favoritos: { ruta: '/favoritos', nombre: 'Favoritos', icono: 'corazon' },
   citas: {

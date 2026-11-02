@@ -11,7 +11,7 @@ import {
   abrirConversacion, eliminarConversacion, enviarMensaje, fijarConversacion, iniciarConversacion, listarConversaciones,
   obtenerEstadoAsistente,
 } from '../services/asistente.service.js';
-import { primerNombre } from '../services/formato.js';
+import { formatearNumero, primerNombre } from '../services/formato.js';
 import './Asistente.css';
 
 const { mensaje: { max: MAX_MENSAJE } } = reglas.asistente;
@@ -40,7 +40,25 @@ function Recomendacion({ especialidad }) {
   );
 }
 
-function Burbuja({ remitente, contenido, especialidad = null, fecha, pendiente = false }) {
+// FS-HU-09: alimentos que el asistente agregó a las comidas de hoy, con acceso a Comidas para revisarlos.
+function ComidasAgregadas({ comidas }) {
+  return (
+    <div className="comidas-ia">
+      <span className="comidas-ia__icono" aria-hidden="true"><Icono nombre="comida" tamano={20} /></span>
+      <div className="comidas-ia__texto">
+        <p>Agregado a tus comidas de hoy</p>
+        <ul>
+          {comidas.map(({ id, nombre, gramos, calorias }) => (
+            <li key={id}>{formatearNumero(gramos)} g de {nombre.toLowerCase()} · {formatearNumero(calorias)} kcal</li>
+          ))}
+        </ul>
+      </div>
+      <Link to="/comidas" className="boton boton--secundario boton--compacto comidas-ia__boton">Ver mis comidas <Icono nombre="flecha" tamano={16} /></Link>
+    </div>
+  );
+}
+
+function Burbuja({ remitente, contenido, especialidad = null, comidasAgregadas = null, fecha, pendiente = false }) {
   const esAsistente = remitente === 'asistente';
   return (
     <li className={`burbuja burbuja--${remitente}${pendiente ? ' burbuja--pendiente' : ''}`}>
@@ -49,6 +67,7 @@ function Burbuja({ remitente, contenido, especialidad = null, fecha, pendiente =
         <span className="solo-lector">{esAsistente ? 'Asistente: ' : 'Tú: '}</span>
         {esAsistente ? <Contenido texto={contenido} /> : <p>{contenido}</p>}
         {esAsistente && especialidad && <Recomendacion especialidad={especialidad} />}
+        {esAsistente && comidasAgregadas?.length > 0 && <ComidasAgregadas comidas={comidasAgregadas} />}
         {fecha && <time className="burbuja__hora" dateTime={fecha}>{horaDe(fecha)}</time>}
         {pendiente && <span className="burbuja__hora">Enviando…</span>}
       </div>
@@ -133,13 +152,15 @@ export default function Asistente() {
     el.setSelectionRange(el.value.length, el.value.length);
   });
 
-  // Desde el banner llega con ?inicio=profesional: la pregunta queda escrita y el cursor al final para terminarla. Se
-  // atiende una vez por navegación (cada clic), también si la pantalla del asistente ya estaba abierta.
-  const pidePregunta = parametros.get('inicio') === 'profesional';
+  // Desde el banner llega con ?inicio=profesional y desde Comidas con ?inicio=comida (FS-HU-09): el comienzo del mensaje
+  // queda escrito y el cursor al final para terminarlo. Se atiende una vez por navegación (cada clic), también si la
+  // pantalla del asistente ya estaba abierta.
+  const inicioPedido = { profesional: ACCIONES.find((accion) => accion.icono === 'profesional').inicio, comida: 'Agrega a mis comidas de hoy ' }[parametros.get('inicio')];
+  const pidePregunta = Boolean(inicioPedido);
   const [navegacionAtendida, setNavegacionAtendida] = useState(null);
   if (pidePregunta && navegacionAtendida !== navegacion) {
     setNavegacionAtendida(navegacion);
-    setTexto(ACCIONES.find((accion) => accion.icono === 'profesional').inicio);
+    setTexto(inicioPedido);
   }
   useEffect(() => {
     if (pidePregunta) enfocar();

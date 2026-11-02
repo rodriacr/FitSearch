@@ -4,7 +4,9 @@
 // nombre, el correo, el perfil ni la información de salud de la persona (DAS, QS7).
 // FS-HU-08 (DAS D34): si recomienda un tipo de profesional, el modelo lo marca en una línea final que el backend valida
 // contra el catálogo de especialidades y quita del texto visible.
-const { profesionales: { especialidades: ESPECIALIDADES } } = require('../../../shared/reglas.json');
+// FS-HU-09: si la persona pide agregar alimentos a sus comidas, el modelo llama a la función agregar_alimentos; el
+// backend valida y registra los alimentos y arma la respuesta. El modelo nunca accede a la base de datos.
+const { profesionales: { especialidades: ESPECIALIDADES }, comidas: reglasComidas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -12,6 +14,8 @@ const TIEMPO_ESPERA_MS = 20000;
 const MAXIMO_TOKENS = 700;
 const MAXIMO_CARACTERES = 4000;
 const MARCA = 'ESPECIALIDAD';
+const HERRAMIENTA = 'agregar_alimentos';
+const MOMENTOS = reglasComidas.momentos.map(({ valor }) => valor);
 
 const INSTRUCCIONES = `Eres el asistente de orientación de FitSearch, una plataforma chilena que conecta a las personas con profesionales de salud, deporte y bienestar (nutrición, kinesiología, entrenamiento personal, medicina deportiva y psicología deportiva).
 
@@ -31,6 +35,12 @@ Límites:
 Recomendación de profesional:
 - Si recomiendas un tipo de profesional, termina tu respuesta con una última línea exactamente así: ${MARCA}: <nombre>, donde <nombre> es uno de estos: ${ESPECIALIDADES.join(', ')}.
 - Si la pregunta es general o no corresponde recomendar, no agregues esa línea.
+
+Registro de comidas:
+- Si la persona te pide agregar, anotar o registrar alimentos en sus comidas (por ejemplo: «añade 100 g de pollo a mis comidas»), usa la función ${HERRAMIENTA} con cada alimento y sus gramos, y el momento del día si lo indica.
+- Si da unidades en vez de gramos (2 huevos, 1 plátano), conviértelas a gramos según una porción habitual.
+- Si no queda claro qué alimento o qué cantidad, pregúntale antes de agregar.
+- Si solo pregunta por calorías o nutrición, responde sin agregar nada.
 
 Forma de responder:
 - En español de Chile, cercano y claro, tuteando.
@@ -120,6 +130,59 @@ const CLAVES_DE_PRUEBA = [
 ];
 const especialidadDePrueba = (texto) => CLAVES_DE_PRUEBA.find(([, patron]) => patron.test(sinTildes(texto)))?.[0] ?? null;
 
+// Solo en modo de prueba: reconoce «agrega 100 g de pollo y 150 g de arroz al almuerzo» para probar el registro de
+// comidas desde el chat (FS-HU-09) sin proveedor de IA. Sin gramos explícitos responde como un mensaje normal.
+const PEDIDO_DE_PRUEBA = /\b(agreg|anad|anot|registr|sum)/;
+const PORCION_DE_PRUEBA = /(\d+(?:[.,]\d+)?)\s*(?:g|gr|grs|gramos)\b\s*(?:de\s+)?([a-zñ][a-zñ ]*?)(?=\s*(?:[,;.]|$)|\s+y\s+\d|\s+(?:al|a|en|para)\b)/g;
+const MOMENTOS_DE_PRUEBA = [['media_manana', /media manana/], ['desayuno', /desayuno/], ['almuerzo', /almuerzo/], ['merienda', /merienda|\bonce\b/], ['cena', /\bcena\b/]];
+function accionDePrueba(texto) {
+  const normalizado = sinTildes(texto);
+  if (!PEDIDO_DE_PRUEBA.test(normalizado)) return null;
+  const alimentos = [...normalizado.matchAll(PORCION_DE_PRUEBA)].map(([, gramos, nombre]) => ({ nombre: nombre.trim(), gramos: Number(gramos.replace(',', '.')) }));
+  if (alimentos.length === 0) return null;
+  return { alimentos, momento: MOMENTOS_DE_PRUEBA.find(([, patron]) => patron.test(normalizado))?.[0] ?? null };
+}
+
+// Función que el modelo puede pedir (formato de herramientas de la API compatible con OpenAI).
+const HERRAMIENTAS = [{
+  type: 'function',
+  function: {
+    name: HERRAMIENTA,
+    description: 'Agrega alimentos con sus gramos a las comidas de hoy de la persona en FitSearch. Úsala solo cuando pida agregar, anotar o registrar lo que comió.',
+    parameters: {
+      type: 'object',
+      properties: {
+        alimentos: {
+          type: 'array',
+          maxItems: reglasComidas.alimentosPorMensaje,
+          items: {
+            type: 'object',
+            properties: {
+              nombre: { type: 'string', description: 'Alimento en español, por ejemplo: pechuga de pollo' },
+              gramos: { type: 'number', description: 'Cantidad en gramos' },
+            },
+            required: ['nombre', 'gramos'],
+          },
+        },
+        momento: { type: 'string', enum: MOMENTOS, description: 'Momento del día, solo si la persona lo indica' },
+      },
+      required: ['alimentos'],
+    },
+  },
+}];
+
+// Pedido de agregar alimentos que hizo el modelo, o null si la respuesta no lo trae o viene mal formado.
+function leerPedido(mensaje) {
+  const llamada = (mensaje?.tool_calls ?? []).find((item) => item?.function?.name === HERRAMIENTA);
+  if (!llamada) return null;
+  try {
+    const { alimentos, momento } = JSON.parse(llamada.function.arguments);
+    return Array.isArray(alimentos) && alimentos.length > 0 ? { alimentos, momento: MOMENTOS.includes(momento) ? momento : null } : null;
+  } catch {
+    return null;
+  }
+}
+
 const noDisponible = (mensaje = 'El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.') => new ErrorHttp(503, mensaje);
 
 async function consultarProveedor(mensajes) {
@@ -134,6 +197,8 @@ async function consultarProveedor(mensajes) {
           { role: 'system', content: INSTRUCCIONES },
           ...mensajes.map(({ remitente, contenido }) => ({ role: remitente === 'usuario' ? 'user' : 'assistant', content: contenido })),
         ],
+        tools: HERRAMIENTAS,
+        tool_choice: 'auto',
         max_tokens: MAXIMO_TOKENS,
         temperature: 0.5,
       }),
@@ -149,20 +214,29 @@ async function consultarProveedor(mensajes) {
     throw noDisponible();
   }
   const datos = await respuesta.json().catch(() => null);
-  const texto = datos?.choices?.[0]?.message?.content;
+  const mensaje = datos?.choices?.[0]?.message;
+  const pedido = leerPedido(mensaje);
+  if (pedido) return { pedido };
+  const texto = mensaje?.content;
   if (typeof texto !== 'string' || !limpiar(texto)) throw noDisponible();
-  return limpiar(texto);
+  return { texto: limpiar(texto) };
 }
 
 // mensajes: [{ remitente: 'usuario' | 'asistente', contenido }], el último es el del usuario.
-// Devuelve { contenido, especialidad }: especialidad es un nombre del catálogo o null (FS-HU-08).
+// Devuelve { contenido, especialidad }: especialidad es un nombre del catálogo o null (FS-HU-08). Si la persona pidió
+// agregar alimentos (FS-HU-09), devuelve { pedido: { alimentos, momento } } y el asistente arma la respuesta.
 async function responder(mensajes) {
   const ultimo = mensajes.at(-1).contenido;
-  const { texto, especialidad } = ia.apiKey
-    ? extraerEspecialidad(await consultarProveedor(mensajes))
-    : { texto: respuestaSimulada(ultimo), especialidad: especialidadDePrueba(ultimo) };
+  if (!ia.apiKey) {
+    const pedido = accionDePrueba(ultimo);
+    if (pedido) return { pedido };
+    return { contenido: agregarAvisos(ultimo, respuestaSimulada(ultimo)), especialidad: especialidadDePrueba(ultimo) };
+  }
+  const resultado = await consultarProveedor(mensajes);
+  if (resultado.pedido) return { pedido: resultado.pedido };
+  const { texto, especialidad } = extraerEspecialidad(resultado.texto);
   if (!texto) throw noDisponible();
   return { contenido: agregarAvisos(ultimo, texto), especialidad };
 }
 
-module.exports = { responder, modo, limpiar, agregarAvisos, extraerEspecialidad, resumir, INSTRUCCIONES };
+module.exports = { responder, modo, limpiar, agregarAvisos, extraerEspecialidad, resumir, INSTRUCCIONES, HERRAMIENTAS };
