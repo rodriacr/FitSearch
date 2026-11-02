@@ -245,14 +245,14 @@ describe('Sesión', () => {
     sessionStorage.clear();
     const fetch = simular();
     renderizarApp('/profesionales');
-    expect(await screen.findByRole('heading', { name: /bienvenido/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(llamadasA(fetch, '/api/profesionales')).toHaveLength(0);
   });
 
   test('una sesión vencida vuelve al inicio de sesión', async () => {
     vi.spyOn(globalThis, 'fetch').mockImplementation(() => respuestaJson(401, { error: 'Sesión vencida' }));
     renderizarApp('/profesionales');
-    expect(await screen.findByRole('heading', { name: /bienvenido/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();
   });
 });

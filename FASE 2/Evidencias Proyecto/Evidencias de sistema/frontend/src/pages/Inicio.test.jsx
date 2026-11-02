@@ -190,6 +190,6 @@ describe('Inicio sin datos', () => {
   test('sin sesión pide iniciar sesión', () => {
     sessionStorage.clear();
     renderizarApp('/inicio');
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
   });
 });

@@ -5,9 +5,12 @@ import Icono from './Icono.jsx';
 // texto de ayuda dentro del campo) pero sigue disponible para lectores de pantalla.
 export default function CampoFormulario({ id, etiqueta, error, ayuda, children, icono, etiquetaOculta = false, ...propsEntrada }) {
   const [visible, setVisible] = useState(false);
+  const [mayusculas, setMayusculas] = useState(false);
   const idError = `${id}-error`;
   const idAyuda = `${id}-ayuda`;
   const esPassword = propsEntrada.type === 'password';
+  // En las contraseñas se avisa si Bloq Mayús está activado, un error frecuente al escribirlas.
+  const revisarMayusculas = (evento) => setMayusculas(Boolean(evento.getModifierState?.('CapsLock')));
   const propsControl = {
     id,
     name: id,
@@ -16,7 +19,7 @@ export default function CampoFormulario({ id, etiqueta, error, ayuda, children, 
     className: 'campo__control',
     ...(etiquetaOculta && !children ? { placeholder: etiqueta } : {}),
     ...propsEntrada,
-    ...(esPassword ? { type: visible ? 'text' : 'password' } : {}),
+    ...(esPassword ? { type: visible ? 'text' : 'password', onKeyDown: revisarMayusculas, onKeyUp: revisarMayusculas, onBlur: () => setMayusculas(false) } : {}),
   };
 
   const clases = ['campo', error && 'campo--error', icono && 'campo--icono', esPassword && 'campo--password'].filter(Boolean).join(' ');
@@ -34,6 +37,9 @@ export default function CampoFormulario({ id, etiqueta, error, ayuda, children, 
           </button>
         )}
       </div>
+      {esPassword && mayusculas && (
+        <p className="campo__mayusculas" role="status"><Icono nombre="info" tamano={16} /> Bloq Mayús está activado</p>
+      )}
       {error
         ? <p id={idError} className="campo__mensaje" role="alert">{error}</p>
         : ayuda && <p id={idAyuda} className="campo__ayuda">{ayuda}</p>}

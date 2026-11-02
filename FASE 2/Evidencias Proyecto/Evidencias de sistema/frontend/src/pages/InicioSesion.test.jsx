@@ -82,13 +82,13 @@ describe('Inicio de sesión (FS-HU-01)', () => {
 
   test('sin sesión, la ruta de perfil redirige al inicio de sesión', () => {
     renderizarApp('/perfil');
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
   });
 
   test('sin sesión, el Inicio también pide iniciar sesión y luego vuelve a él', async () => {
     simularApi(API_CON_SESION);
     renderizarApp('/inicio');
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
 
     await ingresar();
     expect(await screen.findByRole('heading', TITULO_INICIO)).toBeInTheDocument();
@@ -134,5 +134,17 @@ describe('Inicio de sesión (FS-HU-01)', () => {
     await ingresar();
 
     expect(await screen.findByRole('heading', { level: 1, name: '¡Hola, Matías!' })).toBeInTheDocument();
+  });
+
+  test('las pestañas cambian entre ingresar y crear cuenta', async () => {
+    renderizarApp('/iniciar-sesion');
+    const pestanas = screen.getByRole('navigation', { name: 'Elige cómo entrar' });
+    expect(screen.getByRole('link', { name: 'Ingresar' })).toHaveAttribute('aria-current', 'page');
+    expect(pestanas).toContainElement(screen.getByRole('link', { name: 'Crear cuenta' }));
+
+    await userEvent.click(screen.getByRole('link', { name: 'Crear cuenta' }));
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Crea tu cuenta' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Crear cuenta' })).toHaveAttribute('aria-current', 'page');
   });
 });

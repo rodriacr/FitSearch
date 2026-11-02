@@ -83,7 +83,7 @@ describe('Elegir perfil', () => {
     renderizarApp('/elegir-perfil');
     await userEvent.click(screen.getByRole('button', { name: /Continuar como usuario/ }));
 
-    expect(await screen.findByRole('heading', { level: 1, name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: 'Inicia sesión' })).toBeInTheDocument();
     expect(screen.getByText(/Tu perfil ya fue elegido. Inicia sesión nuevamente/)).toBeInTheDocument();
     expect(sesionGuardada()).toBeNull();
     expect(fetch.mock.calls.some(([url]) => url === '/api/profesionales/mi-ficha')).toBe(false);
