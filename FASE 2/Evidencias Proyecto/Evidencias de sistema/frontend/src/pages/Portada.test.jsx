@@ -66,7 +66,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(destinoDe('Gimnasios')).toBeUndefined();
 
     await userEvent.click(screen.getByRole('heading', { level: 3, name: 'Comidas' }).closest('article').querySelector('a'));
-    expect(screen.getByRole('heading', { name: '¡Bienvenido!' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
     await userEvent.type(screen.getByLabelText('Correo electrónico'), 'ana@correo.cl');
     await userEvent.type(screen.getByLabelText('Contraseña'), 'ClaveSegura123');
     await userEvent.click(screen.getByRole('button', { name: 'Iniciar sesión' }));
