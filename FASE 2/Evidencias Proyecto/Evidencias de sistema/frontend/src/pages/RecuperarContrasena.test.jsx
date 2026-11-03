@@ -63,6 +63,15 @@ describe('Recuperar contraseña (FS-HU-15)', () => {
     expect(await screen.findByText(ENLACE_INVALIDO)).toBeInTheDocument();
   });
 
+  test('la presentación habla de recuperar el acceso, al pedir el enlace y al crear la contraseña nueva', () => {
+    for (const ruta of ['/recuperar-contrasena', `/restablecer-contrasena?token=${TOKEN}`]) {
+      const { unmount } = renderizarApp(ruta);
+      expect(screen.getByText(/Vuelve a/)).toHaveTextContent('Vuelve a entrar en pocos pasos.');
+      expect(screen.queryByText(/Vuelve a tu/)).not.toBeInTheDocument();
+      unmount();
+    }
+  });
+
   test('sin código en el enlace ofrece solicitar uno nuevo', () => {
     renderizarApp('/restablecer-contrasena');
     expect(screen.getByRole('link', { name: 'Solicitar un enlace nuevo' })).toBeInTheDocument();

@@ -23,6 +23,14 @@ describe('Registro (FS-HU-01 y FS-HU-17)', () => {
     expect(screen.getByText('Las contraseñas coinciden')).toBeInTheDocument();
   });
 
+  test('la presentación invita a empezar, no a volver', () => {
+    renderizarApp('/registro');
+    expect(screen.getByText(/Empieza tu/)).toHaveTextContent('Empieza tu camino de bienestar.');
+    expect(screen.queryByText(/Vuelve a tu/)).not.toBeInTheDocument();
+    expect(screen.getByText('Calorías y macros del día')).toBeInTheDocument();
+    expect(screen.queryByText('Planes a tu ritmo')).not.toBeInTheDocument();
+  });
+
   // El registro no pregunta el rol: se elige justo después, en "Elegir perfil" (DAS, D25).
   test('FS-HU-17 escenario 1: registra la cuenta y lleva a elegir cómo usar FitSearch', async () => {
     const fetch = vi.spyOn(globalThis, 'fetch').mockImplementation((url) => (url === '/api/auth/registro'

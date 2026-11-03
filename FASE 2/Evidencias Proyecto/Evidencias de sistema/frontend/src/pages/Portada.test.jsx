@@ -146,6 +146,28 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
   });
 
+  test('mientras la despedida está abierta la portada de atrás queda inerte, y al cerrarla el foco vuelve al contenido', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    const { container } = renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    expect(dialogo.closest('[inert]')).toBeNull();
+    const principal = container.querySelector('main#contenido');
+    expect(principal).toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).toHaveAttribute('inert');
+    // La despedida muestra la marca de FitSearch, no la foto de una persona.
+    expect(dialogo.querySelector('img[src*="perfil-usuario"]')).toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(principal).not.toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).not.toHaveAttribute('inert');
+    expect(principal).toHaveFocus();
+  });
+
   test('la despedida también se cierra con Escape', async () => {
     localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
     simularApi(API_CON_SESION);
