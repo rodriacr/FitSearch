@@ -1,0 +1,14 @@
+{
+  "fecha": "03-11-2026",
+  "descripcion": "Verificación de los 4 ajustes del nuevo login (revisión del PR #36) en el entorno de desarrollo con Node y MySQL 8.4 en Docker: pruebas automatizadas del frontend, lint y build, y revisión en el navegador con una cuenta temporal creada para la prueba y borrada después.",
+  "automatizadas": { "archivos": 37, "pruebas": 308, "aprobadas": 308, "lint": "sin errores", "build": "correcto" },
+  "resultados": [
+    { "caso": "CP-152 despedida accesible", "ok": true, "detalle": { "inertesConDialogo": ["a.portada__saltar", "header.portada__encabezado", "main", "footer.portada__pie"], "focoInicial": "Volver a iniciar sesión", "focoAlCerrar": "main#contenido", "inertesAlCerrar": 0 } },
+    { "caso": "CP-153 marca en la despedida", "ok": true, "detalle": { "captura": "evidencias-login/despedida-marca.jpg" } },
+    { "caso": "CP-154 texto propio al crear cuenta", "ok": true, "detalle": { "lema": "Empieza tu camino de bienestar.", "captura": "evidencias-login/registro-texto-propio.jpg" } },
+    { "caso": "CP-155 texto propio al recuperar la contraseña", "ok": true, "detalle": { "lema": "Vuelve a entrar en pocos pasos.", "capturas": ["evidencias-login/recuperar-contrasena.jpg", "evidencias-login/restablecer-contrasena.jpg"] } },
+    { "caso": "CP-156 especialidad Nutrición", "ok": true, "detalle": { "texto": "Calorías y macros del día" } }
+  ],
+  "celular360": { "registro": { "scrollWidth": 345, "clientWidth": 345 }, "recuperar": { "scrollWidth": 360, "clientWidth": 360 }, "restablecer": { "scrollWidth": 360, "clientWidth": 360 }, "captura": "evidencias-login/acceso-celular-360-ajustes.jpg" },
+  "limpieza": "Cuenta temporal eliminada; no se modificaron cuentas existentes ni credenciales."
+}

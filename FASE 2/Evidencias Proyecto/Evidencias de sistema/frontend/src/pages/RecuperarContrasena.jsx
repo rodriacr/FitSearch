@@ -34,7 +34,7 @@ export default function RecuperarContrasena() {
   };
 
   return (
-    <PantallaAcceso>
+    <PantallaAcceso tipo="recuperacion">
       <Link to="/iniciar-sesion" className="volver"><Icono nombre="flechaIzquierda" /> Volver al inicio de sesión</Link>
       <div className="acceso__encabezado">
         <h1>¿Olvidaste tu contraseña?</h1>
