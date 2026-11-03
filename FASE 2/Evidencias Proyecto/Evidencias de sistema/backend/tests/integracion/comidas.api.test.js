@@ -89,6 +89,24 @@ test('el progreso semanal trae los 7 días de la semana', async () => {
   expect(res.body.objetivoCalorias).toBe(2525);
 });
 
+test('las estadísticas responden la semana por defecto o el mes pedido, y validan el período y la fecha', async () => {
+  modelo.totalesPorDia.mockResolvedValue([]);
+  const semana = await conSesion(request(app).get('/api/comidas/estadisticas'));
+  expect(semana.status).toBe(200);
+  expect(semana.body).toMatchObject({ periodo: 'semana', diasConRegistros: 0, promedio: null });
+  expect(semana.body.dias).toHaveLength(7);
+  expect(semana.body.objetivo.calorias).toBe(2525);
+  const mes = await conSesion(request(app).get('/api/comidas/estadisticas?periodo=mes&fecha=2026-02-10'));
+  expect(mes.status).toBe(200);
+  expect(mes.body).toMatchObject({ desde: '2026-02-01', hasta: '2026-02-28' });
+  const malo = await conSesion(request(app).get('/api/comidas/estadisticas?periodo=anio'));
+  expect(malo.status).toBe(400);
+  expect(malo.body.detalles.periodo).toBe('Elige semana o mes');
+  expect((await conSesion(request(app).get('/api/comidas/estadisticas?fecha=2026-13-01'))).status).toBe(400);
+  expect((await conSesion(request(app).get(`/api/comidas/estadisticas?fecha=${sumarDias(HOY, 1)}`))).status).toBe(400);
+  expect((await conSesion(request(app).get('/api/comidas/estadisticas'), 'profesional')).status).toBe(403);
+});
+
 test('cambia los gramos o el momento de un registro propio; un registro ajeno responde 404', async () => {
   modelo.obtener.mockResolvedValueOnce(registro()).mockResolvedValueOnce(null);
   modelo.obtenerAlimento.mockResolvedValue(ARROZ);

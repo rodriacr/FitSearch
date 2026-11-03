@@ -6,6 +6,9 @@ const fechaDe = (valor) => valor || fechaEnChile();
 async function alimentos(req, res) { res.json(await servicio.buscarAlimentos(req.query.q)); }
 async function delDia(req, res) { res.json(await servicio.delDia(req.usuario.id, fechaDe(req.query.fecha))); }
 async function semana(req, res) { res.json(await servicio.semana(req.usuario.id, fechaDe(req.query.fecha))); }
+async function estadisticas(req, res) {
+  res.json(await servicio.estadisticas(req.usuario.id, { periodo: req.query.periodo || 'semana', fecha: fechaDe(req.query.fecha) }));
+}
 async function agregar(req, res) {
   const { fecha, momento, alimentoId, gramos } = req.body;
   res.status(201).json(await servicio.agregar(req.usuario.id, { fecha: fechaDe(fecha), momento, alimentoId, gramos }));
@@ -19,4 +22,4 @@ async function eliminar(req, res) {
   res.status(204).end();
 }
 
-module.exports = { alimentos, delDia, semana, agregar, actualizar, eliminar };
+module.exports = { alimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar };

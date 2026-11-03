@@ -186,10 +186,53 @@
 .registrar-comida__acciones { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .registrar-comida__acciones p { flex: 1; min-width: 14rem; margin: 0; font-size: 0.75rem; }
 
+/* Estadísticas (FS-HU-26): período, barras por día con la línea del objetivo y promedio del período. */
+.estadisticas { display: flex; flex-direction: column; gap: 1rem; }
+.estadisticas__controles { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.estadisticas__opciones { display: inline-flex; flex-wrap: wrap; gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--color-borde); border-radius: 12px; background: var(--color-superficie); }
+.estadisticas__opcion {
+  min-height: 2.4rem; padding: 0 0.9rem; border: 0; border-radius: 9px; background: transparent;
+  color: var(--color-texto-secundario); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
+}
+.estadisticas__opcion[aria-pressed="true"] { background: var(--color-primario); color: #fff; }
+.estadisticas__graficos { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+.estadisticas__graficos .panel-tarjeta { border-radius: 20px; }
+.estadisticas__encabezado-tarjeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
+.estadisticas__encabezado-tarjeta .panel-tarjeta__titulo { margin: 0; }
+.estadisticas__leyenda { display: flex; gap: 1rem; margin: 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
+.estadisticas__leyenda span::before { content: ""; display: inline-block; margin-right: 0.35rem; vertical-align: middle; }
+.estadisticas__leyenda-consumo::before { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #1c74c9; }
+.estadisticas__leyenda-objetivo::before { width: 0.9rem; border-top: 2px dashed #8aa9c0; }
+.estadisticas__promedio { display: grid; gap: 0.9rem; }
+.estadisticas__promedio .panel-tarjeta__titulo, .estadisticas__promedio > p { margin: 0; }
+.estadisticas-barras__area { position: relative; height: 10rem; border-bottom: 1px solid var(--color-borde); }
+.estadisticas-barras__area ol, .estadisticas-barras__rotulos {
+  display: grid; grid-template-columns: repeat(var(--dias), minmax(0, 1fr)); gap: 0.35rem; margin: 0; padding: 0; list-style: none;
+}
+.estadisticas-barras--mes .estadisticas-barras__area ol, .estadisticas-barras--mes .estadisticas-barras__rotulos { gap: 2px; }
+.estadisticas-barras__area ol { height: 100%; }
+.estadisticas-barras__area li { display: flex; align-items: flex-end; justify-content: center; height: 100%; }
+.estadisticas-barras__barra { display: block; width: min(1.25rem, 70%); border-radius: 6px 6px 2px 2px; background: var(--color-barra); transition: height 400ms var(--curva-salida); }
+.estadisticas-barras--mes .estadisticas-barras__barra { width: 85%; border-radius: 3px 3px 1px 1px; }
+.estadisticas-barras__dia--futuro .estadisticas-barras__barra { opacity: 0; }
+.estadisticas-barras__objetivo { position: absolute; z-index: 1; left: 0; right: 0; border-top: 2px dashed #8aa9c0; pointer-events: none; }
+.estadisticas-barras__rotulos { margin-top: 0.4rem; font-size: 0.7rem; line-height: 1.25; text-align: center; color: var(--color-texto-secundario); }
+@media (min-width: 64rem) {
+  .estadisticas__graficos { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; }
+  .estadisticas__graficos > :first-child { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .estadisticas-barras__barra { transition: none; }
+}
+
 @media (max-width: 39.99rem) {
   .comidas__titulos h1 { font-size: 1.5rem; }
   .comidas__icono { width: 2.9rem; height: 2.9rem; }
   .comidas__registrar { width: 100%; }
   .anillo-calorias { width: 8rem; }
   .progreso-semanal__barras { height: 6.5rem; }
+  .estadisticas-barras__area { height: 8rem; }
+  /* El selector de macronutrientes ocupa el ancho de la tarjeta para que sus tres opciones quepan en una fila. */
+  .estadisticas__encabezado-tarjeta .estadisticas__opciones { flex-wrap: nowrap; width: 100%; }
+  .estadisticas__encabezado-tarjeta .estadisticas__opcion { flex: 1; padding: 0 0.4rem; }
 }
