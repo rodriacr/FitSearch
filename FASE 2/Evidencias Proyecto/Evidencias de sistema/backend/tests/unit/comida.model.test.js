@@ -9,11 +9,11 @@ const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../..
 
 beforeEach(() => jest.resetAllMocks());
 
-test('cada palabra buscada debe estar en el nombre o en los sinónimos', async () => {
+test('cada palabra buscada debe estar en el nombre o en los sinónimos, y solo entre los alimentos activos', async () => {
   prisma.alimento.findMany.mockResolvedValue([]);
   await modelo.buscarAlimentos(['pechuga', 'pollo'], 12);
   expect(prisma.alimento.findMany).toHaveBeenCalledWith(expect.objectContaining({
-    where: { AND: [
+    where: { activo: true, AND: [
       { OR: [{ nombre: { contains: 'pechuga' } }, { sinonimos: { contains: 'pechuga' } }] },
       { OR: [{ nombre: { contains: 'pollo' } }, { sinonimos: { contains: 'pollo' } }] },
     ] },

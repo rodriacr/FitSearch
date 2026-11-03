@@ -9,6 +9,7 @@ import Asistente from './pages/Asistente.jsx';
 import Comidas from './pages/Comidas.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
 import { DisenoAdministrador, ResumenAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
+import ContenidoAdministrador from './pages/administrador/ContenidoAdministrador.jsx';
 import Favoritos from './pages/Favoritos.jsx';
 import FichaProfesional from './pages/FichaProfesional.jsx';
 import Inicio from './pages/Inicio.jsx';
@@ -56,6 +57,7 @@ export default function App() {
               <Route path="verificaciones/:id" element={<DetalleVerificacion key={pathname} />} />
               <Route path="usuarios" element={<ListadoAdministrador key="usuarios" tipo="usuarios" />} />
               <Route path="reportes" element={<ResumenAdministrador reporte />} />
+              <Route path="contenido" element={<ContenidoAdministrador />} />
             </Route>
           </Route>
           {/* Espacio del usuario */}

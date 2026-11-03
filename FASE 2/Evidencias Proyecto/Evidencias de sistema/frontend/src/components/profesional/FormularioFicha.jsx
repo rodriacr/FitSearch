@@ -6,10 +6,11 @@ import Icono from '../Icono.jsx';
 import MapaUbicacion from './MapaUbicacion.jsx';
 import { enMapa } from '../profesionales/ubicacionMapa.js';
 import { guardarMiFicha, ubicarDireccion } from '../../services/profesional.service.js';
+import { useEspecialidades } from '../../services/especialidades.js';
 import './FormularioFicha.css';
 
 const {
-  especialidades, modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION },
+  modalidades, descripcion: { max: MAX_DESCRIPCION }, comuna: { max: MAX_COMUNA }, direccion: { max: MAX_DIRECCION },
 } = reglas.profesionales;
 
 // Los nombres de los campos coinciden con la API, así los errores del servidor caen en su campo. SC-24: la dirección es
@@ -76,6 +77,9 @@ export default function FormularioFicha({ ficha, onGuardado, onCancelar }) {
   const [errorUbicacion, setErrorUbicacion] = useState('');
   // La última ubicación y la búsqueda en curso, para leerlas sin esperar a que React vuelva a dibujar
   // (al guardar justo después de escribir la dirección, la búsqueda que empezó al salir del campo se reutiliza).
+  // FS-HU-30: las especialidades activas del catálogo; la que ya tenía la ficha se ofrece aunque esté desactivada.
+  const catalogo = useEspecialidades();
+  const especialidades = ficha?.especialidad && !catalogo.includes(ficha.especialidad) ? [...catalogo, ficha.especialidad] : catalogo;
   const ubicacionActual = useRef(ubicacion);
   const enCurso = useRef(null);
 

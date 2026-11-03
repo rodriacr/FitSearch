@@ -6,9 +6,9 @@ const modelo = require('../../src/models/comida.model');
 const usuarioModel = require('../../src/models/usuario.model');
 const servicio = require('../../src/services/comida.service');
 
-const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo, pechuga, pollo a la plancha', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6' };
-const TRUTRO = { id: 2, nombre: 'Trutro de pollo cocido, sin piel', sinonimos: 'trutro, muslo de pollo', calorias: '209.0', proteinasG: '25.9', carbohidratosG: '0.0', grasasG: '10.9' };
-const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo, pechuga, pollo a la plancha', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6', activo: true };
+const TRUTRO = { id: 2, nombre: 'Trutro de pollo cocido, sin piel', sinonimos: 'trutro, muslo de pollo', calorias: '209.0', proteinasG: '25.9', carbohidratosG: '0.0', grasasG: '10.9', activo: true };
+const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3', activo: true };
 // 26-10-2026 a las 13:00 en Chile (UTC-3 en horario de verano).
 const AHORA = new Date('2026-10-26T16:00:00Z');
 const registro = (extra = {}) => ({
@@ -84,7 +84,7 @@ test('el progreso semanal va de lunes a domingo, completa los días sin registro
 });
 
 test('agregar calcula y guarda el aporte con el nombre del catálogo; un alimento inexistente responde 404', async () => {
-  modelo.obtenerAlimento.mockResolvedValueOnce(ARROZ).mockResolvedValueOnce(null);
+  modelo.obtenerAlimento.mockResolvedValueOnce(ARROZ).mockResolvedValueOnce(null).mockResolvedValueOnce({ ...ARROZ, activo: false });
   const { registro: guardado } = await servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, gramos: 150 }, AHORA);
   expect(modelo.crear).toHaveBeenCalledWith({
     usuarioId: 1, fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, descripcionAlimento: 'Arroz blanco cocido', gramos: 150, origen: 'manual',
@@ -92,6 +92,9 @@ test('agregar calcula y guarda el aporte con el nombre del catálogo; un aliment
   });
   expect(guardado).toMatchObject({ id: 50, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195 });
   await expect(servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 99, gramos: 10 }, AHORA)).rejects.toMatchObject({ estado: 404 });
+  // FS-HU-30: el administrador lo desactivó; sus registros anteriores se conservan, pero no se registra de nuevo.
+  await expect(servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, gramos: 10 }, AHORA)).rejects.toMatchObject({ estado: 404 });
+  expect(modelo.crear).toHaveBeenCalledTimes(1);
 });
 
 test('cambiar los gramos recalcula con el catálogo, o escala lo guardado si el alimento ya no existe', async () => {

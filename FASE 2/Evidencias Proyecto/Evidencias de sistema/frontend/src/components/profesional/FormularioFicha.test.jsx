@@ -1,10 +1,10 @@
 // Ubicación de atención de la ficha (SC-28): el profesional escribe su comuna y su dirección, la API las ubica y el
 // mapa muestra el lugar; si no quedó exacto, mueve el marcador. Ya no hay campos de latitud ni longitud.
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { cargarMapLibre } from '../../services/mapas.js';
-import { MI_FICHA, respuestaJson } from '../../tests/utilidades.jsx';
+import { ESPECIALIDADES_DE_PRUEBA, MI_FICHA, respuestaJson } from '../../tests/utilidades.jsx';
 import FormularioFicha from './FormularioFicha.jsx';
 vi.mock('../../services/mapas.js', () => ({ cargarMapLibre: vi.fn(), ESTILO_MAPA: 'https://estilo.prueba/style.json' }));
 
@@ -41,10 +41,12 @@ function simularMapLibre({ falla = false } = {}) {
   return registro;
 }
 
-// Servidor simulado: la búsqueda de la ubicación (configurable) y el guardado de la ficha.
+// Servidor simulado: el catálogo de especialidades (FS-HU-30), la búsqueda de la ubicación (configurable) y el guardado
+// de la ficha.
 function simularServidor({ ubicar = () => respuestaJson(200, PROVIDENCIA), alGuardar } = {}) {
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
     const direccion = new URL(url, 'http://localhost');
+    if (direccion.pathname === '/api/especialidades') return respuestaJson(200, { especialidades: ESPECIALIDADES_DE_PRUEBA });
     if (direccion.pathname === '/api/profesionales/mi-ficha/ubicacion') return ubicar(Object.fromEntries(direccion.searchParams));
     if (direccion.pathname === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
       return alGuardar ? alGuardar() : respuestaJson(200, { ficha: { id: 3, ...JSON.parse(opciones.body) } });
@@ -62,6 +64,8 @@ const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([, o = {}]) => o.
 const huboPut = (fetch) => fetch.mock.calls.some(([, o = {}]) => o.method === 'PUT');
 
 async function completar({ modalidad = 'presencial', comuna = 'Providencia', direccion = 'Av. Providencia 1234, oficina 501' } = {}) {
+  // El catálogo de especialidades llega de la API (FS-HU-30).
+  await screen.findByRole('option', { name: 'Nutrición' });
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);
   await userEvent.type(screen.getByLabelText('Comuna (obligatorio)'), comuna);
@@ -288,4 +292,17 @@ describe('Editar ficha', () => {
     await guardar();
     await waitFor(() => expect(huboPut(fetch)).toBe(true));
   });
+});
+
+// FS-HU-30: las especialidades vienen del catálogo que administra el administrador.
+test('ofrece la especialidad que ya tenía la ficha aunque el administrador la haya desactivado', async () => {
+  simularMapLibre();
+  simularServidor();
+  formulario({ ficha: { ...MI_FICHA, especialidad: 'Masoterapia' }, onCancelar: vi.fn() });
+  await screen.findByRole('option', { name: 'Nutrición' });
+  expect(screen.getByLabelText('Especialidad (obligatorio)')).toHaveValue('Masoterapia');
+  const opciones = within(screen.getByLabelText('Especialidad (obligatorio)')).getAllByRole('option');
+  expect(opciones.map((opcion) => opcion.textContent)).toEqual([
+    'Selecciona tu especialidad', 'Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva', 'Masoterapia',
+  ]);
 });
