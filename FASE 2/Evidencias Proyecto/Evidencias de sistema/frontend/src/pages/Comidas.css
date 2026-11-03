@@ -190,6 +190,10 @@
   .comidas__titulos h1 { font-size: 1.5rem; }
   .comidas__icono { width: 2.9rem; height: 2.9rem; }
   .comidas__registrar { width: 100%; }
+  /* Las flechas quedan en la misma línea que el día; el texto se ajusta dentro del párrafo. */
+  .comidas__dia { flex-wrap: nowrap; }
+  .comidas__dia p { min-width: 0; }
+  .comidas__dia .boton-texto { white-space: nowrap; }
   .anillo-calorias { width: 8rem; }
   .progreso-semanal__barras { height: 6.5rem; }
 }

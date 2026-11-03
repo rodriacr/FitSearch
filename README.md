@@ -287,7 +287,7 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA.
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`.
 
 ## Convenciones de trabajo
 
