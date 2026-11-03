@@ -1,7 +1,7 @@
 flowchart TB
   subgraph SPA[Frontend React y Vite]
     direction LR
-    P["Acceso y perfiles<br/>Panel administrador<br/>Agenda y Mis citas"]
+    P["Acceso y perfiles<br/>Panel administrador y Contenido<br/>Agenda, Mis citas y Comidas"]
     C["Tarjetas y formularios<br/>Certificaciones"]
     S["SesionContext y JWT<br/>Navegación por rol"]
     A["Cliente API<br/>JSON y archivos"]
@@ -12,14 +12,14 @@ flowchart TB
     R["Rutas del dominio<br/>administrador<br/>verificaciones"]
     M["JWT y roles<br/>Cuenta activa<br/>Versión de sesión"]
     K["Controladores<br/>Rutas administrativas"]
-    V["Servicios<br/>Agenda, reservas<br/>Ficha y su ubicación, documentos,<br/>clima, asistente IA y comidas"]
+    V["Servicios<br/>Agenda, reservas<br/>Ficha y su ubicación, documentos,<br/>clima, asistente IA, comidas<br/>y contenido del administrador"]
     D["Modelos<br/>Dominio, admin,<br/>sesión, agenda y verificación"]
     R --> M --> K --> V --> D
   end
   SPA -->|"HTTP /api; Bearer JWT"| API
   API --> PR["models/prisma.js<br/>Conexión compartida"]
-  PR --> DB[("MySQL<br/>17 tablas implementadas")]
-  API --> G["shared/reglas.json<br/>Nutrición, comidas y catálogos"]
+  PR --> DB[("MySQL<br/>18 tablas implementadas<br/>catálogos de especialidades, alimentos y establecimientos")]
+  API --> G["shared/reglas.json<br/>Nutrición, comidas y límites de los catálogos"]
   API --> O["Open-Meteo<br/>HTTPS; caché 30 min"]
   API --> NM["Nominatim (OpenStreetMap)<br/>Dirección a coordenadas de la ficha<br/>1 consulta/s; caché 24 h (D36)"]
   API --> IA["Groq, compatible con OpenAI<br/>Asistente IA y comidas por chat;<br/>plan gratuito (D33, D37)"]

@@ -5,6 +5,7 @@ erDiagram
   usuarios ||--o{ tokens_recuperacion : "usuario_id"
   usuarios ||--o| profesionales : "usuario_id"
   establecimientos |o--o{ profesionales : "establecimiento_id"
+  especialidades ||..o{ profesionales : "especialidad (por nombre)"
   profesionales ||--o{ disponibilidades : "profesional_id"
   disponibilidades ||--o{ reservas : "disponibilidad_id"
   usuarios ||--o{ reservas : "usuario_id"
@@ -84,10 +85,18 @@ erDiagram
   establecimientos {
     INT id PK
     VARCHAR150 nombre
-    VARCHAR50 categoria
+    VARCHAR50 categoria "centro_salud o gimnasio"
+    VARCHAR80 comuna "NULL, FS-HU-30"
     VARCHAR255 direccion
     DECIMAL ubicacion_lat
     DECIMAL ubicacion_lng
+    BOOLEAN activo "DEFAULT true, FS-HU-30"
+  }
+  especialidades {
+    INT id PK
+    VARCHAR100 nombre UK
+    BOOLEAN activa "DEFAULT true"
+    DATETIME fecha_creacion
   }
   disponibilidades {
     INT id PK
@@ -150,6 +159,7 @@ erDiagram
     DECIMAL proteinas_g "por 100 g"
     DECIMAL carbohidratos_g "por 100 g"
     DECIMAL grasas_g "por 100 g"
+    BOOLEAN activo "DEFAULT true, FS-HU-30"
   }
   favoritos {
     INT id PK

@@ -83,10 +83,18 @@ classDiagram
   class Establecimiento {
     +int id
     +string nombre
-    +string categoria
+    +Categoria categoria
+    +string comuna
     +string direccion
     +decimal ubicacionLat
     +decimal ubicacionLng
+    +bool activo
+  }
+  class Especialidad {
+    +int id
+    +string nombre
+    +bool activa
+    +datetime fechaCreacion
   }
   class Disponibilidad {
     +int id
@@ -141,6 +149,7 @@ classDiagram
     +decimal proteinas100g
     +decimal carbohidratos100g
     +decimal grasas100g
+    +bool activo
     +aporte(gramos) Aporte
   }
   Rol "1" <-- "0..*" Usuario : tiene
@@ -149,6 +158,7 @@ classDiagram
   Usuario "1" *-- "0..*" TokenRecuperacion : recuperación
   Usuario "1" -- "0..1" Profesional : ficha profesional
   Establecimiento "0..1" o-- "0..*" Profesional : agrupa
+  Especialidad "1" <.. "0..*" Profesional : elige por nombre
   Profesional "1" *-- "0..*" Disponibilidad : publica
   Disponibilidad "1" -- "0..*" Reserva : se reserva en
   Usuario "1" -- "0..*" Reserva : realiza
