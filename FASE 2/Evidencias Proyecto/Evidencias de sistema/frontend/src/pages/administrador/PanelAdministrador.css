@@ -59,6 +59,16 @@
 .admin__error { color: #8a2525; background: #ffeded; }
 .admin__exito { color: #14543c; background: #ddf5ea; }
 .admin__solo-lector { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+/* Contenido (FS-HU-30): formulario de cada catálogo y acciones de cada elemento. */
+.admin__agregar { margin: 6px 0 2px; }
+.admin__formulario h2 { margin-top: 0; }
+.admin__campos { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 16px 0; }
+.admin__campo { display: grid; gap: 8px; align-content: start; }
+.admin__campo small { color: #8a2525; }
+.admin__campo--error input, .admin__campo--error select { border-color: #c64545; }
+.admin__ubicacion { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
+.admin__ubicacion p { margin: 0; color: #476779; }
+.admin__acciones-formulario, .admin__acciones-fila { display: flex; flex-wrap: wrap; gap: 8px; }
 @media (max-width: 800px) {
   .admin__cabecera { padding: 14px 20px; }
   .admin__cabecera button { display: inline-flex; }

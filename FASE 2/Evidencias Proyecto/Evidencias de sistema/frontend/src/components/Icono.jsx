@@ -66,6 +66,7 @@ const TRAZOS = {
   enviar: <><path d="M21 3 10 14" /><path d="m21 3-7 18-4-7-7-4Z" /></>,
   chincheta: <><path d="M9 4h6l-1 6 3 3H7l3-3Z" /><path d="M12 13v8" /></>,
   basura: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
+  capas: <><path d="m12 3 9 5-9 5-9-5Z" /><path d="m3 13 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,
   robot: <><rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 8V5" /><circle cx="12" cy="4" r="1" /><path d="M9.5 13h.01M14.5 13h.01M10 16.5h4M3 12v3M21 12v3" /></>,
 };
 

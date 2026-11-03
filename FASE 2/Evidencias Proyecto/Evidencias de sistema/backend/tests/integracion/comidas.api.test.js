@@ -11,7 +11,7 @@ const { fechaEnChile, sumarDias } = require('../../src/utils/fechaChile');
 const firmar = (rol) => jwt.sign({ rol }, process.env.JWT_SECRET, { subject: '1', expiresIn: '1h' });
 const conSesion = (peticion, rol = 'usuario') => peticion.set('Authorization', `Bearer ${firmar(rol)}`);
 const HOY = fechaEnChile();
-const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3', activo: true };
 const registro = (extra = {}) => ({
   id: 7, fecha: new Date(`${HOY}T00:00:00Z`), momento: 'almuerzo', alimentoId: 17, descripcionAlimento: 'Arroz blanco cocido', gramos: '150.0',
   calorias: 195, proteinasG: '4.10', carbohidratosG: '42.30', grasasG: '0.50', origen: 'manual', fechaCreacion: new Date(), ...extra,

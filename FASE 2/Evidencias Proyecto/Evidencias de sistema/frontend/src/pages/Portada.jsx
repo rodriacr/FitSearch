@@ -8,6 +8,7 @@ import Despedida from '../components/Despedida.jsx';
 import Icono from '../components/Icono.jsx';
 import iconoMarca from '../assets/logo-fitsearch-icono.png';
 import { useSesion } from '../context/SesionContext.jsx';
+import { useEspecialidades } from '../services/especialidades.js';
 import './Portada.css';
 import './PortadaRedisenada.css';
 
@@ -39,6 +40,8 @@ export default function Portada() {
   // para que no reaparezca en otra pantalla (seguro con StrictMode, que repite los efectos en desarrollo).
   const [aviso, setAviso] = useState(avisoSesion);
   const navegar = useNavigate();
+  // Especialidades activas del catálogo (FS-HU-30) para el buscador de la portada.
+  const especialidades = useEspecialidades();
   useEffect(() => { limpiarAviso(); }, [limpiarAviso]);
   const cerrarDespedida = useCallback(() => setAviso(null), []);
   const esDespedida = aviso?.origen === 'cierre';
@@ -81,7 +84,7 @@ export default function Portada() {
           <form role="search" aria-label="Buscar profesionales por especialidad y comuna" onSubmit={buscar}>
             <label className="portada__filtro"><Icono nombre="medico" tamano={24} /><span><span>Especialidad</span>
               <select name="especialidad" aria-label="Especialidad"><option value="">Todas las especialidades</option>
-                {reglas.profesionales.especialidades.map((nombre) => <option key={nombre}>{nombre}</option>)}
+                {especialidades.map((nombre) => <option key={nombre}>{nombre}</option>)}
               </select></span></label>
             <label className="portada__filtro"><Icono nombre="pin" tamano={24} /><span><span>Comuna</span>
               <input name="comuna" aria-label="Comuna" placeholder="Ej. Ñuñoa" maxLength={reglas.profesionales.comuna.max} />
