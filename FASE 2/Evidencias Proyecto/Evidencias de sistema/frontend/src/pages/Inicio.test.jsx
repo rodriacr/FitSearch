@@ -45,7 +45,10 @@ describe('Inicio con datos', () => {
     // Calorías registradas hoy en Comidas frente a la meta estimada con el perfil.
     await waitFor(() => expect(progreso).toHaveTextContent('1.420 / 2.556 kcal'));
     expect(within(progreso).getByRole('link', { name: 'Registrar comida' })).toHaveAttribute('href', '/comidas');
-    expect(within(progreso).getAllByText('Próximamente')).toHaveLength(2);
+    // «Pasos hoy» se quitó (SC-33); «Agua hoy» sigue como Próximamente hasta FS-HU-33.
+    expect(within(progreso).queryByText('Pasos hoy')).not.toBeInTheDocument();
+    expect(within(progreso).getByText('Agua hoy')).toBeInTheDocument();
+    expect(within(progreso).getAllByText('Próximamente')).toHaveLength(1);
 
     expect(await screen.findByRole('heading', { name: 'Matías Demo' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 4 reseñas' })).toBeInTheDocument();
