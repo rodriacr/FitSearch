@@ -13,6 +13,21 @@
 .agenda__cabecera {
   justify-content: space-between;
 }
+/* En /citas (y en las reservas del profesional) la agenda es la página: su título tiene tamaño de título de página. */
+.app__contenido > .agenda > .agenda__cabecera h2 {
+  margin: 0.25rem 0 0.35rem;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
+  letter-spacing: -0.03em;
+}
+/* El filtro elegido se distingue: antes «Próximas» y «Todas e historial» se veían iguales. */
+.agenda__filtros .boton[aria-pressed='true'] {
+  color: #fff;
+  background: var(--color-primario);
+  border-color: var(--color-primario);
+}
+@media (hover: hover) and (pointer: fine) {
+  .agenda__filtros .boton[aria-pressed='true']:hover { background: var(--color-primario-oscuro); }
+}
 .agenda__cabecera h2 {
   display: flex;
   align-items: center;

@@ -133,7 +133,7 @@ export default function Inicio() {
 
   return (
     <div className="inicio" ref={animaciones}>
-      <div data-revelar className="inicio__saludo"><h1>Hola, {primerNombre(sesion.usuario.nombre)}.<br />¿Cómo quieres cuidarte hoy?</h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
+      <div data-revelar className="inicio__saludo"><h1><span className="inicio__saludo-nombre">Hola, {primerNombre(sesion.usuario.nombre)}.</span> <span>¿Cómo quieres cuidarte hoy?</span></h1><p>Encuentra profesionales de la salud y el deporte, y da el siguiente paso hacia tu bienestar.</p></div>
       {pendientes > 0 && (
         <div className="inicio__aviso">
           <Icono nombre="info" tamano={20} />

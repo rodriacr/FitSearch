@@ -4,7 +4,7 @@ import { inicioDe } from '../services/navegacion.js';
 import MenuUsuario from './diseno/MenuUsuario.jsx';
 import Notificaciones from './diseno/Notificaciones.jsx';
 import Icono from './Icono.jsx';
-import { Logo } from './PantallaAcceso.jsx';
+import MarcaFitSearch from './diseno/MarcaFitSearch.jsx';
 
 // El logo lleva al Inicio de su rol con sesión y a la portada sin ella; nunca al perfil (DAS, D25).
 // No hay acceso a Profesionales en el encabezado: ya están el menú lateral, la barra inferior y los accesos del Inicio.
@@ -14,7 +14,7 @@ export default function Encabezado({ menuAbierto = false, onAlternarMenu }) {
   return (
     <header className="encabezado">
       <Link to={sesion ? inicioDe(sesion.usuario) : '/'} className="encabezado__marca" aria-label={sesion ? 'FitSearch, ir al inicio' : 'FitSearch, ir a la portada'}>
-        <Logo />
+        <MarcaFitSearch />
       </Link>
       {sesion && (
         <div className="encabezado__acciones">
