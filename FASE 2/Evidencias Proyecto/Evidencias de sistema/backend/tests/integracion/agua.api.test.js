@@ -23,10 +23,26 @@ describe('GET /api/agua', () => {
     const res = await conSesion(request(app).get('/api/agua'));
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
-      fecha: FECHA, totalMl: 750, metaMl: 2000, vasoMl: 250,
+      fecha: FECHA, hoy: FECHA, totalMl: 750, metaMl: 2000, vasoMl: 250,
       registros: [{ id: 4, ml: 250, hora: '09:10' }, { id: 5, ml: 500, hora: '12:30' }],
     });
     expect(modelo.delDia).toHaveBeenCalledWith(1, FECHA);
+  });
+
+  test('el Resumen nutricional de Comidas pide un día anterior', async () => {
+    modelo.delDia.mockResolvedValue([filas[0]]);
+    const res = await conSesion(request(app).get('/api/agua?fecha=2026-10-01'));
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ fecha: '2026-10-01', totalMl: 250 });
+    expect(modelo.delDia).toHaveBeenCalledWith(1, '2026-10-01');
+  });
+
+  test('no consulta un día que aún no llega ni una fecha mal escrita', async () => {
+    const futura = await conSesion(request(app).get('/api/agua?fecha=2999-01-01'));
+    expect(futura.status).toBe(400);
+    expect(futura.body.error).toBe('No hay registros de agua en días que aún no llegan');
+    expect((await conSesion(request(app).get('/api/agua?fecha=01-10-2026'))).status).toBe(400);
+    expect(modelo.delDia).not.toHaveBeenCalled();
   });
 
   test('sin registros, el total es 0', async () => {
@@ -71,6 +87,29 @@ describe('POST /api/agua', () => {
     const res = await conSesion(request(app).post('/api/agua')).send(cuerpo);
     expect(res.status).toBe(400);
     expect(JSON.stringify(res.body)).toContain('Indica entre 50 y 2.000 ml');
+    expect(modelo.agregar).not.toHaveBeenCalled();
+  });
+
+  test('desde Comidas suma al día anterior que se está viendo', async () => {
+    modelo.agregar.mockResolvedValue([{ id: 9, ml: 250, fechaCreacion: new Date('2026-10-01T15:00:00Z') }]);
+    const res = await conSesion(request(app).post('/api/agua')).send({ ml: 250, fecha: '2026-10-01' });
+    expect(res.status).toBe(201);
+    expect(res.body).toMatchObject({ fecha: '2026-10-01', totalMl: 250 });
+    expect(res.body.hoy).not.toBe('2026-10-01');
+    expect(modelo.agregar).toHaveBeenCalledWith(1, '2026-10-01', 250);
+  });
+
+  test('no suma agua a un día que aún no llega', async () => {
+    const res = await conSesion(request(app).post('/api/agua')).send({ ml: 250, fecha: '2999-01-01' });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('No puedes registrar agua en días que aún no llegan');
+    expect(modelo.agregar).not.toHaveBeenCalled();
+  });
+
+  test.each(['01-10-2026', '2026-02-30', 20261001])('rechaza la fecha mal escrita %s', async (fecha) => {
+    const res = await conSesion(request(app).post('/api/agua')).send({ ml: 250, fecha });
+    expect(res.status).toBe(400);
+    expect(JSON.stringify(res.body)).toContain('La fecha debe tener el formato AAAA-MM-DD');
     expect(modelo.agregar).not.toHaveBeenCalled();
   });
 

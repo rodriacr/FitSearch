@@ -23,8 +23,10 @@
 }
 .agua-hoy .boton-texto { font-size: 0.8rem; }
 .agua-hoy__formulario { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem 0.5rem; flex-basis: 100%; margin-top: 0.25rem; }
-.agua-hoy__formulario label { font-size: 0.8rem; font-weight: 600; }
+/* La etiqueta va arriba y el campo con «Sumar» en una fila, para que quepan juntos en la tarjeta a 360 px. */
+.agua-hoy__formulario label { flex-basis: 100%; font-size: 0.8rem; font-weight: 600; }
 .agua-hoy__formulario .campo__control { width: 6.5rem; min-height: 2.4rem; padding-block: 0.3rem; }
+.agua-hoy__formulario .boton { min-width: 0; min-height: 2.4rem; }
 .agua-hoy__ayuda { flex-basis: 100%; font-size: 0.75rem; color: var(--color-texto-secundario); }
 .agua-hoy__mensaje { flex-basis: 100%; margin: 0.15rem 0 0; font-size: 0.78rem; }
 .agua-hoy__mensaje--error { color: var(--color-error); }
