@@ -268,6 +268,21 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
 
+### Agua — FS-HU-33
+
+En «Tu progreso» del Inicio, la persona suma el agua que toma en el día:
+- «1 vaso» suma 250 ml.
+- «Otra cantidad» acepta entre 50 y 2.000 ml por vez.
+- «Deshacer» quita la última suma.
+
+El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`, sección `agua`), y el total de un día no puede pasar de 10.000 ml. El día se corta a medianoche de Chile. La migración aditiva `20261105120000_registro_agua` crea la tabla `registro_agua`, con una fila por suma. Solo las cuentas de usuario usan estas rutas.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/agua` | Bearer JWT (rol usuario) | Agua de hoy en Chile: `totalMl`, `metaMl`, `vasoMl` y cada suma con su hora |
+| POST | `/api/agua` | Bearer JWT (rol usuario) | Suma `ml` (entero de 50 a 2.000) al día de hoy y responde el día actualizado (201); 400 con el rango permitido si la cantidad no es válida o si el día pasaría de 10.000 ml |
+| DELETE | `/api/agua/:id` | Bearer JWT (rol usuario) | Deshace una suma propia de hoy y responde el día actualizado; 404 si es de otra cuenta o de otro día |
+
 ## Ejecución con Docker
 
 _Pendiente (FS-HU-11, Sprint 5)._
