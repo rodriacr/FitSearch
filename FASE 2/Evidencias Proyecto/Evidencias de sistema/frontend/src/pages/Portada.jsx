@@ -25,8 +25,8 @@ function MarcaPortada() {
 // vuelve a ella. Sin destino, se muestra como «Próximamente».
 const OFERTA = [
   { icono: 'profesional', nombre: 'Profesionales', texto: 'Explora especialidades, reseñas y profesionales cerca de ti.', destino: '/profesionales' },
-  { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti.' },
-  { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.' },
+  { icono: 'hospital', nombre: 'Centros de salud', texto: 'Encuentra centros de salud y clínicas cerca de ti, con su ubicación en el mapa.', destino: '/centros-salud' },
+  { icono: 'mancuerna', nombre: 'Gimnasios', texto: 'Descubre gimnasios y centros deportivos para entrenar a tu ritmo.', destino: '/gimnasios' },
   { icono: 'comida', nombre: 'Comidas', texto: 'Registra lo que comes con sus gramos y sigue tus calorías y macronutrientes del día.', destino: '/comidas' },
   { icono: 'chispa', nombre: 'Asistente IA', texto: 'Orientación e historial para continuar tus consultas.', destino: '/asistente' },
 ];

@@ -1,0 +1,67 @@
+/* Directorio de centros de salud y gimnasios (FS-HU-25). La grilla de lista y mapa es la del buscador de profesionales
+   (Profesionales.css); aquí van los filtros, las tarjetas, el detalle bajo el mapa y la ficha. */
+.filtros-establecimientos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; align-items: end; }
+.filtros-establecimientos .campo { margin: 0; }
+.filtros-establecimientos .campo__etiqueta { font-size: 0.875rem; }
+.filtros-establecimientos .campo__control { min-height: 2.75rem; }
+.filtros-establecimientos__quitar { grid-column: 1 / -1; justify-self: start; }
+@media (min-width: 40rem) {
+  .filtros-establecimientos { grid-template-columns: repeat(2, minmax(0, 15rem)) auto; justify-content: start; }
+  .filtros-establecimientos__quitar { grid-column: auto; align-self: center; margin-top: 1.5rem; }
+}
+
+/* Las tarjetas y el detalle bajo el mapa usan las clases del buscador de profesionales (TarjetaProfesional.css y
+   MapaProfesionales.css), para que se marquen igual. Aquí solo lo que cambia: sin botón de favorito y con el ícono de
+   la categoría en vez de las iniciales. */
+.tarjeta-establecimiento.tarjeta-profesional--fila .tarjeta-profesional__nombre { padding-right: 0; }
+.buscador__lista > .tarjeta-establecimiento { scroll-margin: 6rem 0 1rem; }
+.detalle-mapa__avatar .icono { color: #fff; }
+
+/* ---------- Ficha del establecimiento ---------- */
+.ficha-establecimiento { display: grid; gap: 1.25rem; max-width: 60rem; margin: 0 auto; }
+.ficha-establecimiento > .volver { margin-bottom: 0; }
+.ficha-establecimiento__cabecera {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; align-items: center;
+  padding: 1.5rem 1.25rem; border-radius: 20px; border: 1px solid #d9e6ef; background: linear-gradient(115deg, #e6f0f8, #f7fafc 70%);
+}
+.ficha-establecimiento__icono {
+  display: grid; place-items: center; width: 4rem; height: 4rem; border-radius: 18px;
+  color: #fff; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+}
+.ficha-establecimiento__categoria {
+  display: inline-block; margin-bottom: 0.35rem; padding: 0.15rem 0.65rem; border: 1px solid #cfe0ec; border-radius: 999px;
+  font-size: 0.8rem; font-weight: 600; color: var(--color-primario); background: var(--color-superficie);
+}
+.ficha-establecimiento h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
+.ficha-establecimiento__direccion { display: flex; gap: 0.4rem; align-items: flex-start; margin: 0.45rem 0 0; color: var(--color-texto-secundario); }
+.ficha-establecimiento__direccion .icono { flex-shrink: 0; margin-top: 0.2rem; color: var(--color-primario); }
+.ficha-establecimiento__cuerpo { display: grid; gap: 1.25rem; }
+.ficha-establecimiento__cuerpo h2 { margin: 0 0 0.85rem; font-size: 1.1rem; }
+@media (min-width: 60rem) {
+  .ficha-establecimiento__cuerpo { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; }
+}
+
+.lista-asociados { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.asociado {
+  display: flex; align-items: center; gap: 0.75rem; min-height: 3.5rem; padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-borde); border-radius: 12px; color: var(--color-texto); text-decoration: none;
+}
+.asociado__avatar {
+  display: grid; place-items: center; flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 50%;
+  font-size: 0.9rem; font-weight: 700; color: #fff; background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro));
+}
+.asociado__texto { display: grid; flex: 1; min-width: 0; }
+.asociado__nombre { font-weight: 600; }
+.asociado__especialidad { font-size: 0.85rem; color: var(--color-texto-secundario); }
+.asociado__verificado {
+  display: inline-flex; align-items: center; gap: 0.25rem; flex-shrink: 0; padding: 0.15rem 0.5rem; border-radius: 999px;
+  font-size: 0.75rem; font-weight: 600; color: var(--color-exito); background: var(--color-exito-fondo);
+}
+.asociado__flecha { flex-shrink: 0; color: var(--color-primario); transition: transform 150ms var(--curva-salida); }
+@media (hover: hover) and (pointer: fine) {
+  .asociado:hover { border-color: var(--color-primario); }
+  .asociado:hover .asociado__flecha { transform: translateX(2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .asociado__flecha { transition: none; }
+}

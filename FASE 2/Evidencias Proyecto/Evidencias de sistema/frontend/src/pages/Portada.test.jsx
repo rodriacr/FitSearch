@@ -19,10 +19,10 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Comidas', 'Asistente IA']) {
       expect(screen.getByRole('heading', { level: 3, name: oferta })).toBeInTheDocument();
     }
-    // El directorio, el asistente y Comidas están disponibles; centros de salud y gimnasios mantienen su aviso.
-    expect(screen.getAllByText('Próximamente')).toHaveLength(2);
+    // Las cinco herramientas están disponibles: desde FS-HU-25 también los centros de salud y los gimnasios.
+    expect(screen.queryByText('Próximamente')).not.toBeInTheDocument();
     expect(screen.queryByText('Farmacias')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Disponible')).toHaveLength(3);
+    expect(screen.getAllByText('Disponible')).toHaveLength(5);
     expect(screen.getAllByRole('link', { name: /Registrarse/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();
     // FS-HU-30: el buscador ofrece las especialidades activas del catálogo, que no requiere sesión.
@@ -68,7 +68,8 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(destinoDe('Profesionales')).toBe('/profesionales');
     expect(destinoDe('Comidas')).toBe('/comidas');
     expect(destinoDe('Asistente IA')).toBe('/asistente');
-    expect(destinoDe('Gimnasios')).toBeUndefined();
+    expect(destinoDe('Centros de salud')).toBe('/centros-salud');
+    expect(destinoDe('Gimnasios')).toBe('/gimnasios');
 
     await userEvent.click(screen.getByRole('heading', { level: 3, name: 'Comidas' }).closest('article').querySelector('a'));
     expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();

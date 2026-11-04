@@ -10,7 +10,9 @@ import Comidas from './pages/Comidas.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
 import { DisenoAdministrador, ResumenAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
 import ContenidoAdministrador from './pages/administrador/ContenidoAdministrador.jsx';
+import Establecimientos from './pages/Establecimientos.jsx';
 import Favoritos from './pages/Favoritos.jsx';
+import FichaEstablecimiento from './pages/FichaEstablecimiento.jsx';
 import FichaProfesional from './pages/FichaProfesional.jsx';
 import Inicio from './pages/Inicio.jsx';
 import InicioSesion from './pages/InicioSesion.jsx';
@@ -25,6 +27,7 @@ import AgendaProfesional, { MisCitas } from './pages/Agenda.jsx';
 import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
 import Registro from './pages/Registro.jsx';
 import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
+import { CATEGORIAS } from './components/establecimientos/categorias.js';
 import { ACCESO_NO_DISPONIBLE, destinoTrasIngreso, ELEGIR_PERFIL } from './services/navegacion.js';
 
 export default function App() {
@@ -67,6 +70,11 @@ export default function App() {
               <Route path="/profesionales" element={<Profesionales />} />
               <Route path="/profesionales/:id" element={<FichaProfesional />} />
               <Route path="/favoritos" element={<Favoritos />} />
+              {/* Centros de salud y gimnasios (FS-HU-25): la misma lista y ficha para cada categoría. */}
+              {Object.entries(CATEGORIAS).flatMap(([categoria, { ruta }]) => [
+                <Route key={ruta} path={ruta} element={<Establecimientos key={categoria} categoria={categoria} />} />,
+                <Route key={`${ruta}/:id`} path={`${ruta}/:id`} element={<FichaEstablecimiento key={categoria} categoria={categoria} />} />,
+              ])}
               <Route path="/citas" element={<MisCitas />} />
               <Route path="/asistente/:id?" element={<Asistente />} />
               <Route path="/comidas" element={<Comidas />} />
