@@ -1,11 +1,12 @@
 // Proveedor de IA del asistente (FS-HU-07, DAS D33; recomendación FS-HU-08, D34): cliente genérico compatible con
-// OpenAI, con fetch simulado.
+// OpenAI, con fetch simulado. Las especialidades activas llegan del catálogo (FS-HU-30).
 const { ia } = require('../../src/config/env');
 const proveedor = require('../../src/services/proveedorIa.service');
 const { fechaEnChile } = require('../../src/services/asistente.service');
 
 const respuestaJson = (estado, cuerpo) => ({ ok: estado >= 200 && estado < 300, status: estado, json: async () => cuerpo });
 const conTexto = (texto) => respuestaJson(200, { choices: [{ message: { role: 'assistant', content: texto } }] });
+const CATALOGO = ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva'];
 
 afterEach(() => {
   ia.apiKey = '';
@@ -24,10 +25,12 @@ describe('modo simulado (sin IA_API_KEY)', () => {
   });
 
   test('recomienda una especialidad del catálogo con palabras clave, para probar la tarjeta sin proveedor', async () => {
-    const respuesta = (texto) => proveedor.responder([{ remitente: 'usuario', contenido: texto }]);
+    const respuesta = (texto, catalogo = CATALOGO) => proveedor.responder([{ remitente: 'usuario', contenido: texto }], catalogo);
     expect((await respuesta('Me duele la rodilla al correr')).especialidad).toBe('Kinesiología');
     expect((await respuesta('¿Qué comer después de entrenar?')).especialidad).toBe('Nutrición');
     expect((await respuesta('Me siento desmotivado')).especialidad).toBe('Psicología deportiva');
+    // Una especialidad desactivada por el administrador ya no se recomienda.
+    expect((await respuesta('Me duele la rodilla al correr', ['Nutrición'])).especialidad).toBeNull();
   });
 });
 
@@ -40,7 +43,7 @@ describe('con proveedor configurado', () => {
       { remitente: 'usuario', contenido: 'Hola' },
       { remitente: 'asistente', contenido: '¡Hola! ¿En qué te ayudo?' },
       { remitente: 'usuario', contenido: '¿Qué tomo al entrenar?' },
-    ]);
+    ], CATALOGO);
     expect(contenido).toBe('Consejo\nHidrátate bien.\n- Agua\n- Fruta');
     expect(especialidad).toBeNull();
     const [url, opciones] = fetch.mock.calls[0];
@@ -49,15 +52,15 @@ describe('con proveedor configurado', () => {
     const cuerpo = JSON.parse(opciones.body);
     expect(cuerpo.model).toBe(ia.modelo);
     expect(cuerpo.messages.map((m) => m.role)).toEqual(['system', 'user', 'assistant', 'user']);
-    expect(cuerpo.messages[0].content).toBe(proveedor.INSTRUCCIONES);
+    expect(cuerpo.messages[0].content).toBe(proveedor.instrucciones(CATALOGO));
     expect(cuerpo.messages[3].content).toBe('¿Qué tomo al entrenar?');
   });
 
-  test('las instrucciones nombran las 5 especialidades del catálogo y la marca final', () => {
-    for (const nombre of ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva']) {
-      expect(proveedor.INSTRUCCIONES).toContain(nombre);
-    }
-    expect(proveedor.INSTRUCCIONES).toContain('ESPECIALIDAD: <nombre>');
+  test('las instrucciones nombran las especialidades activas y la marca final; sin catálogo no piden la marca', () => {
+    for (const nombre of CATALOGO) expect(proveedor.instrucciones(CATALOGO)).toContain(nombre);
+    expect(proveedor.instrucciones(CATALOGO)).toContain('ESPECIALIDAD: <nombre>');
+    expect(proveedor.instrucciones(['Nutrición'])).not.toContain('Kinesiología');
+    expect(proveedor.instrucciones([])).not.toContain('ESPECIALIDAD: <nombre>');
   });
 
   test.each([
@@ -69,7 +72,7 @@ describe('con proveedor configurado', () => {
     ['sin marca', 'Toma agua durante el día.', null],
   ])('recomendación (%s): valida contra el catálogo y quita la marca del texto', async (_, texto, esperada) => {
     jest.spyOn(globalThis, 'fetch').mockResolvedValue(conTexto(texto));
-    const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: 'Hola' }]);
+    const { contenido, especialidad } = await proveedor.responder([{ remitente: 'usuario', contenido: 'Hola' }], CATALOGO);
     expect(especialidad).toBe(esperada);
     expect(contenido).not.toMatch(/ESPECIALIDAD\s*:/);
     expect(contenido.length).toBeGreaterThan(0);
@@ -107,7 +110,7 @@ describe('agregar alimentos (FS-HU-09)', () => {
     expect(cuerpo.tool_choice).toBe('auto');
     expect(cuerpo.tools[0].function.name).toBe('agregar_alimentos');
     expect(cuerpo.tools[0].function.parameters.properties.momento.enum).toEqual(['desayuno', 'media_manana', 'almuerzo', 'merienda', 'cena']);
-    expect(proveedor.INSTRUCCIONES).toContain('agregar_alimentos');
+    expect(proveedor.instrucciones(CATALOGO)).toContain('agregar_alimentos');
   });
 
   test('un momento fuera del catálogo se ignora; argumentos mal formados caen en el texto o responden 503', async () => {

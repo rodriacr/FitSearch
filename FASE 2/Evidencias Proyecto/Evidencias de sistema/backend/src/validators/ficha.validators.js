@@ -1,5 +1,7 @@
 const { body } = require('express-validator');
 const { profesionales: reglas } = require('../../../shared/reglas.json');
+const especialidades = require('../models/especialidad.model');
+const profesionales = require('../models/profesional.model');
 
 const valores = (opciones) => opciones.map((opcion) => opcion.valor);
 const { latMin, latMax, lngMin, lngMax } = reglas.ubicacionChile;
@@ -7,12 +9,19 @@ const texto = (numero) => String(numero).replace('.', ',');
 
 // Ficha propia del profesional (FS-HU-04): especialidad del catálogo, descripción opcional, comuna, modalidad,
 // dirección y ubicación de atención. La comuna y la modalidad las usa el buscador de profesionales (FS-HU-22).
+// FS-HU-30: la especialidad debe estar activa en el catálogo de la base de datos; la que ya tenía la ficha se acepta
+// aunque el administrador la haya desactivado después, para que el profesional pueda seguir editando sus otros datos.
 // SC-24: la dirección es obligatoria si atiende presencial o de ambas formas, y las coordenadas deben estar en Chile
 // (el mismo recuadro que limita el mapa, en shared/reglas.json).
 module.exports = [
   body('especialidad')
     .isString().withMessage('Selecciona tu especialidad').bail()
-    .trim().isIn(reglas.especialidades).withMessage('Selecciona tu especialidad'),
+    .trim().notEmpty().withMessage('Selecciona tu especialidad').bail()
+    .custom(async (valor, { req }) => {
+      if (await especialidades.activaPorNombre(valor)) return true;
+      if ((await profesionales.obtenerPorUsuario(req.usuario.id))?.especialidad === valor) return true;
+      throw new Error('Selecciona tu especialidad');
+    }),
   body('descripcion')
     .optional({ values: 'falsy' })
     .isString().withMessage('La descripción debe ser un texto').bail()

@@ -7,12 +7,15 @@ import './MapaProfesionales.css';
 // MapLibre usa [longitud, latitud].
 const SANTIAGO = [-70.66, -33.45];
 
+// Texto de cada marcador: quién es y qué hace. Los centros de salud y gimnasios (FS-HU-25) pasan el suyo.
+const describirProfesional = (p) => `${p.nombre}, ${p.especialidad}`;
+
 // Cada marcador es un botón: se alcanza con Tab y se elige con Enter o Espacio sin código extra (defecto 28).
-function crearAlfiler(p) {
+function crearAlfiler(p, describir) {
   const boton = document.createElement('button');
   boton.type = 'button';
   boton.className = 'marcador-mapa';
-  boton.title = `${p.nombre}, ${p.especialidad}`;
+  boton.title = describir(p);
   boton.innerHTML = ALFILER;
   return boton;
 }
@@ -23,8 +26,10 @@ function crearAlfiler(p) {
 // centrar: selección hecha desde la lista; el mapa se mueve hasta ese marcador.
 // visible: el mapa sigue montado al ocultarlo, pero solo dibuja marcadores y encuadra cuando se ve
 // (un mapa oculto mide 0 y fitBounds calcularía un zoom equivocado).
+// describir, titulo y plural adaptan los textos cuando el mapa muestra centros de salud o gimnasios (FS-HU-25).
 export default function MapaProfesionales({
   profesionales, visible = true, seleccionadoId = null, resaltadoId = null, centrar = null, onSeleccionar, onResaltar,
+  describir = describirProfesional, titulo = 'Profesionales en el mapa', plural = 'profesionales',
 }) {
   const contenedor = useRef(null);
   const mapa = useRef(null);
@@ -39,7 +44,7 @@ export default function MapaProfesionales({
   const sinMapa = profesionales.filter(fueraDeChile);
   const seleccionado = profesionales.find((p) => p.id === seleccionadoId);
 
-  useLayoutEffect(() => { avisos.current = { onSeleccionar, onResaltar }; });
+  useLayoutEffect(() => { avisos.current = { onSeleccionar, onResaltar, describir }; });
 
   useEffect(() => {
     let vigente = true;
@@ -93,13 +98,13 @@ export default function MapaProfesionales({
     for (const p of puntos) {
       const posicion = coordenadas(p);
       limites.extend(posicion);
-      const elemento = crearAlfiler(p);
+      const elemento = crearAlfiler(p, avisos.current.describir);
       const marcador = new maplibregl.Marker({ element: elemento, anchor: 'bottom' })
         .setLngLat(posicion)
         .addTo(mapa.current);
       // El lector de pantalla anuncia a quién corresponde el marcador, no «Marcador del mapa» (defecto 29).
       // Se asigna después de addTo porque MapLibre pone ahí su texto genérico.
-      elemento.setAttribute('aria-label', `${p.nombre}, ${p.especialidad}`);
+      elemento.setAttribute('aria-label', avisos.current.describir(p));
       elemento.addEventListener('click', () => avisos.current.onSeleccionar?.(p.id));
       for (const evento of ['mouseenter', 'focus']) elemento.addEventListener(evento, () => avisos.current.onResaltar?.(p.id));
       for (const evento of ['mouseleave', 'blur']) elemento.addEventListener(evento, () => avisos.current.onResaltar?.(null));
@@ -142,7 +147,7 @@ export default function MapaProfesionales({
     cargaEstilo.current = null;
   }, []);
   return (
-    <section className="mapa-profesionales" aria-label="Profesionales en el mapa">
+    <section className="mapa-profesionales" aria-label={titulo}>
       {estado === 'cargando' && <p className="mapa-profesionales__aviso" role="status">Cargando mapa…</p>}
       {error && (
         <p className="mapa-profesionales__aviso" role="alert">
@@ -167,13 +172,13 @@ export default function MapaProfesionales({
         hidden={estado === 'error'}
       />
       <p className="solo-lector" role="status">
-        {seleccionado ? `Seleccionado: ${seleccionado.nombre}, ${seleccionado.especialidad}. Su detalle está bajo el mapa.` : ''}
+        {seleccionado ? `Seleccionado: ${describir(seleccionado)}. Su detalle está bajo el mapa.` : ''}
       </p>
       {sinMapa.length > 0 && (
         <p className="texto-secundario mapa-profesionales__nota">
           {sinMapa.length === 1
             ? `${sinMapa[0].nombre} no aparece en el mapa porque su ubicación registrada está fuera de Chile.`
-            : `${sinMapa.length} profesionales de esta página no aparecen en el mapa porque su ubicación registrada está fuera de Chile.`}
+            : `${sinMapa.length} ${plural} de esta página no aparecen en el mapa porque su ubicación registrada está fuera de Chile.`}
           {' '}Puedes abrir su ficha desde la lista.
         </p>
       )}

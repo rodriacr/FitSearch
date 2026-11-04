@@ -65,9 +65,15 @@ export const PERFIL_COMPLETO = {
 
 // Servidor simulado por rutas: gana el prefijo más largo que coincida con la URL ('/api/profesionales/filtros'
 // antes que '/api/profesionales'). Cada respuesta es un cuerpo (200) o una función (url, opciones) => [estado, cuerpo].
+export const ESPECIALIDADES_DE_PRUEBA = ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva'];
+
 export function simularApi(respuestas) {
   // Agenda vacía por defecto; las pruebas de horarios/reservas pueden sobrescribir sus rutas.
-  respuestas = { '/api/reservas': { reservas: [] }, '/api/disponibilidades': { horarios: [] }, ...respuestas };
+  // FS-HU-30: el catálogo de especialidades viene de la API; por defecto, el inicial de la migración.
+  respuestas = {
+    '/api/reservas': { reservas: [] }, '/api/disponibilidades': { horarios: [] },
+    '/api/especialidades': { especialidades: ESPECIALIDADES_DE_PRUEBA }, ...respuestas,
+  };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
     const horarios = url.match(/^\/api\/profesionales\/\d+\/disponibilidades/);
     if (horarios && !respuestas[horarios[0]]) return respuestaJson(200, { horarios: [] });

@@ -64,7 +64,7 @@ async function main() {
       profesional: { create: {
         especialidad, descripcion: `${descripcion} Perfil ficticio de demostración.`, comuna, modalidad, ubicacionLat, ubicacionLng,
         ...(establecimiento ? { establecimiento: { create: {
-          nombre: establecimiento, categoria: 'Salud', direccion: `Ubicación de ejemplo en ${comuna}, Chile`, ubicacionLat, ubicacionLng,
+          nombre: establecimiento, categoria: 'centro_salud', comuna, direccion: `Ubicación de ejemplo en ${comuna}, Chile`, ubicacionLat, ubicacionLng,
         } } } : {}),
       } },
     }, include: { profesional: true } });

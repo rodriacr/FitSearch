@@ -2,7 +2,7 @@
 // consulta de registros filtra por el dueño: un registro ajeno se comporta como inexistente.
 const prisma = require('./prisma');
 
-const ALIMENTO = { id: true, nombre: true, sinonimos: true, calorias: true, proteinasG: true, carbohidratosG: true, grasasG: true };
+const ALIMENTO = { id: true, nombre: true, sinonimos: true, calorias: true, proteinasG: true, carbohidratosG: true, grasasG: true, activo: true };
 const REGISTRO = {
   id: true, fecha: true, momento: true, alimentoId: true, descripcionAlimento: true, gramos: true,
   calorias: true, proteinasG: true, carbohidratosG: true, grasasG: true, origen: true, fechaCreacion: true,
@@ -10,10 +10,11 @@ const REGISTRO = {
 const comoDia = (fecha) => new Date(`${fecha}T00:00:00Z`);
 
 // Cada palabra debe aparecer en el nombre o en los sinónimos. La intercalación utf8mb4_unicode_ci de MySQL ignora
-// mayúsculas y tildes: «platano» encuentra «Plátano».
+// mayúsculas y tildes: «platano» encuentra «Plátano». Solo los alimentos activos (FS-HU-30): uno desactivado por el
+// administrador conserva sus registros, pero ya no se ofrece.
 function buscarAlimentos(palabras, limite) {
   return prisma.alimento.findMany({
-    where: { AND: palabras.map((palabra) => ({ OR: [{ nombre: { contains: palabra } }, { sinonimos: { contains: palabra } }] })) },
+    where: { activo: true, AND: palabras.map((palabra) => ({ OR: [{ nombre: { contains: palabra } }, { sinonimos: { contains: palabra } }] })) },
     orderBy: { nombre: 'asc' },
     take: limite,
     select: ALIMENTO,

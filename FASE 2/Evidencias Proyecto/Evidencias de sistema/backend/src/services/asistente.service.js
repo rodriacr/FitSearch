@@ -1,12 +1,14 @@
 // Asistente IA del usuario (FS-HU-07, DAS D33): conversaciones con historial propio, límite diario de mensajes y
 // tolerancia a fallos del proveedor (QS2). Si el proveedor falla, no se guarda nada y la persona puede reintentar.
 // FS-HU-08 (D34): cada respuesta guarda la especialidad recomendada (o null) para mostrarla al reabrir la conversación.
+// Solo se recomiendan especialidades activas del catálogo (FS-HU-30).
 // FS-HU-09: si la persona pide agregar alimentos, se registran en sus comidas y la respuesta guarda lo agregado.
 const { asistente: reglas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const modelo = require('../models/asistente.model');
 const proveedor = require('./proveedorIa.service');
 const comidas = require('./comida.service');
+const especialidades = require('../models/especialidad.model');
 const { fechaEnChile } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -44,7 +46,7 @@ const mensaje = ({ id, remitente, contenido, especialidad = null, comidasAgregad
 // buscan en el catálogo sin guardarlos todavía y el backend arma el texto con lo que se agregará, sin una segunda
 // consulta al proveedor; la red de seguridad se aplica igual.
 async function responder(mensajes, ahora) {
-  const respuesta = await proveedor.responder(mensajes);
+  const respuesta = await proveedor.responder(mensajes, await especialidades.nombresActivos());
   if (!respuesta.pedido) {
     return { respuesta: { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, fecha: new Date() }, comidasPedidas: null };
   }
