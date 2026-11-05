@@ -303,7 +303,7 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA.
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
 ## Convenciones de trabajo
 

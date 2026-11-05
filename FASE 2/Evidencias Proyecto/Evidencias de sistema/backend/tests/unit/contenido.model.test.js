@@ -5,6 +5,7 @@ jest.mock('../../src/models/prisma', () => {
   const cliente = {
     especialidad: tabla(), alimento: tabla(), establecimiento: tabla(),
     profesional: { groupBy: jest.fn(), updateMany: jest.fn() },
+    $queryRaw: jest.fn(),
   };
   cliente.$transaction = jest.fn((trabajo) => trabajo(cliente));
   return cliente;
@@ -18,7 +19,11 @@ const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calor
 beforeEach(() => {
   jest.clearAllMocks();
   prisma.$transaction.mockImplementation((trabajo) => trabajo(prisma));
+  // Bloqueo de la fila (SELECT … FOR UPDATE) y conteo bloqueante de fichas (SELECT COUNT(*) … FOR SHARE).
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('?').includes('COUNT(*)') ? [{ total: 0n }] : [{ id: 2 }]));
 });
+// SQL de cada llamada a $queryRaw, sin espacios de más.
+const consultas = () => prisma.$queryRaw.mock.calls.map(([partes]) => partes.join('?').replace(/\s+/g, ' ').trim());
 
 test('lista con búsqueda, estado y página, y cuenta las fichas que usan cada especialidad', async () => {
   prisma.especialidad.findMany.mockResolvedValue([KINE, { id: 4, nombre: 'Nutrición', activa: false }]);
@@ -87,6 +92,7 @@ test('no borra un elemento en uso y ofrece desactivarlo; uno sin uso se borra', 
 
   prisma.especialidad.findUnique.mockResolvedValue(KINE);
   prisma.profesional.groupBy.mockResolvedValue([{ especialidad: 'kinesiologia', _count: { _all: 1 } }]);
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('?').includes('COUNT(*)') ? [{ total: 1n }] : [{ id: 2 }]));
   await expect(modelo.eliminar('especialidades', 2)).rejects.toMatchObject({
     message: 'No se puede eliminar «Kinesiología»: la usa la ficha de 1 profesional. Puedes desactivarla para que no aparezca en fichas nuevas.',
   });
@@ -94,4 +100,37 @@ test('no borra un elemento en uso y ofrece desactivarlo; uno sin uso se borra', 
   await expect(modelo.eliminar('establecimientos', 5)).rejects.toMatchObject({
     message: 'No se puede eliminar «Gimnasio Demo»: tiene 2 profesionales asociados. Puedes desactivarlo para que no aparezca en el directorio.',
   });
+});
+
+test('eliminar una especialidad bloquea su fila y cuenta las fichas con lectura bloqueante, antes de borrar', async () => {
+  prisma.especialidad.findUnique.mockResolvedValue({ ...KINE, id: 9, nombre: 'Yoga' });
+  prisma.profesional.groupBy.mockResolvedValue([]);
+  await modelo.eliminar('especialidades', 9);
+  expect(consultas()).toEqual(['SELECT id FROM especialidades WHERE id = ? FOR UPDATE', 'SELECT COUNT(*) AS total FROM profesionales WHERE especialidad = ? FOR SHARE']);
+  expect(prisma.$queryRaw.mock.calls[0][1]).toBe(9);
+  expect(prisma.$queryRaw.mock.calls[1][1]).toBe('Yoga');
+  // El bloqueo va primero y el borrado al final, en la misma transacción.
+  expect(prisma.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(prisma.especialidad.findUnique.mock.invocationCallOrder[0]);
+  expect(prisma.especialidad.delete).toHaveBeenCalledWith({ where: { id: 9 } });
+});
+
+test('si una ficha se guardó con la especialidad mientras esperaba el bloqueo, ya no se elimina', async () => {
+  // El conteo bloqueante ve la ficha recién confirmada aunque el conteo inicial (groupBy) diga 0.
+  prisma.especialidad.findUnique.mockResolvedValue({ ...KINE, id: 9, nombre: 'Yoga' });
+  prisma.profesional.groupBy.mockResolvedValue([]);
+  prisma.$queryRaw.mockImplementation((partes) => Promise.resolve(partes.join('?').includes('COUNT(*)') ? [{ total: 1n }] : [{ id: 9 }]));
+  await expect(modelo.eliminar('especialidades', 9)).rejects.toMatchObject({ estado: 409, detalles: { enUso: 1 } });
+  expect(prisma.especialidad.delete).not.toHaveBeenCalled();
+});
+
+test('renombrar y desactivar una especialidad también bloquean su fila; los otros catálogos no la tocan', async () => {
+  prisma.especialidad.findUnique.mockResolvedValue(KINE);
+  prisma.profesional.groupBy.mockResolvedValue([]);
+  await modelo.actualizar('especialidades', 2, { nombre: 'Kinesiología' });
+  await modelo.cambiarEstado('especialidades', 2, false);
+  expect(consultas()).toEqual(['SELECT id FROM especialidades WHERE id = ? FOR UPDATE', 'SELECT id FROM especialidades WHERE id = ? FOR UPDATE']);
+  prisma.$queryRaw.mockClear();
+  prisma.alimento.findUnique.mockResolvedValue({ ...ARROZ, _count: { registros: 0 } });
+  await modelo.eliminar('alimentos', 17);
+  expect(prisma.$queryRaw).not.toHaveBeenCalled();
 });

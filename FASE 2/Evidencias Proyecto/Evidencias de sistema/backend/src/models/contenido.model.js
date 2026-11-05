@@ -39,6 +39,17 @@ async function fichasPorEspecialidad(nombres, db = prisma) {
   return usos;
 }
 
+// Revisión del PR #42: renombrar, desactivar o eliminar una especialidad bloquea su fila (FOR UPDATE) hasta terminar.
+// Guardar una ficha con esa especialidad la bloquea en modo compartido (profesional.model, guardarFicha), así que las
+// dos operaciones nunca se cruzan: antes, una ficha guardada justo entre la revisión de uso y el borrado quedaba con
+// una especialidad que ya no existía.
+const bloquearEspecialidad = (db, id) => db.$queryRaw`SELECT id FROM especialidades WHERE id = ${id} FOR UPDATE`;
+// Fichas que usan la especialidad, con lectura bloqueante: ve lo último confirmado, no una foto anterior.
+async function fichasQueUsan(db, nombre) {
+  const [{ total }] = await db.$queryRaw`SELECT COUNT(*) AS total FROM profesionales WHERE especialidad = ${nombre} FOR SHARE`;
+  return Number(total);
+}
+
 // Cuántas veces se usa un elemento: fichas de profesionales (especialidades y establecimientos) o registros de comidas.
 async function enUso(catalogo, fila, db = prisma) {
   if (catalogo === 'especialidades') return (await fichasPorEspecialidad([fila.nombre], db)).get(clave(fila.nombre)) ?? 0;
@@ -86,6 +97,7 @@ async function actualizar(catalogo, id, datos) {
   const { tabla } = CATALOGOS[catalogo];
   try {
     return await prisma.$transaction(async (tx) => {
+      if (catalogo === 'especialidades') await bloquearEspecialidad(tx, id);
       const anterior = await obtener(catalogo, id, tx);
       await tx[tabla].update({ where: { id }, data: datos });
       if (catalogo === 'especialidades' && datos.nombre !== anterior.nombre) {
@@ -101,9 +113,12 @@ async function actualizar(catalogo, id, datos) {
 
 async function cambiarEstado(catalogo, id, activo) {
   const { tabla, activo: campo } = CATALOGOS[catalogo];
-  await obtener(catalogo, id);
-  await prisma[tabla].update({ where: { id }, data: { [campo]: activo } });
-  return obtener(catalogo, id);
+  return prisma.$transaction(async (tx) => {
+    if (catalogo === 'especialidades') await bloquearEspecialidad(tx, id);
+    await obtener(catalogo, id, tx);
+    await tx[tabla].update({ where: { id }, data: { [campo]: activo } });
+    return obtener(catalogo, id, tx);
+  });
 }
 
 // Solo se borra lo que nadie usa; si está en uso, responde 409 con el uso para que la interfaz ofrezca desactivarlo.
@@ -115,8 +130,10 @@ const MOTIVO_EN_USO = {
 async function eliminar(catalogo, id) {
   const { tabla } = CATALOGOS[catalogo];
   await prisma.$transaction(async (tx) => {
+    if (catalogo === 'especialidades') await bloquearEspecialidad(tx, id);
     const fila = await obtener(catalogo, id, tx);
-    if (fila.enUso > 0) throw new ErrorHttp(409, `No se puede eliminar «${fila.nombre}»: ${MOTIVO_EN_USO[catalogo](fila.enUso)}.`, { enUso: fila.enUso });
+    const usos = catalogo === 'especialidades' ? await fichasQueUsan(tx, fila.nombre) : fila.enUso;
+    if (usos > 0) throw new ErrorHttp(409, `No se puede eliminar «${fila.nombre}»: ${MOTIVO_EN_USO[catalogo](usos)}.`, { enUso: usos });
     await tx[tabla].delete({ where: { id } });
   });
 }
