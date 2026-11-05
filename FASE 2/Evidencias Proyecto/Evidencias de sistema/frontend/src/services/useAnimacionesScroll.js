@@ -46,7 +46,12 @@ export default function useAnimacionesScroll() {
         if (elemento.contains(evento.target)) terminarAnimacion(elemento);
       }
       const escena = evento.target.closest?.('[data-escena]');
-      if (escena && raiz.contains(escena)) mostrarEscena(escena);
+      if (escena && raiz.contains(escena)) {
+        // Con el teclado la escena se muestra terminada al instante, sin los retrasos de sus partes: antes, un enlace
+        // podía recibir el foco mientras su mensaje seguía invisible esperando su turno (revisión del PR #46).
+        escena.dataset.completa = 'true';
+        mostrarEscena(escena);
+      }
     }
 
     function detener() {

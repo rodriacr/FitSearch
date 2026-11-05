@@ -257,3 +257,9 @@
   .portada .portada__accesos .boton { padding-inline: 0.6rem; font-size: 0.75rem; }
   .portada .portada__enlace-acceso { font-size: 0.75rem; }
 }
+
+/* Escena a la que se llegó con el teclado (data-completa, useAnimacionesScroll): todo se muestra terminado al instante,
+   sin animaciones ni retrasos, para no enfocar un enlace todavía invisible (revisión del PR #46). Va al final para
+   ganar a los retrasos de cada parte. */
+.portada[data-escenas-listas] [data-escena][data-completa] *,
+.portada[data-escenas-listas] [data-escena][data-completa]::before { animation: none; transition: none; }

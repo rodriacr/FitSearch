@@ -4,6 +4,11 @@ import useAnimacionesScroll from './useAnimacionesScroll.js';
 
 afterEach(() => vi.unstubAllGlobals());
 
+function ConEscena() {
+  const ref = useAnimacionesScroll();
+  return <main ref={ref}><figure data-escena><p>Mensaje</p><a href="/profesionales">Ver profesionales</a></figure></main>;
+}
+
 function Ejemplo() {
   const ref = useAnimacionesScroll();
   return <main ref={ref}><section data-revelar><button>Explorar</button></section><div><img data-paralaje alt="" /></div></main>;
@@ -75,4 +80,16 @@ test('cambiar a movimiento reducido cancela efectos y limpia la foto; desmontar 
   unmount();
   expect(entorno.observador.disconnect).toHaveBeenCalled();
   expect(entorno.preferencia.removeEventListener).toHaveBeenCalledWith('change', expect.any(Function));
+});
+
+// Revisión del PR #46: con el teclado, la escena se muestra completa al instante (sin los retrasos de sus mensajes).
+test('llegar con Tab a un enlace de una escena la muestra completa y deja de observarla', () => {
+  const { observador } = preparar();
+  render(<ConEscena />);
+  const escena = screen.getByRole('figure');
+  expect(escena).not.toHaveAttribute('data-en-vista');
+  fireEvent.focusIn(screen.getByRole('link', { name: 'Ver profesionales' }));
+  expect(escena).toHaveAttribute('data-en-vista', 'true');
+  expect(escena).toHaveAttribute('data-completa', 'true');
+  expect(observador.unobserve).toHaveBeenCalledWith(escena);
 });
