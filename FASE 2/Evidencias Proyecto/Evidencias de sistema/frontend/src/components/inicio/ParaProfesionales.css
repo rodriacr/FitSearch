@@ -1,0 +1,113 @@
+/* Para profesionales: una isla clara dentro de la portada nocturna. El cambio de luz marca que esta parte le habla a
+   otro público, y el ejemplo de su espacio (ficha, agenda y una solicitud) muestra lo que ya pueden hacer. */
+.para-profesionales { padding-block: 1rem 4rem; scroll-margin-top: 7rem; }
+.para-profesionales__contenido {
+  display: grid; gap: 2.5rem; align-items: center; padding: 2rem 1.25rem; border-radius: 28px;
+  color: #0a263d; background: #f4f7fa; box-shadow: 0 2px 6px rgb(0 10 18 / 25%), 0 40px 80px -40px rgb(0 10 18 / 85%);
+}
+.para-profesionales ::selection { background: rgb(244 123 32 / 26%); color: inherit; }
+.para-profesionales a:focus-visible { outline: 3px solid var(--color-foco); outline-offset: 4px; }
+.para-profesionales h2 {
+  margin: 0; color: #0a263d; font-size: clamp(2rem, 3.6vw, 3.1rem); line-height: 1.08; letter-spacing: -0.04em; text-wrap: balance;
+}
+.para-profesionales h2 span { color: #0b4f80; font-weight: 500; }
+.para-profesionales__bajada { max-width: 36rem; margin: 1rem 0 1.75rem; color: #3f5468; font-size: 1.0625rem; line-height: 1.65; }
+.para-profesionales__beneficios { display: grid; gap: 1.1rem; margin: 0 0 2rem; padding: 0; list-style: none; }
+.para-profesionales__beneficios li { display: flex; align-items: flex-start; gap: 0.9rem; }
+.para-profesionales__icono { display: grid; place-items: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem; border-radius: 14px; color: #0b4f80; background: #e1edf7; }
+.para-profesionales__beneficios h3 { margin: 0.1rem 0 0.25rem; color: #0a263d; font-size: 1.0625rem; }
+.para-profesionales__beneficios p { margin: 0; max-width: 34rem; color: #4d6275; font-size: 0.96875rem; line-height: 1.6; }
+.para-profesionales__acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; }
+.para-profesionales__acciones .boton { width: fit-content; min-width: 0; min-height: 3.25rem; padding-inline: 1.5rem; border-radius: 999px; font-size: 1rem; }
+.para-profesionales__acciones p { margin: 0; color: #4d6275; font-size: 0.875rem; }
+
+/* Ejemplo del espacio del profesional */
+.panel-ejemplo {
+  display: grid; gap: 1rem; margin: 0; padding: 1.25rem; border: 1px solid #e3eaf0; border-radius: 24px; background: #fff;
+  box-shadow: 0 1px 2px rgb(10 38 61 / 8%), 0 24px 48px -24px rgb(10 38 61 / 30%);
+}
+.panel-ejemplo figcaption { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; color: #0b4f80; font-size: 0.9375rem; font-weight: 600; }
+.panel-ejemplo__etiqueta { padding: 0.15rem 0.65rem; border-radius: 999px; color: #4d5e6f; background: #e9eff4; font-size: 0.75rem; font-weight: 600; }
+.panel-ejemplo__ficha {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 0.35rem 0.9rem; padding: 0.9rem;
+  border-radius: 16px; background: #f4f7fa;
+}
+.panel-ejemplo__ficha img { grid-row: span 2; width: 4rem; height: 4rem; border-radius: 50%; object-fit: cover; object-position: center 20%; }
+.panel-ejemplo__ficha div { display: grid; gap: 0.15rem; min-width: 0; }
+.panel-ejemplo__ficha strong { color: #0a263d; font-size: 1.0625rem; }
+.panel-ejemplo__ficha span { color: #4d6275; font-size: 0.875rem; }
+.panel-ejemplo__calificacion { display: inline-flex; align-items: center; gap: 0.3rem; }
+.panel-ejemplo__calificacion .icono { color: #c27a00; fill: currentColor; }
+.panel-ejemplo__ficha .panel-ejemplo__verificado {
+  display: inline-flex; align-items: center; gap: 0.35rem; width: fit-content; padding: 0.25rem 0.65rem; border-radius: 999px;
+  color: #1b6b46; background: #e7f5ee; font-size: 0.8125rem; font-weight: 600;
+}
+.panel-ejemplo__agenda p { margin: 0 0 0.5rem; color: #0a263d; font-size: 0.9375rem; font-weight: 600; }
+.panel-ejemplo__agenda ul { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.panel-ejemplo__bloque {
+  display: flex; align-items: center; gap: 0.75rem; min-height: 2.75rem; padding: 0.5rem 0.85rem; border: 1px solid #dbe4ec;
+  border-radius: 12px; color: #4d6275; font-size: 0.9375rem;
+}
+.panel-ejemplo__bloque time { min-width: 3rem; color: #0a263d; font-weight: 600; }
+.panel-ejemplo__bloque--reservado { border-color: transparent; color: #0b4f80; background: #e6f0f8; }
+.panel-ejemplo__bloque--pendiente { border-color: #f4b98a; color: #8a3604; background: #fff4ea; }
+.panel-ejemplo__solicitud { padding: 1rem; border: 1px solid #f4b98a; border-radius: 16px; background: #fffaf5; }
+.panel-ejemplo__solicitud p { margin: 0; color: #0a263d; font-size: 0.9375rem; }
+.panel-ejemplo__solicitud blockquote { margin: 0.5rem 0 0.9rem; color: #3f5468; font-size: 0.9375rem; line-height: 1.55; }
+.panel-ejemplo__acciones { position: relative; display: flex; gap: 0.5rem; }
+.panel-ejemplo__acciones > span:nth-child(-n + 2) {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 2.5rem; padding: 0.4rem 1rem; border-radius: 10px;
+  font-size: 0.875rem; font-weight: 600;
+}
+.panel-ejemplo__acciones > span:nth-child(1) { color: #fff; background: var(--color-accion); }
+.panel-ejemplo__acciones > span:nth-child(2) { color: #0b4f80; border: 1px solid #cfdbe5; background: #fff; }
+/* Estado final de la escena: aparece en el lugar de los botones cuando la reserva se confirma. */
+.panel-ejemplo__confirmada {
+  position: absolute; inset: 0; display: flex; align-items: center; gap: 0.4rem; opacity: 0;
+  color: #1b6b46; font-size: 0.9375rem; font-weight: 600; pointer-events: none;
+}
+.panel-ejemplo__estado { display: inline-grid; }
+.panel-ejemplo__estado > span { grid-area: 1 / 1; }
+.panel-ejemplo__estado > span:last-child { opacity: 0; }
+
+/* Escena del profesional: llega la solicitud, se presiona «Confirmar» y el bloque de las 18:00 queda reservado. */
+[data-escenas-listas] .panel-ejemplo:not([data-en-vista]) > :not(figcaption) { opacity: 0; }
+.panel-ejemplo[data-en-vista] > :not(figcaption) { animation: panel-entra 600ms var(--curva-salida) both; }
+.panel-ejemplo[data-en-vista] > .panel-ejemplo__agenda { animation-delay: 150ms; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__bloque--pendiente { animation: panel-reservado 450ms ease 2150ms both; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__estado > span:first-child { animation: panel-sale 250ms ease 2150ms both; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__estado > span:last-child { animation: panel-llega 300ms ease 2300ms both; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__acciones > span:nth-child(2) { animation: panel-sale 250ms ease 2350ms both; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__acciones > span:nth-child(1) { animation: panel-presion 320ms var(--curva-salida) 1900ms, panel-sale 250ms ease 2350ms forwards; }
+.panel-ejemplo[data-en-vista] .panel-ejemplo__confirmada { animation: panel-llega 300ms ease 2500ms both; }
+.panel-ejemplo[data-en-vista] > .panel-ejemplo__solicitud { animation: panel-entra 600ms var(--curva-salida) 650ms both, panel-solicitud-lista 400ms ease 2450ms forwards; }
+@keyframes panel-entra {
+  from { opacity: 0; transform: translateY(14px); }
+}
+@keyframes panel-presion {
+  50% { transform: scale(0.94); }
+}
+@keyframes panel-reservado {
+  to { border-color: transparent; color: #0b4f80; background-color: #e6f0f8; }
+}
+@keyframes panel-solicitud-lista {
+  to { border-color: #9fd6b6; background-color: #f3fbf6; }
+}
+@keyframes panel-sale {
+  to { opacity: 0; }
+}
+@keyframes panel-llega {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@media (min-width: 40rem) {
+  .para-profesionales__contenido { padding: 2.75rem; }
+  .panel-ejemplo__ficha { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .panel-ejemplo__ficha img { grid-row: auto; }
+}
+@media (min-width: 64rem) {
+  .para-profesionales { padding-block: 1rem 5rem; }
+  .para-profesionales__contenido { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 4rem; padding: 4rem; }
+  .panel-ejemplo { padding: 1.5rem; }
+}

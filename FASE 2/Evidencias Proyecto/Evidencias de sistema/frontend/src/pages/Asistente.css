@@ -38,7 +38,7 @@
 .conversacion-item__texto { display: grid; gap: 0.1rem; min-width: 0; }
 .conversacion-item__titulo { overflow: hidden; font-size: 0.9rem; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; color: var(--color-primario-oscuro); }
 .conversacion-item__vista { overflow: hidden; font-size: 0.8rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-texto-secundario); }
-.conversacion-item__fecha { font-size: 0.75rem; color: var(--color-texto-secundario); white-space: nowrap; }
+.conversacion-item__fecha { font-size: 0.8125rem; color: var(--color-texto-secundario); white-space: nowrap; }
 
 /* ---------- Bienvenida (chat nuevo) ---------- */
 .chat-ia__bienvenida { display: grid; gap: 1rem; padding: 1.1rem; border-bottom: 1px solid var(--color-borde); }
@@ -153,8 +153,8 @@
 .chat-ia__enviar:disabled { opacity: 0.45; cursor: not-allowed; }
 .chat-ia__enviar:active:not(:disabled), .tarjeta-accion:active, .categoria:active, .sugerencia:active:not(:disabled),
 .chip-sugerencia:active:not(:disabled) { transform: scale(var(--escala-presion)); }
-.chat-ia__ayuda { display: flex; justify-content: space-between; gap: 1rem; margin: 0.4rem 0.2rem 0; font-size: 0.78rem; color: var(--color-texto-secundario); }
-.chat-ia__aviso { margin: 0.3rem 0.2rem 0; font-size: 0.75rem; line-height: 1.4; color: var(--color-texto-secundario); }
+.chat-ia__ayuda { display: flex; justify-content: space-between; gap: 1rem; margin: 0.4rem 0.2rem 0; font-size: 0.8125rem; color: var(--color-texto-secundario); }
+.chat-ia__aviso { margin: 0.3rem 0.2rem 0; font-size: 0.8125rem; line-height: 1.45; color: var(--color-texto-secundario); }
 
 /* ---------- Columna de sugerencias ---------- */
 .chat-ia__sugerencias { display: grid; gap: 0.45rem; margin: 0; padding: 0; list-style: none; }

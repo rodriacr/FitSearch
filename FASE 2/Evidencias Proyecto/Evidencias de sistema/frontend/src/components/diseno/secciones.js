@@ -30,6 +30,7 @@ export const BARRA_INFERIOR = [
   { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
   { seccion: 'profesionales', nombre: 'Profesionales', icono: 'buscar' },
   { seccion: 'asistente', nombre: 'Chat IA', icono: 'chat' },
+  { seccion: 'comidas', nombre: 'Comidas', icono: 'comida' },
   { seccion: 'perfil', nombre: 'Perfil', icono: 'usuario' },
 ];
 

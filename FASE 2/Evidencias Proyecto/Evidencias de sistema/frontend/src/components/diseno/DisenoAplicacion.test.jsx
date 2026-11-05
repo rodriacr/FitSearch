@@ -53,7 +53,7 @@ describe('Con sesión', () => {
 
     await userEvent.click(within(menu).getByRole('link', { name: 'Inicio' }));
     const barra = screen.getByRole('navigation', { name: 'Navegación inferior' });
-    expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Perfil']);
+    expect(within(barra).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Inicio', 'Profesionales', 'Chat IA', 'Comidas', 'Perfil']);
     await userEvent.click(within(barra).getByRole('link', { name: 'Perfil' }));
     expect(await screen.findByRole('heading', { name: 'Hola, Ana Pérez' })).toBeInTheDocument();
   });
