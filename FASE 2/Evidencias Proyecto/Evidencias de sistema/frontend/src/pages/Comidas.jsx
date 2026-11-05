@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import ComidasDelDia from '../components/comidas/ComidasDelDia.jsx';
+import EstadisticasComidas from '../components/comidas/EstadisticasComidas.jsx';
 import { AnilloCalorias, BarraNutriente, ProgresoSemanal } from '../components/comidas/GraficosComidas.jsx';
 import RegistrarComida from '../components/comidas/RegistrarComida.jsx';
 import { formatearNumero } from '../services/formato.js';
@@ -13,7 +14,7 @@ const PESTANAS = [
   { clave: 'resumen', nombre: 'Resumen' },
   { clave: 'comidas', nombre: 'Comidas' },
   { clave: 'plan', nombre: 'Plan de alimentación', proximamente: true },
-  { clave: 'estadisticas', nombre: 'Estadísticas', proximamente: true },
+  { clave: 'estadisticas', nombre: 'Estadísticas' },
 ];
 const NUTRIENTES = [
   { clave: 'proteinasG', nombre: 'Proteínas', color: '#2a7de1' },
@@ -45,6 +46,7 @@ function TarjetaObjetivo({ objetivo }) {
 
 // Gestor de alimentación del usuario (FS-HU-09 y FS-HU-10; mockup del PO del 26-10-2026). Resumen del día frente al
 // objetivo, progreso de la semana y las comidas del día; los alimentos se registran con sus gramos o desde el asistente.
+// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26).
 export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
@@ -78,6 +80,9 @@ export default function Comidas() {
     );
   } else if (pestana === 'comidas') {
     contenido = <ComidasDelDia momentos={dia.momentos} alRegistrar={abrirRegistro} alCambiar={recargar} />;
+  } else if (pestana === 'estadisticas') {
+    // La semana o el mes parten del día elegido; después se recorren con su propia navegación.
+    contenido = <EstadisticasComidas fecha={dia.fecha} version={intento} alRegistrar={() => abrirRegistro()} />;
   } else {
     const { objetivo, consumo } = dia;
     contenido = (
@@ -163,7 +168,7 @@ export default function Comidas() {
         )))}
       </div>
 
-      {dia && (
+      {dia && pestana !== 'estadisticas' && (
         <nav className="comidas__dia" aria-label="Día">
           <button type="button" className="boton-icono" onClick={() => setFecha(sumarDias(dia.fecha, -1))} aria-label="Día anterior">
             <Icono nombre="chevron" tamano={20} className="comidas__anterior" />

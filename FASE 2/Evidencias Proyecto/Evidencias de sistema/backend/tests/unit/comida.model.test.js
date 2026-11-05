@@ -29,6 +29,13 @@ test('los registros del día, el total por día, editar y borrar alcanzan solo l
   expect(prisma.registroComida.groupBy).toHaveBeenCalledWith({
     by: ['fecha'], where: { usuarioId: 7, fecha: { gte: dia, lte: new Date('2026-11-01T00:00:00Z') } }, _sum: { calorias: true },
   });
+  // Estadísticas (FS-HU-26): también suma los macronutrientes de cada día.
+  await modelo.totalesPorDia(7, '2026-10-01', '2026-10-31');
+  expect(prisma.registroComida.groupBy).toHaveBeenLastCalledWith({
+    by: ['fecha'],
+    where: { usuarioId: 7, fecha: { gte: new Date('2026-10-01T00:00:00Z'), lte: new Date('2026-10-31T00:00:00Z') } },
+    _sum: { calorias: true, proteinasG: true, carbohidratosG: true, grasasG: true },
+  });
   await modelo.obtener(3, 7);
   expect(prisma.registroComida.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 3, usuarioId: 7 } }));
   await modelo.eliminar(3, 7);
