@@ -142,6 +142,8 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
   }
 
   const siguiente = datos && sumarDias(datos.hasta, 1);
+  // Mientras llega otro período, datos todavía es el anterior (por ejemplo, la semana al cambiar a «Mes»): las flechas
+  // esperan, para no calcular el mes anterior desde las fechas de la semana (revisión del PR #41).
   return (
     <div className="estadisticas">
       <div className="estadisticas__controles">
@@ -152,11 +154,12 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
         </div>
         {datos && (
           <nav className="comidas__dia estadisticas__navegacion" aria-label={mensual ? 'Mes' : 'Semana'}>
-            <button type="button" className="boton-icono" onClick={() => setReferencia(sumarDias(datos.desde, -1))} aria-label={mensual ? 'Mes anterior' : 'Semana anterior'}>
+            <button type="button" className="boton-icono" onClick={() => setReferencia(sumarDias(datos.desde, -1))} disabled={cargando}
+              aria-label={mensual ? 'Mes anterior' : 'Semana anterior'}>
               <Icono nombre="chevron" tamano={20} className="comidas__anterior" />
             </button>
             <p aria-live="polite"><strong>{nombrePeriodo(datos.periodo, datos.desde, datos.hasta)}</strong></p>
-            <button type="button" className="boton-icono" onClick={() => setReferencia(siguiente)} disabled={siguiente > datos.hoy}
+            <button type="button" className="boton-icono" onClick={() => setReferencia(siguiente)} disabled={cargando || siguiente > datos.hoy}
               aria-label={mensual ? 'Mes siguiente' : 'Semana siguiente'}>
               <Icono nombre="chevron" tamano={20} className="comidas__siguiente" />
             </button>

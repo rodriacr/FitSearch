@@ -277,4 +277,32 @@ describe('Estadísticas (FS-HU-26)', () => {
     await usuario.click(within(vacio).getByRole('button', { name: 'Registrar comida' }));
     expect(screen.getByRole('region', { name: 'Registrar comida' })).toBeInTheDocument();
   });
+
+  // Revisión del PR #41: al cambiar a «Mes» y pulsar «Mes anterior» antes de que cargue, se consultaba noviembre en vez
+  // de octubre porque las flechas usaban las fechas de la semana.
+  test('mientras carga otro período las flechas esperan, y «Mes anterior» parte del mes que se ve', async () => {
+    const usuario = userEvent.setup();
+    const fetch = simular({ '/api/comidas/estadisticas': responder });
+    const original = fetch.getMockImplementation();
+    let soltarMes = null;
+    fetch.mockImplementation((url, opciones) => (url.includes('periodo=mes') && !soltarMes
+      ? new Promise((resolver) => { soltarMes = () => resolver(original(url, opciones)); })
+      : original(url, opciones)));
+    renderizarApp('/comidas');
+    await usuario.click(await screen.findByRole('button', { name: 'Estadísticas' }));
+    await screen.findByRole('heading', { name: 'Aún no hay comidas registradas esta semana' });
+
+    await usuario.click(screen.getByRole('button', { name: 'Mes' }));
+    await waitFor(() => expect(soltarMes).not.toBeNull());
+    expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
+    await usuario.click(screen.getByRole('button', { name: 'Mes anterior' }));
+    expect(llamadasA(fetch, '/api/comidas/estadisticas').filter(([url]) => url.includes('periodo=mes'))).toHaveLength(1);
+
+    soltarMes();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeEnabled());
+    await usuario.click(screen.getByRole('button', { name: 'Mes anterior' }));
+    // El mes que se ve es octubre (MES): el anterior es septiembre, no noviembre.
+    await waitFor(() => expect(parametro(llamadasA(fetch, '/api/comidas/estadisticas').at(-1)[0], 'fecha')).toBe('2026-09-30'));
+  });
 });
