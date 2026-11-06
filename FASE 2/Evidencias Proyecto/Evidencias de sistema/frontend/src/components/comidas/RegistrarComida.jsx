@@ -1,12 +1,24 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import reglas from '@shared/reglas.json';
 import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
+import { sumarAgua } from '../../services/agua.service.js';
 import { formatearNumero } from '../../services/formato.js';
 import {
   aporte, buscarAlimentos, GRAMOS_MAX, GRAMOS_MIN, leerGramos, MOMENTOS, momentoSegunHora, registrarComida,
 } from '../../services/comidas.service.js';
 
 const ESPERA_BUSQUEDA_MS = 250;
+
+// FS-HU-33: el agua se agrega aquí como si fuera un alimento, pero no está en el catálogo: se guarda en el registro de
+// agua del día (sin calorías ni momento del día) y es la misma que muestra «Agua hoy» en el Inicio.
+const AGUA = { id: 'agua', nombre: 'Agua', esAgua: true };
+const { vasoMl, registro: RANGO_AGUA } = reglas.agua;
+const sinTildes = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const leerMl = (texto) => {
+  const limpio = texto.trim();
+  return /^\d+$/.test(limpio) && Number(limpio) >= RANGO_AGUA.min && Number(limpio) <= RANGO_AGUA.max ? Number(limpio) : null;
+};
 
 // Registrar un alimento del catálogo con sus gramos (FS-HU-09 y FS-HU-10): el cálculo se ve antes de guardar. Después de
 // guardar el panel queda abierto, listo para el siguiente alimento de la misma comida.
@@ -42,25 +54,57 @@ export default function RegistrarComida({ fecha, momentoInicial, alGuardar, alCe
     return () => { activo = false; clearTimeout(espera); };
   }, [consulta, alimento]);
 
-  const gramosValidos = leerGramos(gramos);
-  const calculo = alimento && gramosValidos ? aporte(alimento, gramosValidos) : null;
+  const esAgua = Boolean(alimento?.esAgua);
+  // «agua», «vaso de agua» o «Agua mineral» ofrecen el agua primero, antes de los alimentos del catálogo.
+  const ofreceAgua = !alimento && consulta.length >= 2 && sinTildes(consulta).includes('agua');
+  const gramosValidos = esAgua ? leerMl(gramos) : leerGramos(gramos);
+  const calculo = alimento && !esAgua && gramosValidos ? aporte(alimento, gramosValidos) : null;
 
   function elegir(elegido) {
     setAlimento(elegido);
+    if (elegido.esAgua) setGramos(String(vasoMl));
     setEstado({ guardando: false, error: '', exito: '' });
   }
 
-  function cambiarAlimento() {
+  function limpiar() {
     setAlimento(null);
     setTexto('');
     setBusqueda({ texto: '', alimentos: [], error: '' });
+  }
+
+  function cambiarAlimento() {
+    limpiar();
+    if (esAgua) setGramos('100');
     setTimeout(() => campoBusqueda.current?.focus());
+  }
+
+  async function guardarAgua() {
+    if (!gramosValidos) {
+      setEstado({ guardando: false, error: `Indica entre ${formatearNumero(RANGO_AGUA.min)} y ${formatearNumero(RANGO_AGUA.max)} ml.`, exito: '' });
+      return;
+    }
+    setEstado({ guardando: true, error: '', exito: '' });
+    try {
+      const dia = await sumarAgua(gramosValidos, fecha);
+      const llevas = dia.fecha === dia.hoy ? `; hoy llevas ${formatearNumero(dia.totalMl)} ml` : '';
+      setEstado({ guardando: false, error: '', exito: `Agregaste ${formatearNumero(gramosValidos)} ml de agua${llevas}.` });
+      limpiar();
+      setGramos('100');
+      alGuardar();
+      campoBusqueda.current?.focus();
+    } catch (error) {
+      setEstado({ guardando: false, error: error.message, exito: '' });
+    }
   }
 
   async function guardar(evento) {
     evento.preventDefault();
     if (!alimento) {
       setEstado({ guardando: false, error: 'Busca y elige un alimento del catálogo.', exito: '' });
+      return;
+    }
+    if (esAgua) {
+      await guardarAgua();
       return;
     }
     if (!gramosValidos) {
@@ -90,13 +134,15 @@ export default function RegistrarComida({ fecha, momentoInicial, alGuardar, alCe
         <button type="button" className="boton-icono" onClick={alCerrar} aria-label="Cerrar registro de comida"><Icono nombre="cerrar" tamano={20} /></button>
       </div>
       <form onSubmit={guardar} noValidate>
-        <div className="registrar-comida__campos">
-          <label className="registrar-comida__campo" htmlFor={`${id}-momento`}>
-            <span>Momento del día</span>
-            <select id={`${id}-momento`} value={momento} onChange={(evento) => setMomento(evento.target.value)}>
-              {MOMENTOS.map(({ valor, etiqueta }) => <option key={valor} value={valor}>{etiqueta}</option>)}
-            </select>
-          </label>
+        <div className={`registrar-comida__campos${esAgua ? ' registrar-comida__campos--agua' : ''}`}>
+          {!esAgua && (
+            <label className="registrar-comida__campo" htmlFor={`${id}-momento`}>
+              <span>Momento del día</span>
+              <select id={`${id}-momento`} value={momento} onChange={(evento) => setMomento(evento.target.value)}>
+                {MOMENTOS.map(({ valor, etiqueta }) => <option key={valor} value={valor}>{etiqueta}</option>)}
+              </select>
+            </label>
+          )}
           <div className="registrar-comida__campo registrar-comida__campo--alimento">
             <label htmlFor={`${id}-alimento`}>Alimento</label>
             {alimento ? (
@@ -106,25 +152,33 @@ export default function RegistrarComida({ fecha, momentoInicial, alGuardar, alCe
               </p>
             ) : (
               <input ref={campoBusqueda} id={`${id}-alimento`} type="search" value={texto} autoComplete="off"
-                placeholder="Ej.: pollo, arroz, plátano" maxLength={60} onChange={(evento) => setTexto(evento.target.value)} />
+                placeholder="Ej.: pollo, arroz, agua" maxLength={60} onChange={(evento) => setTexto(evento.target.value)} />
             )}
           </div>
           <label className="registrar-comida__campo registrar-comida__campo--gramos" htmlFor={`${id}-gramos`}>
-            <span>Gramos</span>
-            <input id={`${id}-gramos`} inputMode="decimal" value={gramos} onChange={(evento) => setGramos(evento.target.value)} />
+            <span>{esAgua ? 'Mililitros' : 'Gramos'}</span>
+            <input id={`${id}-gramos`} inputMode={esAgua ? 'numeric' : 'decimal'} value={gramos} onChange={(evento) => setGramos(evento.target.value)} />
           </label>
         </div>
 
         {!alimento && consulta.length >= 2 && (
           <div className="registrar-comida__resultados" aria-live="polite">
-            {buscando && <p className="texto-secundario">Buscando…</p>}
+            {buscando && !ofreceAgua && <p className="texto-secundario">Buscando…</p>}
             {!buscando && busqueda.error && <Alerta>{busqueda.error}</Alerta>}
-            {!buscando && !busqueda.error && busqueda.alimentos.length === 0 && (
+            {!buscando && !busqueda.error && busqueda.alimentos.length === 0 && !ofreceAgua && (
               <p className="texto-secundario">No encontramos «{consulta}» en el catálogo. Prueba con otra palabra, por ejemplo «pollo» o «arroz».</p>
             )}
-            {!buscando && busqueda.alimentos.length > 0 && (
+            {(ofreceAgua || (!buscando && busqueda.alimentos.length > 0)) && (
               <ul aria-label="Alimentos encontrados">
-                {busqueda.alimentos.map((opcion) => (
+                {ofreceAgua && (
+                  <li key="agua">
+                    <button type="button" onClick={() => elegir(AGUA)}>
+                      <span>Agua</span>
+                      <small>Se suma a tu agua del día, en ml</small>
+                    </button>
+                  </li>
+                )}
+                {!buscando && busqueda.alimentos.map((opcion) => (
                   <li key={opcion.id}>
                     <button type="button" onClick={() => elegir(opcion)}>
                       <span>{opcion.nombre}</span>
@@ -137,6 +191,11 @@ export default function RegistrarComida({ fecha, momentoInicial, alGuardar, alCe
           </div>
         )}
 
+        {esAgua && (
+          <p className="registrar-comida__calculo" aria-live="polite">
+            {gramosValidos ? `${formatearNumero(gramosValidos)} ml se suman a tu agua del día.` : 'Indica los mililitros que tomaste.'} El agua no aporta calorías.
+          </p>
+        )}
         {calculo && (
           <p className="registrar-comida__calculo" aria-live="polite">
             {formatearNumero(gramosValidos)} g aportan <strong>{formatearNumero(calculo.calorias)} kcal</strong>
@@ -148,9 +207,9 @@ export default function RegistrarComida({ fecha, momentoInicial, alGuardar, alCe
         {estado.exito && <Alerta tipo="exito">{estado.exito}</Alerta>}
         <div className="registrar-comida__acciones">
           <button type="submit" className="boton boton--principal boton--compacto" disabled={estado.guardando}>
-            {estado.guardando ? 'Guardando…' : 'Agregar a mis comidas'}
+            {estado.guardando ? 'Guardando…' : esAgua ? 'Agregar agua' : 'Agregar a mis comidas'}
           </button>
-          <p className="texto-secundario">Valores de referencia aproximados por 100 g; no reemplazan la evaluación de un nutricionista.</p>
+          {!esAgua && <p className="texto-secundario">Valores de referencia aproximados por 100 g; no reemplazan la evaluación de un nutricionista.</p>}
         </div>
       </form>
     </section>

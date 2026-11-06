@@ -6,6 +6,7 @@ import Alerta from '../components/Alerta.jsx';
 import BuscadorGeneral from '../components/BuscadorGeneral.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
+import AguaHoy from '../components/inicio/AguaHoy.jsx';
 import Especialidades from '../components/inicio/Especialidades.jsx';
 import fotoInicio from '../assets/inicio/bienestar-inicio.webp';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
@@ -44,6 +45,8 @@ function TarjetaObjetivo({ objetivo }) {
 }
 
 // consumidas: calorías registradas hoy en Comidas (FS-HU-10), o null si aún no se cargan o no se pudieron cargar.
+// «Pasos hoy» se quitó (SC-33): contar pasos necesita relojes o pulseras, que quedan fuera del alcance.
+// «Agua hoy» se registra a mano desde aquí (FS-HU-33).
 function TarjetaProgreso({ kcal, consumidas }) {
   return (
     <section className="panel-tarjeta" aria-labelledby="titulo-progreso">
@@ -62,12 +65,8 @@ function TarjetaProgreso({ kcal, consumidas }) {
           </div>
         </li>
         <li>
-          <span className="progreso__icono progreso__icono--pasos"><Icono nombre="pasos" tamano={22} /></span>
-          <div><span className="progreso__nombre">Pasos hoy</span><Proximamente /></div>
-        </li>
-        <li>
           <span className="progreso__icono progreso__icono--agua"><Icono nombre="gota" tamano={22} /></span>
-          <div><span className="progreso__nombre">Agua hoy</span><Proximamente /></div>
+          <AguaHoy />
         </li>
       </ul>
       {kcal && <p className="progreso__nota">Tu meta diaria de calorías se estima con tus datos personales; las calorías de hoy salen de lo que registras en Comidas.</p>}

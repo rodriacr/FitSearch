@@ -5,6 +5,7 @@ import Icono from '../components/Icono.jsx';
 import ComidasDelDia from '../components/comidas/ComidasDelDia.jsx';
 import { AnilloCalorias, BarraNutriente, ProgresoSemanal } from '../components/comidas/GraficosComidas.jsx';
 import RegistrarComida from '../components/comidas/RegistrarComida.jsx';
+import AguaDelDia from '../components/comidas/AguaDelDia.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { nombreDia, obtenerDia, obtenerSemana, sumarDias } from '../services/comidas.service.js';
 import './Comidas.css';
@@ -123,6 +124,7 @@ export default function Comidas() {
           {NUTRIENTES.map(({ clave: nutriente, nombre, color }) => (
             <BarraNutriente key={nutriente} nombre={nombre} consumo={consumo[nutriente]} objetivo={objetivo[nutriente]} color={color} />
           ))}
+          <AguaDelDia fecha={dia.fecha} version={intento} />
         </section>
 
         <div className="comidas__pie">
