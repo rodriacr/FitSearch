@@ -82,10 +82,10 @@ describe('Resumen', () => {
     expect(within(objetivo).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/perfil');
     expect(screen.getByRole('link', { name: /Abrir asistente/ })).toHaveAttribute('href', '/asistente/nuevo?inicio=comida');
 
-    // Plan de alimentación y Estadísticas todavía no existen: se muestran como Próximamente, sin botón.
+    // Plan de alimentación todavía no existe: se muestra como Próximamente, sin botón.
     const pestanas = screen.getByRole('group', { name: 'Secciones de Comidas' });
-    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas']);
-    expect(within(pestanas).getAllByText('Próximamente')).toHaveLength(2);
+    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Estadísticas']);
+    expect(within(pestanas).getAllByText('Próximamente')).toHaveLength(1);
   });
 
   test('sin perfil completo muestra el consumo sin objetivo e invita a completar el perfil', async () => {
@@ -193,4 +193,116 @@ test('se puede revisar un día anterior y volver a hoy; no se avanza más allá 
   expect(llamadasA(fetch, '/api/comidas/semana?fecha=2026-10-25')).toHaveLength(1);
   await usuario.click(screen.getByRole('button', { name: 'Volver a hoy' }));
   expect(await screen.findByRole('heading', { name: 'Calorías de hoy' })).toBeInTheDocument();
+});
+
+describe('Estadísticas (FS-HU-26)', () => {
+  const diaEstadistica = (fecha, valores = null, futuro = false) => ({
+    fecha, calorias: valores?.[0] ?? 0, proteinasG: valores?.[1] ?? 0, carbohidratosG: valores?.[2] ?? 0, grasasG: valores?.[3] ?? 0,
+    conRegistros: Boolean(valores), futuro,
+  });
+  const SEMANA = {
+    periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: HOY,
+    objetivo: { calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70 },
+    dias: [
+      diaEstadistica('2026-10-19', [2000, 120.5, 250, 60.3]), diaEstadistica('2026-10-20'), diaEstadistica('2026-10-21', [1500, 80, 190.4, 50]),
+      ...['22', '23', '24', '25'].map((d) => diaEstadistica(`2026-10-${d}`)),
+    ],
+    diasConRegistros: 2,
+    promedio: { calorias: 1750, proteinasG: 100.3, carbohidratosG: 220.2, grasasG: 55.2 },
+  };
+  const VACIA = {
+    ...SEMANA, desde: '2026-10-26', hasta: '2026-11-01', diasConRegistros: 0, promedio: null,
+    dias: Array.from({ length: 7 }, (_, i) => diaEstadistica(i < 6 ? `2026-10-${26 + i}` : '2026-11-01', null, i > 0)),
+  };
+  const MES = {
+    ...SEMANA, periodo: 'mes', desde: '2026-10-01', hasta: '2026-10-31', diasConRegistros: 1,
+    dias: Array.from({ length: 31 }, (_, i) => diaEstadistica(`2026-10-${String(i + 1).padStart(2, '0')}`, i === 18 ? [2000, 120.5, 250, 60.3] : null, i > 25)),
+    promedio: { calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3 },
+  };
+  const parametro = (url, nombre) => new URL(url, 'http://localhost').searchParams.get(nombre);
+  const responder = (url) => {
+    if (parametro(url, 'periodo') === 'mes') return [200, MES];
+    return [200, parametro(url, 'fecha') === '2026-10-25' ? SEMANA : VACIA];
+  };
+
+  test('muestra las calorías y macronutrientes de cada día frente al objetivo y el promedio de los días con registros', async () => {
+    const usuario = userEvent.setup();
+    const fetch = simular({ '/api/comidas/estadisticas': responder });
+    renderizarApp('/comidas');
+    await usuario.click(await screen.findByRole('button', { name: 'Estadísticas' }));
+    // Parte de la semana del día elegido; sin registros, invita a registrar comidas.
+    expect(await screen.findByRole('heading', { name: 'Aún no hay comidas registradas esta semana' })).toBeInTheDocument();
+    expect(parametro(llamadasA(fetch, '/api/comidas/estadisticas')[0][0], 'fecha')).toBe(HOY);
+    expect(screen.queryByRole('navigation', { name: 'Día' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Semana siguiente' })).toBeDisabled();
+
+    await usuario.click(screen.getByRole('button', { name: 'Semana anterior' }));
+    expect(await screen.findByText('Semana del 19 de octubre al 25 de octubre')).toBeInTheDocument();
+    const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día de la semana; objetivo diario: 2.525 kcal' });
+    expect(within(calorias).getByRole('row', { name: 'Lun 19/10 2.000 kcal' })).toBeInTheDocument();
+    expect(within(calorias).getByRole('row', { name: 'Mar 20/10 Sin registros' })).toBeInTheDocument();
+    const macros = screen.getByRole('table', { name: /Proteínas consumidas cada día de la semana, en gramos; objetivo diario: 189 g/ });
+    expect(within(macros).getByRole('row', { name: 'Lun 19/10 120,5 g' })).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Grasas' }));
+    expect(screen.getByRole('table', { name: /Grasas consumidas cada día de la semana, en gramos; objetivo diario: 70 g/ })).toBeInTheDocument();
+
+    const promedio = screen.getByRole('heading', { name: 'Promedio diario' }).closest('section');
+    expect(promedio).toHaveTextContent('Calculado con 2 días con registros de 7 días transcurridos.');
+    expect(within(promedio).getByRole('progressbar', { name: 'Calorías' })).toHaveAttribute('aria-valuetext', '69 % del objetivo');
+    expect(promedio).toHaveTextContent('Proteínas100,3 / 189 g');
+    expect(screen.getByRole('button', { name: 'Semana siguiente' })).toBeEnabled();
+  });
+
+  test('el mes va del 1 al 31, cuenta solo los días transcurridos y no avanza más allá del mes actual', async () => {
+    const usuario = userEvent.setup();
+    const fetch = simular({ '/api/comidas/estadisticas': responder });
+    renderizarApp('/comidas');
+    await usuario.click(await screen.findByRole('button', { name: 'Estadísticas' }));
+    await usuario.click(await screen.findByRole('button', { name: 'Mes' }));
+    expect(await screen.findByText('Octubre de 2026')).toBeInTheDocument();
+    expect(parametro(llamadasA(fetch, '/api/comidas/estadisticas').at(-1)[0], 'periodo')).toBe('mes');
+    const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día del mes; objetivo diario: 2.525 kcal' });
+    expect(within(calorias).getAllByRole('row')).toHaveLength(31);
+    expect(within(calorias).getByRole('row', { name: 'Mar 27/10 Aún no llega' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Promedio diario' }).closest('section')).toHaveTextContent('Calculado con 1 día con registros de 26 días transcurridos.');
+    expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
+  });
+
+  test('sin registros, «Registrar comida» abre el panel de registro', async () => {
+    const usuario = userEvent.setup();
+    simular({ '/api/comidas/estadisticas': VACIA });
+    renderizarApp('/comidas');
+    await usuario.click(await screen.findByRole('button', { name: 'Estadísticas' }));
+    const vacio = (await screen.findByRole('heading', { name: 'Aún no hay comidas registradas esta semana' })).parentElement;
+    await usuario.click(within(vacio).getByRole('button', { name: 'Registrar comida' }));
+    expect(screen.getByRole('region', { name: 'Registrar comida' })).toBeInTheDocument();
+  });
+
+  // Revisión del PR #41: al cambiar a «Mes» y pulsar «Mes anterior» antes de que cargue, se consultaba noviembre en vez
+  // de octubre porque las flechas usaban las fechas de la semana.
+  test('mientras carga otro período las flechas esperan, y «Mes anterior» parte del mes que se ve', async () => {
+    const usuario = userEvent.setup();
+    const fetch = simular({ '/api/comidas/estadisticas': responder });
+    const original = fetch.getMockImplementation();
+    let soltarMes = null;
+    fetch.mockImplementation((url, opciones) => (url.includes('periodo=mes') && !soltarMes
+      ? new Promise((resolver) => { soltarMes = () => resolver(original(url, opciones)); })
+      : original(url, opciones)));
+    renderizarApp('/comidas');
+    await usuario.click(await screen.findByRole('button', { name: 'Estadísticas' }));
+    await screen.findByRole('heading', { name: 'Aún no hay comidas registradas esta semana' });
+
+    await usuario.click(screen.getByRole('button', { name: 'Mes' }));
+    await waitFor(() => expect(soltarMes).not.toBeNull());
+    expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
+    await usuario.click(screen.getByRole('button', { name: 'Mes anterior' }));
+    expect(llamadasA(fetch, '/api/comidas/estadisticas').filter(([url]) => url.includes('periodo=mes'))).toHaveLength(1);
+
+    soltarMes();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeEnabled());
+    await usuario.click(screen.getByRole('button', { name: 'Mes anterior' }));
+    // El mes que se ve es octubre (MES): el anterior es septiembre, no noviembre.
+    await waitFor(() => expect(parametro(llamadasA(fetch, '/api/comidas/estadisticas').at(-1)[0], 'fecha')).toBe('2026-09-30'));
+  });
 });
