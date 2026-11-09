@@ -67,7 +67,6 @@ export default function HeroBienestar({ aviso }) {
           <div className="hero-bienestar__puerta hero-bienestar__puerta--derecha"><span /></div>
         </div>
         <div className="hero-bienestar__superior">
-          <span><span className="hero-bienestar__punto" /> TU ESPACIO DE BIENESTAR DIGITAL</span>
           <a href="#explorar-fitsearch">Ir al buscador <Icono nombre="flecha" tamano={16} /></a>
         </div>
         {/* El título y el aviso de sesión quedan fuera de los pasos: al avanzar la escena, los pasos inactivos se
@@ -77,14 +76,18 @@ export default function HeroBienestar({ aviso }) {
         {aviso && <div className="hero-bienestar__aviso"><Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta></div>}
         <div className="hero-bienestar__relato">
           <div className="hero-bienestar__paso hero-bienestar__paso--entrada" {...atributos(0)}>
-            <p className="hero-bienestar__ceja">ABRE LA PUERTA A TU BIENESTAR</p>
-            <p className="hero-bienestar__titulo" aria-hidden="true">Tu bienestar,<br /><span>a tu ritmo.</span></p>
+            {/* Cada línea sube desde detrás de una máscara (el titular de un motion graphic). Es solo la versión visible:
+                el h1 de arriba es el que lee el lector de pantalla. */}
+            <p className="hero-bienestar__titulo hero-bienestar__titulo--cinetico" aria-hidden="true">
+              <span className="hero-bienestar__linea"><span>Tu bienestar,</span></span>
+              <span className="hero-bienestar__linea hero-bienestar__linea--acento"><span>a tu ritmo.</span></span>
+            </p>
             <p>Profesionales, orientación y un asistente de IA para acompañar tus objetivos. Todo comienza contigo.</p>
             <Link to="/profesionales" className="boton boton--principal">Encuentra tu profesional <Icono nombre="flecha" tamano={18} /></Link>
-            {animado && <p className="hero-bienestar__invitacion">Desliza para abrir el centro <span aria-hidden="true">↓</span></p>}
+            <a href="#para-profesionales" className="hero-bienestar__profesionales">¿Eres profesional? Recibe reservas en FitSearch <Icono nombre="flecha" tamano={16} /></a>
+            {animado && <p className="hero-bienestar__invitacion">Desliza para abrir el centro <span className="hero-bienestar__flecha" aria-hidden="true"><Icono nombre="flecha" tamano={16} /></span></p>}
           </div>
           <div className="hero-bienestar__paso hero-bienestar__paso--especialidades" {...atributos(1)}>
-            <p className="hero-bienestar__ceja">DISTINTAS ESPECIALIDADES. UN MISMO PROPÓSITO.</p>
             <h2>Un espacio.<br /><span>Muchas formas de cuidarte.</span></h2>
             <p>Encuentra el apoyo que necesitas para tu alimentación, tu movimiento y tus próximos desafíos.</p>
             <div className="hero-bienestar__especialidades">
@@ -95,7 +98,6 @@ export default function HeroBienestar({ aviso }) {
             <p className="hero-bienestar__nota">Escenario ilustrativo de las especialidades disponibles en FitSearch.</p>
           </div>
           <div className="hero-bienestar__paso hero-bienestar__paso--ia" {...atributos(2)}>
-            <span className="hero-bienestar__insignia"><Icono nombre="chispa" tamano={19} /> ASISTENTE IA</span>
             <h2>Tu camino continúa.<br /><span>Con apoyo, paso a paso.</span></h2>
             <p>Conversa sobre tus objetivos, revisa tu historial y retoma tus consultas cuando lo necesites.</p>
             <ul className="hero-bienestar__beneficios">
@@ -108,7 +110,7 @@ export default function HeroBienestar({ aviso }) {
           </div>
         </div>
         <div className="hero-bienestar__inferior" aria-hidden="true">
-          <span>{paso === 0 ? 'Desliza para entrar' : paso === 1 ? 'Sigue explorando' : 'Tu siguiente paso está aquí'} <span>↓</span></span>
+          <span>{paso === 0 ? 'Desliza para entrar' : paso === 1 ? 'Sigue explorando' : 'Tu siguiente paso está aquí'} <span className="hero-bienestar__flecha"><Icono nombre="flecha" tamano={14} /></span></span>
           <div className="hero-bienestar__capitulos"><span data-actual={paso === 0}>01 · Bienvenido</span><span data-actual={paso === 1}>02 · Especialidades</span><span data-actual={paso === 2}>03 · Asistente IA</span></div>
         </div>
       </div>

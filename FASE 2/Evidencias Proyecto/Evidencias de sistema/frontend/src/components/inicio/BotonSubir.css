@@ -1,0 +1,31 @@
+/* Botón para volver arriba: entra y sale con una transición corta (se puede disparar seguido), nunca desde scale(0). */
+.boton-subir {
+  position: fixed; right: max(1rem, env(safe-area-inset-right)); bottom: calc(1rem + env(safe-area-inset-bottom)); z-index: 12;
+  display: grid; place-items: center; width: 3.25rem; height: 3.25rem; padding: 0; border: 0; border-radius: 50%;
+  color: #fff; background: var(--color-accion); cursor: pointer;
+  box-shadow: 0 1px 2px rgb(0 10 18 / 30%), 0 12px 24px -10px rgb(0 10 18 / 65%);
+  opacity: 0; transform: translateY(12px) scale(0.92); visibility: hidden; pointer-events: none;
+  transition: opacity 200ms var(--curva-salida), transform 200ms var(--curva-salida), visibility 0s linear 200ms, background-color 150ms ease;
+}
+.boton-subir[data-visible] {
+  opacity: 1; transform: none; visibility: visible; pointer-events: auto;
+  transition: opacity 200ms var(--curva-salida), transform 200ms var(--curva-salida), visibility 0s, background-color 150ms ease;
+}
+.boton-subir > .icono { transform: rotate(-90deg); }
+.boton-subir:active { transform: scale(0.94); }
+.boton-subir:focus-visible { outline: 3px solid #ffb35d; outline-offset: 3px; }
+@media (hover: hover) and (pointer: fine) {
+  .boton-subir:hover { background: var(--color-acento-oscuro); }
+}
+/* Anillo de recorrido: el trazo se completa a medida que se baja por la página (solo donde existe animation-timeline). */
+.boton-subir__anillo { position: absolute; inset: -4px; width: calc(100% + 8px); height: calc(100% + 8px); transform: rotate(-90deg); pointer-events: none; }
+.boton-subir__anillo circle { fill: none; stroke: rgb(255 179 107 / 85%); stroke-width: 2.5; stroke-linecap: round; stroke-dasharray: 100; stroke-dashoffset: 100; }
+@supports (animation-timeline: scroll()) {
+  .boton-subir__anillo circle { animation: boton-subir-recorrido linear both; animation-timeline: scroll(root); }
+}
+@keyframes boton-subir-recorrido {
+  to { stroke-dashoffset: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .boton-subir, .boton-subir[data-visible] { transform: none; transition: opacity 150ms ease, visibility 0s linear 150ms; }
+}

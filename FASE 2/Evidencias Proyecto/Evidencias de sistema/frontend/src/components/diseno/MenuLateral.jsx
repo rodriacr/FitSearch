@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import Icono from '../Icono.jsx';
 import iconoLogo from '../../assets/logo-fitsearch-icono.png';
-import { Logo } from '../PantallaAcceso.jsx';
+import MarcaFitSearch from './MarcaFitSearch.jsx';
 import { ESPACIOS, SECCIONES } from './secciones.js';
 import useBloquearScroll from './useBloquearScroll.js';
 
@@ -24,7 +24,7 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario' }) 
       <div className={`menu-lateral__fondo${abierto ? ' menu-lateral__fondo--visible' : ''}`} onClick={onCerrar} aria-hidden="true" />
       <nav id="menu-principal" className={`menu-lateral${abierto ? ' menu-lateral--abierto' : ''}`} aria-label="Menú principal">
         <div className="menu-lateral__cabecera">
-          <Logo />
+          <MarcaFitSearch />
           <button type="button" className="boton-icono" aria-label="Cerrar menú" onClick={onCerrar}><Icono nombre="cerrar" tamano={22} /></button>
         </div>
         <ul className="menu-lateral__lista">
