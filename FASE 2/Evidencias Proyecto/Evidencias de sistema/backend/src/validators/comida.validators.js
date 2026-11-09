@@ -17,6 +17,7 @@ const busqueda = query('q')
   .isLength({ min: reglas.busqueda.min, max: reglas.busqueda.max })
   .withMessage(`Escribe entre ${reglas.busqueda.min} y ${reglas.busqueda.max} caracteres`);
 
+const periodo = query('periodo').optional().isIn(['semana', 'mes']).withMessage('Elige semana o mes');
 const momento = body('momento').isIn(MOMENTOS).withMessage('Elige el momento del día');
 const momentoOpcional = body('momento').optional().isIn(MOMENTOS).withMessage('Elige el momento del día');
 const alimentoId = body('alimentoId').isInt({ min: 1 }).withMessage('Elige un alimento del catálogo').bail().toInt();
@@ -31,4 +32,4 @@ const gramosOpcional = body('gramos').optional()
 const algunCambio = body().custom((cuerpo) => cuerpo?.gramos !== undefined || cuerpo?.momento !== undefined)
   .withMessage('Indica los gramos o el momento del día');
 
-module.exports = { id, fechaConsulta, fecha, busqueda, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };
+module.exports = { id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };

@@ -1,0 +1,100 @@
+/* Vitrina de objetivos: escenario con la foto activa (fundido y un acercamiento lento) y la lista de objetivos, cuya
+   barra de progreso marca el tiempo de cada uno. Vive en la portada nocturna (variables --p-* de PortadaRedisenada). */
+.vitrina { display: grid; gap: 1rem; }
+.vitrina__escenario {
+  position: relative; isolation: isolate; display: flex; flex-direction: column; justify-content: flex-end; min-height: 30rem;
+  overflow: hidden; border: 1px solid var(--p-borde, rgb(214 236 250 / 14%)); border-radius: 24px; background: #0a3248;
+  box-shadow: 0 1px 2px rgb(0 10 18 / 30%), 0 24px 48px -24px rgb(0 10 18 / 70%);
+}
+.vitrina__foto {
+  position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; opacity: 0;
+  transition: opacity 700ms var(--curva-movimiento);
+}
+.vitrina__foto[data-activa="true"] { opacity: 1; animation: vitrina-acercar 7s var(--curva-salida) both; }
+.vitrina__escenario::after {
+  content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(0deg, rgb(3 26 39 / 95%) 0%, rgb(3 26 39 / 62%) 40%, rgb(3 26 39 / 0%) 72%);
+}
+.vitrina__texto { padding: 1.75rem 1.5rem; }
+.vitrina__texto > * { animation: vitrina-subir 650ms var(--curva-salida) both; }
+.vitrina__texto > :nth-child(2) { animation-delay: 70ms; }
+.vitrina__texto > :nth-child(3) { animation-delay: 140ms; }
+.vitrina__texto > :nth-child(4) { animation-delay: 210ms; }
+.vitrina__especialidad {
+  display: inline-flex; width: fit-content; margin: 0 0 0.85rem; padding: 0.3rem 0.8rem; border-radius: 999px;
+  color: #0a263d; background: #ffb36b; font-size: 0.875rem; font-weight: 600;
+}
+.vitrina__texto h3 { max-width: 18ch; margin: 0; color: #fff; font-size: clamp(1.875rem, 3.4vw, 3rem); line-height: 1.05; letter-spacing: -0.04em; text-wrap: balance; }
+.vitrina__texto > p:not(.vitrina__especialidad) { max-width: 34rem; margin: 0.85rem 0 1.4rem; color: #e3edf3; font-size: 1.0625rem; line-height: 1.6; }
+.vitrina__texto .boton { width: fit-content; min-width: 0; min-height: 3.25rem; padding-inline: 1.5rem; border-radius: 999px; font-size: 1rem; }
+.vitrina__pausa {
+  position: absolute; top: 1rem; right: 1rem; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0;
+  border: 1px solid rgb(255 255 255 / 30%); border-radius: 50%; color: #fff; background: rgb(4 33 49 / 72%); cursor: pointer;
+  transition: background-color 150ms ease, transform 160ms var(--curva-salida);
+}
+@media (hover: hover) and (pointer: fine) {
+  .vitrina__pausa:hover { background: rgb(4 33 49 / 92%); }
+}
+.vitrina__pausa:active { transform: scale(0.94); }
+
+/* Lista de objetivos: en el celular, una fila que se desliza; en escritorio, una columna junto al escenario. */
+.vitrina__lista {
+  display: flex; gap: 0.75rem; margin: 0; padding: 0 0 0.25rem; overflow-x: auto; list-style: none;
+  scroll-snap-type: x mandatory; scrollbar-width: none; overscroll-behavior-x: contain;
+}
+.vitrina__lista::-webkit-scrollbar { display: none; }
+.vitrina__lista li { flex: 0 0 min(78%, 17rem); scroll-snap-align: start; }
+.vitrina__opcion {
+  position: relative; display: flex; align-items: center; gap: 0.85rem; width: 100%; min-height: 4.75rem; padding: 0.7rem 0.9rem;
+  overflow: hidden; border: 1px solid var(--p-borde, rgb(214 236 250 / 14%)); border-radius: 16px; color: #c4d6e2;
+  background: transparent; font: inherit; text-align: left; cursor: pointer;
+  transition: background-color 200ms ease, border-color 200ms ease, color 200ms ease, transform 160ms var(--curva-salida);
+}
+.vitrina__opcion img { flex-shrink: 0; width: 3.25rem; height: 3.25rem; border-radius: 12px; object-fit: cover; opacity: 0.7; transition: opacity 200ms ease; }
+.vitrina__opcion > span:not(.vitrina__progreso) { display: grid; gap: 0.15rem; min-width: 0; }
+.vitrina__opcion-especialidad { color: #9fb8c8; font-size: 0.8125rem; font-weight: 600; }
+.vitrina__opcion-objetivo { color: inherit; font-size: 0.96875rem; font-weight: 500; line-height: 1.35; }
+.vitrina__opcion[aria-pressed="true"] { color: #fff; border-color: rgb(214 236 250 / 30%); background: #0e3d57; }
+.vitrina__opcion[aria-pressed="true"] img { opacity: 1; }
+.vitrina__opcion[aria-pressed="true"] .vitrina__opcion-especialidad { color: #ffb36b; }
+.vitrina__opcion:active { transform: scale(0.98); }
+@media (hover: hover) and (pointer: fine) {
+  .vitrina__opcion:hover { color: #fff; border-color: rgb(214 236 250 / 26%); }
+  .vitrina__opcion:hover img { opacity: 1; }
+}
+/* El reloj de cada objetivo: lineal, como todo progreso, y en pausa cuando la vitrina no avanza. */
+.vitrina__progreso {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: #ff9c3a; transform-origin: left;
+  animation: vitrina-progreso 6s linear both; animation-play-state: paused;
+}
+.vitrina[data-avanza] .vitrina__progreso { animation-play-state: running; }
+
+@keyframes vitrina-acercar {
+  from { transform: scale(1.08); }
+}
+@keyframes vitrina-subir {
+  from { opacity: 0; transform: translateY(16px); }
+}
+@keyframes vitrina-progreso {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+@media (min-width: 64rem) {
+  .vitrina { grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); align-items: stretch; gap: 1.25rem; }
+  .vitrina__escenario { min-height: 36rem; }
+  .vitrina__texto { padding: 2.5rem; }
+  .vitrina__lista { flex-direction: column; justify-content: space-between; gap: 0.6rem; padding: 0; overflow: visible; }
+  .vitrina__lista li { flex: 1 1 0; }
+  .vitrina__opcion { height: 100%; padding: 0.85rem 1.1rem; }
+  .vitrina__opcion img { width: 3.75rem; height: 3.75rem; }
+  .vitrina__opcion-objetivo { font-size: 1.0625rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .vitrina__foto { transition-duration: 200ms; }
+  .vitrina__foto[data-activa="true"] { animation: none; }
+  .vitrina__texto > * { animation: vitrina-fundido 250ms ease both; animation-delay: 0ms; }
+}
+@keyframes vitrina-fundido {
+  from { opacity: 0; }
+}

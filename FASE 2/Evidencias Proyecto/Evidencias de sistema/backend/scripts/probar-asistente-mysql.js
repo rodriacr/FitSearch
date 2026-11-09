@@ -3,7 +3,10 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 // Regresión real del cupo diario (PR #29): solo crea una cuenta temporal y la elimina con sus conversaciones.
 // El proveedor es simulado: no envía mensajes a Groq ni consume una clave externa.
+// La evidencia de Plan de Pruebas solo se reescribe con --guardar-evidencia.
 const base = path.resolve(__dirname, '..');
+const EVIDENCIA = path.resolve(__dirname, '../../../Evidencias de documentación/Plan de Pruebas/Asistente_Cupo_MySQL_2026-10-23.json');
+const guardarEvidencia = process.argv.includes('--guardar-evidencia');
 require(path.join(base, 'node_modules/dotenv')).config({ path: path.join(base, '.env'), quiet: true });
 let db;
 let fixtureUser;
@@ -91,7 +94,8 @@ function check(name, actual, expected) { assert.deepEqual(actual, expected, name
  } finally {
   if(db && fixtureUser){const removed=await db.usuario.deleteMany({where:{id:fixtureUser,correo:fixtureEmail}});evidence.cuentaTemporalEliminada=removed.count===1;}
   if(db)await db.$disconnect();
-  fs.writeFileSync(path.resolve(__dirname, '../../../Evidencias de documentación/Plan de Pruebas/Asistente_Cupo_MySQL_2026-10-23.json'),JSON.stringify(evidence,null,2));
+  if(guardarEvidencia)fs.writeFileSync(EVIDENCIA,JSON.stringify(evidence,null,2));
   console.log(JSON.stringify(evidence,null,2));
+  console.log(guardarEvidencia?`Evidencia guardada en ${EVIDENCIA}`:'Evidencia no guardada (usa --guardar-evidencia para reescribirla).');
  }
 })();

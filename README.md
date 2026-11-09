@@ -217,9 +217,9 @@ Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "men
 
 ### Verificación básica de profesionales — FS-HU-12
 
-Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 5 «si hay capacidad»; el 12-10-2026 el Product Owner la reubicó en el Sprint 3, y falta su aceptación. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
+Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 5 «si hay capacidad»; el 12-10-2026 el Product Owner la reubicó en el Sprint 3 y la aceptó. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
 
-El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración y Contenido quedan fuera. Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados; la aceptación de la historia sigue pendiente del PO. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
+El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración queda fuera y Contenido está planificado para el Sprint 5 (FS-HU-30). Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
 ### Disponibilidad, reservas y mapa — FS-HU-13, FS-HU-14 y FS-HU-06
 
@@ -253,7 +253,9 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 ### Comidas — FS-HU-09 y FS-HU-10
 
-En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo es el requerimiento calórico del perfil (Mifflin-St Jeor), repartido en 30 % de proteínas, 45 % de carbohidratos y 25 % de grasas (`shared/reglas.json`). La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30; falta su aceptación).
+En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo es el requerimiento calórico del perfil (Mifflin-St Jeor), repartido en 30 % de proteínas, 45 % de carbohidratos y 25 % de grasas (`shared/reglas.json`). La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30) y el PO la aceptó el 02-11-2026.
+
+La pestaña Estadísticas (FS-HU-26) muestra la semana o el mes: las calorías y los macronutrientes de cada día frente al objetivo diario, y el promedio de los días con registros. Un día sin registros no baja el promedio.
 
 También se puede pedir al asistente, por ejemplo «añade 100 g de pollo a mi almuerzo». El modelo llama a la función `agregar_alimentos` y el backend busca cada alimento en el catálogo, lo registra en las comidas de hoy y arma la respuesta, sin otra consulta al proveedor (DAS 1.29, D37). Los alimentos y los mensajes se guardan en una sola transacción: si algo falla no queda ninguna comida a medias y el reintento no la duplica (DAS 1.30). Lo que no está en el catálogo no se agrega y la respuesta lo dice. El chat muestra la tarjeta «Agregado a tus comidas de hoy» con el acceso a Comidas, y el pedido usa uno de los 30 mensajes del día.
 
@@ -264,6 +266,7 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | GET | `/api/comidas/alimentos` | Bearer JWT (rol usuario) | Busca en el catálogo por nombre o sinónimo con `q` (2 a 60 caracteres, sin importar tildes); hasta 12 alimentos con su aporte por 100 g |
 | GET | `/api/comidas` | Bearer JWT (rol usuario) | Comidas del día (`fecha` AAAA-MM-DD, por defecto hoy en Chile) agrupadas por momento, con el consumo y el objetivo diario; 400 si la fecha aún no llega |
 | GET | `/api/comidas/semana` | Bearer JWT (rol usuario) | Calorías de cada día, de lunes a domingo, de la semana de `fecha`, con el objetivo calórico |
+| GET | `/api/comidas/estadisticas` | Bearer JWT (rol usuario) | Estadísticas de la semana (`periodo=semana`, por defecto) o del mes (`periodo=mes`) de `fecha`: calorías y macronutrientes de cada día, el objetivo diario y el promedio de los días con registros |
 | POST | `/api/comidas` | Bearer JWT (rol usuario) | Registra `alimentoId`, `gramos` (1 a 2000) y `momento`, y opcionalmente `fecha`; guarda las calorías y los macronutrientes calculados (201) |
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
@@ -287,7 +290,7 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA.
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`.
 
 ## Convenciones de trabajo
 
