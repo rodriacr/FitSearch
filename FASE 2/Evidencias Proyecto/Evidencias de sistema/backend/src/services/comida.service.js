@@ -146,6 +146,59 @@ async function semana(usuarioId, fecha, ahora = new Date()) {
   };
 }
 
+// Primer y último día del período de una fecha: la semana va de lunes a domingo y el mes, del día 1 al último.
+function limitesDelPeriodo(periodo, fecha) {
+  if (periodo === 'mes') {
+    const [anio, mes] = fecha.split('-').map(Number);
+    const ultimo = new Date(Date.UTC(anio, mes, 0)).getUTCDate();
+    return { desde: `${fecha.slice(0, 7)}-01`, hasta: `${fecha.slice(0, 7)}-${String(ultimo).padStart(2, '0')}` };
+  }
+  const desde = lunesDeLaSemana(fecha);
+  return { desde, hasta: sumarDias(desde, 6) };
+}
+
+// Estadísticas de una semana o un mes (FS-HU-26): calorías y macronutrientes de cada día frente al objetivo diario, y el
+// promedio de los días que tienen registros (un día sin registros no baja el promedio, porque puede ser un olvido).
+async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
+  exigirFechaPasada(fecha, ahora);
+  const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
+  const [totales, objetivo] = await Promise.all([modelo.totalesPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId)]);
+  const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum]));
+  const hoy = fechaEnChile(ahora);
+  const largo = Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000) + 1;
+  const dias = Array.from({ length: largo }, (_, i) => {
+    const dia = sumarDias(desde, i);
+    const suma = porDia.get(dia);
+    return {
+      fecha: dia,
+      calorias: suma?.calorias ?? 0,
+      proteinasG: redondear(numero(suma?.proteinasG) ?? 0),
+      carbohidratosG: redondear(numero(suma?.carbohidratosG) ?? 0),
+      grasasG: redondear(numero(suma?.grasasG) ?? 0),
+      conRegistros: Boolean(suma),
+      futuro: dia > hoy,
+    };
+  });
+  const conRegistros = dias.filter((dia) => dia.conRegistros);
+  const promedioDe = (clave, decimales) => {
+    const valor = conRegistros.reduce((total, dia) => total + dia[clave], 0) / conRegistros.length;
+    return decimales ? redondear(valor) : Math.round(valor);
+  };
+  return {
+    periodo,
+    desde,
+    hasta,
+    hoy,
+    objetivo: { calorias: objetivo.calorias, proteinasG: objetivo.proteinasG, carbohidratosG: objetivo.carbohidratosG, grasasG: objetivo.grasasG },
+    dias,
+    diasConRegistros: conRegistros.length,
+    promedio: conRegistros.length === 0 ? null : {
+      calorias: promedioDe('calorias'),
+      ...Object.fromEntries(MACROS.map((macro) => [`${macro}G`, promedioDe(`${macro}G`, true)])),
+    },
+  };
+}
+
 async function agregar(usuarioId, { fecha, momento, alimentoId, gramos }, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
   const alimento = await modelo.obtenerAlimento(alimentoId);
@@ -247,6 +300,6 @@ function textoAgregados({ agregados, noEncontrados, momento }) {
 }
 
 module.exports = {
-  buscarAlimentos, delDia, semana, agregar, actualizar, eliminar, objetivoDiario,
+  buscarAlimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar, objetivoDiario,
   prepararDesdeAsistente, guardarDesdeAsistente, textoAgregados, resolverAlimento, aporte, momentoSegunHora, MOMENTOS,
 };

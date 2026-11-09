@@ -3,8 +3,10 @@ const fs = require('node:fs');
 const assert = require('node:assert/strict');
 // Revisión del PR #35: los alimentos pedidos en el chat y los mensajes se guardan en una sola transacción de MySQL.
 // Solo crea una cuenta temporal y la elimina con sus comidas y conversaciones. El proveedor es simulado (no consulta
-// Groq) y los fallos de guardado son inducidos.
+// Groq) y los fallos de guardado son inducidos. La evidencia de Plan de Pruebas solo se reescribe con --guardar-evidencia.
 const base = path.resolve(__dirname, '..');
+const EVIDENCIA = path.resolve(__dirname, '../../../Evidencias de documentación/Plan de Pruebas/Comidas_Transaccion_MySQL_2026-10-27.json');
+const guardarEvidencia = process.argv.includes('--guardar-evidencia');
 require(path.join(base, 'node_modules/dotenv')).config({ path: path.join(base, '.env'), quiet: true });
 let db;
 let usuarioTemporal;
@@ -94,7 +96,8 @@ function comprobar(caso, real, esperado) { assert.deepEqual(real, esperado, caso
       evidencia.comidasTemporalesRestantes = await db.registroComida.count({ where: { usuarioId: usuarioTemporal } });
     }
     if (db) await db.$disconnect();
-    fs.writeFileSync(path.resolve(__dirname, '../../../Evidencias de documentación/Plan de Pruebas/Comidas_Transaccion_MySQL_2026-10-27.json'), JSON.stringify(evidencia, null, 2));
+    if (guardarEvidencia) fs.writeFileSync(EVIDENCIA, JSON.stringify(evidencia, null, 2));
     console.log(JSON.stringify(evidencia, null, 2));
+    console.log(guardarEvidencia ? `Evidencia guardada en ${EVIDENCIA}` : 'Evidencia no guardada (usa --guardar-evidencia para reescribirla).');
   }
 })();

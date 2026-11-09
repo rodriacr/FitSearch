@@ -2,8 +2,12 @@ import useAnimacionesScroll from '../services/useAnimacionesScroll.js';
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
-import Especialidades from '../components/inicio/Especialidades.jsx';
+import VitrinaObjetivos from '../components/inicio/VitrinaObjetivos.jsx';
 import HeroBienestar from '../components/inicio/HeroBienestar.jsx';
+import ParaProfesionales from '../components/inicio/ParaProfesionales.jsx';
+import CintaMovimiento from '../components/inicio/CintaMovimiento.jsx';
+import EncabezadoPortada from '../components/inicio/EncabezadoPortada.jsx';
+import BotonSubir from '../components/inicio/BotonSubir.jsx';
 import Despedida from '../components/Despedida.jsx';
 import Icono from '../components/Icono.jsx';
 import iconoMarca from '../assets/logo-fitsearch-icono.png';
@@ -62,19 +66,7 @@ export default function Portada() {
     <div className="portada" ref={animaciones}>
       {esDespedida && <Despedida nombre={aviso.nombre} texto={aviso.texto} onCerrar={cerrarDespedida} />}
       <a className="portada__saltar" href="#contenido">Saltar al contenido</a>
-      <header className="portada__encabezado">
-        <div className="portada__ancho portada__barra">
-          <Link to="/" className="portada__marca" aria-label="FitSearch, portada"><MarcaPortada /></Link>
-          <nav className="portada__navegacion" aria-label="Navegación principal">
-            <a href="#especialidades">Especialidades</a><a href="#que-ofrecemos">Qué ofrecemos</a>
-            <a href="#como-funciona">Cómo funciona</a>
-          </nav>
-          <div className="portada__accesos">
-            <Link to="/iniciar-sesion" className="portada__enlace-acceso">Iniciar sesión</Link>
-            <Link to="/registro" className="boton boton--principal boton--compacto">Crear cuenta <Icono nombre="flecha" tamano={18} /></Link>
-          </div>
-        </div>
-      </header>
+      <EncabezadoPortada marca={<MarcaPortada />} />
 
       <main id="contenido" tabIndex={-1}>
         <HeroBienestar aviso={esDespedida ? null : aviso} />
@@ -92,35 +84,47 @@ export default function Portada() {
             <button className="boton boton--principal"><Icono nombre="buscar" tamano={20} /> Buscar profesionales</button>
           </form>
         </section>
+        <CintaMovimiento />
         <section id="especialidades" className="portada__seccion portada__ancho" aria-labelledby="titulo-especialidades">
           <div data-revelar className="portada__titulo-seccion">
-            <div><p className="portada__antetitulo">APOYO PARA CADA ETAPA DE TU VIDA</p><h2 id="titulo-especialidades">El apoyo que necesitas,<br /><span>en un solo lugar.</span></h2></div>
+            <h2 id="titulo-especialidades">El apoyo que necesitas,<br /><span>en un solo lugar.</span></h2>
             <p>Desde cuidar tus hábitos hasta encontrar tu próximo desafío. Explora las especialidades y elige a quién consultar.</p>
           </div>
-          <Especialidades />
+          <VitrinaObjetivos />
           <Link to="/profesionales" className="portada__enlace portada__ver-especialidades">Ver todas las especialidades <Icono nombre="flecha" tamano={18} /></Link>
         </section>
 
 
 
+        {/* En vez de repetir los beneficios del hero, la sección muestra cómo se ve una conversación: la tarjeta de
+            especialidad (FS-HU-08) y los alimentos agregados a Comidas (FS-HU-09) son las respuestas reales del asistente. */}
         <section data-revelar className="portada__asistente portada__ancho" aria-labelledby="titulo-asistente-portada">
           <div className="portada__asistente-texto">
-            <p className="portada__antetitulo"><Icono nombre="chispa" tamano={20} /> ASISTENTE IA</p>
-            <h2 id="titulo-asistente-portada">Tu camino continúa.<br /><span>Con apoyo, paso a paso.</span></h2>
-            <p>Conversa sobre tus objetivos, revisa tu historial y retoma tus consultas cuando lo necesites.</p>
+            <h2 id="titulo-asistente-portada">Pregunta como hablas.<br /><span>El asistente te orienta.</span></h2>
+            <p>Cuéntale qué te pasa o qué quieres lograr. Te sugiere qué especialista consultar, registra tus comidas por ti y guarda la conversación para retomarla cuando vuelvas.</p>
             <Link to="/asistente" className="boton boton--principal">Conoce al asistente IA <Icono nombre="flecha" tamano={18} /></Link>
+            <p className="portada__asistente-nota">Orientación general: no reemplaza la atención de un profesional de salud.</p>
           </div>
-          <ul className="portada__asistente-beneficios">
-            <li><span><Icono nombre="chispa" tamano={24} /></span><div><h3>Orientación</h3><p>Según tus consultas</p></div></li>
-            <li><span><Icono nombre="chat" tamano={24} /></span><div><h3>Historial de consultas</h3><p>Retoma tus conversaciones guardadas</p></div></li>
-            <li><span><Icono nombre="profesional" tamano={24} /></span><div><h3>Especialidades recomendadas</h3><p>Encuentra el apoyo adecuado para ti</p></div></li>
-          </ul>
+          <figure className="portada__conversacion" data-escena aria-label="Ejemplo de conversación con el asistente">
+            <figcaption><span className="portada__conversacion-avatar"><Icono nombre="chispa" tamano={18} /></span> Asistente FitSearch <span className="portada__conversacion-ejemplo">Ejemplo</span></figcaption>
+            <p className="portada__mensaje portada__mensaje--persona">Me duele la rodilla cuando salgo a trotar. ¿A quién debería consultar?</p>
+            <div className="portada__mensaje portada__mensaje--asistente">
+              <p>Si el dolor aparece al trotar y no cede con unos días de descanso, conviene que te evalúe un kinesiólogo: revisará cómo pisas y qué ejercicios te ayudan.</p>
+              <Link to="/profesionales?especialidad=Kinesiolog%C3%ADa" className="portada__mensaje-tarjeta"><Icono nombre="profesional" tamano={18} /> Ver profesionales de Kinesiología <Icono nombre="flecha" tamano={16} /></Link>
+            </div>
+            <p className="portada__mensaje portada__mensaje--persona">Agrega 150 g de avena a mi desayuno.</p>
+            <div className="portada__mensaje portada__mensaje--asistente">
+              <span className="portada__mensaje-tarjeta portada__mensaje-tarjeta--comida"><Icono nombre="check" tamano={18} /> Agregado a tus comidas de hoy: avena, 150 g, desayuno</span>
+            </div>
+          </figure>
         </section>
+
+        <ParaProfesionales />
 
         <section id="como-funciona" className="portada__pasos-fondo" aria-labelledby="titulo-pasos">
           <div className="portada__ancho portada__seccion portada__pasos-contenido">
-            <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">CÓMO FUNCIONA</p><h2 id="titulo-pasos">Empieza a cuidarte <span>en tres pasos</span></h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
-            <ol className="portada__pasos">
+            <div data-revelar className="portada__titulo-seccion"><h2 id="titulo-pasos">Empieza a cuidarte <span>en tres pasos</span></h2><p>No necesitas tener todo resuelto. Comienza por lo que importa: tú.</p><Link to="/registro" className="portada__enlace">Quiero comenzar <Icono nombre="flecha" tamano={18} /></Link></div>
+            <ol className="portada__pasos" data-escena>
               <li data-revelar><span>01</span><div><h3>Crea tu cuenta</h3><p>Regístrate con tu correo o con tu cuenta de Google.</p></div></li>
               <li data-revelar><span>02</span><div><h3>Completa tu perfil</h3><p>Elige tu tipo de cuenta y completa el perfil correspondiente para comenzar.</p></div></li>
               <li data-revelar><span>03</span><div><h3>Encuentra apoyo</h3><p>Busca profesionales cerca de ti, revisa sus reseñas y guarda tus favoritos.</p></div></li>
@@ -129,7 +133,7 @@ export default function Portada() {
         </section>
 
         <section id="que-ofrecemos" className="portada__seccion portada__ancho" aria-labelledby="titulo-oferta">
-          <div data-revelar className="portada__titulo-seccion"><p className="portada__antetitulo">QUÉ OFRECE FITSEARCH</p><h2 id="titulo-oferta">Más herramientas <span>para tu bienestar.</span></h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
+          <div data-revelar className="portada__titulo-seccion"><h2 id="titulo-oferta">Más herramientas <span>para tu bienestar.</span></h2><p>Comienza con nuestros profesionales y el asistente. Seguimos construyendo nuevos espacios para ti.</p></div>
           <div className="portada__herramientas">
             {OFERTA.map(({ icono, nombre, texto, destino }, indice) => (
               <article data-revelar data-revelar-retardo={indice * 70} key={nombre} className={`portada__herramienta${destino ? ' portada__herramienta--disponible' : ''}`}>
@@ -145,9 +149,10 @@ export default function Portada() {
       </main>
 
       <footer className="portada__pie">
-        <div className="portada__ancho portada__pie-contenido"><div><MarcaPortada /><p>Salud, deporte y bienestar.<br />Más cerca de ti.</p></div><nav aria-label="Enlaces del pie de página"><a href="#que-ofrecemos">Qué ofrecemos</a><a href="#como-funciona">Cómo funciona</a><Link to="/iniciar-sesion">Iniciar sesión</Link><Link to="/registro">Registrarse</Link></nav><p className="portada__aviso-salud">FitSearch entrega orientación general y no reemplaza la atención de un profesional de salud.</p></div>
+        <div className="portada__ancho portada__pie-contenido"><div><MarcaPortada /><p>Salud, deporte y bienestar.<br />Más cerca de ti.</p></div><nav aria-label="Enlaces del pie de página"><a href="#que-ofrecemos">Qué ofrecemos</a><a href="#como-funciona">Cómo funciona</a><a href="#para-profesionales">Para profesionales</a><Link to="/iniciar-sesion">Iniciar sesión</Link><Link to="/registro">Registrarse</Link></nav><p className="portada__aviso-salud">FitSearch entrega orientación general y no reemplaza la atención de un profesional de salud.</p></div>
         <div className="portada__ancho portada__creditos"><span>© {new Date().getFullYear()} FitSearch</span><span>Proyecto Capstone · Duoc UC</span></div>
       </footer>
+      <BotonSubir />
     </div>
   );
 }
