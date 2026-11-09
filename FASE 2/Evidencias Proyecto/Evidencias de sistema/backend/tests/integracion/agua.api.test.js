@@ -130,6 +130,20 @@ describe('DELETE /api/agua/:id', () => {
     expect(modelo.eliminar).toHaveBeenCalledWith(1, FECHA, 5);
   });
 
+  test('desde Comidas quita una suma propia del día anterior que se está viendo', async () => {
+    modelo.eliminar.mockResolvedValue([]);
+    const res = await conSesion(request(app).delete('/api/agua/5?fecha=2026-10-01'));
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ fecha: '2026-10-01', totalMl: 0 });
+    expect(modelo.eliminar).toHaveBeenCalledWith(1, '2026-10-01', 5);
+  });
+
+  test('no quita sumas de un día que aún no llega ni con una fecha mal escrita', async () => {
+    expect((await conSesion(request(app).delete('/api/agua/5?fecha=2999-01-01'))).status).toBe(400);
+    expect((await conSesion(request(app).delete('/api/agua/5?fecha=01-10-2026'))).status).toBe(400);
+    expect(modelo.eliminar).not.toHaveBeenCalled();
+  });
+
   test('una suma ajena o de otro día responde 404, y un id inválido 400', async () => {
     modelo.eliminar.mockRejectedValue(new ErrorHttp(404, 'No encontramos ese registro de agua'));
     expect((await conSesion(request(app).delete('/api/agua/99'))).status).toBe(404);

@@ -27,6 +27,7 @@ const fechaConsulta = query('fecha').optional().custom(esFecha).withMessage('La 
 router.get('/', fechaConsulta, validar, async (req, res) => res.json(await servicio.delDia(req.usuario.id, req.query.fecha ?? null)));
 router.post('/', ml, fecha, validar,
   async (req, res) => res.status(201).json(await servicio.agregar(req.usuario.id, req.body.ml, req.body.fecha ?? null)));
-router.delete('/:id', id, validar, async (req, res) => res.json(await servicio.eliminar(req.usuario.id, Number(req.params.id))));
+router.delete('/:id', id, fechaConsulta, validar,
+  async (req, res) => res.json(await servicio.eliminar(req.usuario.id, Number(req.params.id), req.query.fecha ?? null)));
 
 module.exports = router;

@@ -33,9 +33,11 @@ async function agregar(usuarioId, ml, fecha = null, ahora = new Date()) {
   return resumen(dia, await modelo.agregar(usuarioId, dia, ml), ahora);
 }
 
-async function eliminar(usuarioId, id, ahora = new Date()) {
-  const fecha = fechaEnChile(ahora);
-  return resumen(fecha, await modelo.eliminar(usuarioId, fecha, id), ahora);
+// Sin fecha, deshace una suma de hoy (Inicio). Comidas envía el día que se está viendo, para quitar un error de un día
+// anterior (revisión del PR #48).
+async function eliminar(usuarioId, id, fecha = null, ahora = new Date()) {
+  const dia = diaPedido(fecha, ahora, 'No hay registros de agua en días que aún no llegan');
+  return resumen(dia, await modelo.eliminar(usuarioId, dia, id), ahora);
 }
 
 module.exports = { delDia, agregar, eliminar };

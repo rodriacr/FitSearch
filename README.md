@@ -277,13 +277,13 @@ En «Tu progreso» del Inicio, la persona suma el agua que toma en el día:
 
 También se agrega desde Comidas, como si fuera un alimento. En «Registrar comida», al buscar «agua» aparece primero «Agua». Al elegirla se piden mililitros en vez de gramos y no se pide el momento del día. Se guarda en el agua del día que se está viendo, que es la misma que muestra «Agua hoy», y no suma calorías. El «Resumen nutricional» de Comidas muestra el agua del día con la misma barra que los macronutrientes.
 
-El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`, sección `agua`), y el total de un día no puede pasar de 10.000 ml. El día se corta a medianoche de Chile. La migración aditiva `20261105120000_registro_agua` crea la tabla `registro_agua`, con una fila por suma. Solo las cuentas de usuario usan estas rutas.
+El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`, sección `agua`), y el total de un día no puede pasar de 10.000 ml. El día se corta a medianoche de Chile. La migración aditiva `20261105120000_registro_agua` crea la tabla `registro_agua`, con una fila por suma. Solo las cuentas de usuario usan estas rutas. Dos sumas al mismo tiempo no pueden pasar el máximo del día: cada suma bloquea la cuenta mientras cuenta y guarda. `npm run test:mysql:agua` lo comprueba contra MySQL real, junto con el corte del día en Chile y quitar agua de un día anterior desde Comidas.
 
 | Método | Ruta | Autenticación | Descripción |
 |---|---|---|---|
 | GET | `/api/agua` | Bearer JWT (rol usuario) | Agua de hoy en Chile, o de la `fecha` (AAAA-MM-DD) que pide Comidas: `totalMl`, `metaMl`, `vasoMl`, `hoy` y cada suma con su hora; 400 si el día aún no llega |
 | POST | `/api/agua` | Bearer JWT (rol usuario) | Suma `ml` (entero de 50 a 2.000) al día de hoy, o a la `fecha` (AAAA-MM-DD) que envía Comidas, y responde el día actualizado con `hoy` (201); 400 con el rango permitido si la cantidad no es válida, si el día aún no llega o si el día pasaría de 10.000 ml |
-| DELETE | `/api/agua/:id` | Bearer JWT (rol usuario) | Deshace una suma propia de hoy y responde el día actualizado; 404 si es de otra cuenta o de otro día |
+| DELETE | `/api/agua/:id` | Bearer JWT (rol usuario) | Deshace una suma propia de hoy, o de la `fecha` (AAAA-MM-DD) que se ve en Comidas, y responde el día actualizado; 404 si es de otra cuenta o de otro día, y 400 si el día aún no llega |
 
 ## Ejecución con Docker
 

@@ -1,14 +1,16 @@
 // «Agua hoy» del Inicio (FS-HU-33): sumar vasos o mililitros, cantidades no válidas, deshacer y errores de la API.
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import AguaHoy from './AguaHoy.jsx';
+import { hoyEnChile } from '../../services/agua.service.js';
 import { llamadasA, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
+// La fecha es la de hoy en Chile: «Deshacer» solo actúa sobre el día que sigue siendo hoy.
 const dia = (registros) => ({
-  fecha: '2026-11-04', totalMl: registros.reduce((suma, { ml }) => suma + ml, 0), metaMl: 2000, vasoMl: 250,
+  fecha: hoyEnChile(), totalMl: registros.reduce((suma, { ml }) => suma + ml, 0), metaMl: 2000, vasoMl: 250,
   registros: registros.map((r, i) => ({ id: i + 1, hora: '10:00', ...r })),
 });
 
@@ -107,5 +109,32 @@ describe('Agua hoy', () => {
     fallar = false;
     await userEvent.click(screen.getByRole('button', { name: 'Reintentar' }));
     await waitFor(() => expect(valor()).toHaveTextContent('250 / 2.000 ml'));
+  });
+});
+
+// Revisión del PR #48: con el Inicio abierto al pasar la medianoche, «Agua hoy» pasa al día nuevo sin recargar la página.
+describe('Agua hoy al pasar la medianoche', () => {
+  afterEach(() => vi.useRealTimers());
+
+  test('a las 00:00 de Chile muestra el día nuevo y ya no ofrece deshacer las sumas de ayer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    // 02:59:30 UTC del 05-11 son las 23:59:30 del 04-11 en Santiago (UTC-3).
+    vi.setSystemTime(new Date('2026-11-05T02:59:30Z'));
+    const fetch = simularApi({
+      '/api/agua': () => {
+        const fecha = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date());
+        return [200, fecha === '2026-11-04'
+          ? { fecha, hoy: fecha, totalMl: 750, metaMl: 2000, vasoMl: 250, registros: [{ id: 1, ml: 750, hora: '20:00' }] }
+          : { fecha, hoy: fecha, totalMl: 0, metaMl: 2000, vasoMl: 250, registros: [] }];
+      },
+    });
+    render(<AguaHoy />);
+    await waitFor(() => expect(valor()).toHaveTextContent('750 / 2.000 ml'));
+    expect(screen.getByRole('button', { name: 'Deshacer la última suma de 750 ml' })).toBeInTheDocument();
+
+    await vi.advanceTimersByTimeAsync(61000);
+    await waitFor(() => expect(valor()).toHaveTextContent('0 / 2.000 ml'));
+    expect(screen.queryByRole('button', { name: /Deshacer/ })).not.toBeInTheDocument();
+    expect(llamadasA(fetch, '/api/agua').filter(([, o]) => (o?.method ?? 'GET') === 'GET')).toHaveLength(2);
   });
 });

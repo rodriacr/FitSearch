@@ -14,12 +14,15 @@ function delDia(usuarioId, fecha, db = prisma) {
   });
 }
 
-// El tope diario evita totales imposibles (por ejemplo, un número escrito de más). Se revisa en la misma transacción
-// que guarda la suma.
+// El tope diario evita totales imposibles (por ejemplo, un número escrito de más). Revisión del PR #48: dos sumas
+// simultáneas pasaban el tope (9.500 + 500 + 500 = 10.500 ml) porque cada una veía el total sin la otra. Ahora la suma
+// bloquea la fila de la cuenta (FOR UPDATE) antes de contar, así las sumas de una misma persona van de a una, y el
+// total se lee con una lectura bloqueante, que ve lo último confirmado.
 async function agregar(usuarioId, fecha, ml) {
   return prisma.$transaction(async (tx) => {
-    const { _sum } = await tx.registroAgua.aggregate({ where: { usuarioId, fecha: dia(fecha) }, _sum: { ml: true } });
-    const total = _sum.ml ?? 0;
+    await tx.$queryRaw`SELECT id FROM usuarios WHERE id = ${usuarioId} FOR UPDATE`;
+    const [{ total: sumado }] = await tx.$queryRaw`SELECT COALESCE(SUM(ml), 0) AS total FROM registro_agua WHERE usuario_id = ${usuarioId} AND fecha = ${fecha} FOR SHARE`;
+    const total = Number(sumado);
     if (total + ml > reglas.maxDiaMl) {
       const quedan = reglas.maxDiaMl - total;
       throw new ErrorHttp(400, `Hoy puedes sumar hasta ${quedan.toLocaleString('es-CL')} ml más (el máximo es ${reglas.maxDiaMl.toLocaleString('es-CL')} ml al día)`,
@@ -30,7 +33,8 @@ async function agregar(usuarioId, fecha, ml) {
   });
 }
 
-// Solo se deshace una suma propia del día indicado (el de hoy): las de otra cuenta o de otro día responden 404.
+// Solo se deshace una suma propia del día indicado (hoy, o el día que se ve en Comidas): las de otra cuenta o de otro
+// día responden 404.
 async function eliminar(usuarioId, fecha, id) {
   const { count } = await prisma.registroAgua.deleteMany({ where: { id, usuarioId, fecha: dia(fecha) } });
   if (count === 0) throw new ErrorHttp(404, 'No encontramos ese registro de agua');

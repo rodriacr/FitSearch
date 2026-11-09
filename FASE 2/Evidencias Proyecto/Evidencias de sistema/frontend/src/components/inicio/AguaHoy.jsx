@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import reglas from '@shared/reglas.json';
 import Icono from '../Icono.jsx';
-import { deshacerAgua, obtenerAguaHoy, sumarAgua } from '../../services/agua.service.js';
+import { deshacerAgua, hoyEnChile, obtenerAguaHoy, sumarAgua } from '../../services/agua.service.js';
 import { formatearNumero } from '../../services/formato.js';
 import './AguaHoy.css';
 
@@ -30,6 +30,28 @@ export default function AguaHoy() {
       .catch(() => activo && setErrorCarga(true));
     return () => { activo = false; };
   }, [intento]);
+
+  // Revisión del PR #48: si el Inicio queda abierto al pasar la medianoche, «Agua hoy» seguía mostrando el día anterior
+  // y «Deshacer» respondía 404. Cada minuto, y al volver a la pestaña, se revisa si cambió el día en Chile.
+  const fechaDelDia = dia?.fecha;
+  useEffect(() => {
+    if (!fechaDelDia) return undefined;
+    const revisar = () => {
+      if (hoyEnChile() === fechaDelDia) return;
+      setAviso('');
+      setError('');
+      setIntento((valor) => valor + 1);
+    };
+    const reloj = setInterval(revisar, 60000);
+    const alVolver = () => { if (document.visibilityState === 'visible') revisar(); };
+    document.addEventListener('visibilitychange', alVolver);
+    window.addEventListener('focus', revisar);
+    return () => {
+      clearInterval(reloj);
+      document.removeEventListener('visibilitychange', alVolver);
+      window.removeEventListener('focus', revisar);
+    };
+  }, [fechaDelDia]);
 
   async function guardar(accion, avisoListo) {
     setGuardando(true);
@@ -94,7 +116,9 @@ export default function AguaHoy() {
         {ultimo && (
           <button type="button" className="boton-texto agua-hoy__deshacer" disabled={guardando}
             aria-label={`Deshacer la última suma de ${formatearNumero(ultimo.ml)} ml`}
-            onClick={() => guardar(() => deshacerAgua(ultimo.id), `Quitaste ${formatearNumero(ultimo.ml)} ml.`)}>
+            onClick={() => (hoyEnChile() !== dia.fecha
+              ? setIntento((valor) => valor + 1)
+              : guardar(() => deshacerAgua(ultimo.id), `Quitaste ${formatearNumero(ultimo.ml)} ml.`))}>
             Deshacer
           </button>
         )}

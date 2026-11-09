@@ -11,6 +11,7 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "jest",
+    "test:mysql:agua": "node scripts/probar-agua-mysql.js",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",

@@ -1,5 +1,6 @@
 // Agua del día en el Resumen nutricional de Comidas (FS-HU-33).
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import AguaDelDia from './AguaDelDia.jsx';
 import { llamadasA, SESION, simularApi } from '../../tests/utilidades.jsx';
@@ -34,4 +35,23 @@ describe('Agua en el Resumen nutricional', () => {
     render(<AguaDelDia fecha="2026-11-04" />);
     expect(await screen.findByText('No pudimos cargar el agua de este día.')).toBeInTheDocument();
   });
+});
+
+// Revisión del PR #48: desde Comidas se quitan las sumas del día elegido, también de un día anterior.
+test('cada suma del día elegido se puede quitar y la barra se actualiza', async () => {
+  let registros = [{ id: 1, ml: 500, hora: '09:00' }, { id: 2, ml: 250, hora: '15:30' }];
+  const respuestaDia = () => ({ fecha: '2026-11-02', hoy: '2026-11-04', totalMl: registros.reduce((s, r) => s + r.ml, 0), metaMl: 2000, vasoMl: 250, registros });
+  const fetch = simularApi({
+    '/api/agua': (url, { method = 'GET' } = {}) => {
+      if (method === 'DELETE') registros = registros.filter((r) => !url.startsWith(`/api/agua/${r.id}?`));
+      return [200, respuestaDia()];
+    },
+  });
+  render(<AguaDelDia fecha="2026-11-02" />);
+  const sumas = await screen.findByRole('list', { name: 'Agua registrada este día' });
+  expect(within(sumas).getAllByRole('listitem')).toHaveLength(2);
+  await userEvent.click(within(sumas).getByRole('button', { name: 'Quitar 250 ml de las 15:30' }));
+  await waitFor(() => expect(screen.getByText('Agua').closest('.barra-nutriente')).toHaveTextContent('500 / 2.000 ml'));
+  const borrado = llamadasA(fetch, '/api/agua/2').find(([, o]) => o?.method === 'DELETE');
+  expect(borrado[0]).toBe('/api/agua/2?fecha=2026-11-02');
 });
