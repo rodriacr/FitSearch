@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { llamadasA, parametrosDe, renderizarApp, SESION, simularApi, simularUbicacion } from '../tests/utilidades.jsx';
+import { fichaProfesional, llamadasA, parametrosDe, renderizarApp, SESION, simularApi, simularUbicacion } from '../tests/utilidades.jsx';
 
 // El mapa tiene sus propias pruebas (MapaProfesionales.test.jsx). Aquí MapLibre no termina de cargar, como en un
 // navegador sin conexión a la CDN, para probar solo el directorio.
@@ -190,6 +190,29 @@ describe('Ficha', () => {
     simular({ ficha: () => [200, FICHA] });
     renderizarApp('/gimnasios?comuna=%C3%91u%C3%B1oa');
     await userEvent.click(await screen.findByRole('link', { name: 'Gimnasio Demo' }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Gimnasio Demo' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Volver a gimnasios' })).toHaveAttribute('href', '/gimnasios?comuna=%C3%91u%C3%B1oa');
+  });
+
+  // Revisión del PR #47: el recorrido lista → establecimiento → profesional → «Volver» → establecimiento → «Volver».
+  test('desde la ficha de un gimnasio, el profesional vuelve al gimnasio y este a la búsqueda filtrada', async () => {
+    simularApi({
+      '/api/establecimientos/filtros': { comunas: ['Ñuñoa'] },
+      '/api/establecimientos': (url) => [200, /^\/api\/establecimientos\/\d+/.test(url) ? FICHA : pagina(GIMNASIOS)],
+      '/api/profesionales/8/resenas': { resenas: [], pagina: 1, total: 0, totalPaginas: 0 },
+      '/api/profesionales/8': {
+        profesional: fichaProfesional({ id: 8, nombre: 'Ana Demo', especialidad: 'Entrenamiento personal' }),
+        resumenResenas: { promedio: null, total: 0, distribucion: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }, miResena: null, puedeResenar: true,
+      },
+    });
+    renderizarApp('/gimnasios?comuna=%C3%91u%C3%B1oa');
+    await userEvent.click(await screen.findByRole('link', { name: 'Gimnasio Demo' }));
+    await userEvent.click(await screen.findByRole('link', { name: /Ana Demo/ }));
+    expect(await screen.findByRole('heading', { level: 1, name: 'Ana Demo' })).toBeInTheDocument();
+
+    const volverAlGimnasio = screen.getByRole('link', { name: 'Volver a Gimnasio Demo' });
+    expect(volverAlGimnasio).toHaveAttribute('href', '/gimnasios/3');
+    await userEvent.click(volverAlGimnasio);
     expect(await screen.findByRole('heading', { level: 1, name: 'Gimnasio Demo' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver a gimnasios' })).toHaveAttribute('href', '/gimnasios?comuna=%C3%91u%C3%B1oa');
   });

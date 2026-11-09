@@ -86,7 +86,8 @@ export default function FichaEstablecimiento({ categoria }) {
             <ul className="lista-asociados">
               {profesionales.map((profesional) => (
                 <li key={profesional.id}>
-                  <Link to={`/profesionales/${profesional.id}`} state={{ desde: pathname }} className="asociado">
+                  <Link to={`/profesionales/${profesional.id}`} state={{ desde: pathname, origen: nombre, desdeOrigen: volverA }}
+                    className="asociado">
                     <span className="asociado__avatar" aria-hidden="true">{iniciales(profesional.nombre)}</span>
                     <span className="asociado__texto">
                       <span className="asociado__nombre">{profesional.nombre}</span>
