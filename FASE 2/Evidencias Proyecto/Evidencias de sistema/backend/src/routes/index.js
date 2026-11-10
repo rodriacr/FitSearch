@@ -14,6 +14,7 @@ router.use('/asistente', require('./asistente.routes'));
 router.use('/comidas', require('./comida.routes'));
 router.use('/administrador', require('./administrador.routes'));
 router.use('/verificaciones', require('./verificacion.routes'));
+router.use('/profesional', require('./actividadProfesional.routes'));
 router.use('/', require('./agenda.routes'));
 
 module.exports = router;

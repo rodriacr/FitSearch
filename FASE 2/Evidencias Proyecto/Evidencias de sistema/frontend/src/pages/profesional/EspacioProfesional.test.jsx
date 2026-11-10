@@ -58,9 +58,9 @@ describe('Diseño del profesional', () => {
 
   test('una sección que aún no existe muestra "Próximamente" y vuelve al Inicio del profesional', async () => {
     simular();
-    renderizarApp('/profesional/clientes');
-    expect(screen.getByRole('heading', { level: 1, name: 'Clientes' })).toBeInTheDocument();
-    expect(screen.getByText(/personas que reserven/)).toBeInTheDocument();
+    renderizarApp('/profesional/mensajes');
+    expect(screen.getByRole('heading', { level: 1, name: 'Mensajes' })).toBeInTheDocument();
+    expect(screen.getByText(/Pronto podrás leer los mensajes/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/profesional/inicio');
     expect(screen.queryByRole('link', { name: /Buscar profesionales/ })).not.toBeInTheDocument();
   });
@@ -73,7 +73,7 @@ describe('Inicio del profesional', () => {
     await screen.findByRole('group', { name: 'Clima en Providencia: 18 grados, Despejado' });
     expect(screen.queryByText('Define tu disponibilidad')).not.toBeInTheDocument();
   });
-  test('saluda, muestra el clima de su comuna con la fuente y el resumen semanal sin datos simulados', async () => {
+  test('saluda, muestra el clima de su comuna con la fuente y, si el resumen no carga, no inventa datos', async () => {
     simular();
     renderizarApp('/profesional/inicio');
 
@@ -83,7 +83,23 @@ describe('Inicio del profesional', () => {
     expect(within(clima).getByRole('link', { name: 'Datos: Open-Meteo' })).toHaveAttribute('href', 'https://open-meteo.com/');
     const resumen = screen.getByRole('heading', { name: /Resumen semanal/ }).closest('section');
     expect(within(resumen).getAllByText('—')).toHaveLength(4);
-    expect(within(resumen).getByText('Próximamente')).toBeInTheDocument();
+    expect(within(resumen).queryByText('Próximamente')).not.toBeInTheDocument();
+    expect(within(resumen).getByRole('link', { name: 'Ver reportes' })).toHaveAttribute('href', '/profesional/reportes');
+  });
+
+  test('el resumen semanal muestra los datos de la semana en curso (FS-HU-28)', async () => {
+    simularApi({
+      '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] },
+      '/api/profesional/reportes': {
+        resumenSemanal: { inicio: '2026-11-09', fin: '2026-11-15', totalClientes: 12, citasRealizadas: 3, citasPendientes: 2, clientesNuevos: 1 },
+      },
+    });
+    renderizarApp('/profesional/inicio');
+    const resumen = (await screen.findByRole('heading', { name: /Resumen semanal/ })).closest('section');
+    const valor = (nombre) => within(resumen).getByText(nombre).closest('li').querySelector('strong').textContent;
+    expect(await within(resumen).findByText('12')).toBeInTheDocument();
+    expect([valor('Total de clientes'), valor('Citas realizadas'), valor('Citas por confirmar'), valor('Clientes nuevos')]).toEqual(['12', '3', '2', '1']);
+    expect(within(resumen).getByText(/Semana del 9 nov al 15 nov/)).toBeInTheDocument();
   });
 
   test('si el clima no está disponible, el Inicio funciona igual sin esa tarjeta', async () => {
@@ -121,6 +137,8 @@ describe('Inicio del profesional', () => {
     const accesos = (await screen.findByRole('heading', { name: 'Accesos rápidos' })).closest('section');
     expect(within(accesos).getByRole('link', { name: /Mi perfil profesional/ })).toHaveAttribute('href', '/profesional/perfil');
     expect(within(accesos).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
+    expect(within(accesos).getByRole('link', { name: 'Clientes' })).toHaveAttribute('href', '/profesional/clientes');
+    // Solo Mensajes sigue pendiente.
+    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(1);
   });
 });

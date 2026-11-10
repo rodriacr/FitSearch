@@ -1,0 +1,58 @@
+/* Clientes del profesional (FS-HU-27) y su historial. */
+.clientes { display: grid; gap: 1rem; max-width: 60rem; margin: 0 auto; }
+.clientes h1 { margin: 0; font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
+.clientes__cabecera { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
+.clientes__cabecera p { margin: 0.35rem 0 0; }
+.clientes__buscador {
+  display: flex; align-items: center; gap: 0.5rem; width: min(100%, 18rem); padding: 0 0.85rem;
+  border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie); color: var(--color-texto-secundario);
+}
+.clientes__buscador:focus-within { outline: 2px solid var(--color-foco); outline-offset: 2px; }
+.clientes__buscador input { flex: 1; min-width: 0; padding: 0.7rem 0; border: 0; background: none; font: inherit; color: var(--color-texto); }
+.clientes__buscador input:focus { outline: none; }
+.clientes__total { margin: 0; font-size: 0.9rem; color: var(--color-texto-secundario); }
+.clientes__lista { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+
+.cliente {
+  display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 0.75rem 1rem; padding: 1rem 1.15rem;
+  background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta);
+}
+.cliente__inicial {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  font-weight: 600; color: var(--color-primario); background: var(--color-info-fondo);
+}
+.cliente__inicial--grande { width: 3.5rem; height: 3.5rem; font-size: 1.3rem; }
+.cliente__datos h2 { margin: 0; font-size: 1.05rem; }
+.cliente__datos p { margin: 0.2rem 0 0; font-size: 0.88rem; color: var(--color-texto-secundario); }
+.cliente__fechas { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; }
+.cliente__fechas strong { color: var(--color-texto); font-weight: 600; }
+.cliente__accion { grid-column: 1 / -1; justify-self: stretch; }
+
+.clientes__volver { display: inline-flex; align-items: center; gap: 0.4rem; justify-self: start; font-weight: 500; color: var(--color-primario); }
+.historial__cabecera { display: flex; align-items: center; gap: 1rem; }
+.historial__cabecera p { margin: 0.3rem 0 0; }
+.historial__resumen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.historial__resumen li {
+  display: grid; gap: 0.2rem; padding: 0.85rem 1rem; border-radius: 14px; font-size: 0.85rem; color: var(--color-texto-secundario);
+  background: var(--color-superficie); border: 1px solid var(--color-borde);
+}
+.historial__resumen strong { font-size: 1.4rem; color: var(--color-primario); }
+.historial__titulo { margin: 0.5rem 0 0; font-size: 1.1rem; }
+.historial__lista { display: grid; gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.historial__cita { padding: 1rem 1.15rem; background: var(--color-superficie); border-radius: var(--radio); box-shadow: var(--sombra-tarjeta); }
+.historial__cita p { margin: 0.5rem 0 0; }
+.historial__mensaje { font-size: 0.9rem; color: var(--color-texto-secundario); overflow-wrap: anywhere; }
+.historial__nota { margin: 0; font-size: 0.88rem; }
+
+/* Los colores de los estados repiten los de la Agenda y cumplen contraste AA sobre su fondo. */
+.historial__estado { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; color: var(--color-primario); background: #e9f4fb; }
+.historial__estado--confirmada, .historial__estado--realizada { color: #076342; background: #def5ec; }
+.historial__estado--cancelada { color: #962b2b; background: #fce5e5; }
+.historial__estado--sin-confirmar { color: #6b4a00; background: #fdf1d6; }
+
+.carga-error { display: grid; justify-items: start; gap: 0.5rem; }
+
+@media (min-width: 40rem) {
+  .cliente { grid-template-columns: auto 1fr auto; }
+  .cliente__accion { grid-column: auto; justify-self: end; }
+}
