@@ -1,11 +1,11 @@
 // Gestor de alimentación (FS-HU-09 y FS-HU-10; DAS CU-06). La persona registra alimentos del catálogo con sus gramos y
 // el sistema calcula calorías y macronutrientes; el resumen del día se compara con su objetivo diario, que sale del
-// requerimiento calórico del perfil (Mifflin-St Jeor) y del reparto de macronutrientes de shared/reglas.json.
+// requerimiento calórico del perfil (Mifflin-St Jeor) y del plan de alimentación que rige ese día (según la meta o
+// personalizado; planAlimentacion.service).
 // El asistente IA también puede agregar alimentos (prepararDesdeAsistente y guardarDesdeAsistente) con el mismo cálculo.
 const { comidas: reglas, perfil: reglasPerfil } = require('../../../shared/reglas.json');
 const modelo = require('../models/comida.model');
-const usuarioModel = require('../models/usuario.model');
-const { requerimientoCalorico } = require('./nutricion.service');
+const planes = require('./planAlimentacion.service');
 const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -75,22 +75,19 @@ const formatearRegistro = (registro) => ({
   hora: horaEnChile(registro.fechaCreacion),
 });
 
-// Objetivo diario: requerimiento calórico del perfil y gramos de cada macronutriente según el reparto de reglas.json.
-// Si el perfil está incompleto no hay objetivo, y la pantalla invita a completarlo.
-async function objetivoDiario(usuarioId) {
-  const usuario = await usuarioModel.buscarPorIdConPerfil(usuarioId);
-  const perfil = usuario?.perfil;
-  const datos = {
-    pesoKg: numero(perfil?.pesoKg), alturaCm: numero(perfil?.alturaCm), edad: perfil?.edad ?? null,
-    sexo: perfil?.sexo ?? null, actividadFisica: perfil?.actividadFisica ?? null,
-  };
-  const calorias = requerimientoCalorico(datos);
-  const gramos = (macro) => (calorias === null ? null : Math.round((calorias * reglas.macrosObjetivo[macro]) / reglas.kcalPorGramo[macro]));
+// Objetivo de un día: las calorías y los gramos del plan de alimentación que rige esa fecha (11-11-2026; antes, el
+// requerimiento del perfil con un reparto fijo de 30/45/25). Si el perfil está incompleto no hay objetivo, y la
+// pantalla invita a completarlo.
+async function objetivoDiario(usuarioId, fecha = fechaEnChile()) {
+  const plan = await planes.delDia(usuarioId, fecha);
+  const perfil = plan.usuario?.perfil;
+  const { datos } = plan;
   return {
-    calorias,
-    proteinasG: gramos('proteinas'),
-    carbohidratosG: gramos('carbohidratos'),
-    grasasG: gramos('grasas'),
+    calorias: plan.kcal,
+    proteinasG: plan.proteinasG,
+    carbohidratosG: plan.carbohidratosG,
+    grasasG: plan.grasasG,
+    plan: { tipo: plan.tipo, porcentajes: plan.porcentajes },
     perfil: {
       objetivoPrincipal: reglasPerfil.objetivoPrincipal.find(({ valor }) => valor === perfil?.objetivoPrincipal)?.etiqueta ?? null,
       pesoKg: datos.pesoKg,
@@ -113,7 +110,7 @@ async function buscarAlimentos(texto) {
 
 async function delDia(usuarioId, fecha, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
-  const [filas, objetivo] = await Promise.all([modelo.delDia(usuarioId, fecha), objetivoDiario(usuarioId)]);
+  const [filas, objetivo] = await Promise.all([modelo.delDia(usuarioId, fecha), objetivoDiario(usuarioId, fecha)]);
   const registros = filas.map(formatearRegistro);
   return {
     fecha,
@@ -132,7 +129,8 @@ async function semana(usuarioId, fecha, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
   const desde = lunesDeLaSemana(fecha);
   const hasta = sumarDias(desde, 6);
-  const [totales, objetivo] = await Promise.all([modelo.caloriasPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId)]);
+  // El objetivo de la semana es el del plan que rige su último día (o hoy, si la semana no termina).
+  const [totales, objetivo] = await Promise.all([modelo.caloriasPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId, [hasta, fechaEnChile(ahora)].sort()[0])]);
   const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum.calorias ?? 0]));
   const hoy = fechaEnChile(ahora);
   return {
@@ -162,7 +160,8 @@ function limitesDelPeriodo(periodo, fecha) {
 async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
   const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
-  const [totales, objetivo] = await Promise.all([modelo.totalesPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId)]);
+  // El objetivo del período es el del plan que rige su último día (o hoy, si el período no termina).
+  const [totales, objetivo] = await Promise.all([modelo.totalesPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId, [hasta, fechaEnChile(ahora)].sort()[0])]);
   const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum]));
   const hoy = fechaEnChile(ahora);
   const largo = Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000) + 1;

@@ -2,8 +2,10 @@
 // alimentos agregados desde el asistente. El acceso a datos se simula.
 jest.mock('../../src/models/comida.model');
 jest.mock('../../src/models/usuario.model');
+jest.mock('../../src/models/planAlimentacion.model');
 const modelo = require('../../src/models/comida.model');
 const usuarioModel = require('../../src/models/usuario.model');
+const planModelo = require('../../src/models/planAlimentacion.model');
 const servicio = require('../../src/services/comida.service');
 
 const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo, pechuga, pollo a la plancha', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6', activo: true };
@@ -39,11 +41,19 @@ test('elige el momento del día según la hora en Chile', () => {
   expect(momento('2026-10-26T05:00:00Z')).toBe('cena');
 });
 
-test('el objetivo diario sale del requerimiento calórico y reparte 30 % proteínas, 45 % carbohidratos y 25 % grasas', async () => {
-  // Mifflin-St Jeor: 10·68 + 6,25·175 − 5·30 + 5 = 1.628,75 kcal × 1,55 (moderada) = 2.525 kcal.
-  expect(await servicio.objetivoDiario(1)).toEqual({
-    calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70,
+test('el objetivo diario sale del requerimiento calórico y del plan según la meta del perfil', async () => {
+  // Mifflin-St Jeor: 10·68 + 6,25·175 − 5·30 + 5 = 1.628,75 kcal × 1,55 (moderada) = 2.525 kcal. «Mantener peso»: proteína
+  // 1,4 g/kg (95 g, 15 %), grasas 30 % y carbohidratos el resto (11-11-2026; antes un reparto fijo de 30/45/25).
+  expect(await servicio.objetivoDiario(1, '2026-10-26')).toEqual({
+    calorias: 2525, proteinasG: 95, carbohidratosG: 347, grasasG: 84,
+    plan: { tipo: 'meta', porcentajes: { proteinas: 15, carbohidratos: 55, grasas: 30 } },
     perfil: { objetivoPrincipal: 'Mantener peso', pesoKg: 68, alturaCm: 175, actividadFisica: 'Moderada' },
+  });
+  expect(planModelo.vigente).toHaveBeenCalledWith(1, '2026-10-26');
+  // Con un plan personalizado que rige ese día, se usan sus porcentajes con las calorías de la meta.
+  planModelo.vigente.mockResolvedValueOnce({ tipo: 'personalizado', desde: new Date('2026-10-20T00:00:00Z'), proteinasPct: 40, carbohidratosPct: 30, grasasPct: 30 });
+  expect(await servicio.objetivoDiario(1, '2026-10-26')).toMatchObject({
+    calorias: 2525, proteinasG: 253, carbohidratosG: 189, grasasG: 84, plan: { tipo: 'personalizado', porcentajes: { proteinas: 40, carbohidratos: 30, grasas: 30 } },
   });
   usuarioModel.buscarPorIdConPerfil.mockResolvedValue({ id: 1, perfil: { ...perfilCompleto, edad: null } });
   expect(await servicio.objetivoDiario(1)).toMatchObject({ calorias: null, proteinasG: null, carbohidratosG: null, grasasG: null });
@@ -92,7 +102,7 @@ test('las estadísticas de la semana traen cada día con sus macronutrientes y e
   const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-22' }, AHORA);
   expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-10-19', '2026-10-25');
   expect(datos).toMatchObject({ periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: '2026-10-26', diasConRegistros: 2 });
-  expect(datos.objetivo).toEqual({ calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70 });
+  expect(datos.objetivo).toEqual({ calorias: 2525, proteinasG: 95, carbohidratosG: 347, grasasG: 84 });
   expect(datos.dias).toHaveLength(7);
   expect(datos.dias[0]).toEqual({ fecha: '2026-10-19', calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3, conRegistros: true, futuro: false });
   expect(datos.dias[1]).toEqual({ fecha: '2026-10-20', calorias: 0, proteinasG: 0, carbohidratosG: 0, grasasG: 0, conRegistros: false, futuro: false });

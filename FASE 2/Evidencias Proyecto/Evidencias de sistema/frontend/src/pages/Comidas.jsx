@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
+import Carrusel from '../components/Carrusel.jsx';
 import Icono from '../components/Icono.jsx';
 import ComidasDelDia from '../components/comidas/ComidasDelDia.jsx';
 import EstadisticasComidas from '../components/comidas/EstadisticasComidas.jsx';
 import { AnilloCalorias, BarraNutriente, ProgresoSemanal } from '../components/comidas/GraficosComidas.jsx';
 import RegistrarComida from '../components/comidas/RegistrarComida.jsx';
 import AguaDelDia from '../components/comidas/AguaDelDia.jsx';
+import PlanAlimentacion from '../components/comidas/PlanAlimentacion.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { nombreDia, obtenerDia, obtenerSemana, sumarDias } from '../services/comidas.service.js';
 import './Comidas.css';
@@ -14,7 +16,7 @@ import './Comidas.css';
 const PESTANAS = [
   { clave: 'resumen', nombre: 'Resumen' },
   { clave: 'comidas', nombre: 'Comidas' },
-  { clave: 'plan', nombre: 'Plan de alimentación', proximamente: true },
+  { clave: 'plan', nombre: 'Plan de alimentación' },
   { clave: 'estadisticas', nombre: 'Estadísticas' },
 ];
 const NUTRIENTES = [
@@ -47,7 +49,8 @@ function TarjetaObjetivo({ objetivo }) {
 
 // Gestor de alimentación del usuario (FS-HU-09 y FS-HU-10; mockup del PO del 26-10-2026). Resumen del día frente al
 // objetivo, progreso de la semana y las comidas del día; los alimentos se registran con sus gramos o desde el asistente.
-// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26).
+// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26) y la de Plan de alimentación, el plan según la meta o uno
+// personalizado (11-11-2026).
 export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
@@ -70,7 +73,10 @@ export default function Comidas() {
   const esHoy = dia && dia.fecha === dia.hoy;
 
   let contenido;
-  if (!datos) {
+  if (pestana === 'plan') {
+    // El plan no depende del día elegido; al guardarlo se recarga el resumen para que use el plan nuevo.
+    contenido = <PlanAlimentacion alGuardar={recargar} />;
+  } else if (!datos) {
     contenido = <p className="comidas__estado" role="status">Cargando tus comidas…</p>;
   } else if (datos.error) {
     contenido = (
@@ -142,8 +148,10 @@ export default function Comidas() {
         </div>
 
         <p className="comidas__nota texto-secundario">
-          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física), repartido en 30 % proteínas, 45 % carbohidratos y
-          25 % grasas. Es una referencia general que no reemplaza la evaluación de un nutricionista.
+          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física) y repartido según tu plan de alimentación
+          {objetivo.plan && `: ${objetivo.plan.porcentajes.proteinas} % proteínas, ${objetivo.plan.porcentajes.carbohidratos} % carbohidratos y ${objetivo.plan.porcentajes.grasas} % grasas`}.{' '}
+          <button type="button" className="boton-texto comidas__ver-plan" onClick={() => setPestana('plan')}>Ver o cambiar tu plan</button>.
+          Es una referencia general que no reemplaza la evaluación de un nutricionista.
         </p>
       </div>
     );
@@ -162,15 +170,16 @@ export default function Comidas() {
         </button>
       </header>
 
-      <div className="comidas__pestanas" role="group" aria-label="Secciones de Comidas">
+      {/* En celular las pestañas no caben: la fila se desliza y tiene flechas a los costados (11-11-2026). */}
+      <Carrusel className="comidas__pestanas" nombre="secciones" tamano="compacto" role="group" aria-label="Secciones de Comidas">
         {PESTANAS.map(({ clave: valor, nombre, proximamente }) => (proximamente ? (
           <span key={valor} className="comidas__pestana comidas__pestana--proximamente">{nombre} <span className="etiqueta-proximamente">Próximamente</span></span>
         ) : (
           <button key={valor} type="button" className="comidas__pestana" aria-pressed={pestana === valor} onClick={() => setPestana(valor)}>{nombre}</button>
         )))}
-      </div>
+      </Carrusel>
 
-      {dia && pestana !== 'estadisticas' && (
+      {dia && pestana !== 'estadisticas' && pestana !== 'plan' && (
         <nav className="comidas__dia" aria-label="Día">
           <button type="button" className="boton-icono" onClick={() => setFecha(sumarDias(dia.fecha, -1))} aria-label="Día anterior">
             <Icono nombre="chevron" tamano={20} className="comidas__anterior" />

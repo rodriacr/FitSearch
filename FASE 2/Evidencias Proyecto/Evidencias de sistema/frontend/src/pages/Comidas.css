@@ -34,6 +34,7 @@
 .comidas__resumen { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 .comidas__resumen .panel-tarjeta { border-radius: 20px; }
 .comidas__nota { margin: 0; font-size: 0.8rem; }
+.comidas__nota .comidas__ver-plan { display: inline; min-height: 0; padding: 0; font-size: inherit; text-decoration: underline; text-underline-offset: 0.2em; }
 .comidas__pie { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 40rem) {
   .comidas__pie { grid-template-columns: repeat(2, minmax(0, 1fr)); }
