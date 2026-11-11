@@ -8,6 +8,13 @@ function smtpConfigurado() {
   return Boolean(usuario && contrasena && contrasena !== 'CAMBIAR');
 }
 
+// Qué falta para que los correos salgan de verdad (11-11-2026). server.js lo avisa al arrancar: antes, sin SMTP_USUARIO o
+// con la contraseña de ejemplo, ningún correo salía y no había ninguna señal fuera de la consola de cada envío.
+function faltantesSmtp() {
+  const { usuario, contrasena } = config.smtp;
+  return [!usuario && 'SMTP_USUARIO', (!contrasena || contrasena === 'CAMBIAR') && 'SMTP_CONTRASENA'].filter(Boolean);
+}
+
 let transporte;
 function obtenerTransporte() {
   if (!transporte) {
@@ -64,4 +71,4 @@ async function enviarAviso({ para, nombre, asunto, parrafos, accion }) {
   await obtenerTransporte().sendMail({ from: config.smtp.remitente, to: para, subject: asunto, text: texto, html });
 }
 
-module.exports = { enviarRecuperacion, enviarAviso, smtpConfigurado };
+module.exports = { enviarRecuperacion, enviarAviso, smtpConfigurado, faltantesSmtp };

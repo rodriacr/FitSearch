@@ -1,0 +1,63 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "alcance": "Revisión de todo lo que usa el correo y las cuentas de Google: registro, inicio de sesión, recuperación de contraseña, cuentas creadas con Google, cuentas desactivadas, cierre de sesión y acceso con Google",
+  "hallazgos": [
+    "SMTP sin configurar en el backend local: SMTP_USUARIO vacío y SMTP_CONTRASENA con el valor de ejemplo CAMBIAR. Ningún correo (recuperación ni avisos) salía; solo se escribía en la consola, sin ninguna advertencia general",
+    "Al restablecer la contraseña, las sesiones abiertas seguían funcionando",
+    "Google: GOOGLE_CLIENT_ID del backend y VITE_GOOGLE_CLIENT_ID del frontend coinciden y tienen el formato correcto; el botón «Continuar con Google» carga sin errores de origen en la consola",
+    "Cerrar sesión no revoca el token en el servidor: es el diseño documentado (JWT sin estado, el frontend descarta el token)"
+  ],
+  "correcciones": [
+    "Restablecer la contraseña cierra todas las sesiones abiertas de la cuenta (versionSesion)",
+    "El backend avisa al arrancar qué falta para enviar correos (SMTP_USUARIO, SMTP_CONTRASENA) y si falta GOOGLE_CLIENT_ID; npm run smtp:comprobar dice exactamente qué falta",
+    "Nueva comprobación con MySQL real: npm run test:mysql:acceso"
+  ],
+  "pendienteDelUsuario": "Configurar en backend/.env una cuenta de Gmail del proyecto: SMTP_USUARIO (el correo), SMTP_CONTRASENA (contraseña de aplicación de 16 letras, con verificación en dos pasos activa) y SMTP_REMITENTE; luego npm run smtp:comprobar. Probar «Continuar con Google» con una cuenta propia.",
+  "mysqlReal": {
+    "comando": "npm run test:mysql:acceso",
+    "total": 33,
+    "correoSimulado": true,
+    "comprobaciones": [
+      "Registro con correo",
+      "El correo queda en minúsculas",
+      "Un correo repetido no crea otra cuenta",
+      "Un correo inválido se rechaza",
+      "Inicio de sesión con mayúsculas en el correo",
+      "Inicio de sesión con «Recordarme»",
+      "Contraseña incorrecta",
+      "El perfil responde con la sesión",
+      "Cerrar sesión",
+      "Pedir recuperación (correo con mayúsculas)",
+      "Pedir recuperación de un correo sin cuenta",
+      "Mismo mensaje con y sin cuenta",
+      "Solo la cuenta existente recibe el enlace",
+      "El enlace abre la pantalla de restablecer del frontend",
+      "Pedir otro enlace",
+      "El enlace anterior deja de servir",
+      "Contraseña nueva demasiado corta",
+      "Restablecer con el enlace vigente",
+      "El enlace no sirve dos veces",
+      "La contraseña anterior ya no entra",
+      "La contraseña nueva entra",
+      "Restablecer la contraseña cierra las sesiones abiertas",
+      "Pedir un enlace que vencerá",
+      "Un enlace vencido no sirve",
+      "Una cuenta de Google no entra con una contraseña inventada",
+      "La cuenta de Google pide una contraseña por correo",
+      "Crea su contraseña con el enlace",
+      "Ahora entra también con contraseña",
+      "Sigue vinculada a Google",
+      "Una cuenta desactivada no entra",
+      "El acceso con Google está configurado (GOOGLE_CLIENT_ID)",
+      "Google rechaza una credencial falsa",
+      "Google rechaza una credencial mal formada"
+    ],
+    "limpieza": "Solo las cuentas temporales qa-acceso-*@example.test y sus enlaces"
+  },
+  "pruebasAutomatizadas": {
+    "backendJest": "488/488 (1 nueva: tokenRecuperacion.model)",
+    "lint": "sin errores"
+  },
+  "laNuevaComprobacionFallaConElCodigoAnterior": "«Restablecer la contraseña cierra las sesiones abiertas» (200 en vez de 401)"
+}
