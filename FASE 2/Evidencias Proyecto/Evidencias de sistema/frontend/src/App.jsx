@@ -8,7 +8,9 @@ import ElegirPerfil from './pages/ElegirPerfil.jsx';
 import Asistente from './pages/Asistente.jsx';
 import Comidas from './pages/Comidas.jsx';
 import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
-import { DisenoAdministrador, ResumenAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
+import { LienzoAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
+import DashboardAdministrador from './pages/administrador/DashboardAdministrador.jsx';
+import ReportesAdministrador from './pages/administrador/ReportesAdministrador.jsx';
 import ContenidoAdministrador from './pages/administrador/ContenidoAdministrador.jsx';
 import Establecimientos from './pages/Establecimientos.jsx';
 import Favoritos from './pages/Favoritos.jsx';
@@ -58,15 +60,18 @@ export default function App() {
           <Route path={ACCESO_NO_DISPONIBLE} element={<AccesoNoDisponible />} />
           <Route path={ELEGIR_PERFIL} element={<ElegirPerfil />} />
           <Route element={<RutaProtegida rol="administrador" />}>
-            <Route path="/admin" element={<DisenoAdministrador />}>
+            {/* El administrador usa el mismo encabezado y menú que los otros espacios (11-11-2026). */}
+            <Route path="/admin" element={<DisenoAplicacion espacio="administrador" />}>
+             <Route element={<LienzoAdministrador />}>
               <Route index element={<Navigate to="dashboard" replace />} />
-              <Route path="dashboard" element={<ResumenAdministrador />} />
+              <Route path="dashboard" element={<DashboardAdministrador />} />
               <Route path="profesionales" element={<ListadoAdministrador key="profesionales" tipo="profesionales" />} />
               <Route path="verificaciones" element={<ListadoAdministrador key="verificaciones" tipo="verificaciones" />} />
               <Route path="verificaciones/:id" element={<DetalleVerificacion key={pathname} />} />
               <Route path="usuarios" element={<ListadoAdministrador key="usuarios" tipo="usuarios" />} />
-              <Route path="reportes" element={<ResumenAdministrador reporte />} />
+              <Route path="reportes" element={<ReportesAdministrador />} />
               <Route path="contenido" element={<ContenidoAdministrador />} />
+             </Route>
             </Route>
           </Route>
           {/* Espacio del usuario */}

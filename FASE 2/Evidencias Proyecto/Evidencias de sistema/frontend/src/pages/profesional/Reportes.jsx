@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import Alerta from '../../components/Alerta.jsx';
 import { Estrellas } from '../../components/Calificacion.jsx';
 import Icono from '../../components/Icono.jsx';
+import { Barras, Cifra, ColumnasApiladas } from '../../components/graficos/Graficos.jsx';
 import { solicitar } from '../../services/api.js';
 import { formatearNumero } from '../../services/formato.js';
 import './Reportes.css';
@@ -11,112 +12,13 @@ const PERIODOS = [4, 8, 12];
 // Colores de los estados en el gráfico (validados con el verificador de paletas: lightness, croma y daltonismo).
 // El naranjo no llega a 3:1 con el fondo: por eso hay leyenda, valores al pasar el mouse y una tabla para lectores.
 const SERIES = [
-  { clave: 'confirmada', nombre: 'Confirmadas' },
-  { clave: 'pendiente', nombre: 'Por confirmar' },
-  { clave: 'cancelada', nombre: 'Canceladas' },
+  { clave: 'confirmada', nombre: 'Confirmadas', color: 'var(--serie-confirmada)' },
+  { clave: 'pendiente', nombre: 'Por confirmar', color: 'var(--serie-pendiente)' },
+  { clave: 'cancelada', nombre: 'Canceladas', color: 'var(--serie-cancelada)' },
 ];
 const FRANJAS = { manana: 'Mañana', tarde: 'Tarde', noche: 'Noche' };
 const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
 const corta = (fecha) => `${Number(fecha.slice(8))} ${MESES[Number(fecha.slice(5, 7)) - 1]}`;
-
-// Tope "redondo" del eje: 4, 5, 10, 20, 25, 50… para que las marcas sean números limpios.
-function topeLimpio(maximo) {
-  if (maximo <= 4) return 4;
-  const potencia = 10 ** Math.floor(Math.log10(maximo));
-  const paso = [1, 2, 2.5, 5, 10].find((p) => p * potencia >= maximo / 4) * potencia;
-  return Math.ceil(maximo / paso) * paso;
-}
-
-// Cifra con su comparación contra el período anterior (del mismo largo).
-function Cifra({ etiqueta, valor, detalle, delta, subirEsBueno = true }) {
-  const signo = delta > 0 ? '+' : '';
-  const tono = !delta ? '' : (delta > 0) === subirEsBueno ? ' cifra-reporte__delta--buena' : ' cifra-reporte__delta--mala';
-  return (
-    <div className="cifra-reporte">
-      <dt>{etiqueta}</dt>
-      <dd>
-        <strong className="cifra">{valor}</strong>
-        {delta !== undefined && (
-          <span className={`cifra-reporte__delta${tono}`}>
-            {delta !== 0 && <Icono nombre="flecha" tamano={14} className={delta > 0 ? 'cifra-reporte__sube' : 'cifra-reporte__baja'} />}
-            {delta === 0 ? 'Igual que el período anterior' : `${signo}${formatearNumero(delta)} vs. período anterior`}
-          </span>
-        )}
-        {detalle && <span className="cifra-reporte__detalle">{detalle}</span>}
-      </dd>
-    </div>
-  );
-}
-
-// Columnas apiladas por semana: confirmadas abajo, por confirmar y canceladas encima, con 2 px de aire entre partes.
-function ReservasPorSemana({ semanas }) {
-  const totales = semanas.map((s) => s.confirmada + s.pendiente + s.cancelada);
-  const tope = topeLimpio(Math.max(...totales, 1));
-  const marcas = [0, tope / 2, tope];
-  return (
-    <figure className={`columnas${semanas.length > 8 ? ' columnas--densas' : ''}`} style={{ '--columnas': semanas.length }}>
-      <div className="columnas__plano">
-        <div className="columnas__eje" aria-hidden="true">
-          {marcas.map((m) => <span key={m} style={{ bottom: `${(m / tope) * 100}%` }}>{formatearNumero(m)}</span>)}
-        </div>
-        <div className="columnas__area">
-          {marcas.map((m) => <i key={m} className="columnas__guia" style={{ bottom: `${(m / tope) * 100}%` }} aria-hidden="true" />)}
-          {semanas.map((s, indice) => {
-            const total = totales[indice];
-            const resumen = SERIES.map(({ clave, nombre }) => `${s[clave]} ${nombre.toLowerCase()}`).join(', ');
-            return (
-              <div key={s.desde} className={`columna${s.actual ? ' columna--actual' : ''}`} tabIndex={0}
-                aria-label={`Semana del ${corta(s.desde)}: ${total} ${total === 1 ? 'reserva' : 'reservas'} (${resumen})`}>
-                <div className="columna__pila" style={{ height: `${(total / tope) * 100}%` }} aria-hidden="true">
-                  {SERIES.filter(({ clave }) => s[clave] > 0).map(({ clave }) => (
-                    <i key={clave} className={`columna__parte columna__parte--${clave}`} style={{ flexGrow: s[clave] }} />
-                  ))}
-                </div>
-                <span className="columna__etiqueta" aria-hidden="true">{corta(s.desde)}</span>
-                <span className="columna__ayuda" role="tooltip" aria-hidden="true">
-                  <strong>Semana del {corta(s.desde)}{s.actual ? ' (actual)' : ''}</strong>
-                  {SERIES.map(({ clave, nombre }) => (
-                    <span key={clave}><i className={`muestra-serie muestra-serie--${clave}`} />{nombre}<b className="cifra">{s[clave]}</b></span>
-                  ))}
-                </span>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      <figcaption className="leyenda-series">
-        {SERIES.map(({ clave, nombre }) => <span key={clave}><i className={`muestra-serie muestra-serie--${clave}`} aria-hidden="true" />{nombre}</span>)}
-      </figcaption>
-      <table className="solo-lector">
-        <caption>Reservas por semana y estado</caption>
-        <thead><tr><th scope="col">Semana</th>{SERIES.map((s) => <th key={s.clave} scope="col">{s.nombre}</th>)}</tr></thead>
-        <tbody>
-          {semanas.map((s) => (
-            <tr key={s.desde}><th scope="row">Del {corta(s.desde)} al {corta(s.hasta)}</th>{SERIES.map(({ clave }) => <td key={clave}>{s[clave]}</td>)}</tr>
-          ))}
-        </tbody>
-      </table>
-    </figure>
-  );
-}
-
-// Barras horizontales de una sola serie (sin leyenda: el título dice qué se mide), con el valor en la punta.
-function Barras({ filas, etiquetaLector }) {
-  const maximo = Math.max(...filas.map((f) => f.valor), 1);
-  return (
-    <ul className="barras" aria-label={etiquetaLector}>
-      {filas.map((f) => (
-        <li key={f.etiqueta} className="barras__fila">
-          <span className="barras__etiqueta">{f.etiqueta}</span>
-          <span className="barras__pista" aria-hidden="true">
-            <i className="barras__barra" style={{ width: `${(f.valor / maximo) * 100}%` }} />
-          </span>
-          <span className="barras__valor cifra">{f.valor}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 // Reportes del profesional (FS-HU-28): reservas por semana y por estado, calificación y reseñas, cuándo le piden hora
 // y la comparación con el período anterior.
@@ -162,7 +64,7 @@ export default function Reportes() {
         <p className="texto-secundario" role="status">Cargando reportes…</p>
       ) : (
         <div className={`reportes__contenido${actualizando ? ' reportes__contenido--actualizando' : ''}`} aria-busy={actualizando}>
-          <dl className="reportes__cifras">
+          <dl className="reportes__cifras cifras">
             <Cifra etiqueta="Reservas" valor={datos.totales.reservas} delta={datos.totales.reservas - datos.anterior.reservas}
               detalle={`${datos.totales.confirmadas} confirmadas · ${datos.totales.pendientes} por confirmar`} />
             <Cifra etiqueta="Clientes" valor={datos.totales.clientes} detalle={`${datos.totales.clientesNuevos} ${datos.totales.clientesNuevos === 1 ? 'nuevo' : 'nuevos'} en el período`} />
@@ -175,7 +77,11 @@ export default function Reportes() {
 
           <section className="panel-reporte" aria-labelledby="titulo-por-semana">
             <h2 id="titulo-por-semana">Reservas por semana</h2>
-            {datos.totales.reservas ? <ReservasPorSemana semanas={datos.porSemana} /> : (
+            {datos.totales.reservas ? <ColumnasApiladas
+              grupos={datos.porSemana.map((semana) => ({ ...semana, clave: semana.desde }))} series={SERIES} unidad={['reserva', 'reservas']}
+              etiqueta={(semana) => corta(semana.desde)} titulo={(semana) => `Semana del ${corta(semana.desde)}`}
+              tituloTabla="Reservas por semana y estado" filaTabla={{ encabezado: 'Semana', texto: (semana) => `Del ${corta(semana.desde)} al ${corta(semana.hasta)}` }}
+            /> : (
               <p className="panel-reporte__vacio">Aún no tienes reservas en estas semanas. <Link to="/profesional/agenda">Publica horarios</Link> para que puedan reservar contigo.</p>
             )}
           </section>

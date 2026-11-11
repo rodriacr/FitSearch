@@ -44,6 +44,18 @@ export const SECCIONES_PROFESIONAL = {
   configuracion: { ruta: '/profesional/configuracion', nombre: 'Configuración', icono: 'ajustes' },
 };
 
+// Espacio del administrador (11-11-2026): mismo diseño que los otros espacios. Verificaciones va segunda porque es la cola
+// de trabajo del día; Profesionales es el directorio.
+export const SECCIONES_ADMINISTRADOR = {
+  dashboard: { ruta: '/admin/dashboard', nombre: 'Dashboard', icono: 'casa' },
+  verificaciones: { ruta: '/admin/verificaciones', nombre: 'Verificaciones', icono: 'escudo' },
+  profesionales: { ruta: '/admin/profesionales', nombre: 'Profesionales', icono: 'profesional' },
+  usuarios: { ruta: '/admin/usuarios', nombre: 'Usuarios', icono: 'grupo' },
+  reportes: { ruta: '/admin/reportes', nombre: 'Reportes', icono: 'grafico' },
+  // Catálogos de especialidades, alimentos y establecimientos (FS-HU-30).
+  contenido: { ruta: '/admin/contenido', nombre: 'Contenido', icono: 'capas' },
+};
+
 export const ESPACIOS = {
   // Mensajes de las reservas (FS-HU-31) va al final del menú del usuario, después de Mis citas.
   usuario: { secciones: { ...SECCIONES, mensajes: { ruta: '/mensajes', nombre: 'Mensajes', icono: 'chat' } }, menu: [...MENU_LATERAL, 'mensajes'], barra: BARRA_INFERIOR },
@@ -55,6 +67,16 @@ export const ESPACIOS = {
       { seccion: 'agenda', nombre: 'Agenda', icono: 'calendario' },
       { seccion: 'clientes', nombre: 'Clientes', icono: 'grupo' },
       { seccion: 'perfil', nombre: 'Perfil', icono: 'usuario' },
+    ],
+  },
+  administrador: {
+    secciones: SECCIONES_ADMINISTRADOR,
+    menu: ['dashboard', 'verificaciones', 'profesionales', 'usuarios', 'reportes', 'contenido'],
+    barra: [
+      { seccion: 'dashboard', nombre: 'Inicio', icono: 'casa' },
+      { seccion: 'verificaciones', nombre: 'Verificar', icono: 'escudo' },
+      { seccion: 'usuarios', nombre: 'Usuarios', icono: 'grupo' },
+      { seccion: 'reportes', nombre: 'Reportes', icono: 'grafico' },
     ],
   },
 };

@@ -1,0 +1,39 @@
+{
+  "fecha": "2026-11-11",
+  "pedido": "Mismo encabezado que el usuario (indicando que es administrador) y mejora completa del administrador sin repetir gráficos ni secciones",
+  "problemaAnterior": "Dashboard y Reportes usaban el mismo componente (mismas cifras, gráfico y tabla); Profesionales y Verificaciones eran el mismo listado con otro filtro; el panel tenía su propio encabezado y repetía nombre, correo y cerrar sesión en el menú lateral",
+  "investigacion": [
+    "Dashboards operativos vs. analíticos (Basedash): el operativo se escanea y cada fila lleva al registro; el analítico tiene filtros acotados y secciones",
+    "NN/g, atributos preatentivos: largo y posición (barras y líneas) antes que ángulos o áreas (sin tortas)",
+    "Métricas de marketplace (a16z, Sharetribe): oferta y demanda por separado, liquidez y tiempo de emparejamiento",
+    "Skills de diseño del proyecto: impeccable (modo Operate), dataviz (paleta validada para daltonismo, tabla para lectores, ayuda al pasar)"
+  ],
+  "resultado": {
+    "dashboard": "Cola de verificaciones por antigüedad, 4 cifras de 7 días vs. 7 anteriores, actividad diaria de 14 días, últimas cuentas, estado de la plataforma",
+    "reportes": "30 días, 90 días o 12 meses vs. período anterior: crecimiento, demanda, oferta, calidad, uso de funciones; descarga CSV",
+    "verificaciones": "Cola de la solicitud más antigua a la más reciente, días de espera y documentos",
+    "profesionales": "Directorio con calificación y reservas",
+    "encabezado": "El de la app: el menú de cuenta dice «Administrador» y la campana avisa las verificaciones pendientes"
+  },
+  "paleta": {
+    "colores": [
+      "#1565a0",
+      "#e07b2a",
+      "#1f7a52"
+    ],
+    "validador": "dataviz/scripts/validate_palette.js --mode light: todas las pruebas aprobadas; el naranjo bajo 3:1 lleva leyenda, ayuda y tabla"
+  },
+  "pruebas": {
+    "backend": [
+      "tests/unit/estadisticasAdmin.service.test.js",
+      "tests/integracion/administrador.api.test.js"
+    ],
+    "frontend": "src/pages/administrador/PanelAdministrador.test.jsx (15)"
+  },
+  "capturas": [
+    "Administrador_2026-11-11_dashboard.png",
+    "Administrador_2026-11-11_reportes.png",
+    "Administrador_2026-11-11_dashboard_celular.png",
+    "Administrador_2026-11-11_verificaciones.png"
+  ]
+}
