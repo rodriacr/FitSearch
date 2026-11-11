@@ -19,3 +19,6 @@ export const CATEGORIAS = Object.fromEntries(reglas.contenido.establecimiento.ca
 ]));
 
 export const direccionCompleta = ({ direccion, comuna }) => (comuna ? `${direccion}, ${comuna}` : direccion);
+
+// Enlace al perfil de Instagram de un establecimiento (se guarda solo el usuario, sin «@»; 11-11-2026).
+export const enlaceInstagram = (usuario) => `https://www.instagram.com/${usuario}/`;

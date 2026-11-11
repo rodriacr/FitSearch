@@ -14,7 +14,7 @@ const fila = {
   ubicacionLat: '-33.4540000', ubicacionLng: '-70.5980000', distanciaKm: null, totalProfesionales: 2n,
 };
 const esperado = {
-  id: 3, nombre: 'Centro Médico Demo', categoria: 'centro_salud', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 1000',
+  id: 3, nombre: 'Centro Médico Demo', categoria: 'centro_salud', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 1000', instagram: null,
   ubicacionLat: -33.454, ubicacionLng: -70.598, distanciaKm: null, totalProfesionales: 2,
 };
 const porDefecto = { categoria: 'centro_salud', comuna: '', ubicacion: null, distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12 };

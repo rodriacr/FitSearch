@@ -19,7 +19,7 @@ const CATALOGOS = {
   establecimientos: {
     tabla: 'establecimiento', activo: 'activo', buscarEn: ['nombre', 'comuna', 'direccion'],
     seleccion: {
-      id: true, nombre: true, categoria: true, comuna: true, direccion: true, ubicacionLat: true, ubicacionLng: true, activo: true,
+      id: true, nombre: true, categoria: true, comuna: true, direccion: true, instagram: true, ubicacionLat: true, ubicacionLng: true, activo: true,
       _count: { select: { profesionales: true } },
     },
   },

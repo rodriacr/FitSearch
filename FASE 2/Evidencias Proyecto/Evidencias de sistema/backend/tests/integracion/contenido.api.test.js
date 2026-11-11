@@ -83,7 +83,7 @@ test('un establecimiento necesita categoría del catálogo, comuna, dirección y
   modelo.crear.mockImplementation(async (_, datos) => ({ id: 3, ...datos, activo: true, enUso: 0 }));
   const res = await conSesion(request(app).post(`${RUTA}/establecimientos`)).send(GIMNASIO);
   expect(res.status).toBe(201);
-  expect(res.body.elemento).toEqual({ id: 3, ...GIMNASIO, activo: true, enUso: 0 });
+  expect(res.body.elemento).toEqual({ id: 3, ...GIMNASIO, instagram: null, activo: true, enUso: 0 });
   const malo = await conSesion(request(app).post(`${RUTA}/establecimientos`)).send({ ...GIMNASIO, categoria: 'farmacia', comuna: ' ', ubicacionLat: -10 });
   expect(malo.status).toBe(400);
   expect(malo.body.detalles).toMatchObject({
@@ -93,11 +93,30 @@ test('un establecimiento necesita categoría del catálogo, comuna, dirección y
   });
 });
 
+// Instagram (11-11-2026): opcional; se guarda solo el usuario aunque se escriba con «@» o se pegue el enlace del perfil.
+test.each([
+  ['@pacific_sanantonio', 'pacific_sanantonio'],
+  ['https://www.instagram.com/pacific_sanantonio/', 'pacific_sanantonio'],
+  ['instagram.com/no-es-enlace', null],
+])('un establecimiento guarda su Instagram como usuario: %s', async (escrito, guardado) => {
+  modelo.crear.mockImplementation(async (_, datos) => ({ id: 3, ...datos, activo: true, enUso: 0 }));
+  const res = await conSesion(request(app).post(`${RUTA}/establecimientos`)).send({ ...GIMNASIO, instagram: escrito });
+  if (guardado === null) {
+    expect(res.status).toBe(400);
+    expect(res.body.detalles.instagram).toBe('Escribe un usuario de Instagram válido: letras, números, puntos o guiones bajos (hasta 30)');
+    expect(modelo.crear).not.toHaveBeenCalled();
+  } else {
+    expect(res.status).toBe(201);
+    expect(modelo.crear).toHaveBeenCalledWith('establecimientos', { ...GIMNASIO, instagram: guardado });
+    expect(res.body.elemento.instagram).toBe(guardado);
+  }
+});
+
 test('edita, cambia el estado y elimina; un elemento en uso responde 409 sin borrarse', async () => {
   modelo.actualizar.mockResolvedValue({ id: 3, ...GIMNASIO, nombre: 'Gimnasio Demo', activo: true, enUso: 1 });
   const editado = await conSesion(request(app).put(`${RUTA}/establecimientos/3`)).send({ ...GIMNASIO, nombre: 'Gimnasio Demo' });
   expect(editado.status).toBe(200);
-  expect(modelo.actualizar).toHaveBeenCalledWith('establecimientos', 3, { ...GIMNASIO, nombre: 'Gimnasio Demo' });
+  expect(modelo.actualizar).toHaveBeenCalledWith('establecimientos', 3, { ...GIMNASIO, nombre: 'Gimnasio Demo', instagram: null });
 
   modelo.cambiarEstado.mockResolvedValue({ id: 3, ...GIMNASIO, activo: false, enUso: 1 });
   const estado = await conSesion(request(app).patch(`${RUTA}/establecimientos/3/estado`)).send({ activo: false });

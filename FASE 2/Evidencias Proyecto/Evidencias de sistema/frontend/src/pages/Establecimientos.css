@@ -35,6 +35,15 @@
 .ficha-establecimiento h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 2rem); line-height: 1.2; letter-spacing: -0.02em; text-wrap: balance; }
 .ficha-establecimiento__direccion { display: flex; gap: 0.4rem; align-items: flex-start; margin: 0.45rem 0 0; color: var(--color-texto-secundario); }
 .ficha-establecimiento__direccion .icono { flex-shrink: 0; margin-top: 0.2rem; color: var(--color-primario); }
+.ficha-establecimiento__direccion a { font-weight: 600; text-underline-offset: 0.2em; }
+/* Instagram del gimnasio en su tarjeta (11-11-2026): por encima del enlace que cubre la tarjeta, como «Ver en el mapa». */
+.tarjeta-establecimiento__instagram {
+  position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; padding: 0.3rem 0.2rem;
+  font-size: 0.8rem; font-weight: 600; color: var(--color-primario); text-decoration: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tarjeta-establecimiento__instagram:hover { text-decoration: underline; text-underline-offset: 0.2em; }
+}
 .ficha-establecimiento__cuerpo { display: grid; gap: 1.25rem; }
 .ficha-establecimiento__cuerpo h2 { margin: 0 0 0.85rem; font-size: 1.1rem; }
 @media (min-width: 60rem) {
