@@ -168,7 +168,7 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 Sin sesión, la raíz (`/`) muestra la portada pública. Después de registrarse (con correo o con Google), la cuenta elige una sola vez cómo usar FitSearch en `/elegir-perfil`: como usuario sigue al asistente de perfil de 4 pasos (`/perfil`) y como profesional entra a su propio espacio (`/profesional/inicio`). Cambiar el tipo de cuenta después lo hace un administrador.
 
-- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10) y su perfil.
+- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Centros de salud (`/centros-salud`) y Gimnasios (`/gimnasios`) con su lista, mapa y ficha (FS-HU-25), Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10) y su perfil.
 - **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda (`/profesional/agenda`), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`). Clientes, Mensajes, Reportes y Configuración aparecen como «Próximamente».
 - **Administrador:** panel en `/admin` (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; FS-HU-12).
 
@@ -210,6 +210,9 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | GET | `/api/favoritos` | Bearer JWT (rol usuario) | Profesionales favoritos del usuario (FS-HU-23) |
 | PUT | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Guarda un favorito (idempotente) |
 | DELETE | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Quita un favorito (idempotente) |
+| GET | `/api/establecimientos` | Bearer JWT (rol usuario) | Centros de salud o gimnasios activos (FS-HU-25): `categoria` obligatoria (`centro_salud` o `gimnasio`), `comuna`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre` o `cercania`), `pagina` y `limite`; cada uno trae su dirección, ubicación, `distanciaKm` y `totalProfesionales` |
+| GET | `/api/establecimientos/filtros` | Bearer JWT (rol usuario) | Comunas con establecimientos activos de la `categoria` |
+| GET | `/api/establecimientos/:id` | Bearer JWT (rol usuario) | Ficha de un establecimiento activo con sus profesionales asociados (nombre, especialidad, modalidad y si está verificado); 404 si no existe o se desactivó |
 
 Las rutas de la agenda y las reservas (`/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`) se describen en su sección, más abajo. Las del panel del administrador están bajo `/api/administrador` y las solicitudes y documentos de verificación del profesional bajo `/api/verificaciones` (FS-HU-12).
 

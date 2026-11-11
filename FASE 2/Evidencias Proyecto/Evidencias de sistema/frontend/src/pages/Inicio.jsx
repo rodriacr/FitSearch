@@ -151,7 +151,7 @@ export default function Inicio() {
       <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
         <ul className="accesos-rapidos">
-          {['profesionales', 'citas', 'asistente', 'comidas', ...ACCESOS_RAPIDOS.filter((clave) => SECCIONES[clave].proximamente)].map((clave) => {
+          {ACCESOS_RAPIDOS.map((clave) => {
             const { ruta, nombre, icono, proximamente } = SECCIONES[clave];
             return (
               <li key={clave}>

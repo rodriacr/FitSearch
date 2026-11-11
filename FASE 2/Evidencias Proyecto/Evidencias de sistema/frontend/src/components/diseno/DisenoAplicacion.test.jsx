@@ -8,6 +8,8 @@ const API = {
   '/api/perfil': respuestaPerfil(PERFIL_COMPLETO),
   '/api/profesionales/filtros': { especialidades: [], comunas: [] },
   '/api/profesionales': listado([]),
+  '/api/establecimientos/filtros': { comunas: [] },
+  '/api/establecimientos': { establecimientos: [], pagina: 1, total: 0, totalPaginas: 0, hayMas: false },
 };
 
 describe('Con sesión', () => {
@@ -68,12 +70,16 @@ describe('Con sesión', () => {
     expect(within(menu).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
   });
 
-  test('una sección que aún no existe muestra "Próximamente" sin datos simulados', async () => {
+  // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban
+  // en EspacioProfesional.test.jsx).
+  test('"Gimnasios" del menú abre el directorio de gimnasios, sin datos simulados', async () => {
     renderizarApp('/inicio');
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('link', { name: /Gimnasios/ }));
+    const enlace = within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('link', { name: 'Gimnasios' });
+    expect(within(enlace).queryByText('Próximamente')).not.toBeInTheDocument();
+    await userEvent.click(enlace);
     expect(screen.getByRole('heading', { level: 1, name: 'Gimnasios' })).toBeInTheDocument();
-    expect(screen.getByText(/Pronto podrás descubrir gimnasios/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /Buscar profesionales/ })).toHaveAttribute('href', '/profesionales');
+    expect(await screen.findByRole('heading', { name: 'Aún no hay gimnasios para mostrar' })).toBeInTheDocument();
+    expect(screen.queryByText(/Pronto podrás/)).not.toBeInTheDocument();
   });
 
   test('la campana abre un aviso vacío de notificaciones', async () => {

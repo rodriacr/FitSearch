@@ -50,6 +50,22 @@ describe('Ficha', () => {
     expect(await screen.findByRole('searchbox', { name: 'Buscar profesionales' })).toHaveValue('nutri');
   });
 
+  // Revisión del PR #47: desde la ficha de un centro de salud o gimnasio, «Volver» regresa a ese establecimiento.
+  test('abierta desde un centro de salud, «Volver» regresa a ese centro con su nombre', async () => {
+    simular();
+    renderizarApp({ pathname: '/profesionales/1', state: { desde: '/centros-salud/3', origen: 'Centro Médico Demo', desdeOrigen: '/centros-salud?comuna=%C3%91u%C3%B1oa' } });
+    await screen.findByRole('heading', { level: 1, name: 'Ana Demo' });
+    expect(screen.getByRole('link', { name: 'Volver a Centro Médico Demo' })).toHaveAttribute('href', '/centros-salud/3');
+    expect(screen.queryByRole('link', { name: 'Volver a profesionales' })).not.toBeInTheDocument();
+  });
+
+  test('un origen que no es una búsqueda ni un establecimiento vuelve a profesionales', async () => {
+    simular();
+    renderizarApp({ pathname: '/profesionales/1', state: { desde: '/admin/usuarios', origen: 'Otra cosa' } });
+    await screen.findByRole('heading', { level: 1, name: 'Ana Demo' });
+    expect(screen.getByRole('link', { name: 'Volver a profesionales' })).toHaveAttribute('href', '/profesionales');
+  });
+
   test('si el profesional no existe lo indica con una salida', async () => {
     simular({ ficha: { estado: 404 } }); renderizarApp('/profesionales/1');
     expect(await screen.findByRole('heading', { name: 'No encontramos este profesional' })).toBeInTheDocument();

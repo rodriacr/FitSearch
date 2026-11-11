@@ -10,6 +10,7 @@ import ReservarHora from '../components/reservas/ReservarHora.jsx';
 import { direccionDe, etiquetaModalidad, iniciales } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
+import { CATEGORIAS } from '../components/establecimientos/categorias.js';
 
 // Ficha de un profesional con sus datos públicos, favorito y reseñas (FS-HU-23, FS-HU-24).
 // Con "vistaPrevia" la ve el propio profesional desde su perfil: sin favorito y volviendo a su perfil (DAS, D25).
@@ -17,9 +18,22 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
   const { id: idRuta } = useParams();
   const id = idProfesional ?? idRuta;
   const { state } = useLocation();
-  // "Volver" regresa a la misma búsqueda desde la que se abrió la ficha.
-  const volverA = vistaPrevia ? '/profesional/perfil'
-    : typeof state?.desde === 'string' && state.desde.startsWith('/profesionales') ? state.desde : '/profesionales';
+  // "Volver" regresa a la misma búsqueda desde la que se abrió la ficha. Revisión del PR #47: si se abrió desde la ficha
+  // de un centro de salud o gimnasio (FS-HU-25), regresa a ese establecimiento, con su nombre en el botón, y desde ahí
+  // su propio «Volver» sigue llevando a la búsqueda de establecimientos de la que se partió (desdeOrigen).
+  const desde = typeof state?.desde === 'string' ? state.desde : '';
+  const desdeEstablecimiento = !vistaPrevia && Object.values(CATEGORIAS).some(({ ruta }) => new RegExp(`^${ruta}/\\d+$`).test(desde));
+  let volverA = '/profesionales';
+  let textoVolver = 'Volver a profesionales';
+  if (vistaPrevia) {
+    volverA = '/profesional/perfil';
+    textoVolver = 'Volver a mi perfil';
+  } else if (desdeEstablecimiento) {
+    volverA = desde;
+    textoVolver = `Volver a ${typeof state.origen === 'string' && state.origen ? state.origen : 'la ficha del establecimiento'}`;
+  } else if (desde.startsWith('/profesionales')) {
+    volverA = desde;
+  }
   const [intento, setIntento] = useState(0);
   const [datos, setDatos] = useState(null);
   const clave = `${id}-${intento}`;
@@ -34,8 +48,8 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
   }, [clave, id]);
 
   const volver = (
-    <Link className="volver" to={volverA}>
-      <Icono nombre="flechaIzquierda" tamano={18} /> {vistaPrevia ? 'Volver a mi perfil' : 'Volver a profesionales'}
+    <Link className="volver" to={volverA} state={desdeEstablecimiento && typeof state.desdeOrigen === 'string' ? { desde: state.desdeOrigen } : undefined}>
+      <Icono nombre="flechaIzquierda" tamano={18} /> {textoVolver}
     </Link>
   );
   if (cargando) return <>{volver}<p className="texto-secundario" role="status">Cargando ficha…</p></>;

@@ -9,6 +9,8 @@ router.use('/auth', authRoutes);
 router.use('/perfil', perfilRoutes);
 router.use('/profesionales', require('./profesional.routes'));
 router.use('/especialidades', require('./especialidad.routes'));
+// Centros de salud y gimnasios (FS-HU-25).
+router.use('/establecimientos', require('./establecimiento.routes'));
 router.use('/favoritos', require('./favorito.routes'));
 router.use('/clima', require('./clima.routes'));
 router.use('/asistente', require('./asistente.routes'));
