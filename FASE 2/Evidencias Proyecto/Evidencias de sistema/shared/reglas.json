@@ -371,6 +371,15 @@
     },
     "alimentosPorMensaje": 8
   },
+  "agua": {
+    "vasoMl": 250,
+    "metaDiariaMl": 2000,
+    "maxDiaMl": 10000,
+    "registro": {
+      "min": 50,
+      "max": 2000
+    }
+  },
   "resena": {
     "puntaje": {
       "min": 1,

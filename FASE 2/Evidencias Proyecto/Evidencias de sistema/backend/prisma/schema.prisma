@@ -47,6 +47,7 @@ model Usuario {
   conversaciones     Conversacion[]
   usoAsistente       UsoAsistente?
   registrosComida    RegistroComida[]
+  registrosAgua      RegistroAgua[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -213,6 +214,20 @@ model RegistroComida {
   @@index([usuarioId, fecha])
   @@index([alimentoId])
   @@map("registro_comida")
+}
+
+// Agua que registra cada usuario por día (FS-HU-33). Cada suma es una fila, para poder deshacer la última; el total del
+// día es la suma de sus filas.
+model RegistroAgua {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int      @map("usuario_id")
+  fecha         DateTime @db.Date
+  ml            Int
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, fecha])
+  @@map("registro_agua")
 }
 
 // Profesionales que cada usuario guarda para volver a encontrarlos (FS-HU-23).
