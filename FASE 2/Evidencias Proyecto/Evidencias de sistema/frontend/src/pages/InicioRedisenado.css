@@ -1,7 +1,11 @@
 .inicio { gap: 1.25rem; grid-template-areas: "saludo" "aviso" "hero" "accesos" "especialidades" "panel" "destacados" "banner"; }
 .inicio__saludo { grid-area: saludo; }
-.inicio__saludo h1 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.25rem); line-height: 1.2; letter-spacing: -0.045em; color: #10273a; }
-.inicio__saludo p { margin: 0.6rem 0 0; max-width: 40rem; color: #607587; font-size: 0.9rem; line-height: 1.7; }
+/* El saludo es una línea liviana con el azul de la marca y la pregunta es el título: antes las dos líneas tenían el mismo
+   peso y competían con el titular del hero que viene justo debajo. */
+.inicio__saludo h1 { margin: 0; font-size: clamp(1.6rem, 2.8vw, 2.1rem); font-weight: 700; line-height: 1.25; letter-spacing: -0.02em; color: var(--color-texto); text-wrap: balance; }
+.inicio__saludo h1 > span { display: block; }
+.inicio__saludo-nombre { margin-bottom: 0.25rem; font-size: clamp(1.0625rem, 1.5vw, 1.25rem); font-weight: 500; letter-spacing: 0; color: var(--color-primario); }
+.inicio__saludo p { margin: 0.6rem 0 0; max-width: 40rem; color: var(--color-texto-secundario); font-size: 0.95rem; line-height: 1.65; text-wrap: pretty; }
 .inicio__aviso { padding: 0.75rem 1rem; font-size: 0.8rem; }
 .inicio__hero { isolation: isolate; grid-template-columns: 1fr; display: block; padding: 2.5rem 1.4rem; min-height: 21rem; background: #073b58; border-radius: 20px; }
 .inicio__foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: 70% calc(20% + var(--desplazamiento-hero, 0px)); }

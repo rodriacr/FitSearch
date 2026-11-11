@@ -76,3 +76,60 @@
   .hero-bienestar--animado .hero-bienestar__puertas, .hero-bienestar--animado .hero-bienestar__inferior { display: none; }
   .hero-bienestar__interior { transform: none; }
 }
+
+/* ---------- Titular cinético (portada) ----------
+   Cada línea sube desde detrás de su máscara con un desfase corto; después entran el texto y las acciones.
+   Pieza de marketing que se ve una vez: puede durar más que una animación de interfaz. */
+.hero-bienestar__titulo--cinetico .hero-bienestar__linea { display: block; overflow: hidden; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.hero-bienestar__titulo--cinetico .hero-bienestar__linea > span { display: inline-block; color: #fff; animation: hero-linea 900ms var(--curva-salida) both; }
+.hero-bienestar__titulo--cinetico .hero-bienestar__linea--acento > span { color: #ffa43c; animation-delay: 110ms; }
+.hero-bienestar__paso--entrada > :not(.hero-bienestar__titulo) { animation: hero-aparecer 700ms var(--curva-salida) both; animation-delay: 420ms; }
+.hero-bienestar__paso--entrada > .boton { animation-delay: 520ms; }
+.hero-bienestar__paso--entrada > .hero-bienestar__profesionales { animation-delay: 600ms; }
+@keyframes hero-linea {
+  from { transform: translateY(105%); }
+}
+@keyframes hero-aparecer {
+  from { opacity: 0; transform: translateY(14px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-bienestar__titulo--cinetico .hero-bienestar__linea > span { animation: none; }
+  .hero-bienestar__paso--entrada > :not(.hero-bienestar__titulo) { animation: hero-fundido 300ms ease both; }
+}
+@keyframes hero-fundido {
+  from { opacity: 0; }
+}
+
+/* ---------- Puertas de vidrio (portada) ----------
+   Vidrio oscuro translúcido en vez de un panel opaco: con las puertas cerradas ya se adivina el centro detrás,
+   y eso invita a abrirlas. Sin backdrop-filter: con el giro 3D se vuelve costoso y falla en algunos navegadores. */
+.hero-bienestar__puerta {
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(90deg, rgb(255 255 255 / 0%) 0 46px, rgb(255 255 255 / 4%) 47px 48px),
+    linear-gradient(100deg, rgb(6 40 54 / 86%) 0%, rgb(14 62 74 / 70%) 55%, rgb(8 44 56 / 82%) 100%);
+  box-shadow: inset 0 0 90px rgb(0 18 30 / 55%), inset 0 1px 0 rgb(255 255 255 / 10%);
+  border-inline: 1px solid rgb(229 201 143 / 45%);
+}
+/* Un reflejo cruza cada hoja de vez en cuando, como la luz sobre un vidrio. */
+.hero-bienestar__puerta::before {
+  content: ''; position: absolute; inset: -10% -60%; pointer-events: none;
+  background: linear-gradient(105deg, transparent 42%, rgb(255 255 255 / 11%) 50%, transparent 58%);
+  transform: translateX(-60%); animation: puerta-reflejo 7s var(--curva-movimiento) 1.2s infinite;
+}
+.hero-bienestar__puerta--derecha::before { animation-delay: 1.5s; }
+@keyframes puerta-reflejo {
+  0%, 55% { transform: translateX(-60%); }
+  100% { transform: translateX(60%); }
+}
+/* La flecha de «Desliza» apunta hacia abajo y respira, para que se entienda que hay que bajar. */
+.hero-bienestar__flecha { display: inline-grid; place-items: center; }
+.hero-bienestar__flecha .icono { transform: rotate(90deg); }
+.hero-bienestar--animado .hero-bienestar__flecha { animation: flecha-respira 1.8s var(--curva-movimiento) infinite; }
+@keyframes flecha-respira {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-bienestar__puerta::before, .hero-bienestar--animado .hero-bienestar__flecha { animation: none; }
+}

@@ -5,6 +5,8 @@ import { solicitar } from './api.js';
 const conFecha = (ruta, fecha) => (fecha ? `${ruta}?fecha=${fecha}` : ruta);
 export const obtenerDia = (fecha) => solicitar(conFecha('/comidas', fecha));
 export const obtenerSemana = (fecha) => solicitar(conFecha('/comidas/semana', fecha));
+// Estadísticas de una semana o un mes (FS-HU-26).
+export const obtenerEstadisticas = (periodo, fecha) => solicitar(`/comidas/estadisticas?periodo=${periodo}${fecha ? `&fecha=${fecha}` : ''}`);
 export const buscarAlimentos = (texto) => solicitar(`/comidas/alimentos?q=${encodeURIComponent(texto)}`);
 export const registrarComida = (datos) => solicitar('/comidas', { metodo: 'POST', cuerpo: datos });
 export const actualizarComida = (id, datos) => solicitar(`/comidas/${id}`, { metodo: 'PATCH', cuerpo: datos });
@@ -60,3 +62,15 @@ export const diaSemana = (fecha) => {
   return texto.charAt(0).toUpperCase() + texto.slice(1);
 };
 export const diaMes = (fecha) => `${Number(fecha.slice(8, 10))}/${Number(fecha.slice(5, 7))}`;
+
+const diaYMes = new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'long', timeZone: 'UTC' });
+const mesYAnio = new Intl.DateTimeFormat('es-CL', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+// «Semana del 26 de octubre al 1 de noviembre» u «Octubre de 2026».
+export function nombrePeriodo(periodo, desde, hasta) {
+  const comoFecha = (fecha) => new Date(`${fecha}T00:00:00Z`);
+  if (periodo === 'mes') {
+    const texto = mesYAnio.format(comoFecha(desde));
+    return texto.charAt(0).toUpperCase() + texto.slice(1);
+  }
+  return `Semana del ${diaYMes.format(comoFecha(desde))} al ${diaYMes.format(comoFecha(hasta))}`;
+}

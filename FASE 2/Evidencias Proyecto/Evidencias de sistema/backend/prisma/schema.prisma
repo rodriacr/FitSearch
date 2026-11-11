@@ -185,6 +185,8 @@ model Alimento {
   proteinasG     Decimal          @map("proteinas_g") @db.Decimal(5, 1)
   carbohidratosG Decimal          @map("carbohidratos_g") @db.Decimal(5, 1)
   grasasG        Decimal          @map("grasas_g") @db.Decimal(5, 1)
+  // FS-HU-30: un alimento desactivado no aparece al registrar comidas, pero los registros que lo usan se conservan.
+  activo         Boolean          @default(true)
   registros      RegistroComida[]
 
   @@map("alimentos")
@@ -260,16 +262,33 @@ model Resena {
   @@map("resenas")
 }
 
+// Centros de salud y gimnasios que registra el administrador (FS-HU-30) y que muestra el directorio (FS-HU-25).
+// categoria: una de shared/reglas.json (contenido.establecimiento.categorias). Uno desactivado no aparece en el
+// directorio, pero los profesionales asociados lo conservan.
 model Establecimiento {
   id            Int           @id @default(autoincrement())
   nombre        String        @db.VarChar(150)
   categoria     String        @db.VarChar(50)
+  comuna        String?       @db.VarChar(80)
   direccion     String        @db.VarChar(255)
   ubicacionLat  Decimal       @map("ubicacion_lat") @db.Decimal(10, 7)
   ubicacionLng  Decimal       @map("ubicacion_lng") @db.Decimal(10, 7)
+  activo        Boolean       @default(true)
   profesionales Profesional[]
 
   @@map("establecimientos")
+}
+
+// Catálogo de especialidades que administra el administrador (FS-HU-30). Las fichas guardan el nombre
+// (profesionales.especialidad): renombrar una especialidad actualiza las fichas que la usan, y una especialidad en uso
+// no se borra, solo se desactiva para que no aparezca en fichas nuevas.
+model Especialidad {
+  id            Int      @id @default(autoincrement())
+  nombre        String   @unique @db.VarChar(100)
+  activa        Boolean  @default(true)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
+
+  @@map("especialidades")
 }
 
 model PerfilUsuario {

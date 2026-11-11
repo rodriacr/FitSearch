@@ -105,9 +105,21 @@ function obtenerPorUsuario(usuarioId) {
 }
 
 // Crea o actualiza la ficha: una cuenta tiene como máximo una (usuario_id es único).
+// La especialidad elegida se bloquea en modo compartido hasta guardar (revisión del PR #42): si el administrador la
+// está eliminando, renombrando o desactivando, una de las dos operaciones espera a la otra. Se bloquea por su id, igual
+// que lo hace el administrador: bloquearla por el nombre producía un interbloqueo con el borrado (MySQL 1213). Si se
+// renombró o se eliminó entre la búsqueda y el bloqueo, no se encuentra y la ficha no se guarda. Debe estar activa;
+// una desactivada solo se acepta si es la que la ficha ya tenía (igual que ficha.validators).
+const especialidadNoDisponible = () => new ErrorHttp(400, 'Selecciona tu especialidad', { especialidad: 'Selecciona tu especialidad' });
+
 function guardarFicha(usuarioId, datos) {
   return prisma.$transaction(async (tx) => {
     const ficha = await tx.profesional.findUnique({ where: { usuarioId } });
+    const [encontrada] = await tx.$queryRaw`SELECT id FROM especialidades WHERE nombre = ${datos.especialidad}`;
+    const [catalogo] = encontrada
+      ? await tx.$queryRaw`SELECT activa FROM especialidades WHERE id = ${encontrada.id} AND nombre = ${datos.especialidad} FOR SHARE`
+      : [];
+    if (!catalogo || (!Number(catalogo.activa) && ficha?.especialidad !== datos.especialidad)) throw especialidadNoDisponible();
     if (!ficha) return tx.profesional.create({ data: { usuarioId, ...datos }, select: seleccionFicha });
     const especialidadCambio = datos.especialidad !== ficha.especialidad;
     const teniaSolicitud = ficha.verificado || ficha.estadoVerificacion === 'pendiente';

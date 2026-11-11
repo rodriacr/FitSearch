@@ -11,3 +11,14 @@ process.env.IA_API_KEY = '';
 // Las pruebas existentes usan sesiones firmadas y modelos simulados, sin consultar MySQL.
 // La invalidación de cuentas y versiones se prueba explícitamente en sesion.api.test.js.
 jest.mock('../src/models/sesion.model', () => ({ estadoCuenta: async () => ({ activo: true, versionSesion: 0 }) }));
+// FS-HU-30: el catálogo de especialidades vive en MySQL. Las pruebas usan el catálogo inicial de la migración, con
+// funciones simples para que jest.resetAllMocks() no las borre. especialidad.model.test.js prueba el modelo real.
+jest.mock('../src/models/especialidad.model', () => {
+  const catalogo = ['Entrenamiento personal', 'Kinesiología', 'Medicina deportiva', 'Nutrición', 'Psicología deportiva'];
+  const clave = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  return {
+    CATALOGO_DE_PRUEBA: catalogo,
+    nombresActivos: async () => catalogo,
+    activaPorNombre: async (nombre) => catalogo.find((activa) => clave(activa) === clave(String(nombre ?? ''))) ?? null,
+  };
+});

@@ -15,6 +15,7 @@
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",
+    "test:mysql:especialidades": "node scripts/probar-especialidades-mysql.js",
     "lint": "eslint .",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",

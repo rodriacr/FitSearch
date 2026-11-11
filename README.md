@@ -168,7 +168,7 @@ La aplicación queda en `http://localhost:5173`. Vite reenvía las llamadas a `/
 
 Sin sesión, la raíz (`/`) muestra la portada pública. Después de registrarse (con correo o con Google), la cuenta elige una sola vez cómo usar FitSearch en `/elegir-perfil`: como usuario sigue al asistente de perfil de 4 pasos (`/perfil`) y como profesional entra a su propio espacio (`/profesional/inicio`). Cambiar el tipo de cuenta después lo hace un administrador.
 
-- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10) y su perfil.
+- **Usuario:** el logo y la raíz llevan al Inicio (`/inicio`), que reúne accesos rápidos, objetivo, progreso, próximas citas y profesionales destacados (FS-HU-21). Desde ahí accede a Profesionales, Centros de salud (`/centros-salud`) y Gimnasios (`/gimnasios`) con su lista, mapa y ficha (FS-HU-25), Favoritos, Mis citas (`/citas`), Asistente IA (`/asistente`, FS-HU-07), Comidas (`/comidas`, FS-HU-09 y FS-HU-10) y su perfil.
 - **Profesional:** Inicio con clima, tareas y resumen semanal (`/profesional/inicio`), Mi agenda (`/profesional/agenda`), su perfil con la ficha pública (`/profesional/perfil`) y la vista previa de cómo lo ven los usuarios (`/profesional/perfil/publico`). Clientes, Mensajes, Reportes y Configuración aparecen como «Próximamente».
 - **Administrador:** panel en `/admin` (Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; FS-HU-12).
 
@@ -210,6 +210,9 @@ Detalle de la entrega original del listado: [FS-HU-03 — Listado de profesional
 | GET | `/api/favoritos` | Bearer JWT (rol usuario) | Profesionales favoritos del usuario (FS-HU-23) |
 | PUT | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Guarda un favorito (idempotente) |
 | DELETE | `/api/favoritos/:profesionalId` | Bearer JWT (rol usuario) | Quita un favorito (idempotente) |
+| GET | `/api/establecimientos` | Bearer JWT (rol usuario) | Centros de salud o gimnasios activos (FS-HU-25): `categoria` obligatoria (`centro_salud` o `gimnasio`), `comuna`, `distanciaKm` (2, 5, 10 o 25, requiere `lat` y `lng`), `orden` (`nombre` o `cercania`), `pagina` y `limite`; cada uno trae su dirección, ubicación, `distanciaKm` y `totalProfesionales` |
+| GET | `/api/establecimientos/filtros` | Bearer JWT (rol usuario) | Comunas con establecimientos activos de la `categoria` |
+| GET | `/api/establecimientos/:id` | Bearer JWT (rol usuario) | Ficha de un establecimiento activo con sus profesionales asociados (nombre, especialidad, modalidad y si está verificado); 404 si no existe o se desactivó |
 
 Las rutas de la agenda y las reservas (`/api/disponibilidades`, `/api/profesionales/:id/disponibilidades` y `/api/reservas`) se describen en su sección, más abajo. Las del panel del administrador están bajo `/api/administrador` y las solicitudes y documentos de verificación del profesional bajo `/api/verificaciones` (FS-HU-12).
 
@@ -217,9 +220,25 @@ Los errores se responden como `{ "error": "mensaje", "detalles": { "campo": "men
 
 ### Verificación básica de profesionales — FS-HU-12
 
-Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 5 «si hay capacidad»; el 12-10-2026 el Product Owner la reubicó en el Sprint 3, y falta su aceptación. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
+Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 5 «si hay capacidad»; el 12-10-2026 el Product Owner la reubicó en el Sprint 3 y la aceptó. El endpoint solo admite administradores con sesión; usuario y profesional reciben 403, sin sesión responde 401 y un id inválido devuelve 400. La ficha propia no permite modificar `verificado`. Las fichas aprobadas muestran el ícono de escudo y «Verificado» en el listado, el Inicio y el perfil profesional.
 
-El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración y Contenido quedan fuera. Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados; la aceptación de la historia sigue pendiente del PO. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
+El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración queda fuera y Contenido está planificado para el Sprint 5 (FS-HU-30). Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
+
+### Contenido del administrador — FS-HU-30
+
+En `/admin/contenido` el administrador agrega, edita, desactiva y elimina las especialidades, los alimentos de Comidas y los establecimientos (centros de salud y gimnasios, con su comuna y su ubicación). Lo que está en uso no se elimina: la API responde 409 con el uso y la pantalla ofrece desactivarlo, para que no aparezca en elementos nuevos sin perder el historial. Las especialidades pasaron de `shared/reglas.json` a la tabla `especialidades`: las usan la ficha del profesional, el buscador de la portada y el asistente IA, siempre solo las activas, y renombrar una actualiza las fichas que la usan. Un alimento desactivado deja de aparecer al registrar comidas y en el asistente.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261104120000_contenido_administrador` crea `especialidades` con las cinco del catálogo anterior y agrega `activo` a `alimentos` y a `establecimientos`, y `comuna` a `establecimientos`, sin borrar datos.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/especialidades` | Pública | Nombres de las especialidades activas, en orden alfabético |
+| GET | `/api/administrador/contenido/:catalogo` | Bearer JWT (rol administrador) | `especialidades`, `alimentos` o `establecimientos`, con `q`, `estado` (`activos` o `inactivos`) y `pagina`; cada elemento trae `activo` y `enUso` |
+| POST | `/api/administrador/contenido/:catalogo` | Bearer JWT (rol administrador) | Agrega un elemento (201); 409 si ya existe uno con ese nombre |
+| PUT | `/api/administrador/contenido/:catalogo/:id` | Bearer JWT (rol administrador) | Edita un elemento; renombrar una especialidad actualiza las fichas que la usan |
+| PATCH | `/api/administrador/contenido/:catalogo/:id/estado` | Bearer JWT (rol administrador) | Activa o desactiva el elemento con `activo` (`true` o `false`) |
+| DELETE | `/api/administrador/contenido/:catalogo/:id` | Bearer JWT (rol administrador) | Elimina un elemento sin uso (204); 409 con `detalles.enUso` si está en uso |
+| GET | `/api/administrador/contenido/establecimientos/ubicacion` | Bearer JWT (rol administrador) | Busca la ubicación de un establecimiento con `comuna` y `direccion` (Nominatim, igual que la ficha del profesional) |
 
 ### Disponibilidad, reservas y mapa — FS-HU-13, FS-HU-14 y FS-HU-06
 
@@ -237,7 +256,7 @@ La usuaria o el usuario conversa en `/asistente` con un asistente de orientació
 
 El proveedor es Groq, con plan gratuito y una API compatible con OpenAI (DAS 1.25, D33, SC-25). El backend usa un cliente genérico, así que otro proveedor compatible se configura solo con `IA_URL_BASE`, `IA_MODELO` e `IA_API_KEY`. Al proveedor solo viajan las instrucciones del asistente y los últimos 10 mensajes de la conversación: nunca el perfil ni la información de salud. Sin `IA_API_KEY` el asistente responde en modo de prueba.
 
-Cuando corresponde, el asistente recomienda uno de los tipos de profesional del catálogo (`shared/reglas.json`): el modelo lo marca en una línea final, el backend lo valida, lo quita del texto y lo guarda en `mensajes.especialidad`, y la pantalla muestra una tarjeta «Ver …» que abre `/profesionales` filtrado por esa especialidad (FS-HU-08, DAS D34). El banner «¿Necesitas una recomendación?» del menú abre un chat nuevo con la pregunta ya escrita (`/asistente/nuevo?inicio=profesional`).
+Cuando corresponde, el asistente recomienda una de las especialidades activas del catálogo que administra el administrador (FS-HU-30): el modelo lo marca en una línea final, el backend lo valida, lo quita del texto y lo guarda en `mensajes.especialidad`, y la pantalla muestra una tarjeta «Ver …» que abre `/profesionales` filtrado por esa especialidad (FS-HU-08, DAS D34). El banner «¿Necesitas una recomendación?» del menú abre un chat nuevo con la pregunta ya escrita (`/asistente/nuevo?inicio=profesional`).
 
 Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261021120000_asistente_ia` agrega `conversaciones`, `mensajes` y `uso_asistente` sin borrar datos existentes, y `20261022120000_recomendacion_profesional` agrega la columna `mensajes.especialidad`.
 
@@ -253,7 +272,9 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 
 ### Comidas — FS-HU-09 y FS-HU-10
 
-En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo es el requerimiento calórico del perfil (Mifflin-St Jeor), repartido en 30 % de proteínas, 45 % de carbohidratos y 25 % de grasas (`shared/reglas.json`). La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30; falta su aceptación).
+En `/comidas` la persona registra lo que come: busca un alimento del catálogo (58 alimentos con sus valores por 100 g, aproximados de USDA FoodData Central), indica los gramos y el momento del día (desayuno, media mañana, almuerzo, merienda o cena) y el sistema calcula sus calorías y macronutrientes antes de guardarlo. El resumen muestra las calorías de hoy frente al objetivo diario, el progreso de la semana, las comidas de hoy por momento, los macronutrientes y su objetivo. El objetivo es el requerimiento calórico del perfil (Mifflin-St Jeor), repartido en 30 % de proteínas, 45 % de carbohidratos y 25 % de grasas (`shared/reglas.json`). La pestaña Comidas permite cambiar los gramos o el momento y quitar alimentos, también de días anteriores. Se adelantó del Sprint 5 al Sprint 4 por decisión del PO del 26-10-2026 (SC-30) y el PO la aceptó el 02-11-2026.
+
+La pestaña Estadísticas (FS-HU-26) muestra la semana o el mes: las calorías y los macronutrientes de cada día frente al objetivo diario, y el promedio de los días con registros. Un día sin registros no baja el promedio.
 
 También se puede pedir al asistente, por ejemplo «añade 100 g de pollo a mi almuerzo». El modelo llama a la función `agregar_alimentos` y el backend busca cada alimento en el catálogo, lo registra en las comidas de hoy y arma la respuesta, sin otra consulta al proveedor (DAS 1.29, D37). Los alimentos y los mensajes se guardan en una sola transacción: si algo falla no queda ninguna comida a medias y el reintento no la duplica (DAS 1.30). Lo que no está en el catálogo no se agrega y la respuesta lo dice. El chat muestra la tarjeta «Agregado a tus comidas de hoy» con el acceso a Comidas, y el pedido usa uno de los 30 mensajes del día.
 
@@ -264,6 +285,7 @@ Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrat
 | GET | `/api/comidas/alimentos` | Bearer JWT (rol usuario) | Busca en el catálogo por nombre o sinónimo con `q` (2 a 60 caracteres, sin importar tildes); hasta 12 alimentos con su aporte por 100 g |
 | GET | `/api/comidas` | Bearer JWT (rol usuario) | Comidas del día (`fecha` AAAA-MM-DD, por defecto hoy en Chile) agrupadas por momento, con el consumo y el objetivo diario; 400 si la fecha aún no llega |
 | GET | `/api/comidas/semana` | Bearer JWT (rol usuario) | Calorías de cada día, de lunes a domingo, de la semana de `fecha`, con el objetivo calórico |
+| GET | `/api/comidas/estadisticas` | Bearer JWT (rol usuario) | Estadísticas de la semana (`periodo=semana`, por defecto) o del mes (`periodo=mes`) de `fecha`: calorías y macronutrientes de cada día, el objetivo diario y el promedio de los días con registros |
 | POST | `/api/comidas` | Bearer JWT (rol usuario) | Registra `alimentoId`, `gramos` (1 a 2000) y `momento`, y opcionalmente `fecha`; guarda las calorías y los macronutrientes calculados (201) |
 | PATCH | `/api/comidas/:id` | Bearer JWT (rol usuario) | Cambia los `gramos` (recalcula el aporte) o el `momento` de un registro propio; 404 si no existe o es de otra cuenta |
 | DELETE | `/api/comidas/:id` | Bearer JWT (rol usuario) | Quita un registro propio (204) |
@@ -304,7 +326,7 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA.
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
 ## Convenciones de trabajo
 

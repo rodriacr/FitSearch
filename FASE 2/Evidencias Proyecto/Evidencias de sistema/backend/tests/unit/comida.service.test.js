@@ -6,9 +6,9 @@ const modelo = require('../../src/models/comida.model');
 const usuarioModel = require('../../src/models/usuario.model');
 const servicio = require('../../src/services/comida.service');
 
-const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo, pechuga, pollo a la plancha', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6' };
-const TRUTRO = { id: 2, nombre: 'Trutro de pollo cocido, sin piel', sinonimos: 'trutro, muslo de pollo', calorias: '209.0', proteinasG: '25.9', carbohidratosG: '0.0', grasasG: '10.9' };
-const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo, pechuga, pollo a la plancha', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6', activo: true };
+const TRUTRO = { id: 2, nombre: 'Trutro de pollo cocido, sin piel', sinonimos: 'trutro, muslo de pollo', calorias: '209.0', proteinasG: '25.9', carbohidratosG: '0.0', grasasG: '10.9', activo: true };
+const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3', activo: true };
 // 26-10-2026 a las 13:00 en Chile (UTC-3 en horario de verano).
 const AHORA = new Date('2026-10-26T16:00:00Z');
 const registro = (extra = {}) => ({
@@ -83,8 +83,47 @@ test('el progreso semanal va de lunes a domingo, completa los días sin registro
   expect(modelo.caloriasPorDia).toHaveBeenLastCalledWith(1, '2026-10-19', '2026-10-25');
 });
 
+const total = (fecha, calorias, proteinas, carbohidratos, grasas) => ({
+  fecha: new Date(`${fecha}T00:00:00Z`), _sum: { calorias, proteinasG: proteinas, carbohidratosG: carbohidratos, grasasG: grasas },
+});
+
+test('las estadísticas de la semana traen cada día con sus macronutrientes y el promedio de los días con registros', async () => {
+  modelo.totalesPorDia.mockResolvedValue([total('2026-10-19', 2000, '120.50', '250.00', '60.25'), total('2026-10-21', 1500, '80.00', '190.40', '50.00')]);
+  const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-22' }, AHORA);
+  expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-10-19', '2026-10-25');
+  expect(datos).toMatchObject({ periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: '2026-10-26', diasConRegistros: 2 });
+  expect(datos.objetivo).toEqual({ calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70 });
+  expect(datos.dias).toHaveLength(7);
+  expect(datos.dias[0]).toEqual({ fecha: '2026-10-19', calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3, conRegistros: true, futuro: false });
+  expect(datos.dias[1]).toEqual({ fecha: '2026-10-20', calorias: 0, proteinasG: 0, carbohidratosG: 0, grasasG: 0, conRegistros: false, futuro: false });
+  // El día sin registros no cuenta: (2000 + 1500) / 2.
+  expect(datos.promedio).toEqual({ calorias: 1750, proteinasG: 100.3, carbohidratosG: 220.2, grasasG: 55.2 });
+});
+
+test('las estadísticas del mes van del día 1 al último, marcan los días futuros y sin registros no hay promedio', async () => {
+  modelo.totalesPorDia.mockResolvedValue([]);
+  const octubre = await servicio.estadisticas(1, { periodo: 'mes', fecha: '2026-10-05' }, AHORA);
+  expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-10-01', '2026-10-31');
+  expect(octubre.dias).toHaveLength(31);
+  expect(octubre.dias[25]).toMatchObject({ fecha: '2026-10-26', futuro: false });
+  expect(octubre.dias[26]).toMatchObject({ fecha: '2026-10-27', futuro: true });
+  expect(octubre).toMatchObject({ diasConRegistros: 0, promedio: null });
+  const febrero = await servicio.estadisticas(1, { periodo: 'mes', fecha: '2026-02-14' }, AHORA);
+  expect(febrero).toMatchObject({ desde: '2026-02-01', hasta: '2026-02-28' });
+  expect(febrero.dias).toHaveLength(28);
+  await expect(servicio.estadisticas(1, { periodo: 'mes', fecha: '2026-10-27' }, AHORA)).rejects.toMatchObject({ estado: 400 });
+});
+
+test('sin perfil completo las estadísticas no tienen objetivo, pero sí los días y el promedio', async () => {
+  usuarioModel.buscarPorIdConPerfil.mockResolvedValue({ id: 1, perfil: null });
+  modelo.totalesPorDia.mockResolvedValue([total('2026-10-26', 900, '40.00', '100.00', '30.00')]);
+  const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-26' }, AHORA);
+  expect(datos.objetivo).toEqual({ calorias: null, proteinasG: null, carbohidratosG: null, grasasG: null });
+  expect(datos.promedio).toEqual({ calorias: 900, proteinasG: 40, carbohidratosG: 100, grasasG: 30 });
+});
+
 test('agregar calcula y guarda el aporte con el nombre del catálogo; un alimento inexistente responde 404', async () => {
-  modelo.obtenerAlimento.mockResolvedValueOnce(ARROZ).mockResolvedValueOnce(null);
+  modelo.obtenerAlimento.mockResolvedValueOnce(ARROZ).mockResolvedValueOnce(null).mockResolvedValueOnce({ ...ARROZ, activo: false });
   const { registro: guardado } = await servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, gramos: 150 }, AHORA);
   expect(modelo.crear).toHaveBeenCalledWith({
     usuarioId: 1, fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, descripcionAlimento: 'Arroz blanco cocido', gramos: 150, origen: 'manual',
@@ -92,6 +131,9 @@ test('agregar calcula y guarda el aporte con el nombre del catálogo; un aliment
   });
   expect(guardado).toMatchObject({ id: 50, nombre: 'Arroz blanco cocido', gramos: 150, calorias: 195 });
   await expect(servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 99, gramos: 10 }, AHORA)).rejects.toMatchObject({ estado: 404 });
+  // FS-HU-30: el administrador lo desactivó; sus registros anteriores se conservan, pero no se registra de nuevo.
+  await expect(servicio.agregar(1, { fecha: '2026-10-26', momento: 'almuerzo', alimentoId: 17, gramos: 10 }, AHORA)).rejects.toMatchObject({ estado: 404 });
+  expect(modelo.crear).toHaveBeenCalledTimes(1);
 });
 
 test('cambiar los gramos recalcula con el catálogo, o escala lo guardado si el alimento ya no existe', async () => {

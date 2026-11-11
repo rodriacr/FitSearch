@@ -3,10 +3,11 @@
 // modo simulado. Al proveedor solo viajan estas instrucciones y los últimos mensajes de la conversación: nunca el
 // nombre, el correo, el perfil ni la información de salud de la persona (DAS, QS7).
 // FS-HU-08 (DAS D34): si recomienda un tipo de profesional, el modelo lo marca en una línea final que el backend valida
-// contra el catálogo de especialidades y quita del texto visible.
+// contra el catálogo de especialidades y quita del texto visible. FS-HU-30: el catálogo está en la base de datos y el
+// asistente recibe las especialidades activas en cada respuesta.
 // FS-HU-09: si la persona pide agregar alimentos a sus comidas, el modelo llama a la función agregar_alimentos; el
 // backend valida y registra los alimentos y arma la respuesta. El modelo nunca accede a la base de datos.
-const { profesionales: { especialidades: ESPECIALIDADES }, comidas: reglasComidas } = require('../../../shared/reglas.json');
+const { comidas: reglasComidas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -17,7 +18,15 @@ const MARCA = 'ESPECIALIDAD';
 const HERRAMIENTA = 'agregar_alimentos';
 const MOMENTOS = reglasComidas.momentos.map(({ valor }) => valor);
 
-const INSTRUCCIONES = `Eres el asistente de orientación de FitSearch, una plataforma chilena que conecta a las personas con profesionales de salud, deporte y bienestar (nutrición, kinesiología, entrenamiento personal, medicina deportiva y psicología deportiva).
+const enumerar = (elementos) => (elementos.length < 2 ? elementos.join('') : `${elementos.slice(0, -1).join(', ')} y ${elementos.at(-1)}`);
+
+// Sin especialidades activas no se pide la marca de recomendación (no habría a quién recomendar).
+const recomendacion = (especialidades) => (especialidades.length > 0
+  ? `- Si recomiendas un tipo de profesional, termina tu respuesta con una última línea exactamente así: ${MARCA}: <nombre>, donde <nombre> es uno de estos: ${especialidades.join(', ')}.
+- Si la pregunta es general o no corresponde recomendar, no agregues esa línea.`
+  : '- Por ahora no recomiendes un tipo de profesional: solo entrega orientación general.');
+
+const instrucciones = (especialidades) => `Eres el asistente de orientación de FitSearch, una plataforma chilena que conecta a las personas con profesionales de salud, deporte y bienestar${especialidades.length > 0 ? ` (${enumerar(especialidades.map((nombre) => nombre.toLowerCase()))})` : ''}.
 
 Tu función:
 - Entregar orientación general sobre alimentación, actividad física, descanso, hábitos saludables y bienestar.
@@ -33,8 +42,7 @@ Límites:
 - No pidas datos que identifiquen a la persona (nombre, RUT, dirección o teléfono).
 
 Recomendación de profesional:
-- Si recomiendas un tipo de profesional, termina tu respuesta con una última línea exactamente así: ${MARCA}: <nombre>, donde <nombre> es uno de estos: ${ESPECIALIDADES.join(', ')}.
-- Si la pregunta es general o no corresponde recomendar, no agregues esa línea.
+${recomendacion(especialidades)}
 
 Registro de comidas:
 - Si la persona te pide agregar, anotar o registrar alimentos en sus comidas (por ejemplo: «añade 100 g de pollo a mis comidas»), usa la función ${HERRAMIENTA} con cada alimento y sus gramos, y el momento del día si lo indica.
@@ -106,13 +114,13 @@ const MARCAS = [
   new RegExp(`^[ \\t-]*${MARCA}\\s*:[ \\t]*(.*?)[ \\t.]*$`, 'gim'),
   new RegExp(`[ \\t]+${MARCA}\\s*:[ \\t]*(.*?)[ \\t.]*$`, 'gm'),
 ];
-function extraerEspecialidad(texto) {
+function extraerEspecialidad(texto, especialidades) {
   const marcadas = [];
   const visible = MARCAS.reduce((resto, marca) => resto.replace(marca, (_, nombre) => {
     marcadas.push(sinTildes(nombre));
     return '';
   }), texto).replace(/\n{3,}/g, '\n\n').trim();
-  const especialidad = marcadas.length ? ESPECIALIDADES.find((nombre) => sinTildes(nombre) === marcadas.at(-1)) : undefined;
+  const especialidad = marcadas.length ? especialidades.find((nombre) => sinTildes(nombre) === marcadas.at(-1)) : undefined;
   return { texto: visible, especialidad: especialidad ?? null };
 }
 
@@ -120,7 +128,8 @@ const respuestaSimulada = (texto) => 'Modo de prueba: esta es una respuesta de e
   + `configurado su proveedor de IA. Recibí tu mensaje: «${resumir(texto, 120)}».\n\nCuando esté activo, aquí verás una `
   + 'orientación general sobre tu consulta. Recuerda que el asistente no reemplaza la atención de un profesional de salud.';
 
-// Solo en modo de prueba: palabras clave para mostrar la recomendación (FS-HU-08) sin proveedor de IA.
+// Solo en modo de prueba: palabras clave para mostrar la recomendación (FS-HU-08) sin proveedor de IA, si la especialidad
+// está activa.
 const CLAVES_DE_PRUEBA = [
   ['Kinesiología', /dolor|duele|lesion|rodilla|espalda|tobillo|esguince|tendin|hombro/],
   ['Medicina deportiva', /chequeo|examen|mareo|corazon|presion/],
@@ -128,7 +137,10 @@ const CLAVES_DE_PRUEBA = [
   ['Psicología deportiva', /ansiedad|motivaci|desmotivad|estres|nervios|concentraci/],
   ['Entrenamiento personal', /rutina|entrenar|musculo|ejercicio|gimnasio|fuerza/],
 ];
-const especialidadDePrueba = (texto) => CLAVES_DE_PRUEBA.find(([, patron]) => patron.test(sinTildes(texto)))?.[0] ?? null;
+function especialidadDePrueba(texto, especialidades) {
+  const nombre = CLAVES_DE_PRUEBA.find(([, patron]) => patron.test(sinTildes(texto)))?.[0];
+  return especialidades.find((activa) => sinTildes(activa) === sinTildes(nombre ?? '')) ?? null;
+}
 
 // Solo en modo de prueba: reconoce «agrega 100 g de pollo y 150 g de arroz al almuerzo» para probar el registro de
 // comidas desde el chat (FS-HU-09) sin proveedor de IA. Sin gramos explícitos responde como un mensaje normal.
@@ -185,7 +197,7 @@ function leerPedido(mensaje) {
 
 const noDisponible = (mensaje = 'El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.') => new ErrorHttp(503, mensaje);
 
-async function consultarProveedor(mensajes) {
+async function consultarProveedor(mensajes, especialidades) {
   let respuesta;
   try {
     respuesta = await fetch(`${ia.urlBase}/chat/completions`, {
@@ -194,7 +206,7 @@ async function consultarProveedor(mensajes) {
       body: JSON.stringify({
         model: ia.modelo,
         messages: [
-          { role: 'system', content: INSTRUCCIONES },
+          { role: 'system', content: instrucciones(especialidades) },
           ...mensajes.map(({ remitente, contenido }) => ({ role: remitente === 'usuario' ? 'user' : 'assistant', content: contenido })),
         ],
         tools: HERRAMIENTAS,
@@ -222,21 +234,22 @@ async function consultarProveedor(mensajes) {
   return { texto: limpiar(texto) };
 }
 
-// mensajes: [{ remitente: 'usuario' | 'asistente', contenido }], el último es el del usuario.
+// mensajes: [{ remitente: 'usuario' | 'asistente', contenido }], el último es el del usuario; especialidades: nombres
+// de las especialidades activas del catálogo (FS-HU-30).
 // Devuelve { contenido, especialidad }: especialidad es un nombre del catálogo o null (FS-HU-08). Si la persona pidió
 // agregar alimentos (FS-HU-09), devuelve { pedido: { alimentos, momento } } y el asistente arma la respuesta.
-async function responder(mensajes) {
+async function responder(mensajes, especialidades = []) {
   const ultimo = mensajes.at(-1).contenido;
   if (!ia.apiKey) {
     const pedido = accionDePrueba(ultimo);
     if (pedido) return { pedido };
-    return { contenido: agregarAvisos(ultimo, respuestaSimulada(ultimo)), especialidad: especialidadDePrueba(ultimo) };
+    return { contenido: agregarAvisos(ultimo, respuestaSimulada(ultimo)), especialidad: especialidadDePrueba(ultimo, especialidades) };
   }
-  const resultado = await consultarProveedor(mensajes);
+  const resultado = await consultarProveedor(mensajes, especialidades);
   if (resultado.pedido) return { pedido: resultado.pedido };
-  const { texto, especialidad } = extraerEspecialidad(resultado.texto);
+  const { texto, especialidad } = extraerEspecialidad(resultado.texto, especialidades);
   if (!texto) throw noDisponible();
   return { contenido: agregarAvisos(ultimo, texto), especialidad };
 }
 
-module.exports = { responder, modo, limpiar, agregarAvisos, extraerEspecialidad, resumir, INSTRUCCIONES, HERRAMIENTAS };
+module.exports = { responder, modo, limpiar, agregarAvisos, extraerEspecialidad, resumir, instrucciones, HERRAMIENTAS };

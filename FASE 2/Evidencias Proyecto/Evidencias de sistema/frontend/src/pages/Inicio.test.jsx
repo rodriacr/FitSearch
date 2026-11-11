@@ -30,13 +30,14 @@ describe('Inicio con datos', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ })).toBeInTheDocument();
     const accesos = screen.getByRole('heading', { name: 'Tus accesos rápidos' }).closest('section');
-    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
+    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Mis citas', '/citas'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
     }
-    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Centros y Gimnasios llegan como "Próximamente";
-    // el Asistente IA (FS-HU-07) y Comidas (FS-HU-09 y FS-HU-10) ya están disponibles.
+    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Desde FS-HU-25, Centros de salud y Gimnasios
+    // también están disponibles, así que ningún acceso dice «Próximamente».
     expect(within(accesos).queryByRole('link', { name: /Farmacias/ })).not.toBeInTheDocument();
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
+    expect(within(accesos).getAllByRole('link')).toHaveLength(6);
+    expect(within(accesos).queryByText('Próximamente')).not.toBeInTheDocument();
 
     expect(await screen.findByText('Bajar de peso')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver detalle de objetivos/ })).toHaveAttribute('href', '/perfil');

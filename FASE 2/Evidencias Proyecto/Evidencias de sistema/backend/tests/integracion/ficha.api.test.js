@@ -50,6 +50,24 @@ test('rechaza especialidad fuera del catálogo, comuna vacía, modalidad inváli
   expect(modelo.guardarFicha).not.toHaveBeenCalled();
 });
 
+// FS-HU-30: el catálogo de especialidades está en la base de datos (en las pruebas, el inicial de la migración).
+test('guarda la especialidad con el nombre del catálogo, aunque se escriba sin tilde ni mayúscula', async () => {
+  modelo.guardarFicha.mockResolvedValue(fila);
+  expect((await enviar('profesional', { ...valido, especialidad: 'nutricion' })).status).toBe(200);
+  expect(modelo.guardarFicha).toHaveBeenCalledWith(7, valido);
+});
+
+test('conserva la especialidad que ya tenía la ficha aunque el administrador la haya desactivado', async () => {
+  modelo.obtenerPorUsuario.mockResolvedValue({ ...fila, especialidad: 'Masoterapia' });
+  modelo.guardarFicha.mockResolvedValue({ ...fila, especialidad: 'Masoterapia' });
+  expect((await enviar('profesional', { ...valido, especialidad: 'Masoterapia' })).status).toBe(200);
+  expect(modelo.guardarFicha).toHaveBeenCalledWith(7, { ...valido, especialidad: 'Masoterapia' });
+  // Otra especialidad que no está activa no se acepta.
+  const res = await enviar('profesional', { ...valido, especialidad: 'Podología' });
+  expect(res.status).toBe(400);
+  expect(res.body.detalles.especialidad).toBe('Selecciona tu especialidad');
+});
+
 // SC-24: dirección de atención propia y coordenadas dentro de Chile.
 test.each([['presencial', undefined], ['ambas', '   ']])('la dirección es obligatoria si atiende %s', async (modalidad, direccion) => {
   const res = await enviar('profesional', { ...valido, modalidad, direccion });

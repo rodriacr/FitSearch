@@ -9,11 +9,11 @@ const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../..
 
 beforeEach(() => jest.resetAllMocks());
 
-test('cada palabra buscada debe estar en el nombre o en los sinónimos', async () => {
+test('cada palabra buscada debe estar en el nombre o en los sinónimos, y solo entre los alimentos activos', async () => {
   prisma.alimento.findMany.mockResolvedValue([]);
   await modelo.buscarAlimentos(['pechuga', 'pollo'], 12);
   expect(prisma.alimento.findMany).toHaveBeenCalledWith(expect.objectContaining({
-    where: { AND: [
+    where: { activo: true, AND: [
       { OR: [{ nombre: { contains: 'pechuga' } }, { sinonimos: { contains: 'pechuga' } }] },
       { OR: [{ nombre: { contains: 'pollo' } }, { sinonimos: { contains: 'pollo' } }] },
     ] },
@@ -28,6 +28,13 @@ test('los registros del día, el total por día, editar y borrar alcanzan solo l
   await modelo.caloriasPorDia(7, '2026-10-26', '2026-11-01');
   expect(prisma.registroComida.groupBy).toHaveBeenCalledWith({
     by: ['fecha'], where: { usuarioId: 7, fecha: { gte: dia, lte: new Date('2026-11-01T00:00:00Z') } }, _sum: { calorias: true },
+  });
+  // Estadísticas (FS-HU-26): también suma los macronutrientes de cada día.
+  await modelo.totalesPorDia(7, '2026-10-01', '2026-10-31');
+  expect(prisma.registroComida.groupBy).toHaveBeenLastCalledWith({
+    by: ['fecha'],
+    where: { usuarioId: 7, fecha: { gte: new Date('2026-10-01T00:00:00Z'), lte: new Date('2026-10-31T00:00:00Z') } },
+    _sum: { calorias: true, proteinasG: true, carbohidratosG: true, grasasG: true },
   });
   await modelo.obtener(3, 7);
   expect(prisma.registroComida.findFirst).toHaveBeenCalledWith(expect.objectContaining({ where: { id: 3, usuarioId: 7 } }));

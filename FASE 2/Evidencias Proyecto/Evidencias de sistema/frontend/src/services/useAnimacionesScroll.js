@@ -34,9 +34,23 @@ export default function useAnimacionesScroll() {
       animaciones.delete(elemento);
     }
 
+    // Una escena ([data-escena]) se cuenta sola al quedar a la vista: el CSS anima sus partes cuando recibe
+    // data-en-vista. Si alguien llega con el teclado antes, se muestra completa para no enfocar algo invisible.
+    function mostrarEscena(elemento) {
+      elemento.dataset.enVista = 'true';
+      observador?.unobserve(elemento);
+    }
+
     function mostrarAlEnfocar(evento) {
       for (const elemento of animaciones.keys()) {
         if (elemento.contains(evento.target)) terminarAnimacion(elemento);
+      }
+      const escena = evento.target.closest?.('[data-escena]');
+      if (escena && raiz.contains(escena)) {
+        // Con el teclado la escena se muestra terminada al instante, sin los retrasos de sus partes: antes, un enlace
+        // podía recibir el foco mientras su mensaje seguía invisible esperando su turno (revisión del PR #46).
+        escena.dataset.completa = 'true';
+        mostrarEscena(escena);
       }
     }
 
@@ -48,6 +62,7 @@ export default function useAnimacionesScroll() {
       cuadro = null;
       for (const elemento of animaciones.keys()) terminarAnimacion(elemento);
       for (const foto of fotografias) foto.style.removeProperty('--desplazamiento-hero');
+      delete raiz.dataset.escenasListas;
     }
 
     function configurar() {
@@ -55,7 +70,11 @@ export default function useAnimacionesScroll() {
       if (preferencia.matches) return;
       if (window.IntersectionObserver) {
         observador = new IntersectionObserver((entradas) => {
-          for (const { target: elemento, isIntersecting } of entradas) {
+          for (const { target: elemento, isIntersecting, intersectionRatio } of entradas) {
+            if (elemento.hasAttribute('data-escena')) {
+              if (isIntersecting && intersectionRatio >= 0.3) mostrarEscena(elemento);
+              continue;
+            }
             if (!isIntersecting || revelados.has(elemento)) continue;
             revelados.add(elemento);
             observador.unobserve(elemento);
@@ -72,8 +91,11 @@ export default function useAnimacionesScroll() {
             animaciones.set(elemento, animacion);
             animacion.onfinish = () => animaciones.delete(elemento);
           }
-        }, { threshold: 0.08 });
+        }, { threshold: [0.08, 0.3] });
         for (const elemento of raiz.querySelectorAll('[data-revelar]')) observador.observe(elemento);
+        // Sin observador (o con movimiento reducido) las escenas se ven ya terminadas: solo se ocultan si se animarán.
+        raiz.dataset.escenasListas = 'true';
+        for (const elemento of raiz.querySelectorAll('[data-escena]:not([data-en-vista])')) observador.observe(elemento);
       }
       window.addEventListener('scroll', solicitarCuadro, { passive: true });
       window.addEventListener('resize', solicitarCuadro);

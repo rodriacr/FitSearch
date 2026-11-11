@@ -4,14 +4,9 @@
 export const SECCIONES = {
   inicio: { ruta: '/inicio', nombre: 'Inicio', icono: 'casa' },
   profesionales: { ruta: '/profesionales', nombre: 'Profesionales', icono: 'profesional' },
-  centros: {
-    ruta: '/centros-salud', nombre: 'Centros de salud', icono: 'hospital', proximamente: true,
-    descripcion: 'Pronto podrás encontrar centros de salud y clínicas cerca de ti.',
-  },
-  gimnasios: {
-    ruta: '/gimnasios', nombre: 'Gimnasios', icono: 'mancuerna', proximamente: true,
-    descripcion: 'Pronto podrás descubrir gimnasios y centros deportivos para entrenar cerca de ti.',
-  },
+  // Directorio de establecimientos que registra el administrador (FS-HU-25 y FS-HU-30).
+  centros: { ruta: '/centros-salud', nombre: 'Centros de salud', icono: 'hospital' },
+  gimnasios: { ruta: '/gimnasios', nombre: 'Gimnasios', icono: 'mancuerna' },
   // El historial de chats vive dentro del asistente IA, no en el menú (decisión del PO del 05-10-2026; FS-HU-07).
   asistente: { ruta: '/asistente', nombre: 'Asistente IA', icono: 'chispa' },
   // Gestor de alimentación (FS-HU-09 y FS-HU-10).
@@ -25,11 +20,12 @@ export const SECCIONES = {
 };
 
 export const MENU_LATERAL = ['inicio', 'profesionales', 'centros', 'gimnasios', 'asistente', 'comidas', 'perfil', 'favoritos', 'citas'];
-export const ACCESOS_RAPIDOS = ['profesionales', 'centros', 'gimnasios', 'asistente', 'comidas'];
+export const ACCESOS_RAPIDOS = ['profesionales', 'centros', 'gimnasios', 'citas', 'asistente', 'comidas'];
 export const BARRA_INFERIOR = [
   { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
   { seccion: 'profesionales', nombre: 'Profesionales', icono: 'buscar' },
   { seccion: 'asistente', nombre: 'Chat IA', icono: 'chat' },
+  { seccion: 'comidas', nombre: 'Comidas', icono: 'comida' },
   { seccion: 'perfil', nombre: 'Perfil', icono: 'usuario' },
 ];
 
