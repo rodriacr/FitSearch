@@ -8,23 +8,17 @@
     "backendJest": "407/407",
     "frontendVitest": "343/343",
     "lint": "backend y frontend sin errores",
-    "build": "correcto"
+    "build": "correcto",
+    "nota": "Cifras de la rama antes de traer main; con main, ver combinadoConMain."
   },
   "combinadoConMain": {
-    "base": "origin/main del 10-11-2026 (ya incluye #40, #42, #44 y #47)",
+    "base": "origin/main 801878c (incluye los PR #40, #42, #43, #44, #47 y #48), fusionado en la rama el 10-11-2026",
     "conflictos": 0,
-    "backendJest": "452/452",
-    "frontendVitest": "368/368",
+    "backendJest": "483/483",
+    "frontendVitest": "399/399",
+    "mysqlReal": "73/73",
     "lint": "sin errores",
-    "build": "correcto",
-    "prAbiertos": {
-      "prs": [
-        "#43",
-        "#48"
-      ],
-      "conflictos": 0,
-      "nota": "Con #43 y #48 solo se comprobó que la fusión no tiene conflictos."
-    }
+    "build": "correcto"
   },
   "mysqlReal": {
     "comando": "npm run test:mysql:mejoras",
