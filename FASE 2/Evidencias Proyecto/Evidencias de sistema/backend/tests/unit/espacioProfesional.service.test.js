@@ -84,3 +84,26 @@ test('FS-HU-28: reservas por semana y estado, calificación, demanda, ocupación
   expect(r.demandaFranja).toEqual([{ franja: 'manana', reservas: 1 }, { franja: 'tarde', reservas: 1 }, { franja: 'noche', reservas: 0 }]);
   expect(r.semanaActual).toMatchObject({ desde: '2026-11-09', reservas: 2, confirmadas: 0, canceladas: 1, pendientes: 1, clientesNuevos: 1 });
 });
+
+test('FS-HU-28: la consulta conserva los dos límites de fechas y cada período ignora lo que queda fuera', async () => {
+  prisma.reserva.findMany
+    .mockResolvedValueOnce([
+      reserva(9, ana, '2026-11-20', '10:00', 'confirmada'), // después de esta semana: no cuenta
+      reserva(8, ana, '2026-11-10', '10:00', 'confirmada'), // dentro del período
+      reserva(7, luis, '2026-09-21', '10:00', 'pendiente'), // primer día del período
+      reserva(6, luis, '2026-09-20', '10:00', 'cancelada'), // último día del período anterior
+      reserva(5, luis, '2026-07-27', '10:00', 'confirmada'), // primer día del período anterior
+      reserva(4, ana, '2026-07-26', '10:00', 'confirmada'), // antes del período anterior: no cuenta
+    ])
+    .mockResolvedValueOnce([]);
+  prisma.resena.findMany.mockResolvedValue([]);
+  prisma.disponibilidad.findMany.mockResolvedValue([]);
+  const r = await servicio.reportes(30, 8, ahora);
+  expect(prisma.reserva.findMany.mock.calls[0][0].where).toEqual({
+    disponibilidad: { fecha: { gte: d('2026-07-27'), lte: d('2026-11-15') }, profesionalId: 3 },
+  });
+  expect(r.totales).toMatchObject({ reservas: 2, confirmadas: 1, pendientes: 1, canceladas: 0 });
+  expect(r.anterior).toMatchObject({ desde: '2026-07-27', hasta: '2026-09-20', reservas: 2, confirmadas: 1, canceladas: 1 });
+  expect(r.porSemana.reduce((suma, s) => suma + s.pendiente + s.confirmada + s.cancelada, 0)).toBe(2);
+  expect(r.semanaActual).toMatchObject({ reservas: 1, confirmadas: 1 });
+});

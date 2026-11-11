@@ -16,7 +16,8 @@ async function fichaDe(usuarioId) {
 
 function reservasDe(profesionalId, where = {}) {
   return prisma.reserva.findMany({
-    where: { ...where, disponibilidad: { profesionalId } },
+    // Se conserva lo que pida la consulta sobre el horario (por ejemplo, un rango de fechas) y se agrega el profesional.
+    where: { ...where, disponibilidad: { ...where.disponibilidad, profesionalId } },
     select: {
       id: true, estado: true, mensaje: true, modalidad: true, primeraVisita: true, canceladaPor: true, fechaCreacion: true,
       usuario: { select: { id: true, nombre: true } },
@@ -115,7 +116,7 @@ async function reportes(usuarioId, semanas = 8, ahora = new Date()) {
   const anteriorInicio = sumarDias(inicio, -7 * semanas);
   const fin = sumarDias(lunesActual, 6);
   const [reservas, resenas, publicados] = await Promise.all([
-    reservasDe(id, { disponibilidad: { profesionalId: id, fecha: { gte: new Date(`${anteriorInicio}T00:00:00Z`), lte: new Date(`${fin}T00:00:00Z`) } } }),
+    reservasDe(id, { disponibilidad: { fecha: { gte: new Date(`${anteriorInicio}T00:00:00Z`), lte: new Date(`${fin}T00:00:00Z`) } } }),
     prisma.resena.findMany({ where: { profesionalId: id }, select: { puntaje: true, reservaId: true, fechaCreacion: true } }),
     prisma.disponibilidad.findMany({
       where: { profesionalId: id, fecha: { gte: new Date(`${inicio}T00:00:00Z`), lte: new Date(`${fin}T00:00:00Z`) } },
@@ -128,8 +129,10 @@ async function reportes(usuarioId, semanas = 8, ahora = new Date()) {
     select: { usuarioId: true }, distinct: ['usuarioId'],
   });
   const conocidos = new Set(antes.map((r) => r.usuarioId));
-  const delPeriodo = reservas.filter((r) => dia(r.disponibilidad.fecha) >= inicio);
-  const anterior = reservas.filter((r) => dia(r.disponibilidad.fecha) < inicio);
+  // Cada período con sus dos límites: lo posterior a esta semana y lo anterior al período de comparación no cuentan.
+  const entre = (desde, hasta) => (r) => dia(r.disponibilidad.fecha) >= desde && dia(r.disponibilidad.fecha) <= hasta;
+  const delPeriodo = reservas.filter(entre(inicio, fin));
+  const anterior = reservas.filter(entre(anteriorInicio, sumarDias(inicio, -1)));
 
   const porSemana = Array.from({ length: semanas }, (_, indice) => {
     const desde = sumarDias(inicio, 7 * indice);

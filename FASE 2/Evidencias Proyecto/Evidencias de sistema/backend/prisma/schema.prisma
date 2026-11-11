@@ -135,22 +135,23 @@ model Disponibilidad {
 }
 
 model Reserva {
-  id               Int            @id @default(autoincrement())
-  usuarioId        Int            @map("usuario_id")
-  disponibilidadId Int            @map("disponibilidad_id")
-  mensaje          String         @db.VarChar(500)
-  estado           String         @default("pendiente") @db.VarChar(20)
-  fechaCreacion    DateTime       @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  id                  Int            @id @default(autoincrement())
+  usuarioId           Int            @map("usuario_id")
+  disponibilidadId    Int            @map("disponibilidad_id")
+  mensaje             String         @db.VarChar(500)
+  estado              String         @default("pendiente") @db.VarChar(20)
+  fechaCreacion       DateTime       @default(now()) @map("fecha_creacion") @db.DateTime(0)
   // Mejoras de la reserva (09-11-2026): presencial u online cuando el profesional atiende de ambas formas, si es la primera
   // visita, quién la cancela y cuándo cambió de estado (reportes, FS-HU-28) y cuándo se envió el recordatorio por correo.
-  modalidad        String?        @db.VarChar(20)
-  primeraVisita    Boolean?       @map("primera_visita")
-  canceladaPor     String?        @map("cancelada_por") @db.VarChar(20)
-  fechaCambio      DateTime?      @map("fecha_cambio") @db.DateTime(0)
-  recordatorioEn   DateTime?      @map("recordatorio_enviado") @db.DateTime(0)
-  usuario          Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  disponibilidad   Disponibilidad @relation(fields: [disponibilidadId], references: [id], onDelete: Restrict)
-  resenas          Resena[]
+  modalidad           String?        @db.VarChar(20)
+  primeraVisita       Boolean?       @map("primera_visita")
+  canceladaPor        String?        @map("cancelada_por") @db.VarChar(20)
+  fechaCambio         DateTime?      @map("fecha_cambio") @db.DateTime(0)
+  recordatorioEn      DateTime?      @map("recordatorio_enviado") @db.DateTime(0)
+  recordatorioIntento DateTime?      @map("recordatorio_intento") @db.DateTime(0)
+  usuario             Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  disponibilidad      Disponibilidad @relation(fields: [disponibilidadId], references: [id], onDelete: Restrict)
+  resenas             Resena[]
 
   @@index([disponibilidadId, estado])
   @@index([usuarioId])
@@ -388,6 +389,7 @@ model ListaEspera {
   usuarioId     Int         @map("usuario_id")
   profesionalId Int         @map("profesional_id")
   fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  avisoIntento  DateTime?   @map("aviso_intento") @db.DateTime(0)
   usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
 

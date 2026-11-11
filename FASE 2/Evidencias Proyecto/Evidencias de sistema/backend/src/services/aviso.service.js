@@ -2,6 +2,7 @@
 // lo provoca: se envían después de guardar y, si el correo falla, solo queda registrado en la consola del backend.
 const modelo = require('../models/aviso.model');
 const correo = require('./correo.service');
+const { marcaDe } = require('../utils/intentoDeEnvio');
 
 const FORMATO_DIA = new Intl.DateTimeFormat('es-CL', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC' });
 const hora = (valor) => valor.toISOString().slice(11, 16);
@@ -60,13 +61,21 @@ async function reservaCambiada(reservaId) {
   }
 }
 
-// «Avísame si se libera una hora»: cada persona de la lista recibe un correo y sale de la lista.
-async function horaLiberada(profesionalId) {
-  const { filas, profesional } = await modelo.listaEspera(profesionalId);
+// «Avísame si se libera una hora»: cada persona de la lista recibe un solo correo y sale de la lista. La fila se toma
+// antes de escribirle, así dos publicaciones simultáneas no le envían dos avisos; si el correo falla, se suelta y la
+// persona sigue en la lista para el próximo aviso. Devuelve cuántos correos se enviaron.
+async function horaLiberada(profesionalId, ahora = new Date()) {
+  const { filas, profesional } = await modelo.listaEspera(profesionalId, ahora);
   if (!filas.length || !profesional) return 0;
-  const avisadas = [];
+  const marca = marcaDe(ahora);
+  let avisadas = 0;
   for (const { id, usuario } of filas) {
-    if (!usuario.activo) { avisadas.push(id); continue; }
+    if (!(await modelo.tomarDeLaLista(id, marca, ahora))) continue;
+    // Una cuenta desactivada sale de la lista sin correo.
+    if (!usuario.activo) {
+      await modelo.sacarDeLaLista(id, marca);
+      continue;
+    }
     try {
       await correo.enviarAviso({
         para: usuario.correo, nombre: primerNombre(usuario.nombre), asunto: `${profesional.usuario.nombre} tiene horas disponibles`,
@@ -74,13 +83,15 @@ async function horaLiberada(profesionalId) {
           'Las horas se toman por orden de reserva: revísalas pronto.'],
         accion: { texto: 'Ver horas disponibles', ruta: `/profesionales/${profesionalId}` },
       });
-      avisadas.push(id);
     } catch (error) {
+      await modelo.soltarDeLaLista(id, marca);
       registrarFallo('hora liberada')(error);
+      continue;
     }
+    await modelo.sacarDeLaLista(id, marca);
+    avisadas += 1;
   }
-  if (avisadas.length) await modelo.sacarDeLaLista(avisadas);
-  return avisadas.length;
+  return avisadas;
 }
 
 async function recordatorio(r) {

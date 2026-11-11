@@ -1,7 +1,7 @@
 // Comprobación con MySQL real de las mejoras del 09-11-2026 (agenda semanal, horarios en serie, fechas bloqueadas,
 // modalidad y primera visita, confirmación automática, lista de espera, reseñas verificadas, recordatorios, clientes,
 // reportes y chat entre usuario y profesional). Crea cuentas temporales y las borra al final. Uso: npm run test:mysql:mejoras
-// Los correos nunca salen: el SMTP se desactiva y los avisos solo se escriben en la consola (se silencian aquí).
+// Los correos nunca salen: el SMTP se desactiva y el envío se simula (para contar avisos y probar fallos del correo).
 const path = require('node:path');
 const assert = require('node:assert/strict');
 const base = path.resolve(__dirname, '..');
@@ -15,7 +15,9 @@ const request = require(path.join(base, 'node_modules/supertest'));
 const jwt = require(path.join(base, 'node_modules/jsonwebtoken'));
 const app = require(path.join(base, 'src/app'));
 const recordatorios = require(path.join(base, 'src/services/recordatorio.service'));
-const { fechaEnChile, sumarDias } = require(path.join(base, 'src/utils/fechaChile'));
+const avisos = require(path.join(base, 'src/services/aviso.service'));
+const correo = require(path.join(base, 'src/services/correo.service'));
+const { fechaEnChile, sumarDias, lunesDeLaSemana } = require(path.join(base, 'src/utils/fechaChile'));
 
 const creados = [];
 const comprobaciones = [];
@@ -29,6 +31,20 @@ async function check(nombre, peticion, estado) {
 }
 const ok = (nombre, condicion, detalle = '') => { assert.ok(condicion, `${nombre} ${detalle}`); comprobaciones.push(nombre); };
 const esperar = (ms) => new Promise((listo) => { setTimeout(listo, ms); });
+
+// Correo simulado: registra cada aviso, tarda un poco (como un servidor real, así dos procesos se cruzan) y puede fallar
+// una vez para una dirección. Sin SMTP, el original solo escribe en la consola.
+const correos = [];
+const fallarUnaVez = new Set();
+const enviarOriginal = correo.enviarAviso;
+correo.enviarAviso = async (aviso) => {
+  await esperar(40);
+  if (fallarUnaVez.delete(aviso.para)) throw new Error('Servidor de correo simulado caído');
+  correos.push(aviso);
+  return enviarOriginal(aviso);
+};
+const recibidos = (para, asunto) => correos.filter((x) => x.para === para && x.asunto.includes(asunto)).length;
+console.error = (texto, ...resto) => (/\[(recordatorio|aviso)\]/.test(String(texto)) ? undefined : process.stderr.write(`${[texto, ...resto].join(' ')}\n`));
 
 (async () => {
   try {
@@ -156,14 +172,64 @@ const esperar = (ms) => new Promise((listo) => { setTimeout(listo, ms); });
       horaInicio: new Date(`1970-01-01T${horaChile}:00Z`), horaFin: new Date(`1970-01-01T${horaFin}:00Z`),
     } });
     {
+      // Revisión del PR #49: si el correo falla, la cita queda libre para reintentar; nunca se envían dos recordatorios.
       const cita = await prisma.reserva.create({ data: { usuarioId: b.id, disponibilidadId: pronto.id, mensaje: 'Cita para el recordatorio', estado: 'confirmada' } });
-      await recordatorios.enviarPendientes(ahora);
-      ok('Marca el recordatorio enviado', Boolean((await prisma.reserva.findUnique({ where: { id: cita.id } })).recordatorioEn));
-      const segunda = await recordatorios.pendientes(ahora);
-      ok('No lo repite', !segunda.some((r) => r.id === cita.id));
+      const estadoCita = () => prisma.reserva.findUnique({ where: { id: cita.id }, select: { recordatorioEn: true, recordatorioIntento: true } });
+      fallarUnaVez.add(b.correo);
+      await recordatorios.enviarPendientes(new Date());
+      const trasFallo = await estadoCita();
+      ok('Si el correo falla, no lo marca enviado y queda libre', !trasFallo.recordatorioEn && !trasFallo.recordatorioIntento && recibidos(b.correo, 'Recordatorio') === 0);
+      await prisma.reserva.update({ where: { id: cita.id }, data: { recordatorioIntento: new Date(Date.now() - 5 * 60000) } });
+      await recordatorios.enviarPendientes(new Date());
+      ok('Mientras otro proceso lo envía, no se duplica', recibidos(b.correo, 'Recordatorio') === 0);
+      await prisma.reserva.update({ where: { id: cita.id }, data: { recordatorioIntento: new Date(Date.now() - 20 * 60000) } });
+      await Promise.all([recordatorios.enviarPendientes(new Date()), recordatorios.enviarPendientes(new Date())]);
+      ok('Un envío a medias (marca vencida) se reintenta y dos procesos a la vez envían uno solo', recibidos(b.correo, 'Recordatorio') === 1);
+      const enviado = await estadoCita();
+      ok('Marca el recordatorio enviado', Boolean(enviado.recordatorioEn) && !enviado.recordatorioIntento);
+      await recordatorios.enviarPendientes(new Date());
+      ok('No lo repite', recibidos(b.correo, 'Recordatorio') === 1 && !(await recordatorios.pendientes(new Date())).some((r) => r.id === cita.id));
     }
 
-    console.log(JSON.stringify({ fecha: hoy, mysqlReal: true, total: comprobaciones.length, comprobaciones, limpieza: 'Solo cuentas, horarios, reservas, chats, reseñas y bloqueos temporales' }));
+    // Revisión del PR #49: lista de espera con dos publicaciones simultáneas y con un correo que falla.
+    {
+      const q = await crear('profesional');
+      const anotar = (u) => prisma.listaEspera.create({ data: { usuarioId: u.id, profesionalId: q.profesional.id } });
+      const enLaLista = () => prisma.listaEspera.findMany({ where: { profesionalId: q.profesional.id }, select: { usuarioId: true, avisoIntento: true } });
+      const asunto = `${q.nombre} tiene horas disponibles`;
+      await Promise.all([anotar(a), anotar(b), anotar(c)]);
+      await Promise.all([avisos.horaLiberada(q.profesional.id), avisos.horaLiberada(q.profesional.id)]);
+      ok('Dos publicaciones a la vez: cada persona recibe un solo aviso', [a, b, c].every((u) => recibidos(u.correo, asunto) === 1));
+      ok('Todos salen de la lista tras el aviso', (await enLaLista()).length === 0);
+      await anotar(a);
+      fallarUnaVez.add(a.correo);
+      ok('Si el correo falla no cuenta como enviado', (await avisos.horaLiberada(q.profesional.id)) === 0);
+      const sigue = await enLaLista();
+      ok('Si el correo falla, la persona sigue en la lista y queda libre', sigue.length === 1 && sigue[0].usuarioId === a.id && !sigue[0].avisoIntento);
+      await Promise.all([avisos.horaLiberada(q.profesional.id), avisos.horaLiberada(q.profesional.id)]);
+      ok('El reintento envía un solo aviso y la saca de la lista', recibidos(a.correo, asunto) === 2 && (await enLaLista()).length === 0);
+
+      // Revisión del PR #49: los reportes respetan los dos límites de fechas de cada período (4 semanas).
+      const lunes = lunesDeLaSemana(hoy);
+      const inicio = sumarDias(lunes, -21);
+      const anteriorInicio = sumarDias(inicio, -28);
+      const citaEl = async (u, fecha, estado) => {
+        const h = await prisma.disponibilidad.create({ data: {
+          profesionalId: q.profesional.id, fecha: new Date(`${fecha}T00:00:00Z`), horaInicio: new Date('1970-01-01T10:00:00Z'), horaFin: new Date('1970-01-01T11:00:00Z'),
+        } });
+        return prisma.reserva.create({ data: { usuarioId: u.id, disponibilidadId: h.id, mensaje: 'Cita para los reportes', estado } });
+      };
+      await citaEl(a, lunes, 'confirmada'); // dentro del período
+      await citaEl(b, sumarDias(lunes, 7), 'pendiente'); // después de esta semana
+      await citaEl(c, anteriorInicio, 'cancelada'); // primer día del período anterior
+      await citaEl(a, sumarDias(anteriorInicio, -1), 'confirmada'); // antes del período anterior
+      const informe = await check('Reportes con citas fuera de los límites', api(q, 'get', '/profesional/reportes?semanas=4'), 200);
+      ok('El período cuenta solo la cita dentro de sus fechas', informe.totales.reservas === 1 && informe.totales.confirmadas === 1 && informe.totales.pendientes === 0);
+      ok('Las semanas del gráfico suman lo mismo', informe.porSemana.reduce((suma, x) => suma + x.pendiente + x.confirmada + x.cancelada, 0) === 1);
+      ok('El período anterior cuenta solo la cita dentro de sus fechas', informe.anterior.desde === anteriorInicio && informe.anterior.reservas === 1 && informe.anterior.canceladas === 1);
+    }
+
+    console.log(JSON.stringify({ fecha: hoy, mysqlReal: true, total: comprobaciones.length, comprobaciones, limpieza: 'Solo cuentas, horarios, reservas, chats, reseñas, bloqueos y lista de espera temporales', correoSimulado: true }));
   } finally {
     const profesionales = (await prisma.profesional.findMany({ where: { usuarioId: { in: creados } }, select: { id: true } })).map((x) => x.id);
     await prisma.chatCita.deleteMany({ where: { profesionalId: { in: profesionales } } });

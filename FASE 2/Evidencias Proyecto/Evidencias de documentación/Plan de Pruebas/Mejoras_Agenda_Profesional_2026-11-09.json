@@ -23,7 +23,8 @@
   "mysqlReal": {
     "comando": "npm run test:mysql:mejoras",
     "fecha": "2026-11-10",
-    "total": 73,
+    "total": 85,
+    "correoSimulado": true,
     "comprobaciones": [
       "Serie de 3 bloques de 45 min",
       "La serie crea 09:00, 09:45 y 10:30",
@@ -96,10 +97,22 @@
       "Un usuario no ve los clientes",
       "Reportes del profesional",
       "Reporte con 4 semanas y calificación",
+      "Si el correo falla, no lo marca enviado y queda libre",
+      "Mientras otro proceso lo envía, no se duplica",
+      "Un envío a medias (marca vencida) se reintenta y dos procesos a la vez envían uno solo",
       "Marca el recordatorio enviado",
-      "No lo repite"
+      "No lo repite",
+      "Dos publicaciones a la vez: cada persona recibe un solo aviso",
+      "Todos salen de la lista tras el aviso",
+      "Si el correo falla no cuenta como enviado",
+      "Si el correo falla, la persona sigue en la lista y queda libre",
+      "El reintento envía un solo aviso y la saca de la lista",
+      "Reportes con citas fuera de los límites",
+      "El período cuenta solo la cita dentro de sus fechas",
+      "Las semanas del gráfico suman lo mismo",
+      "El período anterior cuenta solo la cita dentro de sus fechas"
     ],
-    "limpieza": "Solo cuentas, horarios, reservas, chats, reseñas y bloqueos temporales"
+    "limpieza": "Solo cuentas, horarios, reservas, chats, reseñas, bloqueos y lista de espera temporales"
   },
   "revisionVisual": {
     "herramienta": "Edge sin interfaz (1280, 768 y 375 px) y detector de impeccable",
@@ -118,5 +131,17 @@
       "Mejoras_Agenda_Profesional_2026-11-09_reportes.png"
     ]
   },
-  "correos": "Sin SMTP configurado: los avisos se escribieron solo en la consola; no se envió ningún correo real."
+  "correos": "Sin SMTP configurado: los avisos se escribieron solo en la consola; no se envió ningún correo real.",
+  "revisionPR49": {
+    "fecha": "2026-11-10",
+    "correcciones": [
+      "Reportes: la consulta conserva los dos límites de fechas y cada período ignora las citas fuera de sus fechas",
+      "Recordatorio: se toma la cita antes de enviar, se marca enviado solo si el correo salió y, si falla, se suelta para reintentar sin duplicar",
+      "Lista de espera: cada persona se toma antes de escribirle (un solo aviso aunque dos publicaciones coincidan) y, si el correo falla, sigue en la lista"
+    ],
+    "migracion": "20261110120000_reintento_de_avisos (columnas reservas.recordatorio_intento y lista_espera.aviso_intento)",
+    "backendJest": "487/487",
+    "pruebasQueFallanConElCodigoAnterior": "5 unitarias y los 3 casos con MySQL real",
+    "otrosScriptsMysql": "asistente, comidas y agua (19/19) correctos"
+  }
 }
