@@ -151,14 +151,14 @@ console.error = (texto, ...resto) => (/\[(recordatorio|aviso)\]/.test(String(tex
     ok('Experiencia en la ficha', publica.aniosExperiencia === 6 && publica.registroSis === '12345' && publica.formacion.length === 1);
     await check('Experiencia inválida → 400', api(p, 'put', '/profesionales/mi-ficha/experiencia', { aniosExperiencia: 99 }), 400);
 
-    // Clientes y reportes.
+    // Clientes y reportes (API del PR #50).
     const clientes = await check('Clientes del profesional', api(p, 'get', '/profesional/clientes'), 200);
-    ok('Lista a las tres personas que reservaron', clientes.total === 3);
+    ok('Lista a las tres personas que reservaron', clientes.clientes.length === 3);
     ok('Sin correo ni salud', !JSON.stringify(clientes).match(/@|alergia|medicamento/));
     await check('Historial de un cliente', api(p, 'get', `/profesional/clientes/${c.id}`), 200);
     await check('Un usuario no ve los clientes', api(a, 'get', '/profesional/clientes'), 403);
     const reporte = await check('Reportes del profesional', api(p, 'get', '/profesional/reportes?semanas=4'), 200);
-    ok('Reporte con 4 semanas y calificación', reporte.porSemana.length === 4 && reporte.calificacion.total === 1 && reporte.calificacion.verificadas === 1);
+    ok('Reporte con 4 semanas y calificación', reporte.semanas.length === 4 && reporte.calificacion.cantidad === 1);
 
     // Recordatorio: una cita confirmada dentro de las próximas 24 horas recibe un solo aviso.
     const ahora = new Date();
@@ -209,7 +209,7 @@ console.error = (texto, ...resto) => (/\[(recordatorio|aviso)\]/.test(String(tex
       await Promise.all([avisos.horaLiberada(q.profesional.id), avisos.horaLiberada(q.profesional.id)]);
       ok('El reintento envía un solo aviso y la saca de la lista', recibidos(a.correo, asunto) === 2 && (await enLaLista()).length === 0);
 
-      // Revisión del PR #49: los reportes respetan los dos límites de fechas de cada período (4 semanas).
+      // Revisión del PR #49, ahora con los reportes del PR #50: cada semana cuenta solo las citas entre su lunes y su domingo.
       const lunes = lunesDeLaSemana(hoy);
       const inicio = sumarDias(lunes, -21);
       const anteriorInicio = sumarDias(inicio, -28);
@@ -219,14 +219,15 @@ console.error = (texto, ...resto) => (/\[(recordatorio|aviso)\]/.test(String(tex
         } });
         return prisma.reserva.create({ data: { usuarioId: u.id, disponibilidadId: h.id, mensaje: 'Cita para los reportes', estado } });
       };
-      await citaEl(a, lunes, 'confirmada'); // dentro del período
+      await citaEl(a, lunes, 'confirmada'); // dentro de las 4 semanas
       await citaEl(b, sumarDias(lunes, 7), 'pendiente'); // después de esta semana
-      await citaEl(c, anteriorInicio, 'cancelada'); // primer día del período anterior
-      await citaEl(a, sumarDias(anteriorInicio, -1), 'confirmada'); // antes del período anterior
+      await citaEl(c, anteriorInicio, 'cancelada'); // antes de las 4 semanas
+      await citaEl(a, sumarDias(inicio, -1), 'confirmada'); // el domingo anterior a la primera semana
       const informe = await check('Reportes con citas fuera de los límites', api(q, 'get', '/profesional/reportes?semanas=4'), 200);
-      ok('El período cuenta solo la cita dentro de sus fechas', informe.totales.reservas === 1 && informe.totales.confirmadas === 1 && informe.totales.pendientes === 0);
-      ok('Las semanas del gráfico suman lo mismo', informe.porSemana.reduce((suma, x) => suma + x.pendiente + x.confirmada + x.cancelada, 0) === 1);
-      ok('El período anterior cuenta solo la cita dentro de sus fechas', informe.anterior.desde === anteriorInicio && informe.anterior.reservas === 1 && informe.anterior.canceladas === 1);
+      ok('La primera semana empieza en su lunes y la última termina este domingo', informe.semanas[0].inicio === inicio && informe.semanas.at(-1).fin === sumarDias(lunes, 6));
+      ok('Las 4 semanas cuentan solo la cita dentro de sus fechas', informe.semanas.reduce((suma, x) => suma + x.total, 0) === 1);
+      ok('Esa cita queda en la semana en curso', informe.semanas.at(-1).total === 1 && informe.semanas.at(-1).canceladas === 0);
+      ok('El total histórico incluye todas las citas', informe.totales.total === 4);
     }
 
     console.log(JSON.stringify({ fecha: hoy, mysqlReal: true, total: comprobaciones.length, comprobaciones, limpieza: 'Solo cuentas, horarios, reservas, chats, reseñas, bloqueos y lista de espera temporales', correoSimulado: true }));

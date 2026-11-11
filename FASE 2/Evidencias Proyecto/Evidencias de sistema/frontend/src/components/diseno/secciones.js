@@ -36,7 +36,7 @@ export const SECCIONES_PROFESIONAL = {
     ruta: '/profesional/agenda', nombre: 'Agenda', icono: 'calendario',
     descripcion: 'Pronto podrás publicar tus horarios disponibles y ver tus citas de la semana.',
   },
-  // FS-HU-27, FS-HU-31, FS-HU-28 y FS-HU-29 (mejoras del 09-11-2026).
+  // FS-HU-27 y FS-HU-28 (Clientes y Reportes, PR #50), FS-HU-29 y FS-HU-31 (Configuración y Mensajes, PR #49).
   clientes: { ruta: '/profesional/clientes', nombre: 'Clientes', icono: 'grupo' },
   perfil: { ruta: '/profesional/perfil', nombre: 'Perfil profesional', icono: 'medico' },
   mensajes: { ruta: '/profesional/mensajes', nombre: 'Mensajes', icono: 'chat' },

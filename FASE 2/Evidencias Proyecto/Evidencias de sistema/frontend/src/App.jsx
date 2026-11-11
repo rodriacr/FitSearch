@@ -21,7 +21,7 @@ import Portada from './pages/Portada.jsx';
 import InicioProfesional from './pages/profesional/InicioProfesional.jsx';
 // Mejoras del 09-11-2026: agenda semanal, clientes (FS-HU-27), reportes (FS-HU-28), configuración (FS-HU-29) y mensajes (FS-HU-31).
 import AgendaSemanal from './pages/profesional/AgendaSemanal.jsx';
-import Clientes from './pages/profesional/Clientes.jsx';
+import Clientes, { HistorialCliente } from './pages/profesional/Clientes.jsx';
 import Configuracion from './pages/profesional/Configuracion.jsx';
 import Reportes from './pages/profesional/Reportes.jsx';
 import Mensajes from './pages/Mensajes.jsx';
@@ -99,8 +99,9 @@ export default function App() {
               <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
               <Route path="/profesional/agenda" element={<AgendaSemanal />} />
               <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
-              <Route path="/profesional/clientes/:id?" element={<Clientes />} />
-              <Route path="/profesional/reportes" element={<Reportes />} />
+              <Route path={SECCIONES_PROFESIONAL.clientes.ruta} element={<Clientes />} />
+              <Route path={`${SECCIONES_PROFESIONAL.clientes.ruta}/:id`} element={<HistorialCliente />} />
+              <Route path={SECCIONES_PROFESIONAL.reportes.ruta} element={<Reportes />} />
               <Route path="/profesional/configuracion" element={<Configuracion />} />
               <Route path="/profesional/mensajes/:id?" element={<Mensajes />} />
               {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (

@@ -1,10 +1,10 @@
 // Rutas de las mejoras del 09-11-2026: agenda semanal, horarios en serie, fechas bloqueadas, lista de espera, experiencia y
-// configuración (FS-HU-29), clientes (FS-HU-27), reportes (FS-HU-28) y el chat entre usuario y profesional (FS-HU-31). Los servicios
+// configuración (FS-HU-29) y el chat entre usuario y profesional (FS-HU-31); clientes y reportes (FS-HU-27 y FS-HU-28) se prueban
+// en actividadProfesional.api.test.js (PR #50). Los servicios
 // se simulan: aquí se prueban la sesión, los roles, las validaciones y que solo lleguen los datos permitidos.
 jest.mock('../../src/services/agenda.service');
 jest.mock('../../src/services/listaEspera.service');
 jest.mock('../../src/services/cuentaProfesional.service');
-jest.mock('../../src/services/espacioProfesional.service');
 jest.mock('../../src/services/chat.service');
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
@@ -12,7 +12,6 @@ const app = require('../../src/app');
 const agenda = require('../../src/services/agenda.service');
 const listaEspera = require('../../src/services/listaEspera.service');
 const cuenta = require('../../src/services/cuentaProfesional.service');
-const espacio = require('../../src/services/espacioProfesional.service');
 const chats = require('../../src/services/chat.service');
 
 const token = (rol) => jwt.sign({ rol }, process.env.JWT_SECRET, { subject: '7' });
@@ -80,25 +79,6 @@ describe('experiencia y configuración (FS-HU-29)', () => {
     expect(cuenta.guardarConfiguracion).toHaveBeenCalledWith(7, { autoconfirmar: true });
     expect((await api('usuario', 'get', '/profesionales/mi-ficha/experiencia')).status).toBe(403);
     expect((await api('usuario', 'put', '/profesionales/mi-ficha/configuracion', {})).status).toBe(403);
-  });
-});
-
-describe('clientes y reportes (FS-HU-27 y FS-HU-28)', () => {
-  test('exigen el rol profesional y validan el cliente y las semanas', async () => {
-    espacio.clientes.mockResolvedValue({ clientes: [], total: 0 });
-    espacio.historial.mockResolvedValue({ cliente: { id: 4 }, citas: [] });
-    espacio.reportes.mockResolvedValue({ porSemana: [] });
-    expect((await api('profesional', 'get', '/profesional/clientes')).status).toBe(200);
-    expect((await api('profesional', 'get', '/profesional/clientes/4')).status).toBe(200);
-    expect(espacio.historial).toHaveBeenCalledWith(7, 4);
-    expect((await api('profesional', 'get', '/profesional/clientes/abc')).status).toBe(400);
-    expect((await api('profesional', 'get', '/profesional/reportes?semanas=12')).status).toBe(200);
-    expect(espacio.reportes).toHaveBeenLastCalledWith(7, 12);
-    expect((await api('profesional', 'get', '/profesional/reportes')).status).toBe(200);
-    expect(espacio.reportes).toHaveBeenLastCalledWith(7, 8);
-    expect((await api('profesional', 'get', '/profesional/reportes?semanas=99')).status).toBe(400);
-    expect((await api('usuario', 'get', '/profesional/clientes')).status).toBe(403);
-    expect((await api('administrador', 'get', '/profesional/reportes')).status).toBe(403);
   });
 });
 
