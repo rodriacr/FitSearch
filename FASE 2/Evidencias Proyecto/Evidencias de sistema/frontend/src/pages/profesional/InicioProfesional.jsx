@@ -6,6 +6,7 @@ import { useSesion } from '../../context/SesionContext.jsx';
 import { obtenerClima } from '../../services/clima.service.js';
 import { primerNombre } from '../../services/formato.js';
 import { obtenerMiFicha } from '../../services/profesional.service.js';
+import { diaYMes, obtenerReportes } from '../../services/actividadProfesional.service.js';
 import { solicitar } from '../../services/api.js';
 import './InicioProfesional.css';
 
@@ -35,9 +36,12 @@ function TarjetaClima({ clima }) {
   );
 }
 
-// Tareas que el profesional puede resolver desde su espacio.
-function tareasDe(ficha, tieneHorarios) {
+// Tareas que el profesional puede resolver desde su espacio. Las citas por confirmar vienen del resumen semanal (FS-HU-28).
+function tareasDe(ficha, tieneHorarios, porConfirmar) {
   const tareas = [];
+  if (porConfirmar > 0) {
+    tareas.push({ icono: 'calendario', titulo: `Tienes ${porConfirmar} ${porConfirmar === 1 ? 'cita' : 'citas'} por confirmar`, detalle: 'Confírmalas o cancélalas en tu agenda.', a: SECCIONES.agenda.ruta, accion: 'Revisar' });
+  }
   if (!ficha) {
     tareas.push({ icono: 'medico', titulo: 'Completa tu ficha profesional', detalle: 'Sin ficha no apareces en el buscador de FitSearch.', a: SECCIONES.perfil.ruta, accion: 'Completar' });
   } else if (!ficha.descripcion) {
@@ -54,7 +58,13 @@ const ACCESOS = [
   { seccion: 'mensajes', nombre: 'Mensajes', icono: 'chat' },
 ];
 
-const RESUMEN = ['Total de clientes', 'Citas realizadas', 'Citas pendientes', 'Clientes nuevos'];
+// Resumen de la semana en curso (FS-HU-28), calculado por la API de reportes.
+const RESUMEN = [
+  { clave: 'totalClientes', nombre: 'Total de clientes' },
+  { clave: 'citasRealizadas', nombre: 'Citas realizadas' },
+  { clave: 'citasPendientes', nombre: 'Citas por confirmar' },
+  { clave: 'clientesNuevos', nombre: 'Clientes nuevos' },
+];
 
 // Paisaje del saludo (SVG propio, sin fotografías): cerros y sol de la tarde.
 function Paisaje() {
@@ -73,6 +83,7 @@ export default function InicioProfesional() {
   const [ficha, setFicha] = useState({ cargando: true });
   const [clima, setClima] = useState(null);
   const [tieneHorarios, setTieneHorarios] = useState(null);
+  const [resumen, setResumen] = useState(null);
 
   useEffect(() => {
     let activo = true;
@@ -81,6 +92,10 @@ export default function InicioProfesional() {
         if (!activo) return;
         setFicha({ datos });
         if (!datos) { setTieneHorarios(false); return; }
+        // Sin ficha no hay reservas: el resumen se pide solo cuando existe. Si falla, se muestra sin datos.
+        obtenerReportes(4)
+          .then(({ resumenSemanal }) => activo && setResumen(resumenSemanal))
+          .catch(() => {});
         try {
           const { horarios } = await solicitar('/disponibilidades');
           if (activo) setTieneHorarios(horarios.length > 0);
@@ -93,7 +108,7 @@ export default function InicioProfesional() {
     return () => { activo = false; };
   }, []);
 
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios);
+  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, resumen?.citasPendientes);
 
   return (
     <div className="inicio-prof">
@@ -113,6 +128,7 @@ export default function InicioProfesional() {
           {ficha.cargando ? <p className="texto-secundario" role="status">Cargando tus tareas…</p> : (
             <ul className="tareas">
               {ficha.error && <li className="texto-secundario">No pudimos revisar tu ficha. Intenta nuevamente más tarde.</li>}
+              {!ficha.error && !tareas.length && <li className="texto-secundario">Estás al día: no tienes tareas pendientes.</li>}
               {tareas.map(({ icono, titulo, detalle, a, accion, proximamente }) => (
                 <li key={titulo} className="tarea">
                   <span className="tarea__icono"><Icono nombre={icono} tamano={20} /></span>
@@ -142,12 +158,20 @@ export default function InicioProfesional() {
 
       <section className="panel-tarjeta" aria-labelledby="titulo-resumen-semanal">
         <h2 id="titulo-resumen-semanal" className="panel-tarjeta__titulo">
-          <span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Resumen semanal <Proximamente />
+          <span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Resumen semanal
         </h2>
         <ul className="resumen-semanal">
-          {RESUMEN.map((nombre) => <li key={nombre}><span>{nombre}</span><strong aria-label="Sin datos todavía">—</strong></li>)}
+          {RESUMEN.map(({ clave, nombre }) => (
+            <li key={clave}>
+              <span>{nombre}</span>
+              {resumen ? <strong>{resumen[clave]}</strong> : <strong aria-label="Sin datos todavía">—</strong>}
+            </li>
+          ))}
         </ul>
-        <p className="texto-secundario resumen-semanal__nota">Puedes consultar tus reservas en Mi agenda. El resumen estadístico semanal está pendiente.</p>
+        <p className="texto-secundario resumen-semanal__nota">
+          {resumen && `Semana del ${diaYMes(resumen.inicio)} al ${diaYMes(resumen.fin)}. `}
+          Los clientes se cuentan desde tu primera reserva. <Link to={SECCIONES.reportes.ruta}>Ver reportes</Link>
+        </p>
       </section>
     </div>
   );

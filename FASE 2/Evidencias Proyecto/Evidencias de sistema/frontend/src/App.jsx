@@ -24,6 +24,8 @@ import VistaPublica from './pages/profesional/VistaPublica.jsx';
 import Profesionales from './pages/Profesionales.jsx';
 import Proximamente from './pages/Proximamente.jsx';
 import AgendaProfesional, { MisCitas } from './pages/Agenda.jsx';
+import Clientes, { HistorialCliente } from './pages/profesional/Clientes.jsx';
+import Reportes from './pages/profesional/Reportes.jsx';
 import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
 import Registro from './pages/Registro.jsx';
 import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
@@ -92,6 +94,9 @@ export default function App() {
               <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
               <Route path="/profesional/agenda" element={<AgendaProfesional />} />
               <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
+              <Route path={SECCIONES_PROFESIONAL.clientes.ruta} element={<Clientes />} />
+              <Route path={`${SECCIONES_PROFESIONAL.clientes.ruta}/:id`} element={<HistorialCliente />} />
+              <Route path={SECCIONES_PROFESIONAL.reportes.ruta} element={<Reportes />} />
               {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (
                 <Route key={clave} path={SECCIONES_PROFESIONAL[clave].ruta}
                   element={<Proximamente key={clave} seccion={clave} espacio="profesional" />} />
