@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { BarraNutriente } from './GraficosComidas.jsx';
 import { deshacerAgua, obtenerAguaDelDia } from '../../services/agua.service.js';
 import { formatearNumero } from '../../services/formato.js';
@@ -11,8 +11,16 @@ import './AguaDelDia.css';
 export default function AguaDelDia({ fecha, version = 0 }) {
   const [estado, setEstado] = useState(null);
   const [quitando, setQuitando] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
   const clave = `${fecha}-${version}`;
+  // Día que se está viendo ahora. Revisión del PR #48: si se pulsa «Quitar» y se cambia de día antes de que termine,
+  // la respuesta es del día anterior y no debe reemplazar los datos del día nuevo.
+  const fechaVigente = useRef(fecha);
+  const claveVigente = useRef(clave);
+  useLayoutEffect(() => {
+    fechaVigente.current = fecha;
+    claveVigente.current = clave;
+  });
 
   useEffect(() => {
     let activo = true;
@@ -23,12 +31,14 @@ export default function AguaDelDia({ fecha, version = 0 }) {
   }, [clave, fecha]);
 
   async function quitar({ id }) {
+    const fechaAlQuitar = fecha;
     setQuitando(id);
-    setError('');
+    setError(null);
     try {
-      setEstado({ clave, dia: await deshacerAgua(id, fecha) });
+      const dia = await deshacerAgua(id, fechaAlQuitar);
+      if (fechaVigente.current === fechaAlQuitar) setEstado({ clave: claveVigente.current, dia });
     } catch (e) {
-      setError(e.message);
+      if (fechaVigente.current === fechaAlQuitar) setError({ fecha: fechaAlQuitar, mensaje: e.message });
     } finally {
       setQuitando(null);
     }
@@ -54,7 +64,7 @@ export default function AguaDelDia({ fecha, version = 0 }) {
           ))}
         </ul>
       )}
-      {error && <p className="agua-del-dia__error" role="alert">{error}</p>}
+      {error?.fecha === fecha && <p className="agua-del-dia__error" role="alert">{error.mensaje}</p>}
     </div>
   );
 }

@@ -55,3 +55,30 @@ test('cada suma del día elegido se puede quitar y la barra se actualiza', async
   const borrado = llamadasA(fetch, '/api/agua/2').find(([, o]) => o?.method === 'DELETE');
   expect(borrado[0]).toBe('/api/agua/2?fecha=2026-11-02');
 });
+
+// Revisión del PR #48: «Quitar» y cambiar de día antes de que termine no debe mostrar los datos del día anterior.
+test('si se cambia de día mientras se quita una suma, la respuesta no reemplaza el día nuevo', async () => {
+  const dia = (fecha, registros) => ({ fecha, hoy: '2026-11-04', totalMl: registros.reduce((s, r) => s + r.ml, 0), metaMl: 2000, vasoMl: 250, registros });
+  let soltarBorrado;
+  simularApi({
+    '/api/agua': (url, { method = 'GET' } = {}) => {
+      if (method === 'DELETE') return [200, dia('2026-11-02', [])];
+      return [200, url.includes('2026-11-03') ? dia('2026-11-03', [{ id: 7, ml: 250, hora: '12:00' }]) : dia('2026-11-02', [{ id: 1, ml: 500, hora: '09:00' }])];
+    },
+  });
+  const fetchOriginal = globalThis.fetch.getMockImplementation();
+  globalThis.fetch.mockImplementation((url, opciones = {}) => (opciones.method === 'DELETE'
+    ? new Promise((resolver) => { soltarBorrado = () => resolver(fetchOriginal(url, opciones)); })
+    : fetchOriginal(url, opciones)));
+  const barra = () => screen.getByText('Agua').closest('.barra-nutriente');
+
+  const { rerender } = render(<AguaDelDia fecha="2026-11-02" />);
+  await userEvent.click(await screen.findByRole('button', { name: 'Quitar 500 ml de las 09:00' }));
+  rerender(<AguaDelDia fecha="2026-11-03" />);
+  await waitFor(() => expect(barra()).toHaveTextContent('250 / 2.000 ml'));
+
+  soltarBorrado();
+  await new Promise((r) => setTimeout(r, 50));
+  expect(barra()).toHaveTextContent('250 / 2.000 ml');
+  expect(screen.getByRole('button', { name: 'Quitar 250 ml de las 12:00' })).toBeInTheDocument();
+});
