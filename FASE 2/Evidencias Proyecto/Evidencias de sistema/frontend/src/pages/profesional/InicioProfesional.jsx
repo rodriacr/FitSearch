@@ -36,7 +36,7 @@ function TarjetaClima({ clima }) {
 }
 
 // Tareas que el profesional puede resolver desde su espacio.
-function tareasDe(ficha, tieneHorarios) {
+function tareasDe(ficha, tieneHorarios, porConfirmar = 0) {
   const tareas = [];
   if (!ficha) {
     tareas.push({ icono: 'medico', titulo: 'Completa tu ficha profesional', detalle: 'Sin ficha no apareces en el buscador de FitSearch.', a: SECCIONES.perfil.ruta, accion: 'Completar' });
@@ -44,6 +44,12 @@ function tareasDe(ficha, tieneHorarios) {
     tareas.push({ icono: 'lapiz', titulo: 'Agrega una descripción a tu ficha', detalle: 'Cuéntales a las personas cómo es tu atención.', a: SECCIONES.perfil.ruta, accion: 'Agregar' });
   }
   if (tieneHorarios === false) tareas.push({ icono: 'calendario', titulo: 'Define tu disponibilidad', detalle: 'Publica tus horarios para que puedan reservar contigo.', a: SECCIONES.agenda.ruta, accion: 'Publicar horario' });
+  if (porConfirmar > 0) {
+    tareas.push({
+      icono: 'reloj', titulo: `Tienes ${porConfirmar} ${porConfirmar === 1 ? 'solicitud' : 'solicitudes'} por confirmar`,
+      detalle: 'Confírmalas o cancélalas desde tu agenda.', a: SECCIONES.agenda.ruta, accion: 'Revisar',
+    });
+  }
   return tareas;
 }
 
@@ -54,7 +60,13 @@ const ACCESOS = [
   { seccion: 'mensajes', nombre: 'Mensajes', icono: 'chat' },
 ];
 
-const RESUMEN = ['Total de clientes', 'Citas realizadas', 'Citas pendientes', 'Clientes nuevos'];
+// Resumen de la semana actual (FS-HU-28, criterio 2): sale de GET /api/profesional/reportes.
+const RESUMEN = [
+  { clave: 'reservas', nombre: 'Reservas de la semana' },
+  { clave: 'confirmadas', nombre: 'Confirmadas' },
+  { clave: 'canceladas', nombre: 'Canceladas' },
+  { clave: 'clientesNuevos', nombre: 'Clientes nuevos' },
+];
 
 // Paisaje del saludo (SVG propio, sin fotografías): cerros y sol de la tarde.
 function Paisaje() {
@@ -73,6 +85,7 @@ export default function InicioProfesional() {
   const [ficha, setFicha] = useState({ cargando: true });
   const [clima, setClima] = useState(null);
   const [tieneHorarios, setTieneHorarios] = useState(null);
+  const [semana, setSemana] = useState(null);
 
   useEffect(() => {
     let activo = true;
@@ -85,6 +98,10 @@ export default function InicioProfesional() {
           const { horarios } = await solicitar('/disponibilidades');
           if (activo) setTieneHorarios(horarios.length > 0);
         } catch { /* No se afirma que falten horarios si la consulta falla. */ }
+        try {
+          const { semanaActual } = await solicitar('/profesional/reportes?semanas=4');
+          if (activo) setSemana(semanaActual);
+        } catch { if (activo) setSemana({ error: true }); }
       })
       .catch(() => activo && setFicha({ error: true }));
     obtenerClima()
@@ -93,7 +110,7 @@ export default function InicioProfesional() {
     return () => { activo = false; };
   }, []);
 
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios);
+  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, semana?.pendientes);
 
   return (
     <div className="inicio-prof">
@@ -142,12 +159,20 @@ export default function InicioProfesional() {
 
       <section className="panel-tarjeta" aria-labelledby="titulo-resumen-semanal">
         <h2 id="titulo-resumen-semanal" className="panel-tarjeta__titulo">
-          <span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Resumen semanal <Proximamente />
+          <span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Resumen semanal
+          <Link to={SECCIONES.reportes.ruta} className="resumen-semanal__enlace">Ver reportes <Icono nombre="flecha" tamano={16} /></Link>
         </h2>
         <ul className="resumen-semanal">
-          {RESUMEN.map((nombre) => <li key={nombre}><span>{nombre}</span><strong aria-label="Sin datos todavía">—</strong></li>)}
+          {RESUMEN.map(({ clave, nombre }) => (
+            <li key={clave}>
+              <span>{nombre}</span>
+              {semana && !semana.error ? <strong className="cifra">{semana[clave]}</strong> : <strong aria-label={semana ? 'Sin datos' : 'Cargando'}>—</strong>}
+            </li>
+          ))}
         </ul>
-        <p className="texto-secundario resumen-semanal__nota">Puedes consultar tus reservas en Mi agenda. El resumen estadístico semanal está pendiente.</p>
+        <p className="texto-secundario resumen-semanal__nota">
+          {ficha.datos === null ? 'Completa tu ficha para empezar a recibir reservas.' : 'Cuenta las citas de esta semana, de lunes a domingo, según su fecha.'}
+        </p>
       </section>
     </div>
   );

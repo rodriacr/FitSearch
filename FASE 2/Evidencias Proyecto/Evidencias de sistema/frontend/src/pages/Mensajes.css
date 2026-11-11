@@ -1,0 +1,344 @@
+/* Chat entre usuario y profesional (FS-HU-31). La pantalla ocupa el alto disponible y cada panel se desplaza por dentro:
+   la caja de escribir queda siempre a la vista. Bajo 64rem se descuentan la barra inferior y su margen.
+   Las clases del chat no se llaman .burbuja: ese nombre ya lo usa el asistente y sus estilos se mezclarían. */
+.mensajes-pagina { container: mensajes / inline-size; }
+.mensajes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1rem;
+  width: 100%;
+  max-width: 72rem;
+  height: calc(100dvh - 11.75rem);
+  min-height: 26rem;
+  margin: 0 auto;
+}
+@media (min-width: 64rem) {
+  .mensajes { height: calc(100dvh - 8.75rem); min-height: 30rem; }
+}
+.mensajes__panel {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+.mensajes__bandeja { grid-template-rows: auto auto minmax(0, 1fr); }
+.mensajes__bandeja h1 { margin: 0; padding: 1rem 1.15rem 0.75rem; font-size: 1.35rem; border-bottom: 1px solid var(--color-borde); }
+.mensajes__bandeja > p, .mensajes__bandeja > .alerta { margin: 0.75rem; }
+.mensajes__bandeja .estado-vacio { align-self: start; padding: 2rem 1rem; }
+.mensajes__lista { grid-row: 3; margin: 0; padding: 0.35rem; overflow-y: auto; list-style: none; }
+
+/* En pantallas angostas se ve una cosa a la vez: la bandeja o el chat abierto. */
+@container mensajes (max-width: 47.99rem) {
+  .mensajes:not(.mensajes--con-hilo) .mensajes__conversacion,
+  .mensajes--con-hilo .mensajes__bandeja { display: none; }
+}
+@container mensajes (min-width: 48rem) {
+  .mensajes { grid-template-columns: 20rem minmax(0, 1fr); }
+  .mensajes__volver { display: none; }
+}
+@container mensajes (max-width: 29.99rem) {
+  .mensajes__cabecera .mensajes__avatar { display: none; }
+}
+
+.conversacion {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+/* index.css se carga después de los estilos de cada página: lo que corrige a .avatar o .boton lleva dos clases. */
+.conversacion .conversacion__avatar { width: 2.5rem; height: 2.5rem; }
+.conversacion__texto { display: grid; gap: 0.15rem; min-width: 0; }
+.conversacion__fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; min-width: 0; }
+.conversacion__fila strong { overflow: hidden; font-size: 0.92rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-primario-oscuro); }
+.conversacion__fila time { flex: none; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--color-texto-secundario); }
+.conversacion__ultimo { overflow: hidden; font-size: 0.82rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-texto-secundario); }
+.conversacion__no-leidos {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  min-width: 1.35rem;
+  height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  background: var(--color-accion);
+}
+.conversacion--activa { background: var(--color-info-fondo); }
+@media (hover: hover) and (pointer: fine) {
+  .conversacion:not(.conversacion--activa):hover { background: var(--color-superficie-suave); }
+}
+
+/* ---------- Chat abierto: cabecera, barras opcionales (eliminar, buscar), hilo o resultados, y la caja de escribir ---------- */
+.mensajes__conversacion { display: flex; flex-direction: column; }
+.mensajes__elige, .mensajes__cargando {
+  display: grid;
+  flex: 1;
+  place-content: center;
+  justify-items: center;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 2rem 1.5rem;
+  text-align: center;
+  color: var(--color-texto-secundario);
+}
+.mensajes__elige p { margin: 0; }
+.mensajes__elige .icono { color: #a9c3d6; }
+.mensajes__cabecera {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 4.25rem;
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+.mensajes__volver { flex: none; margin-left: -0.5rem; }
+.mensajes__quien { flex: 1; min-width: 0; }
+.mensajes__quien h2 { margin: 0; overflow: hidden; font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; }
+.mensajes__quien h2 a { color: var(--color-primario-oscuro); text-decoration: none; }
+.mensajes__quien p { margin: 0.1rem 0 0; overflow: hidden; font-size: 0.8rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-texto-secundario); }
+.mensajes__herramientas { display: flex; flex: none; gap: 0.15rem; }
+.mensajes__herramientas .boton-icono { transition: background-color 150ms ease, color 150ms ease; }
+.mensajes__eliminar { color: var(--color-texto-secundario); }
+.mensajes__eliminar[aria-expanded="true"] { color: var(--color-error); background: var(--color-error-fondo); }
+@media (hover: hover) and (pointer: fine) {
+  .mensajes__quien h2 a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  .mensajes__herramientas .boton-icono:hover { background: var(--color-superficie-suave); }
+  .mensajes__eliminar:hover, .mensajes__eliminar[aria-expanded="true"]:hover { color: var(--color-error); background: var(--color-error-fondo); }
+}
+
+/* Confirmación de eliminar: texto arriba y dos botones del mismo ancho y alto debajo. */
+.confirmar-eliminar {
+  display: grid;
+  flex: none;
+  gap: 0.75rem;
+  margin: 0.75rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radio-control);
+  background: var(--color-error-fondo);
+}
+.confirmar-eliminar__texto p { margin: 0; font-size: 0.88rem; line-height: 1.45; }
+.confirmar-eliminar__texto p + p { margin-top: 0.2rem; }
+.confirmar-eliminar__texto strong { font-size: 0.95rem; color: var(--color-error); }
+.confirmar-eliminar__acciones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; max-width: 22rem; }
+.confirmar-eliminar__acciones .boton { width: 100%; min-width: 0; min-height: 2.75rem; font-size: 0.9rem; }
+.confirmar-eliminar__acciones .boton--secundario { background: var(--color-superficie); }
+.confirmar-eliminar .alerta { margin: 0; }
+.confirmar-eliminar__si.boton { background: var(--color-error); }
+@media (hover: hover) and (pointer: fine) {
+  .confirmar-eliminar__si.boton:hover { background: #8f1d17; }
+}
+
+/* Buscador: icono, campo, cuenta de resultados y cerrar en una sola fila. */
+.buscador-chat {
+  display: grid;
+  flex: none;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.6rem 0.5rem 1rem;
+  border-bottom: 1px solid var(--color-borde);
+}
+.buscador-chat > .icono { color: var(--color-texto-secundario); }
+.buscador-chat__campo {
+  width: 100%;
+  min-width: 0;
+  height: 2.5rem;
+  padding: 0 0.75rem;
+  font: inherit;
+  font-size: 0.92rem;
+  color: var(--color-texto);
+  background: var(--color-superficie-suave);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-control);
+}
+.buscador-chat__campo:focus-visible { outline: 2px solid var(--color-foco); outline-offset: 1px; background: var(--color-superficie); }
+.buscador-chat__cuenta { font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--color-texto-secundario); }
+.buscador-chat__volver.boton-texto { padding: 0.4rem 0.25rem; font-size: 0.85rem; white-space: nowrap; }
+.buscador-chat__cerrar { width: 2.5rem; height: 2.5rem; color: var(--color-texto-secundario); }
+@container mensajes (max-width: 29.99rem) {
+  .buscador-chat { grid-template-columns: minmax(0, 1fr) auto auto; padding-left: 0.75rem; }
+  .buscador-chat > .icono { display: none; }
+}
+
+.mensajes mark { padding: 0 1px; border-radius: 3px; color: inherit; background: #ffe2a8; }
+
+.resultados-chat {
+  position: relative;
+  display: grid;
+  flex: 1 1 auto;
+  align-content: start;
+  gap: 0.4rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0.6rem;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--color-superficie-suave);
+}
+.resultados-chat--vacio { place-content: center; padding: 2rem 1.5rem; text-align: center; color: var(--color-texto-secundario); }
+.resultados-chat--vacio p { margin: 0; }
+.resultado-chat {
+  display: grid;
+  gap: 0.2rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 150ms ease;
+}
+.resultado-chat__fila { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; min-width: 0; }
+.resultado-chat__fila strong { overflow: hidden; font-size: 0.85rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-primario-oscuro); }
+.resultado-chat__fila time { flex: none; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--color-texto-secundario); }
+.resultado-chat__texto {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+@media (hover: hover) and (pointer: fine) {
+  .resultado-chat:hover { border-color: var(--color-primario); }
+}
+
+/* ---------- Hilo ---------- */
+/* position: relative contiene el texto para lectores de pantalla (absoluto) dentro de la lista que se desplaza;
+   sin esto ese texto alarga la página. */
+.hilo {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-height: 0;
+  margin: 0;
+  padding: 1rem;
+  overflow-y: auto;
+  list-style: none;
+  background: var(--color-superficie-suave);
+}
+.hilo--vacio { justify-content: center; text-align: center; color: var(--color-texto-secundario); }
+.hilo--vacio p { margin: 0; }
+.hilo__dia { align-self: center; margin: 0.5rem 0 0.25rem; }
+.hilo__dia span {
+  display: inline-block;
+  padding: 0.15rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  color: var(--color-texto-secundario);
+  background: #e7eef4;
+}
+.hilo__dia span::first-letter { text-transform: uppercase; }
+
+/* Aviso de cada reserva dentro del hilo, con su estado y el mensaje con que se pidió la hora. */
+.aviso-reserva {
+  display: grid;
+  gap: 0.4rem;
+  align-self: center;
+  width: min(30rem, 100%);
+  margin: 0.25rem 0;
+  padding: 0.7rem 0.9rem;
+  border: 1px solid #cfe0ec;
+  border-radius: 12px;
+  background: var(--color-superficie);
+}
+.aviso-reserva__titulo {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-primario-oscuro);
+}
+.aviso-reserva__titulo > .icono { color: var(--color-primario); }
+.aviso-reserva__estado {
+  padding: 0.1rem 0.55rem;
+  border-radius: 99px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-primario-oscuro);
+  background: #e9f4fb;
+}
+.aviso-reserva__estado--confirmada { color: #076342; background: #def5ec; }
+.aviso-reserva__estado--cancelada { color: #962b2b; background: #fce5e5; }
+.aviso-reserva__mensaje {
+  margin: 0;
+  padding-top: 0.4rem;
+  border-top: 1px solid #e3ebf2;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.mensaje-chat {
+  align-self: flex-start;
+  max-width: min(30rem, 82%);
+  padding: 0.55rem 0.8rem 0.4rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--color-superficie);
+}
+.mensaje-chat p { margin: 0; font-size: 0.92rem; line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+.mensaje-chat time { display: block; margin-top: 0.15rem; font-size: 0.7rem; text-align: right; color: var(--color-texto-secundario); }
+.mensaje-chat--propio {
+  align-self: flex-end;
+  border-color: transparent;
+  border-radius: 14px 14px 4px 14px;
+  color: #fff;
+  background: var(--color-primario);
+}
+.mensaje-chat--propio time { color: rgb(255 255 255 / 78%); }
+.mensajes .mensaje-chat--propio mark { color: var(--color-texto); background: #ffd67a; }
+
+/* El resultado elegido en la búsqueda queda marcado; el destello inicial ayuda a encontrarlo al llegar. */
+.mensaje-chat:focus, .aviso-reserva:focus { outline: none; }
+.mensaje-chat.mensaje-chat--destacado, .aviso-reserva.aviso-reserva--destacado {
+  outline: 2px solid var(--color-acento);
+  outline-offset: 2px;
+  animation: destello-chat 900ms var(--curva-salida);
+}
+@keyframes destello-chat {
+  from { box-shadow: 0 0 0 8px rgb(244 123 32 / 30%); }
+  to { box-shadow: 0 0 0 0 rgb(244 123 32 / 0%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mensaje-chat.mensaje-chat--destacado, .aviso-reserva.aviso-reserva--destacado { animation: none; }
+}
+
+.redactar {
+  display: grid;
+  flex: none;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border-top: 1px solid var(--color-borde);
+}
+.redactar .alerta { grid-column: 1 / -1; margin: 0; }
+.redactar__campo { min-height: 2.75rem; max-height: 8rem; resize: none; field-sizing: content; line-height: 1.45; }
+.redactar__enviar.boton { width: 2.75rem; min-height: 2.75rem; padding: 0; }

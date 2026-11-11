@@ -22,19 +22,30 @@ const fichaEsperada = {
   id: 1, nombre: 'Ana Demo', especialidad: 'Nutrición', descripcion: 'Atención nutricional', comuna: 'Melipilla', direccion: 'Av. Demo 123',
   modalidad: 'presencial', verificado: false, ubicacionLat: -33.686, ubicacionLng: -71.215, establecimiento: { nombre: 'Consulta Demo', direccion: 'Melipilla' },
   calificacion: { promedio: 4.5, total: 2 }, distanciaKm: null, esFavorito: true,
+  // Experiencia (FS-HU-29) y precio referencial, vacíos si el profesional no los completó (09-11-2026).
+  aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null,
 };
+// En el buscador cada tarjeta trae además su próxima hora libre y hasta tres horas para elegir.
+const tarjetaEsperada = { ...fichaEsperada, proximaHora: null, proximasHoras: [] };
 const filtrosPorDefecto = {
   usuarioId: 1, q: '', especialidad: '', comuna: '', modalidad: '', calificacionMin: null, ubicacion: null,
   distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12,
+  // Momento actual en Chile para las horas libres y, sin filtro de disponibilidad, sin fecha límite.
+  ahora: expect.objectContaining({ hoy: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }), conHorasHasta: null,
 };
-beforeEach(() => jest.resetAllMocks());
+beforeEach(() => {
+  jest.resetAllMocks();
+  modelo.proximasHoras.mockResolvedValue([]);
+  // Por defecto la persona ya tuvo una cita confirmada con el profesional (reseñas verificadas, 09-11-2026).
+  resenaModel.citaVerificable.mockResolvedValue({ id: 30 });
+});
 
 describe('GET /api/profesionales', () => {
   test('HU-03: lista fichas sin filtrar, con calificación y favorito, y excluye información privada', async () => {
     modelo.listar.mockResolvedValue({ filas: [fila], total: 1 });
     const res = await consulta('/api/profesionales');
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ profesionales: [fichaEsperada], pagina: 1, total: 1, totalPaginas: 1, hayMas: false });
+    expect(res.body).toEqual({ profesionales: [tarjetaEsperada], pagina: 1, total: 1, totalPaginas: 1, hayMas: false });
     expect(JSON.stringify(res.body)).not.toMatch(/privado|usuarioId/);
     expect(modelo.listar).toHaveBeenCalledWith(filtrosPorDefecto);
   });
@@ -141,7 +152,7 @@ describe('GET /api/profesionales/:id (ficha)', () => {
     });
     const res = await consulta('/api/profesionales/1');
     expect(res.body.miResena).toEqual({
-      id: 7, autor: 'rodrigo C.', puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true,
+      id: 7, autor: 'rodrigo C.', puntaje: 4, comentario: 'Muy buena atención', fecha: '2026-10-02T12:00:00.000Z', propia: true, verificada: false,
     });
   });
 

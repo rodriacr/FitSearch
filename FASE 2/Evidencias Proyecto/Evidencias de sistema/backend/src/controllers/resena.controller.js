@@ -1,7 +1,7 @@
 const servicio = require('../services/resena.service');
 
 async function listar(req, res) {
-  res.json(await servicio.listar(Number(req.params.id), req.usuario.id, Number(req.query.pagina || 1)));
+  res.json(await servicio.listar(Number(req.params.id), req.usuario.id, Number(req.query.pagina || 1), req.query.tipo || undefined));
 }
 
 async function guardar(req, res) {

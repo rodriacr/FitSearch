@@ -19,6 +19,9 @@ beforeEach(() => {
   jest.resetAllMocks();
   profesionalModel.existe.mockResolvedValue({ id: 3, usuarioId: 30 });
   resenaModel.distribucion.mockResolvedValue([{ puntaje: 5, cantidad: 1 }]);
+  // Reseñas verificadas (09-11-2026): por defecto la persona ya tuvo la cita confirmada 40 con el profesional.
+  resenaModel.buscarDelUsuario.mockResolvedValue(null);
+  resenaModel.citaVerificable.mockResolvedValue({ id: 40 });
 });
 
 describe('GET /api/profesionales/:id/resenas', () => {
@@ -28,12 +31,21 @@ describe('GET /api/profesionales/:id/resenas', () => {
     expect(res.status).toBe(200);
     expect(res.body).toEqual({
       resenas: [
-        { id: 5, autor: 'Ana P.', puntaje: 5, comentario: 'Excelente atención', fecha: fecha.toISOString(), propia: true },
-        { id: 6, autor: 'Luis', puntaje: 3, comentario: null, fecha: fecha.toISOString(), propia: false },
+        { id: 5, autor: 'Ana P.', puntaje: 5, comentario: 'Excelente atención', fecha: fecha.toISOString(), propia: true, verificada: false },
+        { id: 6, autor: 'Luis', puntaje: 3, comentario: null, fecha: fecha.toISOString(), propia: false, verificada: false },
       ],
       pagina: 2, total: 7, totalPaginas: 2,
     });
     expect(resenaModel.listar).toHaveBeenCalledWith(3, { pagina: 2, limite: 5 });
+  });
+
+  test('filtra por positivas o negativas, marca las verificadas y rechaza otro filtro (09-11-2026)', async () => {
+    resenaModel.listar.mockResolvedValue({ filas: [resena({ reservaId: 40 })], total: 1 });
+    const res = await conSesion(request(app).get('/api/profesionales/3/resenas?tipo=positivas'));
+    expect(res.status).toBe(200);
+    expect(res.body.resenas[0].verificada).toBe(true);
+    expect(resenaModel.listar).toHaveBeenCalledWith(3, { pagina: 1, limite: 5, tipo: 'positivas' });
+    expect((await conSesion(request(app).get('/api/profesionales/3/resenas?tipo=todas'))).status).toBe(400);
   });
 
   test('un profesional también puede leerlas; 404 si el profesional no existe', async () => {
@@ -51,14 +63,34 @@ describe('PUT /api/profesionales/:id/resenas', () => {
     expect(res.status).toBe(201);
     expect(res.body.resena).toMatchObject({ puntaje: 4, comentario: 'Muy buena atención', propia: true });
     expect(res.body.resumenResenas).toEqual({ promedio: 5, total: 1, distribucion: { 5: 1, 4: 0, 3: 0, 2: 0, 1: 0 } });
-    expect(resenaModel.guardar).toHaveBeenCalledWith(1, 3, { puntaje: 4, comentario: 'Muy buena atención' });
+    expect(resenaModel.guardar).toHaveBeenCalledWith(1, 3, { puntaje: 4, comentario: 'Muy buena atención', reservaId: 40 });
+  });
+
+  test('sin una cita confirmada que ya pasó no se puede publicar una reseña nueva (403, sin_cita)', async () => {
+    resenaModel.citaVerificable.mockResolvedValue(null);
+    const res = await conSesion(request(app).put('/api/profesionales/3/resenas')).send({ puntaje: 5 });
+    expect(res.status).toBe(403);
+    expect(res.body.detalles).toEqual({ motivo: 'sin_cita' });
+    expect(resenaModel.guardar).not.toHaveBeenCalled();
+  });
+
+  test('una reseña anterior sin cita se puede editar y queda verificada cuando ya hubo una cita', async () => {
+    resenaModel.buscarDelUsuario.mockResolvedValue(resena());
+    resenaModel.citaVerificable.mockResolvedValue(null);
+    resenaModel.guardar.mockResolvedValue({ fila: resena({ puntaje: 3 }), creada: false });
+    expect((await conSesion(request(app).put('/api/profesionales/3/resenas')).send({ puntaje: 3 })).status).toBe(200);
+    expect(resenaModel.guardar).toHaveBeenLastCalledWith(1, 3, { puntaje: 3, comentario: null, reservaId: null });
+    resenaModel.citaVerificable.mockResolvedValue({ id: 41 });
+    await conSesion(request(app).put('/api/profesionales/3/resenas')).send({ puntaje: 4 });
+    expect(resenaModel.guardar).toHaveBeenLastCalledWith(1, 3, { puntaje: 4, comentario: null, reservaId: 41 });
   });
 
   test('escenario 2: calificar de nuevo reemplaza la reseña (200) y un comentario vacío no se guarda', async () => {
+    resenaModel.buscarDelUsuario.mockResolvedValue(resena({ reservaId: 40 }));
     resenaModel.guardar.mockResolvedValue({ fila: resena({ comentario: null }), creada: false });
     const res = await conSesion(request(app).put('/api/profesionales/3/resenas')).send({ puntaje: '5', comentario: '   ' });
     expect(res.status).toBe(200);
-    expect(resenaModel.guardar).toHaveBeenCalledWith(1, 3, { puntaje: 5, comentario: null });
+    expect(resenaModel.guardar).toHaveBeenCalledWith(1, 3, { puntaje: 5, comentario: null, reservaId: null });
   });
 
   test.each([

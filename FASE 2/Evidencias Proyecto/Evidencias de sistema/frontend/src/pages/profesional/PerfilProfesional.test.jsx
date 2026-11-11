@@ -140,15 +140,20 @@ describe('Con ficha', () => {
     expect(sinDireccion.getByText(/Agrega tu dirección de atención desde «Editar perfil»/)).toBeInTheDocument();
   });
 
-  test('las pestañas que aún no existen lo dicen sin simular datos', async () => {
-    simularServidor({ ficha: MI_FICHA });
+  // FS-HU-29 (09-11-2026): la pestaña Experiencia ya no es «Próximamente». Su formulario se prueba en Experiencia.test.jsx.
+  test('la pestaña Experiencia invita a completar la experiencia, sin simular datos', async () => {
+    const fetch = simularServidor({ ficha: MI_FICHA });
+    const servidor = fetch.getMockImplementation();
+    const vacia = { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null };
+    fetch.mockImplementation((url, opciones) => (url === '/api/profesionales/mi-ficha/experiencia'
+      ? respuestaJson(200, { experiencia: vacia }) : servidor(url, opciones)));
     renderizarApp('/profesional/perfil');
 
     await userEvent.click(await screen.findByRole('tab', { name: 'Experiencia' }));
     expect(screen.getByRole('tab', { name: 'Experiencia' })).toHaveAttribute('aria-selected', 'true');
     const panel = screen.getByRole('tabpanel');
-    expect(within(panel).getByText('Próximamente')).toBeInTheDocument();
-    expect(within(panel).getByText(/años de experiencia/)).toBeInTheDocument();
+    expect(await within(panel).findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
+    expect(within(panel).queryByText('Próximamente')).not.toBeInTheDocument();
   });
 
   test('permite recorrer las pestañas con el teclado y mantiene foco y panel coordinados', async () => {

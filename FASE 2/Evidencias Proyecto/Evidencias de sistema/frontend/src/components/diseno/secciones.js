@@ -41,27 +41,17 @@ export const SECCIONES_PROFESIONAL = {
     ruta: '/profesional/agenda', nombre: 'Agenda', icono: 'calendario',
     descripcion: 'Pronto podrás publicar tus horarios disponibles y ver tus citas de la semana.',
   },
-  clientes: {
-    ruta: '/profesional/clientes', nombre: 'Clientes', icono: 'grupo', proximamente: true,
-    descripcion: 'Aquí verás a las personas que reserven una hora contigo y el estado de cada cita.',
-  },
+  // FS-HU-27, FS-HU-31, FS-HU-28 y FS-HU-29 (mejoras del 09-11-2026).
+  clientes: { ruta: '/profesional/clientes', nombre: 'Clientes', icono: 'grupo' },
   perfil: { ruta: '/profesional/perfil', nombre: 'Perfil profesional', icono: 'medico' },
-  mensajes: {
-    ruta: '/profesional/mensajes', nombre: 'Mensajes', icono: 'chat', proximamente: true,
-    descripcion: 'Pronto podrás leer los mensajes que te dejen las personas al reservar una hora contigo.',
-  },
-  reportes: {
-    ruta: '/profesional/reportes', nombre: 'Reportes', icono: 'grafico', proximamente: true,
-    descripcion: 'Pronto verás un resumen de tus citas y clientes por semana y por mes.',
-  },
-  configuracion: {
-    ruta: '/profesional/configuracion', nombre: 'Configuración', icono: 'ajustes', proximamente: true,
-    descripcion: 'Pronto podrás ajustar las preferencias de tu cuenta profesional.',
-  },
+  mensajes: { ruta: '/profesional/mensajes', nombre: 'Mensajes', icono: 'chat' },
+  reportes: { ruta: '/profesional/reportes', nombre: 'Reportes', icono: 'grafico' },
+  configuracion: { ruta: '/profesional/configuracion', nombre: 'Configuración', icono: 'ajustes' },
 };
 
 export const ESPACIOS = {
-  usuario: { secciones: SECCIONES, menu: MENU_LATERAL, barra: BARRA_INFERIOR },
+  // Mensajes de las reservas (FS-HU-31) va al final del menú del usuario, después de Mis citas.
+  usuario: { secciones: { ...SECCIONES, mensajes: { ruta: '/mensajes', nombre: 'Mensajes', icono: 'chat' } }, menu: [...MENU_LATERAL, 'mensajes'], barra: BARRA_INFERIOR },
   profesional: {
     secciones: SECCIONES_PROFESIONAL,
     menu: ['inicio', 'agenda', 'clientes', 'perfil', 'mensajes', 'reportes', 'configuracion'],

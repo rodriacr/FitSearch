@@ -10,12 +10,13 @@ import MapaProfesionales from '../components/profesionales/MapaProfesionales.jsx
 import DetalleEnMapa from '../components/profesionales/DetalleEnMapa.jsx';
 import { enMapa } from '../components/profesionales/ubicacionMapa.js';
 import { buscarProfesionales, obtenerFiltros } from '../services/profesional.service.js';
+import { obtenerPerfil } from '../services/perfil.service.js';
 import { obtenerUbicacion, ubicacionSiHayPermiso } from '../services/ubicacion.js';
 import './Profesionales.css';
 
 // Parámetros de la URL: la búsqueda se puede compartir y el buscador del Inicio llega con ?q=.
-const CLAVES = ['q', 'especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'orden', 'pagina'];
-const FILTROS = ['especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad'];
+const CLAVES = ['q', 'especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible', 'orden', 'pagina'];
+const FILTROS = ['especialidad', 'comuna', 'distancia', 'calificacion', 'modalidad', 'disponible'];
 const { ordenes, filtroModalidad, busqueda } = reglas.profesionales;
 const UBICACION_INICIAL = { estado: 'inactiva', coords: null, mensaje: '' };
 const SIN_RESULTADOS = [];
@@ -32,6 +33,7 @@ function etiquetaFiltro(clave, valor) {
   if (clave === 'distancia') return `Hasta ${valor} km`;
   if (clave === 'calificacion') return `${valor} estrellas o más`;
   if (clave === 'modalidad') return filtroModalidad.find((opcion) => opcion.valor === valor)?.etiqueta || valor;
+  if (clave === 'disponible') return `Con horas: ${(reglas.agenda.filtroDisponible.find((opcion) => opcion.valor === valor)?.etiqueta || valor).toLowerCase()}`;
   return valor;
 }
 const movimientoSuave = () => !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
@@ -49,6 +51,8 @@ export default function Profesionales() {
   // estado: inactiva | lista | denegada | no-disponible
   const [ubicacion, setUbicacion] = useState(UBICACION_INICIAL);
   const [catalogo, setCatalogo] = useState({ especialidades: [], comunas: [] });
+  // Objetivo del perfil (FS-HU-18): sugiere las especialidades que lo atienden (09-11-2026).
+  const [objetivo, setObjetivo] = useState(null);
   const [panelAbierto, setPanelAbierto] = useState(false);
   const [todasEspecialidades, setTodasEspecialidades] = useState(false);
   const [intento, setIntento] = useState(0);
@@ -60,6 +64,7 @@ export default function Profesionales() {
   useEffect(() => {
     let activo = true;
     obtenerFiltros().then((datos) => activo && setCatalogo(datos)).catch(() => {});
+    obtenerPerfil().then((perfil) => activo && setObjetivo(perfil.objetivos?.objetivoPrincipal || null)).catch(() => {});
     return () => { activo = false; };
   }, []);
 
@@ -197,6 +202,9 @@ export default function Profesionales() {
   const primeras = todasEspecialidades ? especialidades : especialidades.slice(0, ESPECIALIDADES_VISIBLES);
   const visibles = filtros.especialidad && !primeras.includes(filtros.especialidad) ? [...primeras, filtros.especialidad] : primeras;
   const escondidas = especialidades.filter((valor) => !visibles.includes(valor)).length;
+  // Especialidades sugeridas para el objetivo del perfil, solo las que existen en el catálogo y si aún no filtró.
+  const sugeridas = (reglas.especialidadesPorObjetivo[objetivo] || []).filter((nombre) => especialidades.includes(nombre));
+  const nombreObjetivo = reglas.perfil.objetivoPrincipal.find((opcion) => opcion.valor === objetivo)?.etiqueta;
 
   let contenido;
   if (!vigente) {
@@ -258,6 +266,16 @@ export default function Profesionales() {
           <button type="submit" className="boton boton--principal boton--compacto">Buscar</button>
         </form>
       </header>
+
+      {sugeridas.length > 0 && !filtros.especialidad && (
+        <p className="sugerencia-objetivo">
+          <Icono nombre="diana" tamano={18} />
+          <span>Para tu objetivo <strong>«{nombreObjetivo}»</strong> te pueden ayudar:</span>
+          {sugeridas.map((nombre) => (
+            <button key={nombre} type="button" className="chip" onClick={() => cambiarFiltros({ especialidad: nombre })}>{nombre}</button>
+          ))}
+        </p>
+      )}
 
       {especialidades.length > 0 && (
         <div className="accesos-especialidad" role="group" aria-label="Especialidades">

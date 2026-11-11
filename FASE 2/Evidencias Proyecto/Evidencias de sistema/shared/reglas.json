@@ -17,6 +17,119 @@
       "max": 72
     }
   },
+  "agenda": {
+    "duraciones": [
+      30,
+      45,
+      60,
+      90
+    ],
+    "serie": {
+      "maxBloques": 24
+    },
+    "bloqueo": {
+      "motivo": {
+        "max": 100
+      },
+      "maxDias": 90
+    },
+    "vistaSemana": {
+      "horaInicio": "07:00",
+      "horaFin": "21:00"
+    },
+    "proximasHoras": {
+      "cantidad": 3,
+      "dias": 14
+    },
+    "filtroDisponible": [
+      {
+        "valor": "hoy",
+        "etiqueta": "Hoy",
+        "dias": 0
+      },
+      {
+        "valor": "3dias",
+        "etiqueta": "Próximos 3 días",
+        "dias": 2
+      },
+      {
+        "valor": "semana",
+        "etiqueta": "Próximos 7 días",
+        "dias": 6
+      }
+    ],
+    "recordatorioHorasAntes": 24
+  },
+  "experiencia": {
+    "anios": {
+      "min": 0,
+      "max": 60
+    },
+    "formacion": {
+      "max": 8,
+      "titulo": {
+        "min": 3,
+        "max": 120
+      },
+      "institucion": {
+        "min": 2,
+        "max": 120
+      },
+      "anioMin": 1960
+    },
+    "atiendeA": [
+      {
+        "valor": "adultos",
+        "etiqueta": "Adultos"
+      },
+      {
+        "valor": "ninos",
+        "etiqueta": "Niños y adolescentes"
+      },
+      {
+        "valor": "personas_mayores",
+        "etiqueta": "Personas mayores"
+      },
+      {
+        "valor": "deportistas",
+        "etiqueta": "Deportistas"
+      }
+    ],
+    "registroSis": {
+      "min": 3,
+      "max": 12
+    },
+    "precio": {
+      "min": 1000,
+      "max": 1000000
+    }
+  },
+  "mensajesReserva": {
+    "texto": {
+      "min": 1,
+      "max": 1000
+    },
+    "intervaloSegundos": 15
+  },
+  "especialidadesPorObjetivo": {
+    "bajar_peso": [
+      "Nutrición",
+      "Entrenamiento personal"
+    ],
+    "mantener_peso": [
+      "Nutrición",
+      "Entrenamiento personal"
+    ],
+    "aumentar_masa": [
+      "Entrenamiento personal",
+      "Nutrición"
+    ],
+    "mejorar_rendimiento": [
+      "Medicina deportiva",
+      "Entrenamiento personal",
+      "Psicología deportiva"
+    ]
+  },
   "perfil": {
     "pesoKg": {
       "min": 20,
@@ -311,6 +424,10 @@
       {
         "valor": "resenas",
         "etiqueta": "Más reseñas"
+      },
+      {
+        "valor": "disponibilidad",
+        "etiqueta": "Disponibles antes"
       }
     ]
   },

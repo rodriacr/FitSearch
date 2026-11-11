@@ -1,0 +1,188 @@
+/* Paneles del costado de Mi agenda: detalle de un horario, publicar, bloquear fechas y el resumen del día. */
+.panel-agenda {
+  display: grid;
+  align-content: start;
+  gap: 0.85rem;
+  padding: 1.1rem 1.15rem 1.2rem;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+}
+.panel-agenda__cabecera { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; }
+.panel-agenda__cabecera h2 { margin: 0.2rem 0 0; font-size: 1.05rem; line-height: 1.35; color: var(--color-primario-oscuro); }
+.panel-agenda__cabecera h2::first-letter { text-transform: uppercase; }
+.panel-agenda__cabecera h2:focus { outline: none; }
+.panel-agenda__cerrar { flex: none; width: 2.25rem; height: 2.25rem; margin: -0.25rem -0.4rem 0 0; }
+.panel-agenda__titulo-chico { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-size: 0.95rem; color: var(--color-primario-oscuro); }
+.panel-agenda__subtitulo { margin: 0.4rem 0 0; font-size: 0.9rem; color: var(--color-primario-oscuro); }
+.panel-agenda__hora { display: flex; align-items: center; gap: 0.5rem; margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--color-texto); }
+.panel-agenda__hora .icono { color: var(--color-primario); }
+.panel-agenda__texto { margin: 0; font-size: 0.9rem; color: var(--color-texto-secundario); }
+.panel-agenda__nota { display: flex; align-items: flex-start; gap: 0.45rem; margin: 0; font-size: 0.82rem; color: var(--color-texto-secundario); }
+.panel-agenda__nota .icono { flex: none; margin-top: 0.15rem; }
+.panel-agenda__datos { display: grid; gap: 0.5rem; margin: 0; }
+.panel-agenda__datos div { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: 0.75rem; align-items: baseline; }
+.panel-agenda__datos dt { font-size: 0.82rem; color: var(--color-texto-secundario); }
+.panel-agenda__datos dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.panel-agenda__mensaje {
+  margin: 0;
+  padding: 0.75rem 0.9rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-texto);
+  background: var(--color-superficie-suave);
+}
+.panel-agenda__acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; }
+.panel-agenda__acciones .boton--compacto { min-width: 0; }
+.panel-agenda__peligro { color: var(--color-error); }
+.panel-agenda__confirmar {
+  display: grid;
+  gap: 0.7rem;
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #bfd6e5;
+  border-radius: 12px;
+  background: #f3f8fc;
+}
+.panel-agenda__confirmar:focus { outline: none; }
+.panel-agenda__confirmar p { margin: 0; font-size: 0.9rem; font-weight: 500; }
+.panel-agenda__lista { display: grid; margin: 0; padding: 0; list-style: none; }
+.panel-agenda__lista li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  border-top: 1px solid var(--color-borde);
+}
+.panel-agenda__lista li:first-child { border-top: 0; }
+.panel-agenda__lista li > span { display: grid; gap: 0.05rem; min-width: 0; padding: 0.4rem 0; }
+.panel-agenda__lista strong { font-size: 0.9rem; color: var(--color-texto); }
+.panel-agenda__lista small { overflow: hidden; font-size: 0.8rem; white-space: nowrap; text-overflow: ellipsis; color: var(--color-texto-secundario); }
+
+/* Estado de un horario (mismos colores que en el calendario). */
+.estado-agenda {
+  justify-self: start;
+  padding: 0.2rem 0.65rem;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+.estado-agenda--libre { color: var(--color-primario); background: #f3f8fc; border-color: #c4d9e8; }
+.estado-agenda--pendiente { color: #833705; background: #fff4ea; border-color: #f0c39d; }
+.estado-agenda--confirmada { color: #145236; background: #e8f6ef; border-color: #a6dac1; }
+
+/* ---------- Formularios (publicar y bloquear) ---------- */
+.formulario-agenda { display: grid; gap: 0.85rem; }
+.formulario-agenda .campo { margin: 0; min-width: 0; }
+.formulario-agenda__horas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+.formulario-agenda__previa { margin: 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
+.formulario-agenda .boton { min-height: 2.75rem; }
+
+/* Interruptor (casilla con apariencia de switch): la casilla real sigue ahí para el teclado y los lectores. */
+.interruptor { position: relative; display: inline-flex; align-items: center; gap: 0.65rem; font-size: 0.92rem; cursor: pointer; }
+.interruptor input { position: absolute; opacity: 0; width: 2.5rem; height: 1.5rem; margin: 0; cursor: pointer; }
+.interruptor__pista {
+  position: relative;
+  flex: none;
+  width: 2.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: #c7d3de;
+  transition: background-color 160ms ease;
+}
+.interruptor__pista::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 3px rgb(6 38 63 / 25%);
+  transition: transform 180ms var(--curva-salida);
+}
+.interruptor input:checked + .interruptor__pista { background: var(--color-primario); }
+.interruptor input:checked + .interruptor__pista::after { transform: translateX(1rem); }
+.interruptor input:focus-visible + .interruptor__pista { outline: 3px solid var(--color-foco); outline-offset: 2px; }
+
+/* Control segmentado (duración de los bloques). */
+.segmentos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(4.5rem, 1fr));
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border-radius: 12px;
+  background: var(--color-fondo);
+}
+.segmentos__opcion {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 9px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-texto-secundario);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.segmentos__opcion[aria-pressed='true'] { color: var(--color-primario-oscuro); background: var(--color-superficie); box-shadow: 0 1px 3px rgb(6 38 63 / 12%); }
+
+/* ---------- Resumen del día ---------- */
+.resumen-agenda { display: grid; gap: 1rem; align-content: start; }
+.resumen-agenda__cifras { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; }
+/* La etiqueta arriba y la cifra abajo: si una etiqueta ocupa dos líneas, las cifras siguen a la misma altura. */
+.resumen-agenda__cifras div { display: grid; grid-template-rows: 1fr auto; gap: 0.15rem; padding: 0.7rem 0.8rem; border-radius: 12px; background: var(--color-superficie-suave); }
+.resumen-agenda__cifras dt { font-size: 0.78rem; color: var(--color-texto-secundario); }
+.resumen-agenda__cifras dd { margin: 0; font-size: 1.4rem; font-weight: 700; line-height: 1.2; color: var(--color-primario-oscuro); }
+.resumen-agenda__contador {
+  display: inline-grid;
+  place-items: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  color: #fff;
+  background: var(--color-accion);
+}
+.resumen-agenda__pendiente {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.45rem 0;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  color: var(--color-primario);
+  background: none;
+  cursor: pointer;
+}
+.resumen-agenda__pendiente > span { display: grid; gap: 0.05rem; min-width: 0; }
+@media (hover: hover) and (pointer: fine) {
+  .resumen-agenda__pendiente:hover strong { text-decoration: underline; }
+}
+.resumen-agenda__espera {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 0.85rem 0.95rem;
+  border-radius: var(--radio);
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #833705;
+  background: #fff4ea;
+}
+.resumen-agenda__espera .icono { flex: none; margin-top: 0.1rem; }
+@media (prefers-reduced-motion: reduce) {
+  .interruptor__pista, .interruptor__pista::after, .segmentos__opcion { transition: none; }
+}

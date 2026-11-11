@@ -35,6 +35,33 @@ async function propia(tx, usuarioId) {
     );
   return f;
 }
+// Fechas bloqueadas (vacaciones, congresos): sus horarios no se muestran, no se reservan ni se publican.
+const dentroDe = (fecha, bloqueos) =>
+  bloqueos.some((b) => b.fechaInicio <= fecha && b.fechaFin >= fecha);
+const bloqueosDesde = (tx, profesionalId, desde) =>
+  tx.bloqueoAgenda.findMany({
+    where: { profesionalId, fechaFin: { gte: desde } },
+    orderBy: { fechaInicio: 'asc' },
+  });
+async function enBloqueo(tx, profesionalId, fecha) {
+  return (
+    (await tx.bloqueoAgenda.count({
+      where: {
+        profesionalId,
+        fechaInicio: { lte: fecha },
+        fechaFin: { gte: fecha },
+      },
+    })) > 0
+  );
+}
+const SUPERPUESTOS = (tx, profesionalId, fecha, inicio, fin, excluir) =>
+  tx.$queryRaw`SELECT id FROM disponibilidades
+      WHERE profesional_id = ${profesionalId} AND fecha = DATE(${fecha}) AND retirado = FALSE
+        AND TIME_TO_SEC(hora_inicio) < ${fin} AND TIME_TO_SEC(hora_fin) > ${inicio}
+        AND id <> ${excluir} LIMIT 1`;
+// Los parámetros numéricos evitan la conversión de cadenas TIME de Prisma/MySQL.
+const segundos = (hora) =>
+  hora.getUTCHours() * 3600 + hora.getUTCMinutes() * 60;
 async function listarDisponibilidad(usuario, profesionalId, fechaDesde) {
   const f = profesionalId
     ? await prisma.profesional.findFirst({
@@ -45,16 +72,21 @@ async function listarDisponibilidad(usuario, profesionalId, fechaDesde) {
       })
     : await propia(prisma, usuario.id);
   if (!f) throw new ErrorHttp(404, 'No encontramos este profesional');
-  return prisma.disponibilidad.findMany({
-    where: {
-      profesionalId: f.id,
-      retirado: false,
-      fecha: { gte: fechaDesde },
-      ...(profesionalId && { reservas: { none: { estado: { in: ACTIVOS } } } }),
-    },
-    include: profesionalId ? { reservas: ocupado.reservas } : ocupado,
-    orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
-  });
+  const [bloques, bloqueos] = await Promise.all([
+    prisma.disponibilidad.findMany({
+      where: {
+        profesionalId: f.id,
+        retirado: false,
+        fecha: { gte: fechaDesde },
+        ...(profesionalId && { reservas: { none: { estado: { in: ACTIVOS } } } }),
+      },
+      include: profesionalId ? { reservas: ocupado.reservas } : ocupado,
+      orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
+    }),
+    profesionalId ? bloqueosDesde(prisma, f.id, fechaDesde) : [],
+  ]);
+  // Quien reserva no ve los horarios de las fechas bloqueadas; el profesional sí (los ve en su agenda).
+  return bloqueos.length ? bloques.filter((b) => !dentroDe(b.fecha, bloqueos)) : bloques;
 }
 async function guardarDisponibilidad(usuarioId, id, datos) {
   return prisma.$transaction(
@@ -81,16 +113,19 @@ async function guardarDisponibilidad(usuarioId, id, datos) {
             'Este horario tiene reservas. Publica un bloque nuevo',
           );
       }
-      // Los parámetros numéricos evitan la conversión de cadenas TIME de Prisma/MySQL.
-      const segundos = (hora) =>
-        hora.getUTCHours() * 3600 + hora.getUTCMinutes() * 60;
-      const inicio = segundos(datos.horaInicio);
-      const fin = segundos(datos.horaFin);
-      const excluir = id || 0;
-      const superpuestos = await tx.$queryRaw`SELECT id FROM disponibilidades
-      WHERE profesional_id = ${f.id} AND fecha = DATE(${datos.fecha}) AND retirado = FALSE
-        AND TIME_TO_SEC(hora_inicio) < ${fin} AND TIME_TO_SEC(hora_fin) > ${inicio}
-        AND id <> ${excluir} LIMIT 1`;
+      if (await enBloqueo(tx, f.id, datos.fecha))
+        throw new ErrorHttp(
+          409,
+          'Ese día está bloqueado en tu agenda. Quita el bloqueo para publicar horarios',
+        );
+      const superpuestos = await SUPERPUESTOS(
+        tx,
+        f.id,
+        datos.fecha,
+        segundos(datos.horaInicio),
+        segundos(datos.horaFin),
+        id || 0,
+      );
       if (superpuestos.length)
         throw new ErrorHttp(
           409,
@@ -158,7 +193,7 @@ function listarReservas(usuario) {
 }
 async function crearReserva(
   usuarioId,
-  { disponibilidadId, mensaje },
+  { disponibilidadId, mensaje, modalidad, primeraVisita },
   esFuturo,
 ) {
   return prisma.$transaction(
@@ -183,9 +218,16 @@ async function crearReserva(
         actual.retirado ||
         !actual.profesional.usuario.activo ||
         actual.profesional.usuario.rol.nombre !== 'profesional' ||
-        !esFuturo(instante(actual))
+        !esFuturo(instante(actual)) ||
+        (await enBloqueo(tx, actual.profesionalId, actual.fecha))
       )
         throw new ErrorHttp(409, 'El horario ya no está disponible');
+      // Quien atiende de ambas formas deja elegir; si atiende de una sola, la reserva toma esa.
+      const { modalidad: atiende, autoconfirmar } = actual.profesional;
+      if (atiende === 'ambas' && !['presencial', 'online'].includes(modalidad))
+        throw new ErrorHttp(400, 'Elige si te atenderás presencial u online', {
+          modalidad: 'Elige si te atenderás presencial u online',
+        });
       const activas =
         await tx.$queryRaw`SELECT id FROM reservas WHERE disponibilidad_id = ${disponibilidadId} AND estado IN ('pendiente', 'confirmada') FOR UPDATE`;
       if (activas.length)
@@ -206,7 +248,15 @@ async function crearReserva(
           { motivo: 'limite_por_profesional' },
         );
       return tx.reserva.create({
-        data: { usuarioId, disponibilidadId, mensaje },
+        data: {
+          usuarioId,
+          disponibilidadId,
+          mensaje,
+          modalidad: atiende === 'ambas' ? modalidad : atiende,
+          primeraVisita: typeof primeraVisita === 'boolean' ? primeraVisita : null,
+          // FS-HU-29: si el profesional lo configuró, la reserva nace confirmada.
+          ...(autoconfirmar && { estado: 'confirmada', fechaCambio: new Date() }),
+        },
         include: reservaInclude,
       });
     },
@@ -250,18 +300,162 @@ async function cambiarReserva(usuario, id, estado, esFuturo) {
         );
       return tx.reserva.update({
         where: { id },
-        data: { estado },
+        data: {
+          estado,
+          fechaCambio: new Date(),
+          ...(estado === 'cancelada' && {
+            canceladaPor: profesional ? 'profesional' : 'usuario',
+          }),
+        },
         include: reservaInclude,
       });
     },
     { isolationLevel: 'ReadCommitted' },
   );
 }
+// Varios bloques del mismo día de una vez (p. ej., 09:00 a 13:00 en bloques de 45 minutos). Se publican los que no
+// chocan con otro horario y se informan los omitidos; si el día está bloqueado no se publica ninguno.
+async function guardarSerie(usuarioId, bloques) {
+  return prisma.$transaction(
+    async (tx) => {
+      const f = await propia(tx, usuarioId);
+      await bloquear(tx, f.id);
+      if (await enBloqueo(tx, f.id, bloques[0].fecha))
+        throw new ErrorHttp(
+          409,
+          'Ese día está bloqueado en tu agenda. Quita el bloqueo para publicar horarios',
+        );
+      const creados = [];
+      const omitidos = [];
+      for (const datos of bloques) {
+        const choca = await SUPERPUESTOS(
+          tx,
+          f.id,
+          datos.fecha,
+          segundos(datos.horaInicio),
+          segundos(datos.horaFin),
+          0,
+        );
+        if (choca.length) omitidos.push(datos);
+        else
+          creados.push(
+            await tx.disponibilidad.create({
+              data: { ...datos, profesionalId: f.id },
+              include: ocupado,
+            }),
+          );
+      }
+      return { creados, omitidos };
+    },
+    { isolationLevel: 'ReadCommitted' },
+  );
+}
+// Semana del calendario del profesional: sus horarios (también los ya pasados de esa semana), la reserva activa de cada
+// uno, los bloqueos que la tocan y cuántas personas esperan una hora.
+async function semana(usuarioId, desde, hasta) {
+  const f = await propia(prisma, usuarioId);
+  const [bloques, bloqueos, enEspera] = await Promise.all([
+    prisma.disponibilidad.findMany({
+      where: {
+        profesionalId: f.id,
+        fecha: { gte: desde, lte: hasta },
+        OR: [
+          { retirado: false },
+          { reservas: { some: { estado: { in: ACTIVOS } } } },
+        ],
+      },
+      include: {
+        reservas: {
+          where: { estado: { in: ACTIVOS } },
+          include: { usuario: { select: { id: true, nombre: true } } },
+          take: 1,
+        },
+        _count: { select: { reservas: true } },
+      },
+      orderBy: [{ fecha: 'asc' }, { horaInicio: 'asc' }],
+    }),
+    prisma.bloqueoAgenda.findMany({
+      where: {
+        profesionalId: f.id,
+        fechaInicio: { lte: hasta },
+        fechaFin: { gte: desde },
+      },
+      orderBy: { fechaInicio: 'asc' },
+    }),
+    prisma.listaEspera.count({ where: { profesionalId: f.id } }),
+  ]);
+  return { bloques, bloqueos, enEspera, modalidad: f.modalidad };
+}
+async function listarBloqueos(usuarioId, desde) {
+  const f = await propia(prisma, usuarioId);
+  return bloqueosDesde(prisma, f.id, desde);
+}
+async function crearBloqueo(usuarioId, datos) {
+  return prisma.$transaction(
+    async (tx) => {
+      const f = await propia(tx, usuarioId);
+      await bloquear(tx, f.id);
+      const rango = {
+        fechaInicio: { lte: datos.fechaFin },
+        fechaFin: { gte: datos.fechaInicio },
+      };
+      if (await tx.bloqueoAgenda.count({ where: { profesionalId: f.id, ...rango } }))
+        throw new ErrorHttp(409, 'Esas fechas ya están bloqueadas, total o parcialmente');
+      const activas = await tx.reserva.count({
+        where: {
+          estado: { in: ACTIVOS },
+          disponibilidad: {
+            profesionalId: f.id,
+            fecha: { gte: datos.fechaInicio, lte: datos.fechaFin },
+          },
+        },
+      });
+      if (activas)
+        throw new ErrorHttp(
+          409,
+          `Tienes ${activas} ${activas === 1 ? 'reserva activa' : 'reservas activas'} en esas fechas. Cancélalas antes de bloquearlas`,
+          { motivo: 'reservas_activas', cantidad: activas },
+        );
+      return tx.bloqueoAgenda.create({ data: { ...datos, profesionalId: f.id } });
+    },
+    { isolationLevel: 'ReadCommitted' },
+  );
+}
+// Al quitar un bloqueo vuelven a verse sus horarios libres: se informa si hay alguno futuro para avisar a la lista de espera.
+async function eliminarBloqueo(usuarioId, id, hoy) {
+  return prisma.$transaction(
+    async (tx) => {
+      const f = await propia(tx, usuarioId);
+      await bloquear(tx, f.id);
+      const b = await tx.bloqueoAgenda.findUnique({ where: { id } });
+      if (!b || b.profesionalId !== f.id)
+        throw new ErrorHttp(404, 'No encontramos este bloqueo');
+      await tx.bloqueoAgenda.delete({ where: { id } });
+      const libres = await tx.disponibilidad.count({
+        where: {
+          profesionalId: f.id,
+          retirado: false,
+          fecha: { gte: b.fechaInicio > hoy ? b.fechaInicio : hoy, lte: b.fechaFin },
+          reservas: { none: { estado: { in: ACTIVOS } } },
+        },
+      });
+      return { id, profesionalId: f.id, liberaHoras: libres > 0 };
+    },
+    { isolationLevel: 'ReadCommitted' },
+  );
+}
 module.exports = {
+  ACTIVOS,
+  dentroDe,
   listarDisponibilidad,
   guardarDisponibilidad,
+  guardarSerie,
   eliminarDisponibilidad,
   listarReservas,
   crearReserva,
   cambiarReserva,
+  semana,
+  listarBloqueos,
+  crearBloqueo,
+  eliminarBloqueo,
 };

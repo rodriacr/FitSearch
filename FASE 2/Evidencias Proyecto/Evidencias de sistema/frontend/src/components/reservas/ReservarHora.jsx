@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { solicitar } from '../../services/api.js';
@@ -22,6 +22,66 @@ function lugarDe(profesional) {
   return modalidad === 'ambas' ? `${presencial} u online` : presencial;
 }
 
+// «Avísame si se libera una hora» (09-11-2026): cuando el profesional no tiene horas, el usuario se anota y recibe un
+// correo cuando publique una o se cancele una reserva.
+function ListaEspera({ profesionalId, nombre }) {
+  const [estado, setEstado] = useState(null);
+  const [ocupado, setOcupado] = useState(false);
+  const [error, setError] = useState('');
+  useEffect(() => {
+    let activo = true;
+    solicitar(`/profesionales/${profesionalId}/lista-espera`).then((r) => activo && setEstado(r)).catch(() => activo && setEstado({ enLista: false }));
+    return () => { activo = false; };
+  }, [profesionalId]);
+  async function cambiar(anotarse) {
+    setOcupado(true);
+    setError('');
+    try {
+      setEstado(await solicitar(`/profesionales/${profesionalId}/lista-espera`, { metodo: anotarse ? 'POST' : 'DELETE' }));
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setOcupado(false);
+    }
+  }
+  return (
+    <div className="lista-espera">
+      <span className="lista-espera__icono" aria-hidden="true"><Icono nombre="campana" tamano={22} /></span>
+      <div className="lista-espera__texto" aria-live="polite">
+        <strong>{primerNombre(nombre)} no tiene horas disponibles por ahora</strong>
+        <span>{estado?.enLista
+          ? 'Estás en la lista de espera: te escribiremos por correo cuando publique una hora o se libere una.'
+          : 'Anótate y te avisamos por correo apenas publique una hora o alguien cancele la suya.'}</span>
+        <Alerta>{error}</Alerta>
+      </div>
+      {estado && (estado.enLista ? (
+        <button type="button" className="boton boton--secundario boton--compacto" disabled={ocupado} onClick={() => cambiar(false)}>Salir de la lista</button>
+      ) : (
+        <button type="button" className="boton boton--principal boton--compacto" disabled={ocupado} onClick={() => cambiar(true)}>
+          <Icono nombre="campana" tamano={18} /> Avísame si se libera una hora
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// Respuesta en botones del mismo ancho (primera visita y modalidad).
+function Opciones({ nombre, leyenda, opciones, valor, onCambiar }) {
+  return (
+    <fieldset className="opciones-reserva">
+      <legend>{leyenda}</legend>
+      <div className="opciones-reserva__grupo">
+        {opciones.map(([clave, texto]) => (
+          <label key={String(clave)} className="opciones-reserva__opcion">
+            <input type="radio" name={nombre} required checked={valor === clave} onChange={() => onCambiar(clave)} />
+            <span>{texto}</span>
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
 // Reserva de una hora desde la ficha del profesional (FS-HU-14, rediseño de la SC-20): calendario del mes con los días
 // que tienen horas, lista de horas del día, "Confirmar" en la misma fila, mensaje obligatorio y solicitud enviada, que
 // queda pendiente hasta que el profesional la confirme. El archivo .ics se genera en el navegador, sin servicios externos.
@@ -34,9 +94,15 @@ export default function ReservarHora({ profesional }) {
   const reservaActiva = misReservas?.reservas.find(
     (r) => r.profesional.id === Number(profesionalId) && r.estado !== 'cancelada' && futura(r),
   );
+  // Desde el buscador se puede llegar con una hora ya elegida (?hora=ID, 09-11-2026).
+  const [parametros] = useSearchParams();
+  const horaPedida = Number(parametros.get('hora')) || null;
   const [mesElegido, setMesElegido] = useState(null);
   const [diaElegido, setDiaElegido] = useState(null);
-  const [bloqueId, setBloqueId] = useState(null);
+  const [bloqueId, setBloqueId] = useState(horaPedida);
+  const [primeraVisita, setPrimeraVisita] = useState(null);
+  const [modalidadElegida, setModalidadElegida] = useState(null);
+  const seccion = useRef(null);
   const [paso, setPaso] = useState('elegir');
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
@@ -51,11 +117,19 @@ export default function ReservarHora({ profesional }) {
   for (const bloque of horarios) porDia.set(bloque.fecha, [...(porDia.get(bloque.fecha) || []), bloque]);
   const fechas = [...porDia.keys()].sort();
   const meses = [...new Set(fechas.map((fecha) => fecha.slice(0, 7)))];
-  const mes = meses.includes(mesElegido) ? mesElegido : meses[0];
-  const fechasDelMes = fechas.filter((fecha) => fecha.startsWith(mes));
-  const dia = fechasDelMes.includes(diaElegido) ? diaElegido : fechasDelMes[0];
-  const bloquesDelDia = porDia.get(dia) || [];
   const bloque = horarios.find((b) => b.id === bloqueId) || null;
+  const mes = meses.includes(mesElegido) ? mesElegido : bloque?.fecha.slice(0, 7) ?? meses[0];
+  const fechasDelMes = fechas.filter((fecha) => fecha.startsWith(mes));
+  const dia = fechasDelMes.includes(diaElegido) ? diaElegido : bloque?.fecha.startsWith(mes) ? bloque.fecha : fechasDelMes[0];
+  const bloquesDelDia = porDia.get(dia) || [];
+  const preelegida = Boolean(datos && horaPedida && horarios.some((b) => b.id === horaPedida));
+
+  // Si llegó con una hora elegida, la sección de reserva queda a la vista.
+  useEffect(() => {
+    if (!preelegida) return;
+    const suave = !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    seccion.current?.scrollIntoView?.({ behavior: suave ? 'smooth' : 'auto', block: 'start' });
+  }, [preelegida]);
 
   useEffect(() => {
     if (paso === 'mensaje') campoMensaje.current?.focus();
@@ -76,7 +150,11 @@ export default function ReservarHora({ profesional }) {
     setOcupado(true);
     setError('');
     try {
-      const { reserva } = await solicitar('/reservas', { metodo: 'POST', cuerpo: { disponibilidadId: bloque.id, mensaje } });
+      const cuerpo = {
+        disponibilidadId: bloque.id, mensaje, primeraVisita,
+        ...(modalidad === 'ambas' && { modalidad: modalidadElegida }),
+      };
+      const { reserva } = await solicitar('/reservas', { metodo: 'POST', cuerpo });
       setEnviada({ ...reserva, horario: reserva?.horario || bloque });
       setPaso('enviada');
       setMensaje('');
@@ -109,14 +187,26 @@ export default function ReservarHora({ profesional }) {
         <p className="reserva-enviada__cuando">
           <span className="reserva-enviada__fecha">{fechaLarga(horario.fecha)}</span> · {horario.horaInicio} – {horario.horaFin}
         </p>
-        <span className="reserva-enviada__estado">Pendiente de confirmación</span>
-        <p className="reserva-enviada__texto">
-          {primerNombre(nombre)} revisará tu solicitud. Verás si la confirma en Mis citas.
-        </p>
+        {enviada.estado === 'confirmada' ? (
+          <>
+            <span className="reserva-enviada__estado reserva-enviada__estado--confirmada">Confirmada</span>
+            <p className="reserva-enviada__texto">{primerNombre(nombre)} confirma sus reservas al instante. Te enviaremos un recordatorio el día antes.</p>
+          </>
+        ) : (
+          <>
+            <span className="reserva-enviada__estado">Pendiente de confirmación</span>
+            <p className="reserva-enviada__texto">
+              {primerNombre(nombre)} revisará tu solicitud. Te avisaremos por correo y verás si la confirma en Mis citas.
+            </p>
+          </>
+        )}
         <div className="reserva-enviada__acciones">
           <button type="button" className="boton boton--secundario boton--compacto" onClick={agregarAlCalendario}>
             <Icono nombre="descargar" tamano={18} /> Agregar al calendario
           </button>
+          <Link to={`/mensajes?reserva=${enviada.id}`} className="boton boton--secundario boton--compacto">
+            <Icono nombre="chat" tamano={18} /> Escribirle
+          </Link>
           <Link to="/citas" className="boton boton--principal boton--compacto">Ver mis citas</Link>
         </div>
         <p className="reserva-enviada__nota">El archivo .ics se abre con Google Calendar, Outlook o el calendario del celular.</p>
@@ -135,11 +225,12 @@ export default function ReservarHora({ profesional }) {
     contenido = (
       <p className="agenda__vacio" role="status">
         Ya tienes una reserva {reservaActiva.estado} con este profesional para el {fechaHorario(reservaActiva.horario)}. Para pedir
-        otra hora, primero cancélala en <Link to="/citas">Mis citas</Link>.
+        otra hora, primero cancélala en <Link to="/citas">Mis citas</Link>. ¿Necesitas coordinar algo?{' '}
+        <Link to={`/mensajes?reserva=${reservaActiva.id}`}>Escríbele un mensaje</Link>.
       </p>
     );
   } else if (!fechas.length) {
-    contenido = <p className="texto-secundario">Este profesional no tiene horarios disponibles por ahora.</p>;
+    contenido = <ListaEspera profesionalId={profesionalId} nombre={nombre} />;
   } else {
     const anterior = meses.findLast((m) => m < mes);
     const siguiente = meses.find((m) => m > mes);
@@ -176,7 +267,13 @@ export default function ReservarHora({ profesional }) {
             <p id="ayuda-mensaje-reserva" className="campo__ayuda">
               Entre 10 y 500 caracteres ({mensaje.length}/500). El mensaje solo lo verán tú y el profesional.
             </p>
-            <button className="boton boton--principal" disabled={ocupado}>
+            <Opciones nombre="primera-visita" leyenda={`¿Es tu primera visita con ${primerNombre(nombre)}?`} valor={primeraVisita}
+              opciones={[[true, 'Sí, es la primera'], [false, 'No, ya me atendió']]} onCambiar={setPrimeraVisita} />
+            {modalidad === 'ambas' && (
+              <Opciones nombre="modalidad" leyenda="¿Cómo quieres atenderte?" valor={modalidadElegida}
+                opciones={[['presencial', 'Presencial'], ['online', 'Online']]} onCambiar={setModalidadElegida} />
+            )}
+            <button className="boton boton--principal" disabled={ocupado || primeraVisita === null || (modalidad === 'ambas' && !modalidadElegida)}>
               {ocupado ? 'Enviando…' : 'Enviar solicitud de reserva'}
             </button>
           </form>
@@ -225,7 +322,7 @@ export default function ReservarHora({ profesional }) {
   }
 
   return (
-    <section className="ficha__seccion reservar" aria-labelledby="titulo-reservar">
+    <section ref={seccion} className="ficha__seccion reservar" aria-labelledby="titulo-reservar">
       <h2 id="titulo-reservar">Reservar una hora</h2>
       {error && <Alerta>{error}</Alerta>}
       {contenido}

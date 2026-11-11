@@ -25,6 +25,12 @@ const dia = (nombre) => within(seccion()).getByRole('button', { name: nombre });
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION)));
 
+// Antes de enviar hay que responder si es la primera visita y, si atiende de ambas formas, la modalidad.
+async function responderPreguntas() {
+  await userEvent.click(screen.getByRole('radio', { name: 'Sí, es la primera' }));
+  await userEvent.click(screen.getByRole('radio', { name: 'Online' }));
+}
+
 describe('Calendario y horas', () => {
   test('marca los días con horas, elige el primero y muestra sus horas, duración y modalidad', async () => {
     simularApi(ficha());
@@ -93,6 +99,8 @@ describe('Confirmar, mensaje y solicitud enviada', () => {
     expect(screen.getByRole('complementary', { name: 'Resumen de la reserva' })).toHaveTextContent('jueves 15 de octubre, 09:00 – 10:00');
     await userEvent.type(campo, r.mensaje);
     expect(screen.getByText(/\(32\/500\)/)).toBeInTheDocument();
+    // Primera visita y modalidad (09-11-2026): la profesional atiende de ambas formas, así que se elige cómo.
+    await responderPreguntas();
     await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud de reserva' }));
 
     const titulo = await screen.findByRole('heading', { name: 'Solicitud enviada' });
@@ -100,7 +108,7 @@ describe('Confirmar, mensaje y solicitud enviada', () => {
     expect(screen.getByText('Pendiente de confirmación')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Ver mis citas' })).toHaveAttribute('href', '/citas');
     expect(JSON.parse(llamadasA(fetch, '/api/reservas').find(([, o]) => o.method === 'POST')[1].body))
-      .toEqual({ disponibilidadId: 2, mensaje: r.mensaje });
+      .toEqual({ disponibilidadId: 2, mensaje: r.mensaje, primeraVisita: true, modalidad: 'online' });
 
     URL.createObjectURL = vi.fn(() => 'blob:cita');
     URL.revokeObjectURL = vi.fn();
@@ -136,10 +144,12 @@ describe('Confirmar, mensaje y solicitud enviada', () => {
     await userEvent.click(await screen.findByRole('button', { name: '09:00 a 10:00' }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar 09:00 a 10:00' }));
     await userEvent.type(screen.getByLabelText('Qué necesitas consultar'), r.mensaje);
+    // Primera visita y modalidad (09-11-2026): la profesional atiende de ambas formas, así que se elige cómo.
+    await responderPreguntas();
     await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud de reserva' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('El horario ya no está disponible');
-    await waitFor(() => expect(screen.getByText('Este profesional no tiene horarios disponibles por ahora.')).toBeInTheDocument());
-    expect(JSON.parse(fetch.mock.calls.find(([, o]) => o.method === 'POST')[1].body)).toEqual({ disponibilidadId: 2, mensaje: r.mensaje });
+    await waitFor(() => expect(screen.getByText(/no tiene horas disponibles por ahora/)).toBeInTheDocument());
+    expect(JSON.parse(fetch.mock.calls.find(([, o]) => o.method === 'POST')[1].body)).toEqual({ disponibilidadId: 2, mensaje: r.mensaje, primeraVisita: true, modalidad: 'online' });
   });
 
   test('el 409 del límite conserva la hora elegida y el mensaje en vez de tratarla como ocupada', async () => {
@@ -150,6 +160,8 @@ describe('Confirmar, mensaje y solicitud enviada', () => {
     await userEvent.click(await screen.findByRole('button', { name: '09:00 a 10:00' }));
     await userEvent.click(screen.getByRole('button', { name: 'Confirmar 09:00 a 10:00' }));
     await userEvent.type(screen.getByLabelText('Qué necesitas consultar'), r.mensaje);
+    // Primera visita y modalidad (09-11-2026): la profesional atiende de ambas formas, así que se elige cómo.
+    await responderPreguntas();
     await userEvent.click(screen.getByRole('button', { name: 'Enviar solicitud de reserva' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Ya tienes una reserva activa con este profesional');
     expect(screen.getByLabelText('Qué necesitas consultar')).toHaveValue(r.mensaje);

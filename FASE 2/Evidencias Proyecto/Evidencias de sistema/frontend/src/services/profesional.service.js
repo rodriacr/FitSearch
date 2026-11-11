@@ -4,6 +4,8 @@ import { solicitar } from './api.js';
 const PARAMETROS_API = {
   q: 'q', especialidad: 'especialidad', comuna: 'comuna', modalidad: 'modalidad', calificacion: 'calificacionMin',
   distancia: 'distanciaKm', orden: 'orden', pagina: 'pagina', limite: 'limite',
+  // Con horas libres hoy, en 3 días o en la semana (09-11-2026).
+  disponible: 'disponible',
 };
 
 // La ubicación (si la hay) solo viaja a la API para calcular distancias; no se agrega a la URL de la página.
@@ -22,7 +24,8 @@ export function buscarProfesionales(filtros = {}, ubicacion = null) {
 
 export const obtenerFiltros = () => solicitar('/profesionales/filtros');
 export const obtenerProfesional = (id) => solicitar(`/profesionales/${id}`);
-export const listarResenas = (id, pagina = 1) => solicitar(`/profesionales/${id}/resenas?pagina=${pagina}`);
+// tipo: positivas o negativas (09-11-2026); sin tipo, todas.
+export const listarResenas = (id, pagina = 1, tipo = '') => solicitar(`/profesionales/${id}/resenas?pagina=${pagina}${tipo ? `&tipo=${tipo}` : ''}`);
 export const guardarResena = (id, datos) => solicitar(`/profesionales/${id}/resenas`, { metodo: 'PUT', cuerpo: datos });
 export const eliminarResena = (id) => solicitar(`/profesionales/${id}/resenas`, { metodo: 'DELETE' });
 // Ficha propia del profesional (FS-HU-04).

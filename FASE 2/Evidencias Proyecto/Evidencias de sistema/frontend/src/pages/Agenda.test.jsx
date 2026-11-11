@@ -1,13 +1,22 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { StrictMode } from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, test, expect, vi } from 'vitest';
 import { renderizarApp, simularApi, SESION_PROFESIONAL } from '../tests/utilidades.jsx';
+import { SesionProvider } from '../context/SesionContext.jsx';
+import AgendaProfesional from './Agenda.jsx';
 const h = { id: 2, fecha: '2099-10-15', horaInicio: '09:00', horaFin: '10:00', ocupado: false };
 const r = { id: 4, estado: 'pendiente', mensaje: 'Necesito orientación nutricional', horario: h, usuario: { id: 1, nombre: 'Ana' }, profesional: { id: 3, nombre: 'Juan' } };
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
 afterEach(() => vi.useRealTimers());
 // Fecha del sistema fija (solo Date, los temporizadores siguen reales) para que el calendario abra en octubre de 2099.
 const fijarHoy = (iso) => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date(iso)); };
+// Desde el 09-11-2026 /profesional/agenda muestra el calendario semanal (AgendaSemanal.test.jsx). El formulario de
+// publicar con calendario del mes y la lista de reservas siguen en Agenda.jsx (la pestaña Horarios del perfil los usa).
+const renderizarAgendaClasica = () => render(
+  <StrictMode><MemoryRouter><SesionProvider><AgendaProfesional /></SesionProvider></MemoryRouter></StrictMode>,
+);
 const dia = (nombre) => within(screen.getByRole('group', { name: /octubre 2099|noviembre 2099/ })).getByRole('button', { name: nombre });
 
 test('editar avisa actualización; eliminar el bloque editado limpia el formulario sin afirmar historial', async () => {
@@ -20,7 +29,7 @@ test('editar avisa actualización; eliminar el bloque editado limpia el formular
     '/api/disponibilidades': () => [200,{horarios}],
     '/api/reservas': { reservas:[] },
   });
-  renderizarApp('/profesional/agenda');
+  renderizarAgendaClasica();
   await userEvent.click(await screen.findByRole('button',{name:'Editar horario'}));
   // El calendario salta al mes del horario, marca su día y el foco queda en la hora de inicio.
   expect(screen.getByRole('heading', { name: 'octubre 2099' })).toBeInTheDocument();
@@ -48,7 +57,7 @@ test('retira un bloque con historial cancelado solo tras confirmar y mantiene la
     '/api/disponibilidades': () => [200, { horarios }],
     '/api/reservas': { reservas: [{ ...r, estado: 'cancelada', horario: { ...h, retirado: true } }] },
   });
-  renderizarApp('/profesional/agenda');
+  renderizarAgendaClasica();
   expect(await screen.findByRole('button', { name: 'Editar horario' })).toBeDisabled();
   await userEvent.click(screen.getByRole('button', { name: 'Retirar horario' }));
   expect(fetch.mock.calls.some(([, o]) => o.method === 'DELETE')).toBe(false);
@@ -65,7 +74,7 @@ test('publica un horario eligiendo el día en el calendario y la duración rápi
     if (o.method === 'POST') { horarios = [...horarios, h]; return [201, { horario: h }]; }
     return [200, { horarios }];
   } });
-  renderizarApp('/profesional/agenda');
+  renderizarAgendaClasica();
   expect(await screen.findByRole('heading', { name: 'octubre 2099' })).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Mes anterior' })).toBeDisabled();
   expect(dia('jueves 1 de octubre, día pasado')).toBeDisabled();
@@ -90,7 +99,7 @@ test('publica un horario eligiendo el día en el calendario y la duración rápi
 test('no envía un horario que termina antes de empezar y lo avisa', async () => {
   fijarHoy('2099-10-10T15:00:00Z');
   const fetch = simularApi({ '/api/disponibilidades': { horarios: [] } });
-  renderizarApp('/profesional/agenda');
+  renderizarAgendaClasica();
   await userEvent.click(await screen.findByRole('button', { name: 'jueves 15 de octubre, sin horarios publicados' }));
   fireEvent.change(screen.getByLabelText('Hora de inicio'), { target: { value: '10:00' } });
   fireEvent.change(screen.getByLabelText('Hora de término'), { target: { value: '09:30' } });

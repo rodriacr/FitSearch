@@ -13,6 +13,8 @@ const TRAZOS = {
   balanza: <><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M8 9a4 4 0 0 1 8 0Z" /><path d="m12 9 1.2-2" /></>,
   regla: <><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M7 6h4M7 10h3M7 14h4M7 18h3" /></>,
   calendario: <><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /></>,
+  // Formación del profesional (FS-HU-29).
+  birrete: <><path d="m2 9 10-5 10 5-10 5Z" /><path d="M6 11v5c3 2 9 2 12 0v-5" /><path d="M22 9v6" /></>,
   persona: <><circle cx="10" cy="14" r="5" /><path d="M14 10l6-6m-5 0h5v5" /></>,
   actividad: <><circle cx="14" cy="4" r="2" /><path d="m7 21 3-6 3 2v5M10 15l1-6 4 3 3-1M11 9 7 10l-2 3" /></>,
   objetivoBajar: <><path d="M12 3v14m-5-5 5 5 5-5" /><path d="M5 21h14" /></>,

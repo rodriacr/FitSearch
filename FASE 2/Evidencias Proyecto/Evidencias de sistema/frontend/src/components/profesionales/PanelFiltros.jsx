@@ -4,6 +4,7 @@ import Icono from '../Icono.jsx';
 import useBloquearScroll from '../diseno/useBloquearScroll.js';
 
 const { distanciasKm, calificacionesMinimas, filtroModalidad } = reglas.profesionales;
+const { filtroDisponible } = reglas.agenda;
 
 // Si la URL trae un valor que ya no está en el catálogo (enlace antiguo), se conserva para que se vea seleccionado.
 const conValorActual = (lista, actual) => (actual && !lista.includes(actual) ? [actual, ...lista] : lista);
@@ -59,6 +60,7 @@ export default function PanelFiltros({ id, abierto, onCerrar, filtros, catalogo,
           { 'aria-describedby': 'estado-ubicacion' })}
         {lista('especialidad', 'Especialidad', [['', 'Todas'], ...valores(catalogo.especialidades, filtros.especialidad)])}
         {lista('modalidad', 'Modalidad', [['', 'Todas'], ...filtroModalidad.map(({ valor, etiqueta }) => [valor, etiqueta])])}
+        {lista('disponible', 'Con horas libres', [['', 'Cualquier día'], ...filtroDisponible.map(({ valor, etiqueta }) => [valor, etiqueta])])}
         {lista('calificacion', 'Calificación mínima', [['', 'Cualquiera'], ...calificacionesMinimas.map((n) => [String(n), `${n} estrellas o más`])])}
         <div className="panel-filtros__pie">
           {hayFiltros && <button type="button" className="boton boton--secundario" onClick={onLimpiar}>Limpiar filtros</button>}

@@ -16,10 +16,11 @@ test('escenario 1: lista solo los favoritos del usuario con el formato de ficha 
     id: 3, nombre: 'Camila Demo', especialidad: 'Kinesiología', descripcion: null, comuna: 'Ñuñoa', modalidad: 'ambas', verificado: 0,
     ubicacionLat: '-33.45', ubicacionLng: '-70.59', establecimientoNombre: null, promedio: 0, totalResenas: 0n, distanciaKm: null, esFavorito: 1n,
   }], total: 1 });
+  profesionalModel.proximasHoras.mockResolvedValue([]);
   const res = await conSesion(request(app).get('/api/favoritos'));
   expect(res.status).toBe(200);
   expect(res.body).toMatchObject({ total: 1, profesionales: [{ id: 3, nombre: 'Camila Demo', esFavorito: true }] });
-  expect(profesionalModel.listar).toHaveBeenCalledWith({ usuarioId: 1, soloFavoritosDe: 1, orden: 'nombre', pagina: 1, limite: 12 });
+  expect(profesionalModel.listar).toHaveBeenCalledWith(expect.objectContaining({ usuarioId: 1, soloFavoritosDe: 1, orden: 'nombre', pagina: 1, limite: 12 }));
 });
 
 test('escenario 2: agrega un favorito; repetirlo no falla', async () => {

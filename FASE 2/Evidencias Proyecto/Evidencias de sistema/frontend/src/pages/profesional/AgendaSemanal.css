@@ -1,0 +1,89 @@
+/* Mi agenda del profesional (09-11-2026). La disposición depende del ancho de la propia página (container queries):
+   en escritorio el costado (detalle, publicar, bloquear o resumen) va a la izquierda del calendario y queda fijo al
+   bajar; en pantallas angostas va arriba del día elegido cuando hay un panel abierto y abajo cuando solo es el resumen. */
+.agenda-semanal {
+  container: agenda / inline-size;
+  display: grid;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 88rem;
+  margin: 0 auto;
+}
+.agenda-semanal__cabecera { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
+.agenda-semanal__cabecera h1 { margin: 0 0 0.25rem; font-size: 1.75rem; letter-spacing: -0.02em; }
+.agenda-semanal__cabecera p { margin: 0; }
+.agenda-semanal__botones { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; width: 100%; }
+.agenda-semanal__botones .boton { width: auto; min-width: 0; min-height: 2.75rem; padding-inline: 1rem; font-size: 0.92rem; white-space: nowrap; }
+.agenda-semanal__botones .boton--secundario[aria-pressed='true'] { color: var(--color-primario-oscuro); background: var(--color-info-fondo); border-color: var(--color-primario); }
+
+.agenda-semanal__cuerpo { display: grid; gap: 1rem; }
+.agenda-semanal__calendario { display: grid; gap: 0.85rem; min-width: 0; }
+.agenda-semanal__costado { display: grid; align-content: start; gap: 1rem; min-width: 0; scroll-margin-top: 5rem; }
+/* En pantallas angostas, un panel abierto va antes del calendario. */
+.agenda-semanal__cuerpo--con-panel .agenda-semanal__costado { order: -1; }
+
+.agenda-semanal__barra {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.6rem 0.85rem;
+}
+.agenda-semanal__navegacion { display: flex; align-items: center; gap: 0.35rem; }
+.agenda-semanal__navegacion .boton-icono { width: 2.5rem; height: 2.5rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie); }
+.agenda-semanal__hoy.boton { min-height: 2.5rem; padding-inline: 0.9rem; }
+.agenda-semanal__hoy.boton:disabled { opacity: 0.5; cursor: default; }
+.agenda-semanal__rango { margin: 0; font-size: 1.05rem; line-height: 1.3; color: var(--color-primario-oscuro); }
+.agenda-semanal__leyenda {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--color-texto-secundario);
+}
+.agenda-semanal__leyenda li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.leyenda__muestra { width: 0.85rem; height: 0.85rem; border: 1px solid; border-radius: 4px; }
+.leyenda__muestra--libre { background: #f3f8fc; border-color: #c4d9e8; }
+.leyenda__muestra--pendiente { background: #fff4ea; border-color: #f0c39d; }
+.leyenda__muestra--confirmada { background: #e8f6ef; border-color: #a6dac1; }
+.leyenda__muestra--bloqueado { border-color: #c7d3de; background: repeating-linear-gradient(135deg, rgb(95 111 128 / 22%) 0 3px, transparent 3px 6px); }
+
+.agenda-semanal__vista { transition: opacity 150ms ease; }
+.agenda-semanal__vista--actualizando { opacity: 0.6; }
+/* Mientras carga se reserva el mismo alto del calendario: la página no salta al llegar los datos. */
+.agenda-semanal__esqueleto {
+  height: min(44rem, calc(100dvh - 12rem));
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  background:
+    linear-gradient(90deg, transparent, rgb(255 255 255 / 70%), transparent) 0 0 / 40% 100% no-repeat,
+    var(--color-superficie-suave);
+  animation: esqueleto-agenda 1.2s ease-in-out infinite;
+}
+@keyframes esqueleto-agenda {
+  from { background-position: -40% 0, 0 0; }
+  to { background-position: 140% 0, 0 0; }
+}
+.agenda-semanal__estado { display: grid; justify-items: start; gap: 0.5rem; }
+.agenda-semanal__vacia { margin: 0; font-size: 0.88rem; color: var(--color-texto-secundario); }
+
+/* La lista de reservas de abajo conserva su estilo (Agenda.css), con un título del tamaño de una sección. */
+.agenda-semanal > .agenda { margin: 0.5rem 0 0; }
+.agenda-semanal > .agenda .agenda__cabecera h2 { margin: 0; font-size: 1.15rem; }
+
+@container agenda (min-width: 34rem) {
+  .agenda-semanal__botones { display: flex; width: auto; }
+  .agenda-semanal__botones .boton { flex: none; }
+}
+/* Desde aquí el costado va a la izquierda y el calendario ocupa el resto; el costado acompaña al bajar. 55rem = costado
+   (19rem) + separación + las siete columnas mínimas del calendario con su riel de horas. */
+@container agenda (min-width: 55rem) {
+  .agenda-semanal__cuerpo { grid-template-columns: 19rem minmax(0, 1fr); align-items: start; gap: 1.25rem; }
+  .agenda-semanal__costado { position: sticky; top: 5.5rem; order: -1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .agenda-semanal__esqueleto { animation: none; }
+}

@@ -14,6 +14,9 @@ router.use('/asistente', require('./asistente.routes'));
 router.use('/comidas', require('./comida.routes'));
 router.use('/administrador', require('./administrador.routes'));
 router.use('/verificaciones', require('./verificacion.routes'));
+// Clientes y reportes del profesional (FS-HU-27 y FS-HU-28) y chat entre usuario y profesional (FS-HU-31).
+router.use('/profesional', require('./espacioProfesional.routes'));
+router.use('/chats', require('./chats.routes'));
 router.use('/', require('./agenda.routes'));
 
 module.exports = router;
