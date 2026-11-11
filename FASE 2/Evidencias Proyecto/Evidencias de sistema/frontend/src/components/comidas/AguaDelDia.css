@@ -1,0 +1,9 @@
+/* Sumas de agua del día en el Resumen nutricional de Comidas (FS-HU-33, revisión del PR #48). */
+.agua-del-dia { display: grid; gap: 0.5rem; }
+.agua-del-dia__sumas { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+.agua-del-dia__sumas li {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.15rem 0.35rem 0.15rem 0.65rem;
+  border: 1px solid var(--color-borde); border-radius: 999px; font-size: 0.78rem; color: var(--color-texto-secundario);
+}
+.agua-del-dia__sumas .boton-texto { min-height: 2rem; padding-inline: 0.35rem; font-size: 0.78rem; }
+.agua-del-dia__error { margin: 0; font-size: 0.8rem; color: var(--color-error); }

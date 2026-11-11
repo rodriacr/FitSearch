@@ -13,6 +13,8 @@ const secciones = [
   ['verificaciones', 'Verificaciones', 'escudo'],
   ['usuarios', 'Usuarios', 'grupo'],
   ['reportes', 'Reportes', 'grafico'],
+  // Catálogos de especialidades, alimentos y establecimientos (FS-HU-30).
+  ['contenido', 'Contenido', 'capas'],
 ];
 
 export function DisenoAdministrador() {

@@ -1,6 +1,7 @@
 // Directorio de profesionales: listado con búsqueda y filtros (FS-HU-03, FS-HU-05, FS-HU-22) y ficha individual.
 const modelo = require('../models/profesional.model');
 const resenaModel = require('../models/resena.model');
+const especialidadModel = require('../models/especialidad.model');
 const ErrorHttp = require('../utils/ErrorHttp');
 const { profesionales: reglas, agenda: reglasAgenda } = require('../../../shared/reglas.json');
 const { fechaEnChile, horaEnChile, sumarDias } = require('../utils/fechaChile');
@@ -140,7 +141,12 @@ const formatearMiFicha = (fila) => fila && {
 };
 
 async function obtenerMiFicha(usuarioId) { return { ficha: formatearMiFicha(await modelo.obtenerPorUsuario(usuarioId)) }; }
-async function guardarMiFicha(usuarioId, datos) { return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, datos)) }; }
+// FS-HU-30: la especialidad, ya validada contra el catálogo (ficha.validators), se guarda con el nombre del catálogo
+// («nutricion» queda «Nutrición»). Si es la que ya tenía la ficha y ahora está desactivada, se guarda tal cual.
+async function guardarMiFicha(usuarioId, datos) {
+  const delCatalogo = await especialidadModel.activaPorNombre(datos.especialidad);
+  return { ficha: formatearMiFicha(await modelo.guardarFicha(usuarioId, { ...datos, especialidad: delCatalogo ?? datos.especialidad })) };
+}
 
 // FS-HU-12: Administrador verifica un perfil profesional
 async function verificarPerfil(id, administradorId) {

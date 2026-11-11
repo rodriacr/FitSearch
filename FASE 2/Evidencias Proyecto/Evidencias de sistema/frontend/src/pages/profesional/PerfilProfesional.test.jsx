@@ -2,7 +2,9 @@
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test, vi } from 'vitest';
-import { fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL } from '../../tests/utilidades.jsx';
+import {
+  ESPECIALIDADES_DE_PRUEBA, fichaProfesional, MI_FICHA, renderizarApp, respuestaJson, SESION_PROFESIONAL,
+} from '../../tests/utilidades.jsx';
 // El mapa de la ficha (SC-28) se prueba en FormularioFicha.test.jsx: aquí queda cargando.
 vi.mock('../../services/mapas.js', () => ({ cargarMapLibre: () => new Promise(() => {}), ESTILO_MAPA: 'https://estilo.prueba/style.json' }));
 
@@ -14,10 +16,12 @@ const NUEVA = {
 const UBICACION = { lat: -33.4569, lng: -70.5976, precision: 'exacta', encontrada: 'Avenida Irarrázaval 2401, Ñuñoa' };
 const RESUMEN_VACIO = { promedio: null, total: 0, distribucion: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } };
 
-// Servidor simulado: la ficha propia (null hasta que se guarda) y su ficha pública por id.
+// Servidor simulado: el catálogo de especialidades (FS-HU-30), la ficha propia (null hasta que se guarda) y su ficha
+// pública por id.
 function simularServidor({ ficha = null, alGuardar } = {}) {
   const estado = { ficha };
   return vi.spyOn(globalThis, 'fetch').mockImplementation((url, opciones = {}) => {
+    if (url === '/api/especialidades') return respuestaJson(200, { especialidades: ESPECIALIDADES_DE_PRUEBA });
     if (url.startsWith('/api/profesionales/mi-ficha/ubicacion')) return respuestaJson(200, UBICACION);
     if (url === '/api/profesionales/mi-ficha' && opciones.method === 'PUT') {
       if (alGuardar) return alGuardar();
@@ -39,6 +43,8 @@ const cuerpoPut = (fetch) => JSON.parse(fetch.mock.calls.find(([url, o]) => url 
 const huboPut = (fetch) => fetch.mock.calls.some(([, opciones = {}]) => opciones.method === 'PUT');
 
 async function completarFicha({ modalidad = 'ambas', direccion = 'Av. Irarrázaval 2401' } = {}) {
+  // El catálogo de especialidades llega de la API (FS-HU-30).
+  await screen.findByRole('option', { name: 'Nutrición' });
   await userEvent.selectOptions(screen.getByLabelText('Especialidad (obligatorio)'), 'Nutrición');
   await userEvent.type(screen.getByLabelText('Descripción sobre tu atención'), 'Atención nutricional');
   await userEvent.selectOptions(screen.getByLabelText('Modalidad de atención (obligatorio)'), modalidad);

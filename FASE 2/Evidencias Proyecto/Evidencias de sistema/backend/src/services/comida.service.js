@@ -202,7 +202,8 @@ async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
 async function agregar(usuarioId, { fecha, momento, alimentoId, gramos }, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
   const alimento = await modelo.obtenerAlimento(alimentoId);
-  if (!alimento) throw new ErrorHttp(404, 'No encontramos ese alimento en el catálogo');
+  // Un alimento desactivado (FS-HU-30) ya no se puede registrar de nuevo.
+  if (!alimento?.activo) throw new ErrorHttp(404, 'No encontramos ese alimento en el catálogo');
   const registro = await modelo.crear({
     usuarioId, fecha, momento, alimentoId, descripcionAlimento: alimento.nombre, gramos, origen: 'manual', ...aporte(alimento, gramos),
   });

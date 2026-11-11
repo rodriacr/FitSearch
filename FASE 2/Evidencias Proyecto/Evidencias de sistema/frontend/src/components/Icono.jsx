@@ -48,7 +48,6 @@ const TRAZOS = {
   diana: <><circle cx="12" cy="12" r="8.5" /><circle cx="12" cy="12" r="4.5" /><circle cx="12" cy="12" r="1" /></>,
   fuego: <path d="M12 21c-3.9 0-7-2.7-7-6.5 0-3 2-5.2 3.5-6.5.3 2 1.2 3 2.5 3.5C11 8 12 5 14 3c1 3 5 5.5 5 11 0 4-3.1 7-7 7Z" />,
   gota: <path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11Z" />,
-  pasos: <><path d="M8 3C6.3 3 5 4.8 5 7.5S6 12 6 12h4s1-2 1-4.5S9.7 3 8 3Z" /><path d="M6 14.5h4V16a2 2 0 0 1-4 0Z" /><path d="M16 7c1.7 0 3 1.8 3 4.5S18 16 18 16h-4s-1-2-1-4.5S14.3 7 16 7Z" /><path d="M14 18.5h4V20a2 2 0 0 1-4 0Z" /></>,
   comida: <><path d="M7 3v8a2 2 0 0 0 4 0V3M9 3v18" /><path d="M17 3c-1.7 1.3-2.5 3.5-2.5 6.5V13H17v8" /></>,
   grupo: <><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5" /><path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2" /></>,
   ajustes: <><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12" /><circle cx="16" cy="6" r="2" /><circle cx="10" cy="12" r="2" /><circle cx="18" cy="18" r="2" /></>,
@@ -68,6 +67,7 @@ const TRAZOS = {
   enviar: <><path d="M21 3 10 14" /><path d="m21 3-7 18-4-7-7-4Z" /></>,
   chincheta: <><path d="M9 4h6l-1 6 3 3H7l3-3Z" /><path d="M12 13v8" /></>,
   basura: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
+  capas: <><path d="m12 3 9 5-9 5-9-5Z" /><path d="m3 13 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,
   robot: <><rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 8V5" /><circle cx="12" cy="4" r="1" /><path d="M9.5 13h.01M14.5 13h.01M10 16.5h4M3 12v3M21 12v3" /></>,
 };
 

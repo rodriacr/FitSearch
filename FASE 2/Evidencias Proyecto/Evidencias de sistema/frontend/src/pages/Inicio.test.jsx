@@ -18,6 +18,7 @@ function simular({ perfil = respuestaPerfil(PERFIL_COMPLETO), profesionales = li
     '/api/profesionales/filtros': { especialidades: [], comunas: [] },
     '/api/profesionales': profesionales,
     '/api/comidas': { consumo: { calorias: 1420, proteinasG: 85, carbohidratosG: 150, grasasG: 45 } },
+    '/api/agua': { fecha: '2026-11-04', totalMl: 500, metaMl: 2000, vasoMl: 250, registros: [{ id: 1, ml: 500, hora: '10:15' }] },
     ...extra,
   });
 }
@@ -29,13 +30,14 @@ describe('Inicio con datos', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: /¿Cómo quieres cuidarte hoy\?/ })).toBeInTheDocument();
     const accesos = screen.getByRole('heading', { name: 'Tus accesos rápidos' }).closest('section');
-    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
+    for (const [nombre, ruta] of [['Profesionales', '/profesionales'], ['Centros de salud', '/centros-salud'], ['Gimnasios', '/gimnasios'], ['Mis citas', '/citas'], ['Asistente IA', '/asistente'], ['Comidas', '/comidas']]) {
       expect(within(accesos).getByRole('link', { name: new RegExp(`^${nombre}`) })).toHaveAttribute('href', ruta);
     }
-    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Centros y Gimnasios llegan como "Próximamente";
-    // el Asistente IA (FS-HU-07) y Comidas (FS-HU-09 y FS-HU-10) ya están disponibles.
+    // Farmacias salió del alcance (decisión del PO del 05-10-2026). Desde FS-HU-25, Centros de salud y Gimnasios
+    // también están disponibles, así que ningún acceso dice «Próximamente».
     expect(within(accesos).queryByRole('link', { name: /Farmacias/ })).not.toBeInTheDocument();
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(2);
+    expect(within(accesos).getAllByRole('link')).toHaveLength(6);
+    expect(within(accesos).queryByText('Próximamente')).not.toBeInTheDocument();
 
     expect(await screen.findByText('Bajar de peso')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver detalle de objetivos/ })).toHaveAttribute('href', '/perfil');
@@ -45,7 +47,11 @@ describe('Inicio con datos', () => {
     // Calorías registradas hoy en Comidas frente a la meta estimada con el perfil.
     await waitFor(() => expect(progreso).toHaveTextContent('1.420 / 2.556 kcal'));
     expect(within(progreso).getByRole('link', { name: 'Registrar comida' })).toHaveAttribute('href', '/comidas');
-    expect(within(progreso).getAllByText('Próximamente')).toHaveLength(2);
+    // «Pasos hoy» se quitó (SC-33) y «Agua hoy» muestra el agua registrada hoy frente a la meta (FS-HU-33).
+    expect(within(progreso).queryByText('Pasos hoy')).not.toBeInTheDocument();
+    await waitFor(() => expect(progreso).toHaveTextContent('500 / 2.000 ml'));
+    expect(within(progreso).getByRole('button', { name: 'Sumar 1 vaso de 250 ml' })).toBeInTheDocument();
+    expect(within(progreso).queryByText('Próximamente')).not.toBeInTheDocument();
 
     expect(await screen.findByRole('heading', { name: 'Matías Demo' })).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 4 reseñas' })).toBeInTheDocument();

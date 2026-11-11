@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, test, vi } from 'vitest';
+import { describe, expect, test } from 'vitest';
 import { listado, llamadasA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../tests/utilidades.jsx';
 
 const TITULO = { level: 1, name: /Tu bienestar,\s*a tu ritmo\./ };
@@ -11,21 +11,25 @@ const API_CON_SESION = {
 };
 
 describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => {
-  test('sin sesión es lo primero que se ve, presenta lo que ofrece FitSearch y no llama a la API', () => {
-    const fetch = vi.spyOn(globalThis, 'fetch');
+  test('sin sesión es lo primero que se ve, presenta lo que ofrece FitSearch y solo pide el catálogo público', async () => {
+    const fetch = simularApi({});
     renderizarApp();
 
     expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
     for (const oferta of ['Profesionales', 'Centros de salud', 'Gimnasios', 'Comidas', 'Asistente IA']) {
       expect(screen.getByRole('heading', { level: 3, name: oferta })).toBeInTheDocument();
     }
-    // El directorio, el asistente y Comidas están disponibles; centros de salud y gimnasios mantienen su aviso.
-    expect(screen.getAllByText('Próximamente')).toHaveLength(2);
+    // Las cinco herramientas están disponibles: desde FS-HU-25 también los centros de salud y los gimnasios.
+    expect(screen.queryByText('Próximamente')).not.toBeInTheDocument();
     expect(screen.queryByText('Farmacias')).not.toBeInTheDocument();
-    expect(screen.getAllByText('Disponible')).toHaveLength(3);
+    expect(screen.getAllByText('Disponible')).toHaveLength(5);
     expect(screen.getAllByRole('link', { name: /Registrarse/ }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('navigation', { name: 'Menú principal' })).not.toBeInTheDocument();
-    expect(fetch).not.toHaveBeenCalled();
+    // FS-HU-30: el buscador ofrece las especialidades activas del catálogo, que no requiere sesión.
+    expect(await screen.findByRole('option', { name: 'Psicología deportiva' })).toBeInTheDocument();
+    // En desarrollo, StrictMode repite el efecto: puede pedirlo dos veces, pero nunca otra ruta ni con sesión.
+    expect(new Set(fetch.mock.calls.map(([url]) => url))).toEqual(new Set(['/api/especialidades']));
+    expect(fetch.mock.calls.every(([, opciones]) => opciones.headers.Authorization === undefined)).toBe(true);
   });
 
 
@@ -36,6 +40,7 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
       '/api/profesionales/filtros': { especialidades: ['Nutrición'], comunas: ['Ñuñoa'] },
     });
     renderizarApp('/');
+    await screen.findByRole('option', { name: 'Nutrición' });
     await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Especialidad' }), 'Nutrición');
     await userEvent.type(screen.getByRole('textbox', { name: 'Comuna' }), '  Ñuñoa  ');
     await userEvent.click(screen.getByRole('button', { name: 'Buscar profesionales' }));
@@ -63,7 +68,8 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(destinoDe('Profesionales')).toBe('/profesionales');
     expect(destinoDe('Comidas')).toBe('/comidas');
     expect(destinoDe('Asistente IA')).toBe('/asistente');
-    expect(destinoDe('Gimnasios')).toBeUndefined();
+    expect(destinoDe('Centros de salud')).toBe('/centros-salud');
+    expect(destinoDe('Gimnasios')).toBe('/gimnasios');
 
     await userEvent.click(screen.getByRole('heading', { level: 3, name: 'Comidas' }).closest('article').querySelector('a'));
     expect(screen.getByRole('heading', { name: 'Inicia sesión' })).toBeInTheDocument();
@@ -146,6 +152,28 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
   });
 
+  test('mientras la despedida está abierta la portada de atrás queda inerte, y al cerrarla el foco vuelve al contenido', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    const { container } = renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    expect(dialogo.closest('[inert]')).toBeNull();
+    const principal = container.querySelector('main#contenido');
+    expect(principal).toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).toHaveAttribute('inert');
+    // La despedida muestra la marca de FitSearch, no la foto de una persona.
+    expect(dialogo.querySelector('img[src*="perfil-usuario"]')).toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(principal).not.toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).not.toHaveAttribute('inert');
+    expect(principal).toHaveFocus();
+  });
+
   test('la despedida también se cierra con Escape', async () => {
     localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
     simularApi(API_CON_SESION);
@@ -156,5 +184,47 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  // Revisión del PR #43: con Tab o Shift+Tab el foco no sale de la despedida; recorre sus dos acciones en círculo.
+  test('con Tab y Shift+Tab el foco se queda dentro de la despedida, en los dos sentidos', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    const volver = screen.getByRole('link', { name: 'Volver a iniciar sesión' });
+    const seguir = screen.getByRole('button', { name: 'Seguir en la portada' });
+    expect(volver).toHaveFocus();
+
+    await userEvent.tab();
+    expect(seguir).toHaveFocus();
+    await userEvent.tab();
+    expect(volver).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+    expect(seguir).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(volver).toHaveFocus();
+  });
+
+  test('si el foco quedó fuera de la despedida, Tab entra por la primera acción y Shift+Tab por la última', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+
+    document.activeElement.blur();
+    await userEvent.tab();
+    expect(screen.getByRole('link', { name: 'Volver a iniciar sesión' })).toHaveFocus();
+
+    document.activeElement.blur();
+    await userEvent.tab({ shift: true });
+    expect(screen.getByRole('button', { name: 'Seguir en la portada' })).toHaveFocus();
   });
 });

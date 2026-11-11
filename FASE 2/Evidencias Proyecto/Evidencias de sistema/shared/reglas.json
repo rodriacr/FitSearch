@@ -348,15 +348,9 @@
       "max": 100
     },
     "especialidad": {
+      "min": 2,
       "max": 100
     },
-    "especialidades": [
-      "Entrenamiento personal",
-      "Kinesiología",
-      "Medicina deportiva",
-      "Nutrición",
-      "Psicología deportiva"
-    ],
     "descripcion": {
       "max": 500
     },
@@ -494,6 +488,15 @@
     },
     "alimentosPorMensaje": 8
   },
+  "agua": {
+    "vasoMl": 250,
+    "metaDiariaMl": 2000,
+    "maxDiaMl": 10000,
+    "registro": {
+      "min": 50,
+      "max": 2000
+    }
+  },
   "resena": {
     "puntaje": {
       "min": 1,
@@ -504,5 +507,44 @@
       "max": 500
     },
     "porPagina": 5
+  },
+  "contenido": {
+    "porPagina": 12,
+    "busqueda": {
+      "max": 100
+    },
+    "alimento": {
+      "nombre": {
+        "min": 2,
+        "max": 80
+      },
+      "sinonimos": {
+        "max": 255
+      },
+      "caloriasMax": 900,
+      "macronutrienteMax": 100
+    },
+    "establecimiento": {
+      "nombre": {
+        "min": 2,
+        "max": 150
+      },
+      "comuna": {
+        "max": 80
+      },
+      "direccion": {
+        "max": 150
+      },
+      "categorias": [
+        {
+          "valor": "centro_salud",
+          "etiqueta": "Centro de salud"
+        },
+        {
+          "valor": "gimnasio",
+          "etiqueta": "Gimnasio"
+        }
+      ]
+    }
   }
 }

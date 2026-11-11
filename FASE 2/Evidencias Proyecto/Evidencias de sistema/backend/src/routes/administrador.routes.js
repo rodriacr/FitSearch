@@ -6,6 +6,8 @@ const servicio = require('../services/administrador.service');
 
 const router = Router();
 router.use(autenticar, autorizarRoles('administrador'));
+// Catálogos de especialidades, alimentos y establecimientos (FS-HU-30).
+router.use('/contenido', require('./contenido.routes'));
 const paginacion = [
   query('q').default('').isString().bail().trim().isLength({ max: 100 }),
   query('pagina').default(1).isInt({ min: 1, max: 100000 }).toInt(),
