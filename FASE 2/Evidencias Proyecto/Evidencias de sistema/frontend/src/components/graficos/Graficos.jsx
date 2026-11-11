@@ -2,8 +2,8 @@ import Icono from '../Icono.jsx';
 import { formatearNumero } from '../../services/formato.js';
 import './Graficos.css';
 
-// Piezas de gráficos compartidas por los reportes del profesional (FS-HU-28) y el dashboard y los reportes del
-// administrador (11-11-2026). Marcas finas, 2 px de aire entre partes apiladas, el texto en los colores de texto y, para
+// Piezas de gráficos del dashboard y los reportes del administrador (11-11-2026); los reportes del profesional usan su
+// propia versión (PR #50). Marcas finas, 2 px de aire entre partes apiladas, el texto en los colores de texto y, para
 // los lectores de pantalla, una tabla con los mismos datos. Los colores de las series se validaron con el verificador de
 // paletas; los que no llegan a 3:1 con el fondo van siempre con leyenda, detalle al pasar el mouse y tabla.
 

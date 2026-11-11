@@ -1,146 +1,134 @@
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import Alerta from '../../components/Alerta.jsx';
 import EstadoVacio from '../../components/EstadoVacio.jsx';
+import ErrorCarga from '../../components/profesional/ErrorCarga.jsx';
+import useConsulta from '../../components/profesional/useConsulta.js';
 import Icono from '../../components/Icono.jsx';
-import { diaCorto, diaLargo } from '../../components/agenda/semana.js';
-import { solicitar } from '../../services/api.js';
-import { iniciales } from '../../services/formato.js';
+import { SECCIONES_PROFESIONAL as SECCIONES } from '../../components/diseno/secciones.js';
+import { normalizar } from '../../services/buscadorGeneral.js';
+import { estadoCita, fechaCorta, fechaEnChile, obtenerClientes, obtenerHistorialCliente } from '../../services/actividadProfesional.service.js';
 import './Clientes.css';
 
-const ESTADO = { pendiente: 'Por confirmar', confirmada: 'Confirmada', cancelada: 'Cancelada' };
-const MODALIDAD = { presencial: 'Presencial', online: 'Online' };
-// Para buscar sin importar mayúsculas ni tildes.
-const normalizar = (texto) => texto.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const citasTexto = (n) => `${n} ${n === 1 ? 'cita' : 'citas'}`;
 
-function useDatos(ruta) {
-  const [estado, setEstado] = useState({ ruta: null });
-  const [intento, setIntento] = useState(0);
-  useEffect(() => {
-    if (!ruta) return undefined;
-    let activo = true;
-    solicitar(ruta).then((datos) => activo && setEstado({ ruta, datos })).catch((error) => activo && setEstado({ ruta, error }));
-    return () => { activo = false; };
-  }, [ruta, intento]);
-  return { ...(estado.ruta === ruta ? estado : {}), reintentar: () => setIntento((i) => i + 1) };
-}
+// Lista de clientes del profesional (FS-HU-27): quienes reservaron con él, con su próxima y última cita.
+// Solo se muestra el nombre y las citas; la información de salud de la persona no se comparte (FS-HU-19).
+export default function Clientes() {
+  const { datos, error, cargando, reintentar } = useConsulta(obtenerClientes);
+  const [busqueda, setBusqueda] = useState('');
+  const visibles = useMemo(() => {
+    const termino = normalizar(busqueda);
+    return (datos?.clientes ?? []).filter(({ nombre }) => normalizar(nombre).includes(termino));
+  }, [datos, busqueda]);
 
-function Historial({ clienteId }) {
-  const { datos, error, reintentar } = useDatos(`/profesional/clientes/${clienteId}`);
-  if (error) {
-    return (
-      <div className="clientes__vacio">
-        <Alerta>{error.estado === 404 ? 'No encontramos a este cliente entre tus reservas.' : error.message}</Alerta>
-        {error.estado !== 404 && <button type="button" className="boton boton--secundario boton--compacto" onClick={reintentar}>Reintentar</button>}
-      </div>
-    );
-  }
-  if (!datos) return <p className="texto-secundario clientes__cargando" role="status">Cargando historial…</p>;
-  const { cliente, citas } = datos;
-  const conversacion = citas.find((c) => c.estado !== 'cancelada') || citas[0];
   return (
-    <>
-      <header className="cliente__cabecera">
-        <Link to="/profesional/clientes" className="boton-icono clientes__volver" aria-label="Volver a mis clientes"><Icono nombre="flechaIzquierda" tamano={20} /></Link>
-        <span className="avatar avatar--grande" aria-hidden="true">{iniciales(cliente.nombre)}</span>
-        <div className="cliente__quien">
-          <h2>{cliente.nombre}</h2>
-          <p>{citas.length} {citas.length === 1 ? 'cita' : 'citas'} contigo · desde el {diaLargo(citas.at(-1).fecha)}</p>
+    <section className="clientes" aria-labelledby="titulo-clientes">
+      <header className="clientes__cabecera">
+        <div>
+          <h1 id="titulo-clientes">Clientes</h1>
+          <p className="texto-secundario">Personas que reservaron una hora contigo. Horarios en hora de Chile (Santiago).</p>
         </div>
-        <Link to={`/profesional/mensajes?reserva=${conversacion.reservaId}`} className="boton boton--secundario boton--compacto cliente__mensajes">
-          <Icono nombre="chat" tamano={18} /> Mensajes
-        </Link>
+        {datos?.clientes.length > 0 && (
+          <label className="clientes__buscador">
+            <span className="solo-lector">Buscar cliente por nombre</span>
+            <Icono nombre="buscar" tamano={18} />
+            <input type="search" placeholder="Buscar por nombre" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
+          </label>
+        )}
       </header>
-      <h3 className="cliente__subtitulo">Historial de citas</h3>
-      <ol className="historial">
-        {citas.map((c) => (
-          <li key={c.reservaId} className="historial__cita">
-            <div className="historial__cuando">
-              <strong>{diaCorto(c.fecha)}</strong>
-              <span className="cifra">{c.horaInicio} – {c.horaFin}</span>
-            </div>
-            <div className="historial__detalle">
-              <span className={`estado-agenda estado-agenda--${c.estado === 'cancelada' ? 'cancelada' : c.estado}`}>{ESTADO[c.estado]}</span>
-              {[MODALIDAD[c.modalidad], c.primeraVisita && 'Primera visita', c.canceladaPor && `Cancelada por ${c.canceladaPor === 'profesional' ? 'ti' : 'la persona'}`]
-                .filter(Boolean).map((dato) => <span key={dato} className="historial__dato">{dato}</span>)}
-              <p className="historial__mensaje">{c.mensaje}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </>
+
+      {cargando && !datos && <p role="status">Cargando tus clientes…</p>}
+      {error && <ErrorCarga error={error} reintentar={reintentar} />}
+      {datos && !datos.clientes.length && (
+        <EstadoVacio icono="grupo" titulo="Aún no tienes clientes" nivel={2}
+          accion={<Link to={SECCIONES.agenda.ruta} className="boton boton--principal boton--compacto">Publicar horario</Link>}>
+          Cuando alguien reserve uno de tus horarios, aparecerá aquí con su historial de citas.
+        </EstadoVacio>
+      )}
+      {datos?.clientes.length > 0 && (
+        <>
+          <p className="clientes__total" aria-live="polite">
+            {busqueda.trim() ? `${visibles.length} de ${datos.clientes.length} clientes` : `${datos.clientes.length} ${datos.clientes.length === 1 ? 'cliente' : 'clientes'}`}
+          </p>
+          {!visibles.length && <p className="texto-secundario">Ningún cliente coincide con «{busqueda.trim()}».</p>}
+          <ul className="clientes__lista">
+            {visibles.map((cliente) => (
+              <li key={cliente.id} className="cliente">
+                <span className="cliente__inicial" aria-hidden="true">{cliente.nombre.charAt(0).toUpperCase()}</span>
+                <div className="cliente__datos">
+                  <h2>{cliente.nombre}</h2>
+                  <p>{citasTexto(cliente.totalCitas)}{cliente.estados.realizadas ? ` · ${cliente.estados.realizadas} realizadas` : ''}</p>
+                  <p className="cliente__fechas">
+                    {cliente.proximaCita
+                      ? <span><strong>Próxima:</strong> {fechaCorta(cliente.proximaCita.fecha)}, {cliente.proximaCita.horaInicio}</span>
+                      : <span>Sin citas próximas</span>}
+                    {cliente.ultimaCita && <span><strong>Última:</strong> {fechaCorta(cliente.ultimaCita.fecha)}</span>}
+                  </p>
+                </div>
+                <Link to={`${SECCIONES.clientes.ruta}/${cliente.id}`} className="boton boton--secundario boton--compacto cliente__accion"
+                  aria-label={`Ver historial de ${cliente.nombre}`}>
+                  Ver historial <Icono nombre="flecha" tamano={16} />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
   );
 }
 
-// Clientes del profesional (FS-HU-27): cada persona que reservó contigo, con su última y su próxima cita, y su
-// historial. Nunca muestra su información de salud ni su correo.
-export default function Clientes() {
+// Historial de citas de un cliente con este profesional, de la más reciente a la más antigua.
+export function HistorialCliente() {
   const { id } = useParams();
-  const clienteId = /^\d+$/.test(id || '') ? Number(id) : null;
-  const { datos, error, reintentar } = useDatos('/profesional/clientes');
-  const [busqueda, setBusqueda] = useState('');
-  const filtro = normalizar(busqueda.trim());
-  const visibles = datos?.clientes.filter((c) => !filtro || normalizar(c.nombre).includes(filtro)) || [];
+  const consultar = useMemo(() => () => obtenerHistorialCliente(id), [id]);
+  const { datos, error, cargando, reintentar } = useConsulta(consultar, id);
+  const volver = (
+    <Link to={SECCIONES.clientes.ruta} className="clientes__volver"><Icono nombre="flechaIzquierda" tamano={18} /> Volver a Clientes</Link>
+  );
 
+  if (cargando) return <section className="clientes">{volver}<p role="status">Cargando el historial…</p></section>;
+  if (error) {
+    return (
+      <section className="clientes">
+        {volver}
+        {error.estado === 404
+          ? <EstadoVacio icono="grupo" titulo="No encontramos a este cliente" nivel={1}>Solo puedes ver a las personas que reservaron contigo.</EstadoVacio>
+          : <ErrorCarga error={error} reintentar={reintentar} />}
+      </section>
+    );
+  }
+
+  const { cliente, citas } = datos;
   return (
-    <div className="clientes-pagina">
-      <div className={`clientes${clienteId ? ' clientes--con-detalle' : ''}`}>
-        <section className="clientes__panel clientes__lista-panel" aria-labelledby="titulo-clientes">
-          <div className="clientes__encabezado">
-            <h1 id="titulo-clientes">Clientes</h1>
-            {datos && <p className="texto-secundario">{datos.total} {datos.total === 1 ? 'persona ha reservado' : 'personas han reservado'} contigo</p>}
-            {datos?.total > 0 && (
-              <label className="clientes__buscar">
-                <Icono nombre="buscar" tamano={18} />
-                <span className="solo-lector">Buscar un cliente por nombre</span>
-                <input type="search" placeholder="Buscar por nombre" value={busqueda} onChange={(e) => setBusqueda(e.target.value)} />
-              </label>
-            )}
-          </div>
-          {error ? (
-            <div className="clientes__vacio">
-              <Alerta>{error.message}</Alerta>
-              <button type="button" className="boton boton--secundario boton--compacto" onClick={reintentar}>Reintentar</button>
-            </div>
-          ) : !datos ? <p className="texto-secundario clientes__cargando" role="status">Cargando clientes…</p> : !datos.total ? (
-            <EstadoVacio compacto icono="grupo" titulo="Aún no tienes clientes"
-              accion={<Link to="/profesional/agenda" className="boton boton--secundario boton--compacto">Publicar horarios</Link>}>
-              Cuando alguien reserve una hora contigo, aparecerá aquí con su historial.
-            </EstadoVacio>
-          ) : !visibles.length ? (
-            <p className="clientes__sin-resultados">Nadie coincide con «{busqueda.trim()}».</p>
-          ) : (
-            <ul className="clientes__lista">
-              {visibles.map((c) => (
-                <li key={c.id}>
-                  <Link to={`/profesional/clientes/${c.id}`} className={`cliente-fila${c.id === clienteId ? ' cliente-fila--activa' : ''}`}
-                    aria-current={c.id === clienteId ? 'page' : undefined}>
-                    <span className="avatar" aria-hidden="true">{iniciales(c.nombre)}</span>
-                    <span className="cliente-fila__texto">
-                      <strong>{c.nombre}</strong>
-                      <span>
-                        {c.proximaCita ? `Próxima: ${diaCorto(c.proximaCita.fecha)}, ${c.proximaCita.horaInicio}`
-                          : c.ultimaCita ? `Última: ${diaCorto(c.ultimaCita.fecha)}` : 'Sin citas realizadas'}
-                      </span>
-                    </span>
-                    <span className="cliente-fila__total" aria-label={`${c.totalCitas} ${c.totalCitas === 1 ? 'cita' : 'citas'}`}>
-                      <strong className="cifra">{c.totalCitas}</strong><small>{c.totalCitas === 1 ? 'cita' : 'citas'}</small>
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="clientes__panel clientes__detalle" aria-label="Historial del cliente">
-          {clienteId ? <Historial key={clienteId} clienteId={clienteId} /> : (
-            <div className="clientes__elige">
-              <Icono nombre="grupo" tamano={40} />
-              <p>Elige a un cliente para ver su historial de citas contigo.</p>
-            </div>
-          )}
-        </section>
-      </div>
-    </div>
+    <section className="clientes" aria-labelledby="titulo-historial">
+      {volver}
+      <header className="historial__cabecera">
+        <span className="cliente__inicial cliente__inicial--grande" aria-hidden="true">{cliente.nombre.charAt(0).toUpperCase()}</span>
+        <div>
+          <h1 id="titulo-historial">{cliente.nombre}</h1>
+          <p className="texto-secundario">Cliente desde el {fechaCorta(fechaEnChile(cliente.primeraReserva))} · {citasTexto(cliente.totalCitas)}</p>
+        </div>
+      </header>
+      <ul className="historial__resumen" aria-label="Citas por estado">
+        <li><strong>{cliente.estados.realizadas}</strong> Realizadas</li>
+        <li><strong>{cliente.estados.confirmadas + cliente.estados.pendientes}</strong> Próximas</li>
+        <li><strong>{cliente.estados.canceladas}</strong> Canceladas</li>
+      </ul>
+      <h2 className="historial__titulo">Historial de citas</h2>
+      <ol className="historial__lista">
+        {citas.map((cita) => {
+          const { clave, nombre } = estadoCita(cita);
+          return (
+            <li key={cita.id} className="historial__cita">
+              <span className={`historial__estado historial__estado--${clave}`}>{nombre}</span>
+              <p className="historial__fecha"><strong>{fechaCorta(cita.horario.fecha)}</strong>, {cita.horario.horaInicio}–{cita.horario.horaFin}</p>
+              <p className="historial__mensaje">«{cita.mensaje}»</p>
+            </li>
+          );
+        })}
+      </ol>
+      <p className="texto-secundario historial__nota">Para confirmar o cancelar una cita próxima, entra a <Link to={SECCIONES.agenda.ruta}>Agenda</Link>.</p>
+    </section>
   );
 }

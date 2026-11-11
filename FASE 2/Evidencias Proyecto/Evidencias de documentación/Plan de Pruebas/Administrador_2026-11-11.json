@@ -35,5 +35,6 @@
     "Administrador_2026-11-11_reportes.png",
     "Administrador_2026-11-11_dashboard_celular.png",
     "Administrador_2026-11-11_verificaciones.png"
-  ]
+  ],
+  "nota": "Los reportes del profesional quedaron con la versión del PR #50 (Nicolás Silva); los gráficos de components/graficos los usa solo el administrador."
 }

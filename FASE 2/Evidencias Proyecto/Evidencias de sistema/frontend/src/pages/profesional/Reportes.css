@@ -1,63 +1,64 @@
-/* Reportes del profesional (FS-HU-28). Los gráficos usan las piezas compartidas. Marcas finas: columnas de hasta 24 px con la punta redondeada (4 px) y recta en
-   la base, 2 px de aire entre las partes apiladas, guías de 1 px y el texto siempre en los colores de texto. */
-.reportes {
-  --serie-confirmada: #1f7a52;
-  --serie-pendiente: #e07b2a;
-  --serie-cancelada: #b54a5a;
-  --serie-unica: #1565a0;
-  --guia: #e6edf3;
-  container: reportes / inline-size;
-  display: grid;
-  gap: 1.25rem;
-  width: 100%;
-  max-width: 72rem;
-  margin: 0 auto;
+/* Reportes del profesional (FS-HU-28). */
+.reportes { display: grid; gap: 1rem; max-width: 64rem; margin: 0 auto; }
+.reportes h1 { margin: 0; font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
+.reportes__cabecera { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
+.reportes__cabecera p { margin: 0.35rem 0 0; }
+.reportes__periodos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; width: 100%; }
+.reportes__periodos .boton--compacto { min-width: 0; padding-inline: 0.4rem; font-size: 0.85rem; white-space: nowrap; }
+.reportes__periodos [aria-pressed='true'] { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.reportes__contenido { display: grid; gap: 1rem; }
+.reportes__contenido[aria-busy='true'] { opacity: 0.6; transition: opacity 0.2s; }
+.reportes__nota { margin: 0.75rem 0 0; font-size: 0.85rem; }
+
+.reportes-indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.reportes-indicador {
+  display: grid; gap: 0.25rem; align-content: start; padding: 1rem; border-radius: var(--radio);
+  background: var(--color-superficie); box-shadow: var(--sombra-tarjeta);
 }
-.reportes__cabecera { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; }
-.reportes__cabecera h1 { margin: 0 0 0.25rem; font-size: 1.75rem; letter-spacing: -0.02em; }
-.reportes__cabecera p { margin: 0; }
-.reportes__periodo { width: min(100%, 22rem); }
-.reportes__estado { display: grid; justify-items: start; gap: 0.5rem; }
-.reportes__contenido { display: grid; gap: 1.25rem; transition: opacity 150ms ease; }
-.reportes__contenido--actualizando { opacity: 0.6; }
+.reportes-indicador__icono { display: grid; place-items: center; width: 2.2rem; height: 2.2rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
+.reportes-indicador__nombre { font-size: 0.82rem; color: var(--color-texto-secundario); }
+.reportes-indicador__valor { font-size: 1.6rem; color: var(--color-primario); }
+.reportes-indicador__detalle { font-size: 0.78rem; color: var(--color-texto-secundario); }
 
-/* ---------- Paneles ---------- */
-.panel-reporte {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-  min-width: 0;
-  padding: 1.1rem 1.2rem 1.25rem;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio);
+/* Colores de los estados: verde para lo realizado, azul para lo próximo, ámbar para lo no confirmado y rojo para lo cancelado. */
+.reportes-barras__tramo--realizadas { background: #1b6b46; }
+.reportes-barras__tramo--confirmadas { background: #3aa57b; }
+.reportes-barras__tramo--pendientes { background: #1c74c9; }
+.reportes-barras__tramo--sinConfirmar { background: #d39a1c; }
+.reportes-barras__tramo--canceladas { background: #c0473f; }
+
+.reportes-barras__area {
+  display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); align-items: end; gap: 0.5rem;
+  height: 12rem; margin: 0; padding: 1.25rem 0 0; list-style: none; border-bottom: 1px solid var(--color-borde);
 }
-.panel-reporte h2 { margin: 0; font-size: 1rem; color: var(--color-primario-oscuro); }
-.panel-reporte__subtitulo { margin: 0.5rem 0 0; font-size: 0.88rem; color: var(--color-primario-oscuro); }
-.panel-reporte__nota { margin: -0.6rem 0 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
-.panel-reporte__vacio { margin: 0; font-size: 0.9rem; color: var(--color-texto-secundario); }
-.reportes__grilla { display: grid; gap: 1.25rem; }
-
-.calificacion-reporte { display: flex; align-items: center; gap: 0.85rem; }
-.calificacion-reporte > strong { font-size: 2.25rem; font-weight: 600; line-height: 1; color: var(--color-primario-oscuro); }
-.calificacion-reporte > span { display: grid; gap: 0.25rem; }
-.calificacion-reporte small { font-size: 0.8rem; color: var(--color-texto-secundario); }
-
-.reportes__nota {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  margin: 0;
-  padding: 0.9rem 1rem;
-  border-radius: var(--radio);
-  font-size: 0.88rem;
-  line-height: 1.5;
-  color: var(--color-texto);
-  background: var(--color-info-fondo);
+.reportes-barras__semana { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; }
+.reportes-barras__total { font-size: 0.78rem; font-weight: 600; color: var(--color-texto-secundario); min-height: 1.1rem; }
+.reportes-barras__pila {
+  display: flex; flex-direction: column-reverse; width: min(100%, 2.6rem); overflow: hidden; border-radius: 6px 6px 0 0;
+  transition: height 0.3s var(--curva-salida);
 }
-.reportes__nota .icono { flex: none; margin-top: 0.15rem; color: var(--color-primario); }
+.reportes-barras__tramo { flex-basis: 0; min-height: 3px; }
+.reportes-barras__rotulos {
+  display: grid; grid-template-columns: repeat(var(--semanas), minmax(0, 1fr)); gap: 0.5rem;
+  margin: 0.4rem 0 0; padding: 0; list-style: none; font-size: 0.72rem; text-align: center; color: var(--color-texto-secundario);
+}
+.reportes-leyenda { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; margin: 0.9rem 0 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.reportes-leyenda li { display: inline-flex; align-items: center; gap: 0.4rem; }
+.reportes-leyenda__color { display: inline-block; width: 0.75rem; height: 0.75rem; border-radius: 3px; }
 
-/* Cifras, columnas y barras: components/graficos/Graficos.css (compartidos con el administrador desde el 11-11-2026). */
-@container reportes (min-width: 48rem) {
-  .reportes__grilla { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.reportes-estados { display: grid; gap: 0.65rem; margin: 0; padding: 0; list-style: none; }
+.reportes-estados li { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 0.3rem 0.6rem; font-size: 0.9rem; }
+.reportes-estados__barra { grid-column: 1 / -1; height: 0.45rem; overflow: hidden; border-radius: 99px; background: var(--color-superficie-suave); border: 1px solid var(--color-borde); }
+.reportes-estados__barra span { display: block; height: 100%; border-radius: 99px; }
+
+@media (min-width: 40rem) {
+  .reportes__periodos { display: flex; width: auto; }
+  .reportes__periodos .boton--compacto { padding-inline: 1rem; font-size: inherit; }
+}
+@media (min-width: 48rem) {
+  .reportes-indicadores { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .reportes-barras__area { height: 15rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reportes-barras__pila { transition: none; }
 }
