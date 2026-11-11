@@ -44,6 +44,7 @@ function TarjetaObjetivo({ objetivo }) {
 }
 
 // consumidas: calorías registradas hoy en Comidas (FS-HU-10), o null si aún no se cargan o no se pudieron cargar.
+// «Pasos hoy» se quitó (SC-33): contar pasos necesita relojes o pulseras, que quedan fuera del alcance.
 function TarjetaProgreso({ kcal, consumidas }) {
   return (
     <section className="panel-tarjeta" aria-labelledby="titulo-progreso">
@@ -60,10 +61,6 @@ function TarjetaProgreso({ kcal, consumidas }) {
             {!kcal && <Link to="/perfil" className="progreso__enlace">Completa tus datos para estimar tu meta</Link>}
             <Link to="/comidas" className="progreso__enlace">Registrar comida</Link>
           </div>
-        </li>
-        <li>
-          <span className="progreso__icono progreso__icono--pasos"><Icono nombre="pasos" tamano={22} /></span>
-          <div><span className="progreso__nombre">Pasos hoy</span><Proximamente /></div>
         </li>
         <li>
           <span className="progreso__icono progreso__icono--agua"><Icono nombre="gota" tamano={22} /></span>

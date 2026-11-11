@@ -107,7 +107,6 @@
 .progreso__enlace { font-size: 0.8rem; font-weight: 500; }
 .progreso__icono { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 50%; }
 .progreso__icono--calorias { color: var(--color-acento-oscuro); background: #fff1e6; }
-.progreso__icono--pasos { color: var(--color-exito); background: var(--color-exito-fondo); }
 .progreso__icono--agua { color: var(--color-primario-claro); background: var(--color-info-fondo); }
 .progreso__nota { margin: 0.9rem 0 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
 
