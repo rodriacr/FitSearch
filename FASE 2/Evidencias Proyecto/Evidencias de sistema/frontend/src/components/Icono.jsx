@@ -40,8 +40,14 @@ const TRAZOS = {
   chispa: <><path d="M11 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z" /><path d="M19 15v5M16.5 17.5h5" /></>,
   campana: <><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
+  // Contraer y expandir el menú lateral (11-11-2026): el panel con la flecha hacia donde se mueve.
+  contraer: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /><path d="m16 10-2 2 2 2" /></>,
+  expandir: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /><path d="m14 10 2 2-2 2" /></>,
   cerrar: <path d="M6 6l12 12M18 6 6 18" />,
   chevron: <path d="m6 9 6 6 6-6" />,
+  // Flechas de los carruseles (11-11-2026).
+  chevronIzquierda: <path d="m15 6-6 6 6 6" />,
+  chevronDerecha: <path d="m9 6 6 6-6 6" />,
   filtro: <><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1" /><circle cx="15" cy="6" r="2" /><circle cx="9" cy="12" r="2" /><circle cx="17" cy="18" r="2" /></>,
   pin: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" /><circle cx="12" cy="10" r="2.5" /></>,
   mira: <><circle cx="12" cy="12" r="7" /><circle cx="12" cy="12" r="2" /><path d="M12 2v3M12 19v3M2 12h3M19 12h3" /></>,
@@ -65,6 +71,8 @@ const TRAZOS = {
   globo: <><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3Z" /></>,
   descargar: <><path d="M12 4v11m-5-5 5 5 5-5" /><path d="M5 20h14" /></>,
   enviar: <><path d="M21 3 10 14" /><path d="m21 3-7 18-4-7-7-4Z" /></>,
+  // Instagram (11-11-2026): mismo trazo que el resto de los íconos.
+  instagram: <><rect x="3.5" y="3.5" width="17" height="17" rx="5" /><circle cx="12" cy="12" r="3.8" /><path d="M17.2 6.8h.01" strokeWidth="2.6" /></>,
   chincheta: <><path d="M9 4h6l-1 6 3 3H7l3-3Z" /><path d="M12 13v8" /></>,
   basura: <><path d="M4 7h16M10 11v6M14 11v6" /><path d="M6 7l1 13h10l1-13M9 7V4h6v3" /></>,
   capas: <><path d="m12 3 9 5-9 5-9-5Z" /><path d="m3 13 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,

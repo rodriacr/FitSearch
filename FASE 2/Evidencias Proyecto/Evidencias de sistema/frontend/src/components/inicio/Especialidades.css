@@ -14,15 +14,19 @@
 @media (hover: hover) and (pointer: fine) {
   .especialidad:hover { transform: translateY(-3px); box-shadow: 0 14px 30px rgb(8 61 88 / 10%); }
 }
+/* En el Inicio, la foto ocupa toda la tarjeta y el texto va sobre un degradado. Desde el 11-11-2026 también en celular,
+   donde las tarjetas se deslizan como carrusel: así cada una es más baja y la pantalla queda más limpia. */
+.especialidades--inicio .especialidad { min-height: 18rem; border: 0; color: #fff; }
+.especialidades--inicio .especialidad__foto { position: absolute; inset: 0; height: 100%; }
+.especialidades--inicio .especialidad__contenido { position: relative; justify-content: flex-end; padding: 6rem 1rem 1.2rem; background: linear-gradient(0deg, #062638 0%, rgb(6 38 56 / 83%) 28%, transparent 75%); }
+.especialidades--inicio .especialidad h3 { font-size: 1.05rem; }
+.especialidades--inicio .especialidad p { margin-bottom: 1rem; color: #e0edf5; font-size: 0.78rem; }
+.especialidades--inicio .especialidad__enlace { margin-top: 0; color: #fff; }
+.especialidades--inicio .especialidad__enlace .icono { color: #ff9b3d; }
 @media (min-width: 40rem) {
   .especialidades { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .especialidad__foto { height: 17rem; }
-  .especialidades--inicio .especialidad { min-height: 21rem; border: 0; color: #fff; }
-  .especialidades--inicio .especialidad__foto { position: absolute; inset: 0; height: 100%; }
-  .especialidades--inicio .especialidad__contenido { position: relative; justify-content: flex-end; padding: 6rem 1rem 1.2rem; background: linear-gradient(0deg, #062638 0%, rgb(6 38 56 / 83%) 28%, transparent 75%); }
-  .especialidades--inicio .especialidad h3 { font-size: 1.05rem; }
-  .especialidades--inicio .especialidad p { margin-bottom: 1rem; color: #e0edf5; font-size: 0.78rem; }
-  .especialidades--inicio .especialidad__enlace { margin-top: 0; color: #fff; }
-  .especialidades--inicio .especialidad__enlace .icono { color: #ff9b3d; }
+  .especialidades--inicio .especialidad { min-height: 21rem; }
+  .especialidades--inicio .especialidad__foto { height: 100%; }
 }
 @media (prefers-reduced-motion: reduce) { .especialidad { transition: none; } }

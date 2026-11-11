@@ -50,6 +50,31 @@
 .inicio .banner-asistente__icono { width: 3.8rem; height: 3.8rem; color: #ef7908; background: #ffe1bc; }
 .inicio .banner-asistente h2 { font-size: 1.25rem; color: #10273a; letter-spacing: -0.035em; }
 .inicio .banner-asistente .boton { border-radius: 999px; background: #075583; box-shadow: none; }
+
+/* Carruseles en celular (11-11-2026): accesos rápidos, especialidades y profesionales destacados se deslizan hacia la
+   derecha, encajando en cada tarjeta, y la siguiente asoma por el borde para invitar a desplazar. Llegan hasta el borde
+   de su panel (--carrusel-margen es el relleno que recorren) y la primera tarjeta queda alineada con el título. Desde
+   40rem vuelve cada grilla. Es desplazamiento nativo: no captura el gesto vertical ni cambia la navegación por teclado. */
+.inicio > * { min-width: 0; }
+/* Accesos: dos tarjetas y media a la vista en 375 px, para que la flecha quede sobre la que asoma. */
+.inicio__accesos { --carrusel-margen: 1rem; --carrusel-ancho: 8.5rem; }
+.inicio__especialidades, .inicio__destacados { --carrusel-margen: 1.2rem; --carrusel-ancho: 82%; }
+.inicio__destacados { --carrusel-ancho: 78%; }
+@media (max-width: 39.99rem) {
+  .inicio .carrusel-movil {
+    display: grid; grid-auto-flow: column; grid-template-columns: none; grid-auto-columns: var(--carrusel-ancho); gap: 0.75rem;
+    margin-inline: calc(-1 * var(--carrusel-margen)); padding: 0.25rem var(--carrusel-margen) 0.5rem;
+    overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x mandatory; scroll-padding-inline: var(--carrusel-margen);
+    scrollbar-width: thin; scrollbar-color: #c9d8e3 transparent;
+  }
+  .inicio .carrusel-movil > * { min-width: 0; scroll-snap-align: start; }
+  .inicio .accesos-rapidos .acceso-rapido { min-height: 7rem; }
+}
+/* Con el dedo no se necesita la barra de desplazamiento: la tarjeta que asoma ya indica que hay más. */
+@media (max-width: 39.99rem) and (pointer: coarse) {
+  .inicio .carrusel-movil { scrollbar-width: none; }
+  .inicio .carrusel-movil::-webkit-scrollbar { display: none; }
+}
 @media (min-width: 40rem) {
   .inicio__hero { min-height: 23rem; padding: 3rem 2.2rem; }
   .inicio__hero-texto { max-width: 62%; }

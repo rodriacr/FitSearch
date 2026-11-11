@@ -1,0 +1,25 @@
+/* Carrusel con flechas a los costados (Carrusel.jsx, 11-11-2026). La fila (lista) define cómo se desliza; aquí van el
+   contenedor y las flechas: círculos blancos sobre el borde de las tarjetas, centrados en su alto. Una flecha sin más
+   contenido hacia su lado queda deshabilitada y se oculta con un fundido. */
+.carrusel { position: relative; min-width: 0; }
+.carrusel__boton {
+  position: absolute; top: 50%; z-index: 2; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0;
+  border: 1px solid rgb(11 79 128 / 10%); border-radius: 50%; color: var(--color-primario-oscuro); background: var(--color-superficie);
+  box-shadow: 0 6px 16px rgb(6 38 63 / 18%), 0 1px 3px rgb(6 38 63 / 12%); cursor: pointer;
+  transform: translateY(-50%); transition: opacity 160ms ease, transform 160ms var(--curva-salida), background-color 150ms ease;
+}
+/* Las flechas van junto al borde por el que la fila se desliza (--carrusel-margen es lo que la fila sobresale del
+   contenido), sobre la tarjeta que asoma y no sobre la que se está leyendo. */
+.carrusel__boton--atras { left: calc(0.375rem - var(--carrusel-margen, 0px)); }
+.carrusel__boton--adelante { right: calc(0.375rem - var(--carrusel-margen, 0px)); }
+.carrusel__boton:disabled { opacity: 0; pointer-events: none; transform: translateY(-50%) scale(0.85); }
+.carrusel__boton:active { transform: translateY(-50%) scale(var(--escala-presion)); }
+@media (hover: hover) and (pointer: fine) {
+  .carrusel__boton:hover { background: var(--color-superficie-suave); }
+}
+/* Compacto (barras bajas, como las pestañas): flecha más chica con el área de toque de 44 px. */
+.carrusel--compacto .carrusel__boton { width: 2.25rem; height: 2.25rem; box-shadow: 0 3px 10px rgb(6 38 63 / 16%), 0 1px 2px rgb(6 38 63 / 10%); }
+.carrusel--compacto .carrusel__boton::before { content: ''; position: absolute; inset: -0.25rem; }
+@media (prefers-reduced-motion: reduce) {
+  .carrusel__boton:disabled { transform: translateY(-50%); }
+}

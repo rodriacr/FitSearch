@@ -1,7 +1,7 @@
 // Navegación con sesión: logo, enlace "Profesionales", menú de la cuenta, menú lateral, barra inferior y secciones próximas.
 import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 const API = {
@@ -68,6 +68,49 @@ describe('Con sesión', () => {
       expect(nombres).toEqual(['Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mi perfil', 'Favoritos', 'Mis citas', 'Mensajes', 'Abrir chat']);
     expect(within(menu).queryByText('Buscar profesionales')).not.toBeInTheDocument();
     expect(within(menu).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
+  });
+
+  // Menú compacto en escritorio (11-11-2026): solo íconos, a elección, y se recuerda en este navegador.
+  test('el menú se compacta a solo íconos, muestra el nombre al pasar el mouse y deja el chat como un ícono', async () => {
+    const { unmount } = renderizarApp('/inicio');
+    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+    expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
+    expect(menu).toHaveClass('menu-lateral--compacto');
+    expect(localStorage.getItem('fitsearch_menu_compacto')).toBe('1');
+    // Cada opción conserva su nombre para lectores de pantalla; la tarjeta del asistente queda como un acceso con ícono.
+    const profesionales = within(menu).getByRole('link', { name: 'Profesionales' });
+    expect(profesionales).toHaveAttribute('href', '/profesionales');
+    expect(within(menu).getByRole('link', { name: 'Abrir chat con el asistente IA' })).toHaveAttribute('href', '/asistente/nuevo?inicio=profesional');
+    await userEvent.hover(profesionales);
+    expect(document.querySelector('.etiqueta-flotante')).toHaveTextContent('Profesionales');
+    await userEvent.unhover(profesionales);
+    expect(document.querySelector('.etiqueta-flotante')).toBeNull();
+
+    // En la próxima visita sigue compacto hasta que se expande.
+    unmount();
+    renderizarApp('/inicio');
+    const otraVez = screen.getByRole('navigation', { name: 'Menú principal' });
+    expect(otraVez).toHaveClass('menu-lateral--compacto');
+    await userEvent.click(within(otraVez).getByRole('button', { name: 'Expandir menú' }));
+    expect(otraVez).not.toHaveClass('menu-lateral--compacto');
+    expect(localStorage.getItem('fitsearch_menu_compacto')).toBe('0');
+    expect(within(otraVez).getByText('¿Necesitas una recomendación?')).toBeInTheDocument();
+    expect(document.querySelector('.etiqueta-flotante')).toBeNull();
+  });
+
+  test('con el menú expandido no aparece el nombre flotante, y sin almacenamiento el menú igual se compacta', async () => {
+    const guardar = vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => { throw new Error('Almacenamiento bloqueado'); });
+    try {
+      renderizarApp('/inicio');
+      const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+      await userEvent.hover(within(menu).getByRole('link', { name: 'Favoritos' }));
+      expect(document.querySelector('.etiqueta-flotante')).toBeNull();
+      await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
+      expect(menu).toHaveClass('menu-lateral--compacto');
+    } finally {
+      guardar.mockRestore();
+    }
   });
 
   // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban

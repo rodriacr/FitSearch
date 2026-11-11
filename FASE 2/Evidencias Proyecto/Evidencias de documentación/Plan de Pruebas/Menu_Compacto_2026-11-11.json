@@ -1,0 +1,30 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "alcance": "Menú lateral compacto (solo íconos) en las vistas del usuario, del profesional y del administrador, a elección y solo en pantallas grandes",
+  "comportamiento": [
+    "Botón «Contraer menú» / «Expandir menú» arriba del menú lateral (escritorio: desde 64rem en la app y desde 801 px en el administrador)",
+    "Compacto: solo íconos; el nombre aparece al pasar el mouse o al enfocar cada opción, y los enlaces conservan su nombre para lectores de pantalla",
+    "Usuario: la tarjeta «¿Necesitas una recomendación?» queda como un acceso con ícono al chat del asistente",
+    "La elección se guarda en el navegador (fitsearch_menu_compacto); si el navegador no guarda datos, dura la visita",
+    "En celular y tableta el menú siempre se abre completo, aunque la preferencia sea compacta",
+    "Movimiento reducido: sin animar el ancho"
+  ],
+  "pruebasAutomatizadas": {
+    "frontendVitest": "403/403 (4 nuevas: usuario, sin almacenamiento, profesional y administrador); con los carruseles del Inicio, 404/404",
+    "lint": "sin errores",
+    "build": "correcto"
+  },
+  "revisionVisual": {
+    "herramienta": "Edge sin interfaz a 1280 y 375 px, capturas de la pantalla visible",
+    "desbordeHorizontal": 0,
+    "detectorImpeccable": "sin hallazgos",
+    "capturas": [
+      "Menu_Compacto_2026-11-11_usuario_expandido.png",
+      "Menu_Compacto_2026-11-11_usuario_compacto.png",
+      "Menu_Compacto_2026-11-11_profesional_compacto.png",
+      "Menu_Compacto_2026-11-11_administrador_compacto.png",
+      "Menu_Compacto_2026-11-11_celular_completo.png"
+    ]
+  }
+}
