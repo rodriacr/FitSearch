@@ -152,6 +152,28 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     expect(screen.getByRole('heading', TITULO)).toBeInTheDocument();
   });
 
+  test('mientras la despedida está abierta la portada de atrás queda inerte, y al cerrarla el foco vuelve al contenido', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    const { container } = renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    const dialogo = await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    expect(dialogo.closest('[inert]')).toBeNull();
+    const principal = container.querySelector('main#contenido');
+    expect(principal).toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).toHaveAttribute('inert');
+    // La despedida muestra la marca de FitSearch, no la foto de una persona.
+    expect(dialogo.querySelector('img[src*="perfil-usuario"]')).toBeNull();
+
+    await userEvent.keyboard('{Escape}');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(principal).not.toHaveAttribute('inert');
+    expect(container.querySelector('.portada__encabezado')).not.toHaveAttribute('inert');
+    expect(principal).toHaveFocus();
+  });
+
   test('la despedida también se cierra con Escape', async () => {
     localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
     simularApi(API_CON_SESION);
@@ -162,5 +184,47 @@ describe('Portada pública de FitSearch (FS-HU-20, solo para invitados)', () => 
     await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
     await userEvent.keyboard('{Escape}');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  // Revisión del PR #43: con Tab o Shift+Tab el foco no sale de la despedida; recorre sus dos acciones en círculo.
+  test('con Tab y Shift+Tab el foco se queda dentro de la despedida, en los dos sentidos', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+    const volver = screen.getByRole('link', { name: 'Volver a iniciar sesión' });
+    const seguir = screen.getByRole('button', { name: 'Seguir en la portada' });
+    expect(volver).toHaveFocus();
+
+    await userEvent.tab();
+    expect(seguir).toHaveFocus();
+    await userEvent.tab();
+    expect(volver).toHaveFocus();
+
+    await userEvent.tab({ shift: true });
+    expect(seguir).toHaveFocus();
+    await userEvent.tab({ shift: true });
+    expect(volver).toHaveFocus();
+  });
+
+  test('si el foco quedó fuera de la despedida, Tab entra por la primera acción y Shift+Tab por la última', async () => {
+    localStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+    simularApi(API_CON_SESION);
+    renderizarApp('/perfil');
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Hola, Ana: menú de tu cuenta' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
+    await screen.findByRole('dialog', { name: 'Hasta pronto, Ana' });
+
+    document.activeElement.blur();
+    await userEvent.tab();
+    expect(screen.getByRole('link', { name: 'Volver a iniciar sesión' })).toHaveFocus();
+
+    document.activeElement.blur();
+    await userEvent.tab({ shift: true });
+    expect(screen.getByRole('button', { name: 'Seguir en la portada' })).toHaveFocus();
   });
 });
