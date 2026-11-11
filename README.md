@@ -221,6 +221,22 @@ Implementada en el Sprint 3 (PR #15, #19 y #20). Estaba prevista para el Sprint 
 
 El panel autorizado incluye Dashboard, Profesionales, Verificaciones, Usuarios y Reportes; Configuración queda fuera y Contenido está planificado para el Sprint 5 (FS-HU-30). Las cuentas administrativas se preparan con `npm run admin:promover -- --correo correo-de-la-cuenta --confirmar`. Una ficha comienza en `sin_solicitud`; solo el envío explícito con documentos vigentes entra a Pendientes. Rechazo, revocación y cambio de especialidad exigen documentos y solicitud nuevos. Los PR #19 y #20 están fusionados. Se admiten diez cargas por tipo y trámite y la vigencia se determina por IDs. Detalle y evidencia: [FS-HU-12 — Verificación](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-12_Verificacion.md).
 
+### Contenido del administrador — FS-HU-30
+
+En `/admin/contenido` el administrador agrega, edita, desactiva y elimina las especialidades, los alimentos de Comidas y los establecimientos (centros de salud y gimnasios, con su comuna y su ubicación). Lo que está en uso no se elimina: la API responde 409 con el uso y la pantalla ofrece desactivarlo, para que no aparezca en elementos nuevos sin perder el historial. Las especialidades pasaron de `shared/reglas.json` a la tabla `especialidades`: las usan la ficha del profesional, el buscador de la portada y el asistente IA, siempre solo las activas, y renombrar una actualiza las fichas que la usan. Un alimento desactivado deja de aparecer al registrar comidas y en el asistente.
+
+Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261104120000_contenido_administrador` crea `especialidades` con las cinco del catálogo anterior y agrega `activo` a `alimentos` y a `establecimientos`, y `comuna` a `establecimientos`, sin borrar datos.
+
+| Método | Ruta | Autenticación | Descripción |
+|---|---|---|---|
+| GET | `/api/especialidades` | Pública | Nombres de las especialidades activas, en orden alfabético |
+| GET | `/api/administrador/contenido/:catalogo` | Bearer JWT (rol administrador) | `especialidades`, `alimentos` o `establecimientos`, con `q`, `estado` (`activos` o `inactivos`) y `pagina`; cada elemento trae `activo` y `enUso` |
+| POST | `/api/administrador/contenido/:catalogo` | Bearer JWT (rol administrador) | Agrega un elemento (201); 409 si ya existe uno con ese nombre |
+| PUT | `/api/administrador/contenido/:catalogo/:id` | Bearer JWT (rol administrador) | Edita un elemento; renombrar una especialidad actualiza las fichas que la usan |
+| PATCH | `/api/administrador/contenido/:catalogo/:id/estado` | Bearer JWT (rol administrador) | Activa o desactiva el elemento con `activo` (`true` o `false`) |
+| DELETE | `/api/administrador/contenido/:catalogo/:id` | Bearer JWT (rol administrador) | Elimina un elemento sin uso (204); 409 con `detalles.enUso` si está en uso |
+| GET | `/api/administrador/contenido/establecimientos/ubicacion` | Bearer JWT (rol administrador) | Busca la ubicación de un establecimiento con `comuna` y `direccion` (Nominatim, igual que la ficha del profesional) |
+
 ### Disponibilidad, reservas y mapa — FS-HU-13, FS-HU-14 y FS-HU-06
 
 El profesional publica bloques en Mi agenda; el usuario reserva desde la ficha con un mensaje de 10 a 500 caracteres. El profesional confirma y cualquiera de los participantes cancela. Se conserva el historial. La API protege la propiedad y una transacción impide dos reservas activas simultáneas para el mismo bloque. Además, cada usuario puede tener como máximo una reserva activa (pendiente o confirmada) de un horario futuro con cada profesional; si no, la API responde 409 con `detalles.motivo = limite_por_profesional` (decisión del PO del 12-10-2026). Las fechas y horas se interpretan en `America/Santiago`.
@@ -237,7 +253,7 @@ La usuaria o el usuario conversa en `/asistente` con un asistente de orientació
 
 El proveedor es Groq, con plan gratuito y una API compatible con OpenAI (DAS 1.25, D33, SC-25). El backend usa un cliente genérico, así que otro proveedor compatible se configura solo con `IA_URL_BASE`, `IA_MODELO` e `IA_API_KEY`. Al proveedor solo viajan las instrucciones del asistente y los últimos 10 mensajes de la conversación: nunca el perfil ni la información de salud. Sin `IA_API_KEY` el asistente responde en modo de prueba.
 
-Cuando corresponde, el asistente recomienda uno de los tipos de profesional del catálogo (`shared/reglas.json`): el modelo lo marca en una línea final, el backend lo valida, lo quita del texto y lo guarda en `mensajes.especialidad`, y la pantalla muestra una tarjeta «Ver …» que abre `/profesionales` filtrado por esa especialidad (FS-HU-08, DAS D34). El banner «¿Necesitas una recomendación?» del menú abre un chat nuevo con la pregunta ya escrita (`/asistente/nuevo?inicio=profesional`).
+Cuando corresponde, el asistente recomienda una de las especialidades activas del catálogo que administra el administrador (FS-HU-30): el modelo lo marca en una línea final, el backend lo valida, lo quita del texto y lo guarda en `mensajes.especialidad`, y la pantalla muestra una tarjeta «Ver …» que abre `/profesionales` filtrado por esa especialidad (FS-HU-08, DAS D34). El banner «¿Necesitas una recomendación?» del menú abre un chat nuevo con la pregunta ya escrita (`/asistente/nuevo?inicio=profesional`).
 
 Antes de iniciar el backend, ejecutar `npm run db:generate` y `npm run db:migrate`: la migración `20261021120000_asistente_ia` agrega `conversaciones`, `mensajes` y `uso_asistente` sin borrar datos existentes, y `20261022120000_recomendacion_profesional` agrega la columna `mensajes.especialidad`.
 
@@ -290,7 +306,7 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
-Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`.
+Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
 ## Convenciones de trabajo
 

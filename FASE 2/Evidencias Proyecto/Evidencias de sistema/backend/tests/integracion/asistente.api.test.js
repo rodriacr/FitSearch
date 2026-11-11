@@ -222,8 +222,8 @@ describe('límite diario con solicitudes simultáneas', () => {
 
 // FS-HU-09: en modo de prueba, «agrega 100 g de pollo…» se reconoce sin proveedor y registra los alimentos de hoy.
 describe('agregar alimentos desde el chat', () => {
-  const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6' };
-  const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3' };
+  const POLLO = { id: 1, nombre: 'Pechuga de pollo cocida', sinonimos: 'pollo', calorias: '165.0', proteinasG: '31.0', carbohidratosG: '0.0', grasasG: '3.6', activo: true };
+  const ARROZ = { id: 17, nombre: 'Arroz blanco cocido', sinonimos: 'arroz', calorias: '130.0', proteinasG: '2.7', carbohidratosG: '28.2', grasasG: '0.3', activo: true };
   beforeEach(() => {
     comidaModel.buscarAlimentos.mockImplementation(async ([palabra]) => ({ pollo: [POLLO], arroz: [ARROZ] }[palabra] ?? []));
     let id = 40;
