@@ -18,6 +18,10 @@ export const fechaCorta = (fecha) =>
   new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
     .format(new Date(`${fecha}T12:00:00Z`)).replace('.', '');
 
+// Día en Chile ("AAAA-MM-DD") de un instante ISO, por ejemplo la fecha de una reserva.
+export const fechaEnChile = (iso) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date(iso));
+
 // "9 nov" para el eje de las semanas.
 export const diaYMes = (fecha) =>
   new Intl.DateTimeFormat('es-CL', { day: 'numeric', month: 'short', timeZone: 'UTC' })

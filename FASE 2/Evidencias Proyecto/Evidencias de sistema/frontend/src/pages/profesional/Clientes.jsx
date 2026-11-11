@@ -6,7 +6,7 @@ import useConsulta from '../../components/profesional/useConsulta.js';
 import Icono from '../../components/Icono.jsx';
 import { SECCIONES_PROFESIONAL as SECCIONES } from '../../components/diseno/secciones.js';
 import { normalizar } from '../../services/buscadorGeneral.js';
-import { estadoCita, fechaCorta, obtenerClientes, obtenerHistorialCliente } from '../../services/actividadProfesional.service.js';
+import { estadoCita, fechaCorta, fechaEnChile, obtenerClientes, obtenerHistorialCliente } from '../../services/actividadProfesional.service.js';
 import './Clientes.css';
 
 const citasTexto = (n) => `${n} ${n === 1 ? 'cita' : 'citas'}`;
@@ -107,7 +107,7 @@ export function HistorialCliente() {
         <span className="cliente__inicial cliente__inicial--grande" aria-hidden="true">{cliente.nombre.charAt(0).toUpperCase()}</span>
         <div>
           <h1 id="titulo-historial">{cliente.nombre}</h1>
-          <p className="texto-secundario">Cliente desde el {fechaCorta(cliente.primeraReserva.slice(0, 10))} · {citasTexto(cliente.totalCitas)}</p>
+          <p className="texto-secundario">Cliente desde el {fechaCorta(fechaEnChile(cliente.primeraReserva))} · {citasTexto(cliente.totalCitas)}</p>
         </div>
       </header>
       <ul className="historial__resumen" aria-label="Citas por estado">

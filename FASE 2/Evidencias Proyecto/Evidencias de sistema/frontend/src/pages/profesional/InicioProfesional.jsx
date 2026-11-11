@@ -36,9 +36,12 @@ function TarjetaClima({ clima }) {
   );
 }
 
-// Tareas que el profesional puede resolver desde su espacio.
-function tareasDe(ficha, tieneHorarios) {
+// Tareas que el profesional puede resolver desde su espacio. Las citas por confirmar vienen del resumen semanal (FS-HU-28).
+function tareasDe(ficha, tieneHorarios, porConfirmar) {
   const tareas = [];
+  if (porConfirmar > 0) {
+    tareas.push({ icono: 'calendario', titulo: `Tienes ${porConfirmar} ${porConfirmar === 1 ? 'cita' : 'citas'} por confirmar`, detalle: 'Confírmalas o cancélalas en tu agenda.', a: SECCIONES.agenda.ruta, accion: 'Revisar' });
+  }
   if (!ficha) {
     tareas.push({ icono: 'medico', titulo: 'Completa tu ficha profesional', detalle: 'Sin ficha no apareces en el buscador de FitSearch.', a: SECCIONES.perfil.ruta, accion: 'Completar' });
   } else if (!ficha.descripcion) {
@@ -105,7 +108,7 @@ export default function InicioProfesional() {
     return () => { activo = false; };
   }, []);
 
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios);
+  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, resumen?.citasPendientes);
 
   return (
     <div className="inicio-prof">
@@ -125,6 +128,7 @@ export default function InicioProfesional() {
           {ficha.cargando ? <p className="texto-secundario" role="status">Cargando tus tareas…</p> : (
             <ul className="tareas">
               {ficha.error && <li className="texto-secundario">No pudimos revisar tu ficha. Intenta nuevamente más tarde.</li>}
+              {!ficha.error && !tareas.length && <li className="texto-secundario">Estás al día: no tienes tareas pendientes.</li>}
               {tareas.map(({ icono, titulo, detalle, a, accion, proximamente }) => (
                 <li key={titulo} className="tarea">
                   <span className="tarea__icono"><Icono nombre={icono} tamano={20} /></span>

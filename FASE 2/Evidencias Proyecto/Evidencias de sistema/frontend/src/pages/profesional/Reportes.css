@@ -3,8 +3,8 @@
 .reportes h1 { margin: 0; font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
 .reportes__cabecera { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
 .reportes__cabecera p { margin: 0.35rem 0 0; }
-.reportes__periodos { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.reportes__periodos .boton--compacto { min-width: 0; }
+.reportes__periodos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; width: 100%; }
+.reportes__periodos .boton--compacto { min-width: 0; padding-inline: 0.4rem; font-size: 0.85rem; white-space: nowrap; }
 .reportes__periodos [aria-pressed='true'] { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
 .reportes__contenido { display: grid; gap: 1rem; }
 .reportes__contenido[aria-busy='true'] { opacity: 0.6; transition: opacity 0.2s; }
@@ -51,6 +51,10 @@
 .reportes-estados__barra { grid-column: 1 / -1; height: 0.45rem; overflow: hidden; border-radius: 99px; background: var(--color-superficie-suave); border: 1px solid var(--color-borde); }
 .reportes-estados__barra span { display: block; height: 100%; border-radius: 99px; }
 
+@media (min-width: 40rem) {
+  .reportes__periodos { display: flex; width: auto; }
+  .reportes__periodos .boton--compacto { padding-inline: 1rem; font-size: inherit; }
+}
 @media (min-width: 48rem) {
   .reportes-indicadores { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .reportes-barras__area { height: 15rem; }

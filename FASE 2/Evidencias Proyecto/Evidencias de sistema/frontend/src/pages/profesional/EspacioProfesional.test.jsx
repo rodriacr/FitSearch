@@ -100,6 +100,15 @@ describe('Inicio del profesional', () => {
     expect(await within(resumen).findByText('12')).toBeInTheDocument();
     expect([valor('Total de clientes'), valor('Citas realizadas'), valor('Citas por confirmar'), valor('Clientes nuevos')]).toEqual(['12', '3', '2', '1']);
     expect(within(resumen).getByText(/Semana del 9 nov al 15 nov/)).toBeInTheDocument();
+    // Las citas por confirmar también aparecen como tarea, con acceso a la agenda.
+    const tarea = screen.getByText('Tienes 2 citas por confirmar').closest('li');
+    expect(within(tarea).getByRole('link', { name: /Revisar/ })).toHaveAttribute('href', '/profesional/agenda');
+  });
+
+  test('sin tareas pendientes lo dice en vez de dejar el panel vacío', async () => {
+    simularApi({ '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] } });
+    renderizarApp('/profesional/inicio');
+    expect(await screen.findByText('Estás al día: no tienes tareas pendientes.')).toBeInTheDocument();
   });
 
   test('si el clima no está disponible, el Inicio funciona igual sin esa tarjeta', async () => {
