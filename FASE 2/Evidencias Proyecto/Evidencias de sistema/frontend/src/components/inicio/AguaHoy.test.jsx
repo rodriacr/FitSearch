@@ -133,7 +133,9 @@ describe('Agua hoy al pasar la medianoche', () => {
     expect(screen.getByRole('button', { name: 'Deshacer la última suma de 750 ml' })).toBeInTheDocument();
 
     await vi.advanceTimersByTimeAsync(61000);
-    await waitFor(() => expect(valor()).toHaveTextContent('0 / 2.000 ml'));
+    // Texto exacto: «750 / 2.000 ml» también contiene «0 / 2.000 ml», y con la suite completa la prueba seguía antes
+    // de que llegara el día nuevo.
+    await waitFor(() => expect(valor()).toHaveTextContent(/^0 \/ 2\.000 ml$/));
     expect(screen.queryByRole('button', { name: /Deshacer/ })).not.toBeInTheDocument();
     expect(llamadasA(fetch, '/api/agua').filter(([, o]) => (o?.method ?? 'GET') === 'GET')).toHaveLength(2);
   });
