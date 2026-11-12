@@ -27,7 +27,8 @@
     "db:seed:profesionales": "node prisma/seed-profesionales.js",
     "db:reset": "prisma migrate reset",
     "admin:promover": "node prisma/promover-administrador.js",
-    "smtp:comprobar": "node scripts/comprobar-smtp.js"
+    "smtp:comprobar": "node scripts/comprobar-smtp.js",
+    "smtp:plantillas": "node scripts/enviar-plantillas-prueba.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
