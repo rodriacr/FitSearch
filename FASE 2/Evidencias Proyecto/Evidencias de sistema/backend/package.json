@@ -11,10 +11,12 @@
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "test": "jest",
+    "test:mysql:acceso": "node scripts/probar-acceso-mysql.js",
     "test:mysql:agua": "node scripts/probar-agua-mysql.js",
     "test:mysql:agenda": "node scripts/probar-agenda-mysql.js",
     "test:mysql:asistente": "node scripts/probar-asistente-mysql.js",
     "test:mysql:mejoras": "node scripts/probar-mejoras-mysql.js",
+    "test:mysql:plan": "node scripts/probar-plan-alimentacion-mysql.js",
     "test:mysql:comidas": "node scripts/probar-comidas-asistente-mysql.js",
     "test:mysql:especialidades": "node scripts/probar-especialidades-mysql.js",
     "lint": "eslint .",
@@ -25,7 +27,8 @@
     "db:seed:profesionales": "node prisma/seed-profesionales.js",
     "db:reset": "prisma migrate reset",
     "admin:promover": "node prisma/promover-administrador.js",
-    "smtp:comprobar": "node scripts/comprobar-smtp.js"
+    "smtp:comprobar": "node scripts/comprobar-smtp.js",
+    "smtp:plantillas": "node scripts/enviar-plantillas-prueba.js"
   },
   "prisma": {
     "seed": "node prisma/seed.js"

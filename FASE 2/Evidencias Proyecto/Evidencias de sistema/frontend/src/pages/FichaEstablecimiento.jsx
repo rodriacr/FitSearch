@@ -4,7 +4,7 @@ import Alerta from '../components/Alerta.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import MapaProfesionales from '../components/profesionales/MapaProfesionales.jsx';
-import { CATEGORIAS, direccionCompleta } from '../components/establecimientos/categorias.js';
+import { CATEGORIAS, direccionCompleta, enlaceInstagram } from '../components/establecimientos/categorias.js';
 import { obtenerEstablecimiento } from '../services/establecimiento.service.js';
 import { iniciales } from '../services/formato.js';
 import './Profesionales.css';
@@ -70,6 +70,13 @@ export default function FichaEstablecimiento({ categoria }) {
           <span className="ficha-establecimiento__categoria">{datos.etiqueta}</span>
           <h1 id="titulo-establecimiento">{nombre}</h1>
           <p className="ficha-establecimiento__direccion"><Icono nombre="pin" tamano={18} /> {direccionCompleta(establecimiento)}</p>
+          {establecimiento.instagram && (
+            <p className="ficha-establecimiento__direccion">
+              <Icono nombre="instagram" tamano={18} />
+              <a href={enlaceInstagram(establecimiento.instagram)} target="_blank" rel="noopener noreferrer"
+                aria-label={`Instagram de ${nombre}: @${establecimiento.instagram} (se abre en otra pestaña)`}>@{establecimiento.instagram}</a>
+            </p>
+          )}
         </div>
       </header>
 

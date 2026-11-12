@@ -1,0 +1,63 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "alcance": "Dejar funcionando el envío real de correos de FitSearch con la cuenta del proyecto: recuperación de contraseña y avisos de la agenda",
+  "configuracion": {
+    "servidor": "smtp.gmail.com, puerto 465 (SSL)",
+    "cuenta": "fitsearchoficial@gmail.com",
+    "remitente": "FitSearch <fitsearchoficial@gmail.com>",
+    "contrasena": "Contraseña de aplicación de Google (16 caracteres, cuenta con verificación en dos pasos) en backend/.env, que git ignora. No se publica en ningún archivo del repositorio"
+  },
+  "cambios": [
+    "La contraseña de aplicación se acepta con o sin los espacios con que la muestra Google; sin SMTP_REMITENTE, los correos salen como «FitSearch <cuenta>»",
+    "Tiempo límite de conexión y envío: si Gmail no responde, el envío falla en segundos en vez de quedar esperando",
+    "Plantilla única para todos los correos, rediseñada el 11-11-2026 según la referencia del PO: encabezado con el logo y el lema, ícono grande según el aviso, «¡Hola, nombre!», panel con el detalle (fecha, horario, modalidad, tipo de atención y estado con color), «¿Qué debes hacer?», botón naranjo con ícono, enlace escrito por si el botón no se ve, nota, despedida con la firma y aviso de mensaje automático; más versión de solo texto. Asuntos con el formato «FitSearch | …». Hecha con tablas y estilos en línea; 20 imágenes PNG (113 KB en total) en backend/src/recursos/correo, adjuntas dentro del correo (cid) porque la app no tiene dirección pública. Botón #e0600b con texto blanco de 19 px en negrita (texto grande, contraste 3,6:1). Todo lo escrito por personas se escapa en el HTML",
+    "npm run smtp:plantillas: arma una muestra de cada correo con el código real de los avisos y datos de ejemplo; --guardar <carpeta> los escribe como HTML y --destinatario <correo> --enviar los envía con «[Muestra]» en el asunto",
+    ".env.example y README con la cuenta del proyecto y los pasos"
+  ],
+  "resultados": {
+    "smtpComprobar": "Conexión y autenticación SMTP comprobadas (npm run smtp:comprobar)",
+    "muestrasEnviadas": {
+      "destinatario": "fitsearchoficial@gmail.com",
+      "aceptadasPorGmail": [
+        "Restablece tu contraseña de FitSearch",
+        "Tienes una solicitud de reserva",
+        "Tienes una reserva nueva",
+        "Tu cita fue confirmada",
+        "Tu cita fue cancelada",
+        "Una reserva fue cancelada",
+        "Daniela Soto tiene horas disponibles",
+        "Recordatorio de tu cita"
+      ],
+      "nota": "Datos de ejemplo; el enlace de recuperación de la muestra no sirve para cambiar ninguna contraseña",
+      "diseno": "Primer envío con la plantilla simple; el PO confirmó que llegaron al buzón y pidió el diseño nuevo"
+    },
+    "backend": "Reiniciado con la configuración nueva: ya no muestra el aviso «[correo] Sin configurar» al arrancar",
+    "revisionVisual": "Diseño nuevo revisado en escritorio (700 px) y celular (375 px), sin desborde: Correo_Plantillas_2026-11-11_aviso.png, _recuperacion.png y _celular.png",
+    "mysqlAvisos": "npm run test:mysql:mejoras 86/86 (avisos, lista de espera y recordatorios con la consulta nueva)",
+    "muestrasDisenoNuevo": {
+      "destinatario": "fitsearchoficial@gmail.com",
+      "aceptadasPorGmail": [
+        "FitSearch | Restablece tu contraseña",
+        "FitSearch | Nueva solicitud de reserva",
+        "FitSearch | Nueva reserva confirmada",
+        "FitSearch | Tu cita fue confirmada",
+        "FitSearch | Tu cita fue cancelada",
+        "FitSearch | Una reserva fue cancelada",
+        "FitSearch | Daniela Soto tiene horas disponibles",
+        "FitSearch | Recordatorio de tu cita"
+      ],
+      "nota": "Enviadas con «[Muestra]» en el asunto y datos de ejemplo, con el diseño nuevo y sus imágenes adjuntas",
+      "revisionPO": "El PO revisó las muestras en Gmail y confirmó que se ven bien (11-11-2026)"
+    }
+  },
+  "pruebasAutomatizadas": {
+    "backendJest": "563/563 (14 nuevas: correo.service, enviar-plantillas-prueba y la reserva confirmada automáticamente)",
+    "lint": "sin errores",
+    "mysqlAcceso": "npm run test:mysql:acceso 33/33 (correo simulado)"
+  },
+  "pendiente": [
+    "Al publicar la app (Docker, FS-HU-11), FRONTEND_URL debe ser la dirección pública: con ella se arman los enlaces de los correos",
+    "Gmail permite unos 500 destinatarios por día por cuenta"
+  ]
+}

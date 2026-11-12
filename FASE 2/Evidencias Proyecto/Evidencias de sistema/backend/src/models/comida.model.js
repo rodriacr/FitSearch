@@ -49,10 +49,19 @@ function totalesPorDia(usuarioId, desde, hasta) {
   });
 }
 
+// Calorías de cada momento del día (desayuno, almuerzo…) entre dos fechas, para las estadísticas (11-11-2026).
+function caloriasPorMomento(usuarioId, desde, hasta) {
+  return prisma.registroComida.groupBy({
+    by: ['momento'],
+    where: { usuarioId, fecha: { gte: comoDia(desde), lte: comoDia(hasta) } },
+    _sum: { calorias: true },
+  });
+}
+
 // `db` es la transacción en curso, si la hay (alimentos agregados desde el chat).
 const crear = ({ fecha, ...datos }, db = prisma) => db.registroComida.create({ data: { ...datos, fecha: comoDia(fecha) }, select: REGISTRO });
 const obtener = (id, usuarioId) => prisma.registroComida.findFirst({ where: { id, usuarioId }, select: REGISTRO });
 const actualizar = (id, datos) => prisma.registroComida.update({ where: { id }, data: datos, select: REGISTRO });
 const eliminar = (id, usuarioId) => prisma.registroComida.deleteMany({ where: { id, usuarioId } });
 
-module.exports = { buscarAlimentos, obtenerAlimento, delDia, caloriasPorDia, totalesPorDia, crear, obtener, actualizar, eliminar };
+module.exports = { buscarAlimentos, obtenerAlimento, delDia, caloriasPorDia, totalesPorDia, caloriasPorMomento, crear, obtener, actualizar, eliminar };

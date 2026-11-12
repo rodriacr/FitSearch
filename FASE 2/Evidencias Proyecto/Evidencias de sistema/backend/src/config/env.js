@@ -31,8 +31,10 @@ module.exports = {
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     puerto: Number(process.env.SMTP_PORT) || 465,
-    usuario: process.env.SMTP_USUARIO || '',
-    contrasena: process.env.SMTP_CONTRASENA || '',
-    remitente: process.env.SMTP_REMITENTE || process.env.SMTP_USUARIO || '',
+    usuario: (process.env.SMTP_USUARIO || '').trim(),
+    // Gmail muestra la contraseña de aplicación en grupos de cuatro letras: se acepta con o sin los espacios.
+    contrasena: (process.env.SMTP_CONTRASENA || '').replace(/\s+/g, ''),
+    // Sin SMTP_REMITENTE, los correos salen como «FitSearch <cuenta>».
+    remitente: process.env.SMTP_REMITENTE || (process.env.SMTP_USUARIO ? `FitSearch <${process.env.SMTP_USUARIO.trim()}>` : ''),
   },
 };

@@ -8,29 +8,35 @@ import useDesplegable from './useDesplegable.js';
 const CADA_SEGUNDOS = 60;
 
 // Campana del encabezado. Desde FS-HU-31 avisa los mensajes sin leer de los chats: se consulta al cargar, al cambiar
-// de pantalla y cada minuto (si la pestaña está a la vista).
+// de pantalla y cada minuto (si la pestaña está a la vista). Al administrador le avisa las verificaciones pendientes
+// (11-11-2026).
 export default function Notificaciones() {
   const { abierto, setAbierto, contenedor, boton } = useDesplegable();
   const { sesion } = useSesion();
   const { pathname } = useLocation();
   const rol = sesion?.usuario.rol;
-  const conMensajes = rol === 'usuario' || rol === 'profesional';
+  const administrador = rol === 'administrador';
+  const conMensajes = rol === 'usuario' || rol === 'profesional' || administrador;
   const [noLeidos, setNoLeidos] = useState(0);
 
   useEffect(() => {
     if (!conMensajes) return undefined;
     let activo = true;
-    const consultar = () => solicitar('/chats/no-leidos').then(({ total }) => activo && setNoLeidos(total)).catch(() => {});
+    const consultar = () => (administrador
+      ? solicitar('/administrador/alertas').then(({ verificacionesPendientes }) => activo && setNoLeidos(verificacionesPendientes))
+      : solicitar('/chats/no-leidos').then(({ total }) => activo && setNoLeidos(total))).catch(() => {});
     consultar();
     const temporizador = setInterval(() => { if (document.visibilityState !== 'hidden') consultar(); }, CADA_SEGUNDOS * 1000);
     return () => { activo = false; clearInterval(temporizador); };
-  }, [conMensajes, pathname]);
+  }, [conMensajes, administrador, pathname]);
 
   const rutaMensajes = rol === 'profesional' ? '/profesional/mensajes' : '/mensajes';
   return (
     <div className="desplegable" ref={contenedor}>
       <button ref={boton} type="button" className="boton-icono notificaciones__boton" aria-expanded={abierto} aria-controls="panel-notificaciones"
-        aria-label={noLeidos ? `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}` : 'Notificaciones'}
+        aria-label={!noLeidos ? 'Notificaciones' : administrador
+          ? `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'verificación pendiente' : 'verificaciones pendientes'}`
+          : `Notificaciones: ${noLeidos} ${noLeidos === 1 ? 'mensaje sin leer' : 'mensajes sin leer'}`}
         onClick={() => setAbierto(!abierto)}>
         <Icono nombre="campana" tamano={22} />
         {noLeidos > 0 && <span className="notificaciones__contador" aria-hidden="true">{noLeidos > 9 ? '9+' : noLeidos}</span>}
@@ -38,7 +44,16 @@ export default function Notificaciones() {
       {abierto && (
         <div id="panel-notificaciones" className="desplegable__panel notificaciones__panel">
           <p className="notificaciones__titulo">Notificaciones</p>
-          {noLeidos > 0 ? (
+          {noLeidos > 0 && administrador ? (
+            <Link to="/admin/verificaciones" className="notificaciones__aviso" onClick={() => setAbierto(false)}>
+              <span className="notificaciones__aviso-icono"><Icono nombre="escudo" tamano={20} /></span>
+              <span>
+                <strong>{noLeidos} {noLeidos === 1 ? 'verificación pendiente' : 'verificaciones pendientes'}</strong>
+                Profesionales que esperan la revisión de sus documentos.
+              </span>
+              <Icono nombre="flecha" tamano={16} />
+            </Link>
+          ) : noLeidos > 0 ? (
             <Link to={rutaMensajes} className="notificaciones__aviso" onClick={() => setAbierto(false)}>
               <span className="notificaciones__aviso-icono"><Icono nombre="chat" tamano={20} /></span>
               <span>

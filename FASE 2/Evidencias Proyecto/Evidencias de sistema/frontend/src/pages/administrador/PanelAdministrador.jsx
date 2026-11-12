@@ -1,88 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useParams } from 'react-router-dom';
-import { Logo } from '../../components/PantallaAcceso.jsx';
+import { Link, Outlet, useParams } from 'react-router-dom';
 import Icono from '../../components/Icono.jsx';
-import { useSesion } from '../../context/SesionContext.jsx';
 import { solicitar } from '../../services/api.js';
+import { iniciales } from '../../services/formato.js';
 import { Documentos } from '../../components/profesional/Certificaciones.jsx';
 import './PanelAdministrador.css';
 
-const secciones = [
-  ['dashboard', 'Dashboard', 'casa'],
-  ['profesionales', 'Profesionales', 'profesional'],
-  ['verificaciones', 'Verificaciones', 'escudo'],
-  ['usuarios', 'Usuarios', 'grupo'],
-  ['reportes', 'Reportes', 'grafico'],
-  // Catálogos de especialidades, alimentos y establecimientos (FS-HU-30).
-  ['contenido', 'Contenido', 'capas'],
-];
-
-export function DisenoAdministrador() {
-  const { sesion, cerrarSesion } = useSesion();
-  const [abierto, setAbierto] = useState(false);
-  useEffect(() => {
-    if (!abierto) return undefined;
-    const cerrar = (e) => {
-      if (e.key === 'Escape') setAbierto(false);
-    };
-    document.addEventListener('keydown', cerrar);
-    return () => document.removeEventListener('keydown', cerrar);
-  }, [abierto]);
+// Lienzo de las pantallas del administrador (11-11-2026): el encabezado, el menú lateral y la barra inferior son los
+// mismos de la app (DisenoAplicacion con el espacio «administrador»); aquí solo se aplican los estilos de sus páginas.
+export function LienzoAdministrador() {
   return (
     <div className="admin">
-      <a className="app__saltar" href="#contenido">
-        Saltar al contenido
-      </a>
-      <header className="admin__cabecera">
-        <Link to="/admin/dashboard" aria-label="FitSearch, ir al dashboard">
-          <Logo />
-        </Link>
-        <button
-          type="button"
-          aria-label={abierto ? 'Cerrar menú' : 'Abrir menú'}
-          aria-expanded={abierto}
-          aria-controls="menu-admin"
-          onClick={() => setAbierto(!abierto)}
-        >
-          <Icono nombre={abierto ? 'cerrar' : 'menu'} />
-        </button>
-      </header>
-      {abierto && (
-        <button
-          className="admin__fondo"
-          aria-label="Cerrar menú lateral"
-          onClick={() => setAbierto(false)}
-        />
-      )}
-      <aside
-        id="menu-admin"
-        className={`admin__menu${abierto ? ' admin__menu--abierto' : ''}`}
-      >
-        <p className="admin__identidad">
-          <strong>Administrador</strong>
-          <span>{sesion.usuario.nombre}</span>
-          <small>{sesion.usuario.correo}</small>
-        </p>
-        <nav aria-label="Menú administrativo">
-          {secciones.map(([ruta, nombre, icono]) => (
-            <NavLink
-              key={ruta}
-              to={`/admin/${ruta}`}
-              onClick={() => setAbierto(false)}
-            >
-              <Icono nombre={icono} />
-              {nombre}
-            </NavLink>
-          ))}
-        </nav>
-        <button type="button" className="admin__salir" onClick={cerrarSesion}>
-          <Icono nombre="salir" />
-          Cerrar sesión
-        </button>
-      </aside>
-      <main id="contenido" className="admin__contenido" tabIndex={-1}>
-        <Outlet />
-      </main>
+      <Outlet />
     </div>
   );
 }
@@ -120,192 +49,6 @@ function EstadoCarga({ datos, error }) {
 }
 const numero = (n) => Number(n).toLocaleString('es-CL');
 
-function GraficoRegistros({ datos }) {
-  const fechas = [];
-  for (
-    let fecha = Date.parse(datos.desde);
-    fecha <= Date.parse(datos.hasta);
-    fecha += 86400000
-  )
-    fechas.push(new Date(fecha).toISOString().slice(0, 10));
-  const valores = fechas.map((fecha) => ({
-    fecha,
-    usuarios: datos.registros
-      .filter((r) => r.fecha === fecha)
-      .reduce((suma, r) => suma + r.cantidad, 0),
-    profesionales: datos.registros
-      .filter((r) => r.fecha === fecha && r.rol === 'profesional')
-      .reduce((suma, r) => suma + r.cantidad, 0),
-  }));
-  const maximo = Math.max(1, ...valores.map((v) => v.usuarios));
-  const puntos = (clave) =>
-    valores
-      .map(
-        (v, i) =>
-          `${45 + (i * 600) / Math.max(1, valores.length - 1)},${215 - (v[clave] * 180) / maximo}`,
-      )
-      .join(' ');
-  return (
-    <div className="admin__grafico">
-      <p>
-        <span className="admin__leyenda">Todos los registros</span>
-        <span className="admin__leyenda admin__leyenda--profesionales">
-          Cuentas profesionales
-        </span>
-      </p>
-      <svg
-        viewBox="0 0 680 255"
-        role="img"
-        aria-label={`Registros diarios entre ${datos.desde} y ${datos.hasta}. Los valores se detallan en la tabla.`}
-      >
-        {[0, 0.5, 1].map((fraccion) => (
-          <g key={fraccion}>
-            <line
-              x1="45"
-              x2="645"
-              y1={215 - fraccion * 180}
-              y2={215 - fraccion * 180}
-              stroke="#dceaf0"
-            />
-            <text x="4" y={219 - fraccion * 180}>
-              {Math.round(maximo * fraccion)}
-            </text>
-          </g>
-        ))}
-        <polyline
-          points={puntos('usuarios')}
-          fill="none"
-          stroke="#086b90"
-          strokeWidth="3"
-        />
-        <polyline
-          points={puntos('profesionales')}
-          fill="none"
-          stroke="#18a997"
-          strokeWidth="3"
-          strokeDasharray="5 3"
-        />
-        <text x="45" y="245">
-          {datos.desde}
-        </text>
-        <text x="645" y="245" textAnchor="end">
-          {datos.hasta}
-        </text>
-      </svg>
-    </div>
-  );
-}
-
-export function ResumenAdministrador({ reporte = false }) {
-  const [dias, setDias] = useState('30');
-  const [tipoReporte, setTipoReporte] = useState('');
-  const resultado = useDatos(`/administrador/resumen?dias=${dias}`);
-  const { datos } = resultado;
-  const registros = datos && {
-    ...datos,
-    registros: datos.registros.filter(
-      (r) => !tipoReporte || r.rol === tipoReporte,
-    ),
-  };
-  return (
-    <section>
-      <h1>{reporte ? 'Reportes' : 'Dashboard'}</h1>
-      <p>
-        {reporte
-          ? 'Registros y profesionales de la plataforma.'
-          : 'Resumen de la plataforma y verificaciones pendientes.'}
-      </p>
-      <label className="admin__periodo">
-        Período
-        <select value={dias} onChange={(e) => setDias(e.target.value)}>
-          {['7', '30', '90'].map((d) => (
-            <option key={d} value={d}>
-              Últimos {d} días
-            </option>
-          ))}
-        </select>
-      </label>
-      {reporte && (
-        <div className="admin__filtros">
-          {[
-            ['', 'General'],
-            ['usuario', 'Usuarios'],
-            ['profesional', 'Profesionales'],
-          ].map(([valor, nombre]) => (
-            <button
-              key={valor}
-              aria-pressed={tipoReporte === valor}
-              onClick={() => setTipoReporte(valor)}
-            >
-              {nombre}
-            </button>
-          ))}
-        </div>
-      )}
-      <EstadoCarga {...resultado} />
-      {datos && (
-        <>
-          <p className="admin__nota">
-            Registros del {datos.desde} al {datos.hasta} (UTC). Los totales
-            muestran el estado actual.
-          </p>
-          <div className="admin__metricas">
-            {[
-              ['Usuarios nuevos', datos.nuevosUsuarios],
-              ['Profesionales nuevos', datos.nuevosProfesionales],
-              ['Usuarios totales', datos.usuarios],
-              ['Cuentas profesionales', datos.profesionales],
-              ['Fichas pendientes', datos.pendientes],
-              ['Fichas verificadas', datos.verificados],
-            ].map(([nombre, valor]) => (
-              <article key={nombre} className="admin__tarjeta">
-                <span>{nombre}</span>
-                <strong>{numero(valor)}</strong>
-              </article>
-            ))}
-          </div>
-          {!reporte && (
-            <Link className="admin__boton" to="/admin/verificaciones">
-              Revisar profesionales pendientes <Icono nombre="flecha" />
-            </Link>
-          )}
-          <div className="admin__tarjeta">
-            <h2>Registro de usuarios</h2>
-            {registros.registros.length > 0 && (
-              <GraficoRegistros datos={registros} />
-            )}
-            {!registros.registros.length ? (
-              <p>No hubo registros para este filtro en el período.</p>
-            ) : (
-              <div className="admin__tabla">
-                <table>
-                  <caption>Registros diarios por tipo de cuenta</caption>
-                  <thead>
-                    <tr>
-                      <th>Fecha</th>
-                      <th>Tipo de cuenta</th>
-                      <th>Registros</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {registros.registros.map((r) => (
-                      <tr key={`${r.fecha}-${r.rol}`}>
-                        <td>{r.fecha}</td>
-                        <td>{r.rol}</td>
-                        <td>{numero(r.cantidad)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-    </section>
-  );
-}
-
 export function ListadoAdministrador({ tipo }) {
   const usuarios = tipo === 'usuarios';
   const verificaciones = tipo === 'verificaciones';
@@ -318,11 +61,11 @@ export function ListadoAdministrador({ tipo }) {
   const [confirmacion, setConfirmacion] = useState(null);
   const [guardando, setGuardando] = useState(false);
   const [error, setError] = useState('');
+  // Verificaciones es la cola de trabajo (de la solicitud más antigua a la más reciente); Profesionales, el directorio.
   const parametros = new URLSearchParams({
     q,
     pagina: String(pagina),
-    estadoCuenta,
-    [usuarios ? 'rol' : 'estado']: filtro,
+    ...(usuarios ? { estadoCuenta, rol: filtro } : { estado: filtro, vista: verificaciones ? 'cola' : 'directorio' }),
   });
   const resultado = useDatos(
     `/administrador/${usuarios ? 'usuarios' : 'profesionales'}?${parametros}`,
@@ -336,12 +79,18 @@ export function ListadoAdministrador({ tipo }) {
         ['profesional', 'Profesionales'],
         ['administrador', 'Administradores'],
       ]
-    : [
-        ['', 'Todos'],
-        ['pendientes', 'Pendientes'],
-        ['verificados', 'Verificados'],
-        ['rechazados', 'Rechazados'],
-      ];
+    : verificaciones
+      ? [
+          ['pendientes', 'Pendientes'],
+          ['rechazados', 'Rechazadas'],
+          ['verificados', 'Aprobadas'],
+        ]
+      : [
+          ['', 'Todos'],
+          ['verificados', 'Verificados'],
+          ['pendientes', 'Pendientes'],
+          ['rechazados', 'Rechazados'],
+        ];
   async function cambiarEstado() {
     setGuardando(true);
     setError('');
@@ -367,10 +116,12 @@ export function ListadoAdministrador({ tipo }) {
             ? 'Verificaciones'
             : 'Profesionales'}
       </h1>
-      <p>
+      <p className="admin__bajada">
         {usuarios
-          ? 'Consulta las cuentas registradas en FitSearch.'
-          : 'Revisa las fichas profesionales y su verificación.'}
+          ? 'Consulta las cuentas registradas en FitSearch y activa o desactiva su acceso.'
+          : verificaciones
+            ? 'Solicitudes de verificación, de la que más espera a la más reciente. Revisa los documentos y decide.'
+            : 'Directorio de profesionales con su calificación, sus reservas y su estado de verificación.'}
       </p>
       <div className="admin__filtros" aria-label="Filtrar resultados">
         {opciones.map(([valor, nombre]) => (
@@ -458,8 +209,8 @@ export function ListadoAdministrador({ tipo }) {
           <ul className="admin__lista">
             {datos.resultados.map((fila) => (
               <li key={fila.id} className="admin__tarjeta admin__fila">
-                <span className="admin__avatar" aria-hidden="true">
-                  {fila.nombre.slice(0, 1)}
+                <span className="avatar" aria-hidden="true">
+                  {iniciales(fila.nombre)}
                 </span>
                 <div>
                   <h2>{fila.nombre}</h2>
@@ -467,6 +218,17 @@ export function ListadoAdministrador({ tipo }) {
                   <small>
                     {usuarios ? fila.rol : fila.comuna || 'Sin comuna'}
                   </small>
+                  {!usuarios && !verificaciones && (
+                    <small className="admin__indicadores">
+                      {fila.calificacion ? `★ ${fila.calificacion.promedio.toLocaleString('es-CL')} · ${fila.calificacion.total} ${fila.calificacion.total === 1 ? 'reseña' : 'reseñas'}` : 'Sin reseñas'}
+                      {' · '}{fila.reservas} {fila.reservas === 1 ? 'reserva' : 'reservas'}
+                    </small>
+                  )}
+                  {verificaciones && (
+                    <small className="admin__indicadores">
+                      {fila.documentos ?? 0} {fila.documentos === 1 ? 'documento' : 'documentos'}
+                    </small>
+                  )}
                 </div>
                 {usuarios ? (
                   <>
@@ -486,6 +248,13 @@ export function ListadoAdministrador({ tipo }) {
                   </>
                 ) : (
                   <>
+                    {verificaciones && fila.estado === 'pendiente' && (
+                      <span className={`admin-espera${fila.diasEsperando >= 3 ? ' admin-espera--atrasada' : ''}`}>
+                        {fila.diasEsperando === null || fila.diasEsperando === undefined
+                          ? 'Sin fecha de solicitud'
+                          : fila.diasEsperando === 0 ? 'Llegó hoy' : `Espera hace ${fila.diasEsperando} ${fila.diasEsperando === 1 ? 'día' : 'días'}`}
+                      </span>
+                    )}
                     <span
                       className={`admin__estado${fila.verificado ? ' admin__estado--verificado' : ''}`}
                     >
@@ -503,7 +272,7 @@ export function ListadoAdministrador({ tipo }) {
                       aria-label={`Revisar a ${fila.nombre}`}
                       to={`/admin/verificaciones/${fila.id}`}
                     >
-                      Revisar
+                      {verificaciones ? 'Revisar' : 'Ver ficha'}
                     </Link>
                   </>
                 )}

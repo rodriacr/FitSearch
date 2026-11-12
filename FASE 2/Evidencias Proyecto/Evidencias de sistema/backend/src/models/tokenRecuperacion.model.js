@@ -14,6 +14,7 @@ function buscarPorHash(tokenHash) {
 }
 
 // Marca el código como usado solo si sigue disponible (evita que dos peticiones simultáneas lo usen) y cambia la contraseña.
+// También cierra las sesiones abiertas (11-11-2026): si alguien más tenía acceso a la cuenta, lo pierde al cambiarla.
 function usarYCambiarPassword({ id, usuarioId, passwordHash }) {
   return prisma.$transaction(async (tx) => {
     const { count } = await tx.tokenRecuperacion.updateMany({
@@ -21,7 +22,7 @@ function usarYCambiarPassword({ id, usuarioId, passwordHash }) {
       data: { fechaUso: new Date() },
     });
     if (count === 0) return false;
-    await tx.usuario.update({ where: { id: usuarioId }, data: { passwordHash } });
+    await tx.usuario.update({ where: { id: usuarioId }, data: { passwordHash, versionSesion: { increment: 1 } } });
     return true;
   });
 }

@@ -1,0 +1,214 @@
+/* Plan de alimentación de Comidas (11-11-2026): mismas tarjetas, radios y colores de macronutrientes que el resto de la página. */
+.plan { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.plan .panel-tarjeta { border-radius: 20px; }
+/* Dos columnas solo con espacio de sobra; con el menú abierto en 1024 px la tarjeta del plan quedaba angosta. */
+@media (min-width: 72rem) {
+  .plan { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
+}
+
+.plan__columna { display: grid; gap: 1rem; min-width: 0; }
+.plan__principal { display: grid; gap: 1.1rem; container: plan / inline-size; }
+.plan__principal > .alerta { margin: 0; }
+.plan__encabezado .panel-tarjeta__titulo { margin: 0; }
+.plan__encabezado p { margin: 0.25rem 0 0; font-size: 0.85rem; }
+
+/* Mismo selector segmentado que el de Estadísticas. */
+.plan__modos {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.25rem; padding: 0.25rem; border: 1px solid var(--color-borde);
+  border-radius: 12px; background: var(--color-superficie);
+}
+.plan__modo {
+  min-height: 2.75rem; padding: 0 0.75rem; border: 0; border-radius: 9px; background: transparent; color: var(--color-texto-secundario);
+  font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer; transition: background-color 160ms var(--curva-salida), color 160ms var(--curva-salida);
+}
+.plan__modo[aria-pressed="true"] { background: var(--color-primario); color: #fff; }
+@media (hover: hover) and (pointer: fine) {
+  .plan__modo[aria-pressed="false"]:hover { background: var(--color-superficie-suave); color: var(--color-texto); }
+}
+
+.plan__calorias { display: grid; gap: 0.2rem; }
+.plan__calorias p { margin: 0; }
+.plan__kcal { color: var(--color-primario-oscuro); font-weight: 600; }
+.plan__kcal strong { font-size: 2rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.plan__calorias .texto-secundario { font-size: 0.85rem; }
+
+.plan__meta { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 0.3rem 0.75rem; }
+.plan__meta-nombre { margin: 0; color: var(--color-texto-secundario); }
+.plan__meta-nombre strong { color: var(--color-texto); }
+.plan__por-que { grid-column: 1 / -1; margin: 0; font-size: 0.88rem; line-height: 1.55; }
+
+/* Barra del reparto: tres tramos con 2 px de separación y extremos redondeados. */
+.reparto { display: grid; gap: 0.85rem; container-type: inline-size; }
+.reparto__barra { display: flex; gap: 2px; height: 0.85rem; }
+.reparto__barra span { flex-basis: 0; min-width: 4px; border-radius: 2px; background: var(--color-nutriente); transition: flex-grow 300ms var(--curva-salida); }
+.reparto__barra span:first-child { border-radius: 999px 2px 2px 999px; }
+.reparto__barra span:last-child { border-radius: 2px 999px 999px 2px; }
+.reparto__barra span:only-child { border-radius: 999px; }
+.reparto__lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.reparto__lista li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; column-gap: 0.4rem; row-gap: 0.1rem; padding: 0.65rem 0.75rem;
+  border: 1px solid #e6eef4; border-radius: 14px;
+}
+.reparto__punto { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--color-nutriente); }
+.reparto__nombre { overflow: hidden; font-size: 0.8rem; font-weight: 600; color: var(--color-texto-secundario); text-overflow: ellipsis; white-space: nowrap; }
+.reparto__lista strong, .reparto__gramos { grid-column: 2; font-variant-numeric: tabular-nums; }
+.reparto__lista strong { font-size: 1.15rem; color: var(--color-texto); }
+.reparto__gramos { font-size: 0.8rem; color: var(--color-texto-secundario); }
+/* Si no hay espacio para tres columnas con el nombre completo, cada macronutriente va en una fila. */
+@container (max-width: 30rem) {
+  .reparto__lista { grid-template-columns: minmax(0, 1fr); gap: 0.4rem; }
+  .reparto__lista li { grid-template-columns: auto minmax(0, 1fr) auto 4.5rem; column-gap: 0.6rem; padding: 0.55rem 0.8rem; }
+  .reparto__nombre { font-size: 0.88rem; color: var(--color-texto); }
+  .reparto__lista strong, .reparto__gramos { grid-column: auto; }
+  .reparto__lista strong { font-size: 1rem; }
+  .reparto__gramos { text-align: right; }
+}
+
+/* Editor del plan personalizado: nombre, deslizador y número en una fila; el detalle debajo. */
+.plan-editor { display: grid; gap: 1rem; min-width: 0; }
+.plan-editor__titulo { margin: 0; font-size: 1.05rem; color: var(--color-primario-oscuro); }
+.plan-editor__nombre { display: grid; gap: 0.35rem; font-size: 0.9rem; font-weight: 600; }
+.plan-editor__nombre input {
+  min-height: 2.75rem; padding: 0 0.8rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control); background: var(--color-superficie);
+  color: var(--color-texto); font: inherit; font-weight: 400;
+}
+.plan-editor__ayuda { font-size: 0.8rem; font-weight: 400; color: var(--color-texto-secundario); }
+.plan-editor__cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.25rem 1rem; margin-bottom: -0.4rem; }
+.plan-editor__cabecera span { font-size: 0.9rem; font-weight: 600; }
+.plan-editor__meta { padding-inline: 0; font-size: 0.85rem; font-weight: 600; }
+.plan-editor__macros { display: grid; gap: 1rem; min-width: 0; }
+.plan-macro { display: grid; grid-template-columns: 8.5rem minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.85rem; }
+.plan-macro__nombre { display: inline-flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; font-weight: 600; }
+/* Deslizador propio: pista clara, tramo elegido con el color del macronutriente y un tirador blanco de 22 px. */
+.plan-macro__deslizador { width: 100%; height: 2.75rem; margin: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+.plan-macro__deslizador::-webkit-slider-runnable-track {
+  height: 0.4rem; border-radius: 999px; background: linear-gradient(to right, var(--color-nutriente) var(--relleno), #e3ebf2 var(--relleno));
+}
+.plan-macro__deslizador::-moz-range-track { height: 0.4rem; border-radius: 999px; background: #e3ebf2; }
+.plan-macro__deslizador::-moz-range-progress { height: 0.4rem; border-radius: 999px; background: var(--color-nutriente); }
+.plan-macro__deslizador::-webkit-slider-thumb {
+  width: 1.375rem; height: 1.375rem; margin-top: -0.4875rem; border: 2px solid var(--color-nutriente); border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 4px rgb(11 79 128 / 25%); -webkit-appearance: none; appearance: none;
+}
+.plan-macro__deslizador::-moz-range-thumb { width: 1.125rem; height: 1.125rem; border: 2px solid var(--color-nutriente); border-radius: 50%; background: #fff; box-shadow: 0 1px 4px rgb(11 79 128 / 25%); }
+.plan-macro__deslizador:focus-visible { outline: none; }
+.plan-macro__deslizador:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--color-superficie), 0 0 0 5px var(--color-primario); }
+.plan-macro__deslizador:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--color-superficie), 0 0 0 5px var(--color-primario); }
+.plan-macro__numero { display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600; }
+.plan-macro__numero input {
+  width: 4.25rem; min-height: 2.75rem; padding: 0 0.6rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control);
+  background: var(--color-superficie); color: var(--color-texto); font: inherit; font-variant-numeric: tabular-nums; text-align: right;
+}
+.plan-macro__numero input[aria-invalid="true"] { border-color: var(--color-error); }
+.plan-macro__detalle { grid-column: 2 / -1; margin: 0; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.plan-macro__detalle--error { color: var(--color-error); }
+.plan-macro__aviso { color: #8a4b00; font-weight: 600; }
+/* Tarjeta angosta (celular o columna estrecha): nombre y número arriba, el deslizador a todo el ancho debajo. */
+@container plan (max-width: 30rem) {
+  .plan-macro { grid-template-columns: minmax(0, 1fr) auto; }
+  .plan-macro__deslizador { grid-column: 1 / -1; grid-row: 2; }
+  .plan-macro__detalle { grid-column: 1 / -1; }
+}
+
+.plan-total { padding: 0.7rem 0.9rem; border-radius: 12px; background: var(--color-error-fondo); color: var(--color-error); font-size: 0.88rem; }
+.plan-total p { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0; }
+.plan-total--ok { background: var(--color-exito-fondo); color: var(--color-exito); font-weight: 600; }
+.plan-total .boton-texto { color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 0.2em; }
+.plan__por-kilo { margin: 0; font-size: 0.88rem; line-height: 1.55; }
+
+.plan__acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem 0.75rem; }
+.plan__acciones p { margin: 0; font-size: 0.82rem; }
+.plan__nota { margin: 0; font-size: 0.8rem; }
+
+/* Lista de planes personalizados. */
+.personalizados { display: grid; gap: 0.9rem; }
+.personalizados__encabezado { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; }
+.personalizados__encabezado h3 { margin: 0; font-size: 1rem; color: var(--color-texto); }
+.personalizados__encabezado span { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.personalizados__vacio { margin: 0; font-size: 0.88rem; line-height: 1.55; }
+.personalizados__lista { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.personalizado { display: grid; gap: 0.55rem; padding: 0.85rem 0.95rem; border: 1px solid #e6eef4; border-radius: 14px; background: var(--color-superficie); }
+.personalizado--en-uso { border-color: #b9d3e8; background: var(--color-info-fondo); }
+/* El nombre puede ocupar dos líneas: los íconos quedan siempre arriba a la derecha. */
+.personalizado__cabecera { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0.5rem; }
+.personalizado__titulo { display: flex; flex-wrap: wrap; align-items: center; gap: 0.3rem 0.5rem; min-width: 0; padding-top: 0.2rem; }
+.personalizado__nombre { margin: 0; font-size: 0.95rem; overflow-wrap: anywhere; }
+.personalizado__en-uso {
+  display: inline-flex; flex-shrink: 0; align-items: center; gap: 0.2rem; padding: 0.15rem 0.5rem; border-radius: 999px; background: var(--color-primario);
+  color: #fff; font-size: 0.72rem; font-weight: 600;
+}
+.reparto__barra--compacta { height: 0.45rem; }
+.personalizado__valores { display: flex; flex-wrap: wrap; gap: 0.25rem 0.9rem; margin: 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.personalizado__valores li { display: inline-flex; align-items: center; gap: 0.3rem; }
+.personalizado__valores strong { color: var(--color-texto); font-variant-numeric: tabular-nums; }
+.personalizado__iconos { display: inline-flex; gap: 0.15rem; margin: -0.35rem -0.45rem -0.35rem 0; }
+.personalizado__iconos .boton-icono { color: var(--color-texto-secundario); }
+.personalizado__acciones { display: flex; align-items: center; gap: 0.5rem; }
+.personalizado__confirmar { display: grid; gap: 0.5rem; padding: 0.7rem 0.8rem; border-radius: 10px; background: var(--color-error-fondo); }
+.personalizado__confirmar p { margin: 0; font-size: 0.85rem; color: var(--color-error); }
+.personalizado__confirmar > div { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.boton.boton--peligro { width: auto; background: var(--color-error); box-shadow: none; }
+@media (hover: hover) and (pointer: fine) {
+  .boton.boton--peligro:hover { background: #8f1d17; }
+}
+
+/* Meta de peso. */
+.meta-peso { display: grid; gap: 0.9rem; }
+.meta-peso .panel-tarjeta__titulo { margin: 0; }
+.meta-peso > p, .meta-peso > .alerta { margin: 0; }
+.meta-peso > p { font-size: 0.88rem; line-height: 1.55; }
+.meta-peso__formulario { display: grid; gap: 1rem; }
+.meta-peso__campo { display: grid; gap: 0.35rem; font-size: 0.9rem; font-weight: 600; }
+.meta-peso__entrada { display: inline-flex; align-items: center; gap: 0.4rem; }
+.meta-peso__entrada input {
+  width: 7rem; min-height: 2.75rem; padding: 0 0.8rem; border: 1px solid var(--color-borde); border-radius: var(--radio-control);
+  background: var(--color-superficie); color: var(--color-texto); font: inherit; font-weight: 400; font-variant-numeric: tabular-nums;
+}
+.meta-peso__entrada input[aria-invalid="true"] { border-color: var(--color-error); }
+.meta-peso__ayuda { font-size: 0.8rem; font-weight: 400; color: var(--color-texto-secundario); }
+.meta-peso__ayuda--error { color: var(--color-error); }
+.meta-peso__ritmos { display: grid; gap: 0.5rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.meta-peso__ritmos legend { margin-bottom: 0.4rem; padding: 0; font-size: 0.9rem; font-weight: 600; }
+.meta-peso__ritmo {
+  display: flex; align-items: center; gap: 0.7rem; min-height: 3.25rem; padding: 0.55rem 0.85rem; border: 1px solid var(--color-borde); border-radius: 12px;
+  font-size: 0.88rem; cursor: pointer;
+}
+.meta-peso__ritmo:has(input:checked) { border-color: var(--color-primario); background: var(--color-info-fondo); }
+.meta-peso__ritmo input { width: 1.1rem; height: 1.1rem; flex-shrink: 0; margin: 0; }
+.meta-peso__ritmo small { display: block; margin-top: 0.1rem; color: var(--color-texto-secundario); font-size: 0.78rem; }
+.meta-peso__estimacion { margin: 0; font-size: 0.88rem; line-height: 1.55; }
+.meta-peso > .meta-peso__resumen { font-size: 1rem; }
+.meta-peso__avance { display: grid; gap: 0.4rem; }
+.meta-peso__avance p { margin: 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
+.meta-peso__avance strong { color: var(--color-texto); font-variant-numeric: tabular-nums; }
+.meta-peso__pista { height: 0.6rem; overflow: hidden; border-radius: 999px; background: #e3ebf2; }
+.meta-peso__pista span { display: block; height: 100%; border-radius: inherit; background: var(--color-primario); transition: width 600ms var(--curva-salida); }
+.plan-calculo__nota { margin: 0.75rem 0 0; font-size: 0.8rem; line-height: 1.5; }
+.plan__principal > .alerta--exito, .plan__principal > .alerta--error { margin: 0; }
+
+/* Columna lateral: cómo se calcula y el aviso con acceso a nutricionistas. */
+.plan__lateral { display: grid; gap: 1rem; }
+.plan-calculo .panel-tarjeta__titulo { margin-bottom: 0.6rem; }
+.plan-calculo__pasos { display: grid; gap: 0.6rem; margin: 0; padding-left: 1.2rem; font-size: 0.86rem; line-height: 1.55; }
+.plan-calculo__pasos li::marker { color: var(--color-primario); font-weight: 700; }
+.plan-calculo__fuentes { margin-top: 0.9rem; border-top: 1px solid var(--color-borde); padding-top: 0.75rem; font-size: 0.85rem; }
+.plan-calculo__fuentes summary { display: flex; align-items: center; gap: 0.3rem; width: fit-content; min-height: 2.25rem; font-weight: 600; color: var(--color-primario); cursor: pointer; list-style: none; }
+.plan-calculo__fuentes summary::-webkit-details-marker { display: none; }
+.plan-calculo__fuentes summary svg { transition: transform 200ms var(--curva-salida); }
+.plan-calculo__fuentes[open] summary svg { transform: rotate(180deg); }
+.plan-calculo__fuentes ul { display: grid; gap: 0.4rem; margin: 0.4rem 0 0; padding-left: 1.1rem; line-height: 1.45; }
+.plan-calculo__fuentes a { text-underline-offset: 0.2em; }
+.plan-aviso {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 0.6rem; padding: 1.25rem; border: 1px solid #d7e6f1; border-radius: 20px;
+  background: var(--color-info-fondo);
+}
+.plan-aviso h2 { margin: 0; font-size: 1rem; color: var(--color-primario-oscuro); }
+.plan-aviso p { margin: 0; font-size: 0.85rem; line-height: 1.55; color: var(--color-texto); }
+
+@media (max-width: 39.99rem) {
+  .plan__kcal strong { font-size: 1.7rem; }
+  .plan__acciones .boton { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .reparto__barra span, .plan__modo, .plan-calculo__fuentes summary svg, .meta-peso__pista span { transition: none; }
+}

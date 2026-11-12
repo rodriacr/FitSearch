@@ -34,6 +34,7 @@
 .comidas__resumen { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 .comidas__resumen .panel-tarjeta { border-radius: 20px; }
 .comidas__nota { margin: 0; font-size: 0.8rem; }
+.comidas__nota .comidas__ver-plan { display: inline; min-height: 0; padding: 0; font-size: inherit; text-decoration: underline; text-underline-offset: 0.2em; }
 .comidas__pie { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
 @media (min-width: 40rem) {
   .comidas__pie { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -63,6 +64,20 @@
 .tarjeta-calorias__macros li > strong { grid-row: 1 / span 2; grid-column: 3; color: var(--color-texto); font-size: 0.85rem; }
 .tarjeta-calorias__punto { width: 0.55rem; height: 0.55rem; border-radius: 50%; background: var(--color-nutriente); }
 .tarjeta-calorias__nombre { font-weight: 600; }
+.tarjeta-calorias__macros small { display: block; font-size: 0.75rem; color: var(--color-texto-secundario); }
+/* Cuánto falta para la meta del día (11-11-2026): el mensaje principal de la tarjeta, con ícono y texto (no solo color). */
+.tarjeta-calorias__falta {
+  display: flex; align-items: center; gap: 0.6rem; margin: 0 0 1rem; padding: 0.65rem 0.85rem;
+  border-radius: 12px; font-size: 0.95rem; background: var(--color-info-fondo); color: var(--color-primario-oscuro);
+}
+.tarjeta-calorias__falta .icono { flex: none; }
+.tarjeta-calorias__falta--cerca, .tarjeta-calorias__falta--cumplida { background: var(--color-exito-fondo); color: var(--color-exito); }
+.tarjeta-calorias__falta--sobre { background: #fff3e8; color: #8a3b06; }
+.tarjeta-calorias__comparacion {
+  display: grid; gap: 0.15rem; margin: 1rem 0 0; padding-top: 0.85rem; border-top: 1px solid var(--color-borde);
+  font-size: 0.82rem; color: var(--color-texto-secundario);
+}
+.tarjeta-calorias__comparacion strong { color: var(--color-texto); }
 
 .anillo-calorias { position: relative; width: 9.5rem; aspect-ratio: 1; flex-shrink: 0; }
 .anillo-calorias svg { width: 100%; height: 100%; transform: rotate(-90deg); }
@@ -76,21 +91,62 @@
 
 /* Progreso semanal */
 .tarjeta-semana__encabezado, .tarjeta-comidas__encabezado, .tarjeta-objetivo__encabezado { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; flex-wrap: wrap; }
-.tarjeta-semana__leyenda { display: flex; gap: 1rem; margin: 0 0 0.75rem; font-size: 0.75rem; color: var(--color-texto-secundario); }
-.tarjeta-semana__leyenda span::before { content: ""; display: inline-block; width: 0.5rem; height: 0.5rem; margin-right: 0.35rem; border-radius: 50%; }
-.tarjeta-semana__consumidas::before { background: #1f8f84; }
-.tarjeta-semana__objetivo::before { background: #c8dae8; }
-.progreso-semanal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
-.progreso-semanal__dia { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; padding: 0.35rem 0; border-radius: 12px; }
-.progreso-semanal__dia--actual { background: var(--color-info-fondo); }
-.progreso-semanal__barras { display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 100%; height: 9rem; }
-.progreso-semanal__barras span { display: block; width: min(0.75rem, 32%); border-radius: 6px 6px 2px 2px; }
-.progreso-semanal__consumo { background: linear-gradient(180deg, #1fa37a, #1c6f9e); min-height: 2px; }
-.progreso-semanal__objetivo { background: #c8dae8; }
-.progreso-semanal__dia--futuro .progreso-semanal__consumo { opacity: 0; }
-.progreso-semanal__nombre { font-size: 0.75rem; font-weight: 600; color: var(--color-texto-secundario); }
-.progreso-semanal__fecha { font-size: 0.68rem; color: var(--color-texto-secundario); }
-.progreso-semanal__dia--actual .progreso-semanal__nombre, .progreso-semanal__dia--actual .progreso-semanal__fecha { color: var(--color-primario); }
+.tarjeta-semana__resumen { display: flex; flex-wrap: wrap; gap: 0.35rem 1.25rem; margin: 0 0 0.75rem; padding: 0; list-style: none; font-size: 0.85rem; color: var(--color-texto-secundario); }
+.tarjeta-semana__resumen strong { color: var(--color-texto); }
+
+/* Explicación breve de cada panel (pedido del PO del 11-11-2026). */
+.panel-ayuda { margin: -0.35rem 0 0.9rem; font-size: 0.82rem; line-height: 1.5; color: var(--color-texto-secundario); }
+.tarjeta-calorias__fecha + .panel-ayuda { margin-top: 0; }
+
+/* Leyenda de los gráficos: consumo, meta (línea punteada), franja «cerca de la meta», períodos y macronutrientes. */
+.leyenda-meta { display: flex; flex-wrap: wrap; gap: 0.3rem 1rem; margin: 0 0 0.6rem; font-size: 0.75rem; color: var(--color-texto-secundario); }
+.leyenda-meta span { display: inline-flex; align-items: center; gap: 0.35rem; }
+.leyenda-meta span::before { content: ""; display: inline-block; flex: none; }
+.leyenda-meta__consumo::before { width: 0.6rem; height: 0.6rem; border-radius: 3px; background: var(--color-barra, #1c74c9); }
+.leyenda-meta__linea::before { width: 1rem; border-top: 2px dashed #5f7f99; }
+.leyenda-meta__banda::before { width: 0.9rem; height: 0.6rem; border-radius: 2px; background: rgb(31 122 82 / 18%); }
+.leyenda-meta__actual::before { width: 0.9rem; height: 0.45rem; border-radius: 2px; background: #1565a0; }
+.leyenda-meta__anterior::before { width: 0.9rem; height: 0.45rem; border-radius: 2px; background: #a9c2d8; }
+.leyenda-meta__marca::before { width: 2px; height: 0.8rem; background: var(--color-texto); }
+.leyenda-meta__nutriente::before { width: 0.6rem; height: 0.6rem; border-radius: 3px; background: var(--color-nutriente); }
+
+/* Columnas por día frente a la meta (Resumen y Estadísticas). Arriba queda aire para el porcentaje de la barra más alta. */
+.frente-meta { position: relative; }
+.frente-meta__area { height: 10rem; padding-top: 1.35rem; border-bottom: 1px solid var(--color-borde); }
+.frente-meta__plano { position: relative; height: 100%; }
+.frente-meta__banda { position: absolute; left: 0; right: 0; background: rgb(31 122 82 / 12%); border-radius: 2px; pointer-events: none; }
+.frente-meta__linea { position: absolute; z-index: 1; left: 0; right: 0; border-top: 2px dashed #5f7f99; pointer-events: none; }
+.frente-meta__plano ol, .frente-meta__rotulos {
+  display: grid; grid-template-columns: repeat(var(--dias), minmax(0, 1fr)); gap: 0.35rem; margin: 0; padding: 0; list-style: none;
+}
+.frente-meta--mes .frente-meta__plano ol, .frente-meta--mes .frente-meta__rotulos { gap: 2px; }
+.frente-meta__plano ol { position: relative; z-index: 2; height: 100%; }
+.frente-meta__dia { position: relative; display: flex; align-items: flex-end; justify-content: center; height: 100%; border-radius: 8px 8px 0 0; }
+.frente-meta__dia--actual { background: rgb(21 101 160 / 7%); }
+.frente-meta__barra { display: block; width: min(1.5rem, 64%); min-height: 0; border-radius: 4px 4px 0 0; background: var(--color-barra); transition: height 400ms var(--curva-salida); }
+.frente-meta--mes .frente-meta__barra { width: 82%; border-radius: 2px 2px 0 0; }
+.frente-meta__pct {
+  position: absolute; left: 50%; transform: translate(-50%, -0.2rem); margin-bottom: 0;
+  padding: 0 0.2rem; border-radius: 4px; background: rgb(255 255 255 / 88%);
+  font-size: 0.68rem; font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; color: var(--color-texto-secundario);
+}
+.frente-meta__dia--cerca .frente-meta__pct { color: var(--color-exito); }
+/* Detalle al pasar el mouse: sobre la columna, alineado hacia adentro en los extremos. */
+.frente-meta__ayuda {
+  position: absolute; bottom: calc(100% + 0.4rem); left: 50%; z-index: 5; display: grid; gap: 0.15rem;
+  width: max-content; max-width: 13rem; padding: 0.5rem 0.65rem; border-radius: 10px;
+  font-size: 0.75rem; line-height: 1.35; color: var(--color-texto); background: var(--color-superficie);
+  box-shadow: 0 10px 24px rgb(6 38 63 / 16%), 0 1px 3px rgb(6 38 63 / 12%);
+  opacity: 0; pointer-events: none; transform: translate(-50%, 4px); transition: opacity 120ms ease, transform 160ms var(--curva-salida);
+}
+.frente-meta__dia:first-child .frente-meta__ayuda, .frente-meta__dia:nth-child(2) .frente-meta__ayuda { left: 0; transform: translate(0, 4px); }
+.frente-meta__dia:last-child .frente-meta__ayuda, .frente-meta__dia:nth-last-child(2) .frente-meta__ayuda { left: auto; right: 0; transform: translate(0, 4px); }
+@media (hover: hover) and (pointer: fine) {
+  .frente-meta__dia:hover .frente-meta__ayuda { opacity: 1; transform: translate(-50%, 0); }
+  .frente-meta__dia:is(:first-child, :nth-child(2), :last-child, :nth-last-child(2)):hover .frente-meta__ayuda { transform: translate(0, 0); }
+}
+.frente-meta__rotulos { margin-top: 0.4rem; font-size: 0.7rem; line-height: 1.25; text-align: center; color: var(--color-texto-secundario); }
+.frente-meta__rotulo--actual { font-weight: 700; color: var(--color-primario); }
 
 /* Comidas del día */
 /* minmax(0, 1fr): sin él, la descripción larga (en una línea con «…») estiraba la fila y la página en celular. */
@@ -143,6 +199,8 @@
 .barra-nutriente__pista { height: 0.55rem; overflow: hidden; border-radius: 999px; background: #e8eef4; }
 .barra-nutriente__pista span { display: block; height: 100%; border-radius: inherit; background: var(--color-nutriente); transition: width 600ms var(--curva-salida); }
 .barra-nutriente small { color: var(--color-texto-secundario); font-size: 0.75rem; }
+.barra-nutriente__falta { grid-column: 1 / -1; margin-top: -0.15rem; }
+.barra-nutriente .barra-nutriente__falta--cerca, .barra-nutriente .barra-nutriente__falta--cumplida { color: var(--color-exito); font-weight: 600; }
 
 /* Objetivo y asistente */
 .tarjeta-objetivo__meta { margin: 0 0 0.75rem; font-weight: 700; color: var(--color-primario-oscuro); }
@@ -203,30 +261,43 @@
 .estadisticas__graficos .panel-tarjeta { border-radius: 20px; }
 .estadisticas__encabezado-tarjeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
 .estadisticas__encabezado-tarjeta .panel-tarjeta__titulo { margin: 0; }
-.estadisticas__leyenda { display: flex; gap: 1rem; margin: 0; font-size: 0.75rem; color: var(--color-texto-secundario); }
-.estadisticas__leyenda span::before { content: ""; display: inline-block; margin-right: 0.35rem; vertical-align: middle; }
-.estadisticas__leyenda-consumo::before { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: #1c74c9; }
-.estadisticas__leyenda-objetivo::before { width: 0.9rem; border-top: 2px dashed #8aa9c0; }
-.estadisticas__promedio { display: grid; gap: 0.9rem; }
-.estadisticas__promedio .panel-tarjeta__titulo, .estadisticas__promedio > p { margin: 0; }
-.estadisticas-barras__area { position: relative; height: 10rem; border-bottom: 1px solid var(--color-borde); }
-.estadisticas-barras__area ol, .estadisticas-barras__rotulos {
-  display: grid; grid-template-columns: repeat(var(--dias), minmax(0, 1fr)); gap: 0.35rem; margin: 0; padding: 0; list-style: none;
+.estadisticas__sin-datos { margin: 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
+/* Las cifras se acomodan al ancho del panel (Graficos.css usa consultas de contenedor). */
+.estadisticas__cifras { container-type: inline-size; }
+.estadisticas__cifras .cifras { margin-top: 0.25rem; }
+
+.comparacion { display: grid; gap: 1rem; margin: 0.85rem 0 0; padding: 0; list-style: none; }
+.comparacion__fila { display: grid; gap: 0.35rem; }
+.comparacion__titulo { display: flex; justify-content: space-between; gap: 0.75rem; margin: 0; font-size: 0.85rem; font-weight: 600; }
+.comparacion__cambio { font-weight: 600; font-variant-numeric: tabular-nums; color: var(--color-texto-secundario); }
+.comparacion__barras { position: relative; display: grid; gap: 3px; }
+.comparacion__pista { display: block; height: 0.6rem; }
+.comparacion__barra { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+.comparacion__barra--actual { background: #1565a0; }
+.comparacion__barra--anterior { background: #a9c2d8; }
+.comparacion__meta { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--color-texto); border-radius: 1px; }
+.comparacion__valores { display: flex; flex-wrap: wrap; gap: 0.15rem 0.9rem; margin: 0; font-size: 0.75rem; font-variant-numeric: tabular-nums; color: var(--color-texto-secundario); }
+.comparacion__valores strong { color: var(--color-texto); }
+
+/* Calorías por comida: la columna del valor lleva «355 kcal · 22 %» y necesita más ancho que en el administrador. */
+.estadisticas__momentos .barras__fila { grid-template-columns: 6.5rem minmax(0, 1fr) auto; }
+
+.reparto-plan__fila { display: grid; gap: 0.3rem; margin-top: 0.85rem; }
+.reparto-plan__titulo { margin: 0; font-size: 0.82rem; font-weight: 600; }
+.reparto-plan__barra { display: flex; gap: 2px; height: 1.6rem; overflow: hidden; border-radius: 6px; }
+.reparto-plan__barra span {
+  display: grid; place-items: center; min-width: 0; overflow: hidden; background: var(--color-nutriente);
+  font-size: 0.72rem; font-weight: 700; white-space: nowrap; color: #fff; text-shadow: 0 1px 1px rgb(0 0 0 / 25%);
 }
-.estadisticas-barras--mes .estadisticas-barras__area ol, .estadisticas-barras--mes .estadisticas-barras__rotulos { gap: 2px; }
-.estadisticas-barras__area ol { height: 100%; }
-.estadisticas-barras__area li { display: flex; align-items: flex-end; justify-content: center; height: 100%; }
-.estadisticas-barras__barra { display: block; width: min(1.25rem, 70%); border-radius: 6px 6px 2px 2px; background: var(--color-barra); transition: height 400ms var(--curva-salida); }
-.estadisticas-barras--mes .estadisticas-barras__barra { width: 85%; border-radius: 3px 3px 1px 1px; }
-.estadisticas-barras__dia--futuro .estadisticas-barras__barra { opacity: 0; }
-.estadisticas-barras__objetivo { position: absolute; z-index: 1; left: 0; right: 0; border-top: 2px dashed #8aa9c0; pointer-events: none; }
-.estadisticas-barras__rotulos { margin-top: 0.4rem; font-size: 0.7rem; line-height: 1.25; text-align: center; color: var(--color-texto-secundario); }
+.reparto-plan__diferencias { display: grid; gap: 0.2rem; margin: 0.85rem 0 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--color-texto-secundario); }
+.reparto-plan__diferencias strong { color: var(--color-texto); }
+
 @media (min-width: 64rem) {
-  .estadisticas__graficos { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; }
-  .estadisticas__graficos > :first-child { grid-column: 1 / -1; }
+  .estadisticas__graficos { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .estadisticas__cifras, .estadisticas__ancho { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .estadisticas-barras__barra { transition: none; }
+  .frente-meta__barra, .frente-meta__ayuda { transition: none; }
 }
 
 @media (max-width: 39.99rem) {
@@ -238,8 +309,7 @@
   .comidas__dia p { min-width: 0; }
   .comidas__dia .boton-texto { white-space: nowrap; }
   .anillo-calorias { width: 8rem; }
-  .progreso-semanal__barras { height: 6.5rem; }
-  .estadisticas-barras__area { height: 8rem; }
+  .frente-meta__area { height: 8.5rem; }
   /* El selector de macronutrientes ocupa el ancho de la tarjeta para que sus tres opciones quepan en una fila. */
   .estadisticas__encabezado-tarjeta .estadisticas__opciones { flex-wrap: nowrap; width: 100%; }
   .estadisticas__encabezado-tarjeta .estadisticas__opcion { flex: 1; padding: 0 0.4rem; }

@@ -3,6 +3,7 @@ const { query, param, body, matchedData } = require('express-validator');
 const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
 const validar = require('../middlewares/validar');
 const servicio = require('../services/administrador.service');
+const estadisticas = require('../services/estadisticasAdmin.service');
 
 const router = Router();
 router.use(autenticar, autorizarRoles('administrador'));
@@ -13,11 +14,14 @@ const paginacion = [
   query('pagina').default(1).isInt({ min: 1, max: 100000 }).toInt(),
   query('limite').default(12).isInt({ min: 1, max: 50 }).toInt(),
 ];
-router.get('/resumen', query('dias').default(30).isIn(['7', '30', '90', 7, 30, 90]).toInt(), validar,
-  async (req, res) => res.json(await servicio.resumen(matchedData(req).dias)));
+// Dashboard operativo, reportes de un período y avisos del encabezado (11-11-2026).
+router.get('/dashboard', async (req, res) => res.json(await estadisticas.dashboard()));
+router.get('/reportes', query('dias').default(30).isIn(['30', '90', '365', 30, 90, 365]).withMessage('Elige 30, 90 o 365 días').toInt(), validar,
+  async (req, res) => res.json(await estadisticas.reportes(matchedData(req).dias)));
+router.get('/alertas', async (req, res) => res.json(await estadisticas.alertas()));
 router.get('/usuarios', paginacion, query('rol').default('').isIn(['', 'usuario', 'profesional', 'administrador']), query('estadoCuenta').default('').isIn(['', 'activos', 'inactivos']), validar,
   async (req, res) => res.json(await servicio.listarUsuarios(matchedData(req))));
-router.get('/profesionales', paginacion, query('estado').default('').isIn(['', 'pendientes', 'verificados', 'rechazados']), validar,
+router.get('/profesionales', paginacion, query('estado').default('').isIn(['', 'pendientes', 'verificados', 'rechazados']), query('vista').default('directorio').isIn(['directorio', 'cola']), validar,
   async (req, res) => res.json(await servicio.listarProfesionales(matchedData(req))));
 router.get('/profesionales/:id', param('id').isInt({ min: 1 }).toInt(), validar,
   async (req, res) => res.json(await servicio.detalleProfesional(matchedData(req).id)));

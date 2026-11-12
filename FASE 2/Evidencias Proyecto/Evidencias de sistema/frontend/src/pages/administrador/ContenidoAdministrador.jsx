@@ -44,10 +44,12 @@ const CATALOGOS = {
       { clave: 'categoria', etiqueta: 'Categoría', opciones: REGLA_ESTABLECIMIENTO.categorias },
       { clave: 'comuna', etiqueta: 'Comuna', max: REGLA_ESTABLECIMIENTO.comuna.max },
       { clave: 'direccion', etiqueta: 'Dirección', max: REGLA_ESTABLECIMIENTO.direccion.max },
+      // Opcional: el usuario de Instagram (sin «@»); también se acepta el enlace del perfil (11-11-2026).
+      { clave: 'instagram', etiqueta: 'Instagram (opcional)', max: 100 },
       { clave: 'ubicacionLat', etiqueta: 'Latitud', numerico: true },
       { clave: 'ubicacionLng', etiqueta: 'Longitud', numerico: true },
     ],
-    resumen: (fila) => `${etiquetaCategoria(fila.categoria)} · ${fila.comuna || 'Sin comuna'} · ${fila.direccion}`,
+    resumen: (fila) => `${etiquetaCategoria(fila.categoria)} · ${fila.comuna || 'Sin comuna'} · ${fila.direccion}${fila.instagram ? ` · @${fila.instagram}` : ''}`,
     uso: (n) => (n === 1 ? 'Tiene 1 profesional asociado' : `Tiene ${n} profesionales asociados`),
     desactivar: 'Puedes desactivarlo para que no aparezca en el directorio.',
   },

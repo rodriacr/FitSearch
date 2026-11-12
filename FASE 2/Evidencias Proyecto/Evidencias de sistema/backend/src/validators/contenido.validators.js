@@ -52,6 +52,11 @@ const DATOS = {
     body('categoria').isIn(reglasEstablecimiento.categorias.map(({ valor }) => valor)).withMessage('Elige si es un centro de salud o un gimnasio'),
     texto('comuna', { max: reglasEstablecimiento.comuna.max }, 'Ingresa la comuna del establecimiento'),
     texto('direccion', { max: reglasEstablecimiento.direccion.max }, 'Ingresa la dirección del establecimiento'),
+    // Instagram (opcional): se acepta «@usuario», «usuario» o el enlace del perfil, y se guarda solo el usuario.
+    body('instagram').optional({ values: 'falsy' }).isString().withMessage('Escribe el usuario de Instagram').bail()
+      .customSanitizer((valor) => valor.trim().replace(/^(https?:\/\/)?(www\.)?instagram\.com\//i, '').replace(/^@/, '').replace(/[/?#].*$/, ''))
+      .matches(new RegExp(`^[A-Za-z0-9._]{1,${reglasEstablecimiento.instagram.max}}$`))
+      .withMessage(`Escribe un usuario de Instagram válido: letras, números, puntos o guiones bajos (hasta ${reglasEstablecimiento.instagram.max})`),
     body('ubicacionLat').notEmpty().withMessage('Busca la ubicación o ingresa la latitud').bail()
       .isFloat({ min: latMin, max: latMax }).withMessage(`La latitud debe estar en Chile (entre ${conComa(latMin)} y ${conComa(latMax)})`).toFloat(),
     body('ubicacionLng').notEmpty().withMessage('Busca la ubicación o ingresa la longitud').bail()

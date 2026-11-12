@@ -1,3 +1,4 @@
+const { Prisma } = require('@prisma/client');
 const prisma = require('./prisma');
 const ErrorHttp = require('../utils/ErrorHttp');
 const { documentoPublico } = require('./verificacion.model');
@@ -23,17 +24,39 @@ async function listarUsuarios({ q, rol, estadoCuenta, pagina, limite }) {
   return { filas, total };
 }
 
-async function listarProfesionales({ q, estado, pagina, limite }) {
+// Dos vistas (11-11-2026): «cola» (Verificaciones) trae todas las fichas del filtro con su historial y documentos, para
+// ordenarlas por antigüedad de la solicitud en el servicio; «directorio» (Profesionales) pagina por nombre y suma la
+// calificación y las reservas de cada ficha de la página.
+async function listarProfesionales({ q, estado, pagina, limite, vista = 'directorio' }) {
   const where = {
     ...profesionalVigente,
     ...(estado && { estadoVerificacion: { pendientes: 'pendiente', verificados: 'verificado', rechazados: 'rechazado' }[estado] }),
     ...(q && { OR: [{ usuario: { nombre: { contains: q } } }, { especialidad: { contains: q } }, { comuna: { contains: q } }] }),
   };
+  if (vista === 'cola') {
+    const filas = await prisma.profesional.findMany({
+      where, select: { ...seleccionProfesional, historialVerificacion: true, _count: { select: { documentos: true } } }, orderBy: { id: 'asc' },
+    });
+    return { filas, total: filas.length };
+  }
   const [filas, total] = await Promise.all([
-    prisma.profesional.findMany({ where, select: seleccionProfesional, orderBy: { id: 'asc' }, skip: (pagina - 1) * limite, take: limite }),
+    prisma.profesional.findMany({ where, select: seleccionProfesional, orderBy: [{ usuario: { nombre: 'asc' } }, { id: 'asc' }], skip: (pagina - 1) * limite, take: limite }),
     prisma.profesional.count({ where }),
   ]);
-  return { filas, total };
+  if (!filas.length) return { filas, total };
+  const ids = filas.map((fila) => fila.id);
+  const [calificaciones, reservas] = await Promise.all([
+    prisma.resena.groupBy({ by: ['profesionalId'], where: { profesionalId: { in: ids } }, _avg: { puntaje: true }, _count: { _all: true } }),
+    prisma.$queryRaw`SELECT d.profesional_id AS profesionalId, COUNT(*) AS total FROM reservas r
+      JOIN disponibilidades d ON d.id = r.disponibilidad_id
+      WHERE d.profesional_id IN (${Prisma.join(ids)}) AND r.estado <> 'cancelada' GROUP BY d.profesional_id`,
+  ]);
+  const calificacion = new Map(calificaciones.map((fila) => [fila.profesionalId, { promedio: fila._avg.puntaje, total: fila._count._all }]));
+  const reservasPor = new Map(reservas.map((fila) => [Number(fila.profesionalId), Number(fila.total)]));
+  return {
+    filas: filas.map((fila) => ({ ...fila, calificacion: calificacion.get(fila.id) ?? null, reservas: reservasPor.get(fila.id) ?? 0 })),
+    total,
+  };
 }
 
 function detalleProfesional(id) {
@@ -50,21 +73,4 @@ async function cambiarEstadoUsuario(id, activo) {
   });
 }
 
-async function resumen(desde, hasta) {
-  const periodo = { fechaRegistro: { gte: desde, lt: hasta } };
-  const [usuarios, profesionales, pendientes, verificados, nuevosUsuarios, nuevosProfesionales, registros] = await Promise.all([
-    prisma.usuario.count(),
-    prisma.usuario.count({ where: { rol: { nombre: 'profesional' } } }),
-    prisma.profesional.count({ where: { ...profesionalVigente, estadoVerificacion: 'pendiente' } }),
-    prisma.profesional.count({ where: { ...profesionalVigente, verificado: true } }),
-    prisma.usuario.count({ where: periodo }),
-    prisma.usuario.count({ where: { ...periodo, rol: { nombre: 'profesional' } } }),
-    prisma.$queryRaw`SELECT DATE(u.fecha_registro) AS fecha, r.nombre AS rol, COUNT(*) AS cantidad
-      FROM usuarios u JOIN roles r ON r.id = u.rol_id
-      WHERE u.fecha_registro >= ${desde} AND u.fecha_registro < ${hasta}
-      GROUP BY DATE(u.fecha_registro), r.nombre ORDER BY fecha ASC, rol ASC`,
-  ]);
-  return { usuarios, profesionales, pendientes, verificados, nuevosUsuarios, nuevosProfesionales, registros };
-}
-
-module.exports = { listarUsuarios, listarProfesionales, detalleProfesional, resumen, cambiarEstadoUsuario };
+module.exports = { listarUsuarios, listarProfesionales, detalleProfesional, cambiarEstadoUsuario };

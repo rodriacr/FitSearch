@@ -1,0 +1,36 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "alcance": "Menús laterales blancos en usuario, profesional y administrador, y sin franjas vacías fuera de margen en ninguna resolución",
+  "cambios": [
+    "El menú del profesional (antes azul) y el del administrador (antes azul oscuro) usan el mismo estilo blanco del usuario: texto oscuro, opción actual con fondo celeste y borde a la derecha",
+    "El cuerpo de la app ya no tiene un ancho máximo centrado: el menú queda pegado al borde izquierdo y el contenido conserva su ancho de siempre, centrado en el espacio libre (más ancho con el menú compacto)",
+    "El administrador centra su contenido en un lienzo de hasta 1436 px"
+  ],
+  "medicion": {
+    "anchos": [
+      375,
+      768,
+      1024,
+      1280,
+      1566,
+      1920,
+      2560
+    ],
+    "menuEnEscritorio": "x = 0 en las tres vistas (antes, a 1566 px, quedaba a 47 px del borde)",
+    "fondoDelMenu": "blanco en las tres vistas",
+    "desbordeHorizontal": 0,
+    "contenidoCentradoA1920px": "usuario y profesional 224 px a cada lado del contenido; administrador 122 px"
+  },
+  "pruebasAutomatizadas": {
+    "frontendVitest": "406/406",
+    "lint": "sin errores",
+    "build": "correcto"
+  },
+  "detectorImpeccable": "sin hallazgos",
+  "capturas": [
+    "Menus_Blancos_2026-11-11_profesional_1920.png",
+    "Menus_Blancos_2026-11-11_administrador_1920.png",
+    "Menus_Blancos_2026-11-11_usuario_2560.png"
+  ]
+}

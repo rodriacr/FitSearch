@@ -1,0 +1,51 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "alcance": "Inicio del usuario en celular (accesos rápidos, especialidades y profesionales destacados) y pestañas de Comidas: filas que se deslizan con el dedo y con flechas a los costados",
+  "comportamiento": [
+    "Bajo 40rem (640 px) cada lista se desliza hacia la derecha con encaje en cada tarjeta (scroll-snap) y la siguiente asoma por el borde",
+    "Flechas redondas a los costados (componente Carrusel): la de la derecha aparece si hay más tarjetas y la de la izquierda después de avanzar; cada clic mueve casi una pantalla y se puede seguir deslizando con el dedo, el trackpad o la rueda",
+    "Las flechas no se muestran cuando todo cabe (tableta y escritorio) y van sobre la tarjeta que asoma, no sobre la que se lee",
+    "La primera tarjeta queda alineada con el título; la lista llega hasta el borde de su panel",
+    "Desplazamiento nativo: no captura el gesto vertical; con el teclado, cada enlace enfocado entra en vista",
+    "Especialidades en celular con la tarjeta de foto completa (más baja que antes)",
+    "Desde 40rem vuelven las grillas de siempre (tableta y escritorio sin cambios)",
+    "Pestañas de Comidas: la fila se desliza y tiene flechas compactas (área de toque de 44 px); al tocar una pestaña que se ve a medias, la fila se corre hasta mostrarla entera"
+  ],
+  "medicion": {
+    "anchoA375px": {
+      "accesos": "375 px (de borde a borde), tarjetas de 8,5rem",
+      "especialidades": "343 px (borde del panel)",
+      "destacados": "343 px"
+    },
+    "encaje": "tras desplazar, la tarjeta siguiente queda en x = 35 px, alineada con el título",
+    "desbordeHorizontal": {
+      "375": 0,
+      "768": 0,
+      "1280": 0
+    },
+    "flechas": {
+      "alCargar375px": "izquierda oculta y derecha visible en las tres filas",
+      "trasAvanzar": "especialidades en 262 px y destacados en 250 px, con ambas flechas visibles",
+      "escritorio1280px": "las 6 flechas ocultas (opacidad 0)"
+    },
+    "comidasPestanas": {
+      "alCargar375px": "izquierda oculta y derecha visible",
+      "trasAvanzar": "273 de 303 px desplazados, con ambas flechas visibles",
+      "escritorio1280px": "sin flechas (todo cabe)"
+    }
+  },
+  "pruebasAutomatizadas": {
+    "frontendVitest": "406/406 (2 nuevas en Inicio y 1 en Comidas)",
+    "lint": "sin errores",
+    "build": "correcto"
+  },
+  "detectorImpeccable": "sin hallazgos",
+  "capturas": [
+    "Carruseles_Inicio_2026-11-11_accesos_y_especialidades.png",
+    "Carruseles_Inicio_2026-11-11_destacados_desplazado.png",
+    "Carruseles_Inicio_2026-11-11_escritorio_sin_cambios.png",
+    "Carruseles_Inicio_2026-11-11_comidas_pestanas.png"
+  ],
+  "nota": "Una corrida completa falló por tiempo con la CPU cargada por procesos de Edge sin interfaz que dejaron las capturas; se cerraron y la corrida siguiente pasó 406/406. El script de capturas ahora cierra todo el árbol de procesos."
+}

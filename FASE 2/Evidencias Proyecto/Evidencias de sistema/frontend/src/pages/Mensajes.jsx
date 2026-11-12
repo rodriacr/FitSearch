@@ -82,7 +82,14 @@ function Bandeja({ base, chats, activo, profesional, onElegir }) {
               <span className="avatar conversacion__avatar" aria-hidden="true">{iniciales(c.con.nombre)}</span>
               <span className="conversacion__texto">
                 <span className="conversacion__fila">
-                  <strong>{c.con.nombre}</strong>
+                  {/* Para el usuario, la especialidad del profesional va junto al nombre (pedido del PO del 11-11-2026).
+                      Para el profesional se omite: todas sus conversaciones son con clientes. */}
+                  <span className="conversacion__nombre">
+                    <strong>{c.con.nombre}</strong>
+                    {!profesional && c.con.detalle && (
+                      <span className="conversacion__especialidad"><span className="solo-lector">, </span>{c.con.detalle}</span>
+                    )}
+                  </span>
                   <time dateTime={c.actividad}>{diaDe(c.actividad) === hoy ? HORA.format(new Date(c.actividad)) : diaCorto(diaDe(c.actividad))}</time>
                 </span>
                 <span className="conversacion__fila">

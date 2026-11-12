@@ -28,9 +28,21 @@ test('una solicitud nueva avisa al profesional, salvo que haya desactivado los a
   modelo.datosReserva.mockResolvedValue(reserva());
   await avisos.reservaCreada(5);
   expect(correo.enviarAviso).toHaveBeenCalledWith(expect.objectContaining({
-    para: 'camila@example.test', nombre: 'Camila', asunto: 'Tienes una solicitud de reserva', accion: { texto: 'Abrir mi agenda', ruta: '/profesional/agenda' },
+    para: 'camila@example.test', nombre: 'Camila', asunto: 'FitSearch | Nueva solicitud de reserva', icono: 'solicitud',
+    accion: expect.objectContaining({ texto: 'Revisar solicitud en mi agenda', ruta: '/profesional/agenda' }),
   }));
-  expect(correo.enviarAviso.mock.calls[0][0].parrafos.join(' ')).toMatch(/Online · Primera visita/);
+  // Estructura pedida por el PO (11-11-2026): quién pidió la hora, panel con el detalle y qué debe hacer el profesional.
+  const aviso = correo.enviarAviso.mock.calls[0][0];
+  expect(aviso.seccion.texto).toContain('**Ana Pérez** ha solicitado reservar una hora contigo');
+  expect(aviso.detalles).toEqual([
+    { icono: 'calendario', etiqueta: 'Fecha', valor: 'Martes 10 de noviembre' },
+    { icono: 'reloj', etiqueta: 'Horario', valor: '09:00 a 10:00 (hora de Chile)' },
+    { icono: 'video', etiqueta: 'Modalidad', valor: 'Online' },
+    { icono: 'tipo', etiqueta: 'Tipo de atención', valor: 'Primera visita' },
+    { icono: 'estado', etiqueta: 'Estado', valor: 'Pendiente de confirmación', estado: 'pendiente' },
+  ]);
+  expect(aviso.pasos.titulo).toBe('¿Qué debes hacer?');
+  expect(aviso.nota).toMatch(/todavía no está confirmada/);
   correo.enviarAviso.mockClear();
   const sinAvisos = reserva();
   sinAvisos.disponibilidad.profesional.avisosCorreo = false;
@@ -39,16 +51,30 @@ test('una solicitud nueva avisa al profesional, salvo que haya desactivado los a
   expect(correo.enviarAviso).not.toHaveBeenCalled();
 });
 
+test('si el profesional confirma automáticamente, el aviso dice que la reserva ya quedó confirmada', async () => {
+  modelo.datosReserva.mockResolvedValue(reserva({ estado: 'confirmada', primeraVisita: false }));
+  await avisos.reservaCreada(5);
+  const aviso = correo.enviarAviso.mock.calls[0][0];
+  expect(aviso).toMatchObject({ asunto: 'FitSearch | Nueva reserva confirmada', icono: 'confirmada' });
+  expect(aviso.detalles).toEqual(expect.arrayContaining([
+    { icono: 'tipo', etiqueta: 'Tipo de atención', valor: 'Ya se atendió contigo' },
+    { icono: 'estado', etiqueta: 'Estado', valor: 'Confirmada', estado: 'confirmada' },
+  ]));
+});
+
 test('confirmar avisa al usuario; si el usuario cancela, se avisa al profesional', async () => {
   modelo.datosReserva.mockResolvedValue(reserva({ estado: 'confirmada' }));
   await avisos.reservaCambiada(5);
-  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'ana@example.test', asunto: 'Tu cita fue confirmada' }));
+  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'ana@example.test', asunto: 'FitSearch | Tu cita fue confirmada' }));
+  expect(correo.enviarAviso.mock.lastCall[0].detalles[0]).toEqual({ icono: 'persona', etiqueta: 'Profesional', valor: 'Camila Rojas' });
   modelo.datosReserva.mockResolvedValue(reserva({ estado: 'cancelada', canceladaPor: 'usuario' }));
   await avisos.reservaCambiada(5);
-  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'camila@example.test', asunto: 'Una reserva fue cancelada' }));
+  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'camila@example.test', asunto: 'FitSearch | Una reserva fue cancelada' }));
   modelo.datosReserva.mockResolvedValue(reserva({ estado: 'cancelada', canceladaPor: 'profesional' }));
   await avisos.reservaCambiada(5);
-  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'ana@example.test', asunto: 'Tu cita fue cancelada' }));
+  expect(correo.enviarAviso).toHaveBeenLastCalledWith(expect.objectContaining({ para: 'ana@example.test', asunto: 'FitSearch | Tu cita fue cancelada' }));
+  // Si el profesional cancela, el botón lleva a su ficha para elegir otra hora.
+  expect(correo.enviarAviso.mock.lastCall[0].accion).toMatchObject({ texto: 'Buscar otra hora', ruta: '/profesionales/3' });
 });
 
 // Lunes 09-11-2026 a las 10:00 en Chile; la marca del intento va sin milisegundos (columnas DATETIME(0)).
@@ -68,7 +94,8 @@ describe('lista de espera', () => {
     expect(modelo.listaEspera).toHaveBeenCalledWith(3, ahora);
     expect(modelo.tomarDeLaLista.mock.calls).toEqual([[1, marca, ahora], [2, marca, ahora], [3, marca, ahora]]);
     expect(correo.enviarAviso).toHaveBeenCalledTimes(2);
-    expect(correo.enviarAviso.mock.calls[0][0]).toMatchObject({ asunto: 'Camila Rojas tiene horas disponibles', accion: { ruta: '/profesionales/3' } });
+    expect(correo.enviarAviso.mock.calls[0][0]).toMatchObject({ asunto: 'FitSearch | Camila Rojas tiene horas disponibles', accion: { ruta: '/profesionales/3' } });
+    expect(correo.enviarAviso.mock.calls[0][0].detalles).toContainEqual({ icono: 'especialidad', etiqueta: 'Especialidad', valor: 'Nutrición' });
     // Ana recibió el correo y Eva (cuenta desactivada) sale sin correo; a Luis le falló el envío: se suelta y sigue en la lista.
     expect(modelo.sacarDeLaLista.mock.calls).toEqual([[1, marca], [3, marca]]);
     expect(modelo.soltarDeLaLista.mock.calls).toEqual([[2, marca]]);
@@ -105,7 +132,7 @@ describe('recordatorio', () => {
     expect(tomarOtra.where.id).toBe(3);
     expect(prisma.reserva.updateMany).toHaveBeenCalledTimes(3);
     expect(correo.enviarAviso).toHaveBeenCalledTimes(1);
-    expect(correo.enviarAviso.mock.calls[0][0]).toMatchObject({ asunto: 'Recordatorio de tu cita', para: 'ana@example.test' });
+    expect(correo.enviarAviso.mock.calls[0][0]).toMatchObject({ asunto: 'FitSearch | Recordatorio de tu cita', para: 'ana@example.test', icono: 'recordatorio' });
     // Las citas con un envío en curso no vencido no se vuelven a pedir.
     expect(prisma.reserva.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({
       estado: 'confirmada', recordatorioEn: null, OR: [{ recordatorioIntento: null }, { recordatorioIntento: { lt: vencido } }],

@@ -32,7 +32,7 @@ async function listar({ orden = 'nombre', pagina = 1, limite = 12, ...filtros })
   const { desde, distancia } = construirConsulta(filtros);
   const [filas, [{ total }]] = await Promise.all([
     prisma.$queryRaw`
-      SELECT e.id, e.nombre, e.categoria, e.comuna, e.direccion,
+      SELECT e.id, e.nombre, e.categoria, e.comuna, e.direccion, e.instagram,
         e.ubicacion_lat AS ubicacionLat, e.ubicacion_lng AS ubicacionLng,
         ${distancia} AS distanciaKm,
         (SELECT COUNT(*) ${PROFESIONALES_VISIBLES} AND p.establecimiento_id = e.id) AS totalProfesionales
@@ -49,7 +49,7 @@ function buscarPorId(id) {
   return prisma.establecimiento.findFirst({
     where: { id, activo: true },
     select: {
-      id: true, nombre: true, categoria: true, comuna: true, direccion: true, ubicacionLat: true, ubicacionLng: true,
+      id: true, nombre: true, categoria: true, comuna: true, direccion: true, instagram: true, ubicacionLat: true, ubicacionLng: true,
       profesionales: {
         where: DONDE_PROFESIONAL_VISIBLE,
         select: { id: true, especialidad: true, modalidad: true, verificado: true, usuario: { select: { nombre: true } } },

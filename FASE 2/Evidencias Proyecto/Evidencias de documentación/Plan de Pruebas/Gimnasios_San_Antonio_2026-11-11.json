@@ -1,0 +1,79 @@
+{
+  "fecha": "2026-11-11",
+  "pedido": "Buscar gimnasios de la zona de San Antonio (Región de Valparaíso) para la sección Gimnasios del usuario, con su Instagram si tienen",
+  "migracion": "20261111130000_gimnasios_san_antonio (columna instagram y 11 gimnasios; aditiva y sin duplicar)",
+  "fuentes": {
+    "nombresYDirecciones": "Directorio público de gimnasios de San Antonio de AgendaPro: https://agendapro.com/mp/cl/gimnasios-san-antonio (leído el 11-11-2026)",
+    "instagram": "Perfiles públicos de Instagram de cada gimnasio que muestran su nombre o dirección",
+    "coordenadas": "OpenStreetMap (Nominatim) con el servicio de geocodificación de la app; precisión a nivel de calle salvo SO2 Fitness (exacta)"
+  },
+  "gimnasios": [
+    {
+      "nombre": "Gimnasio Pacific San Antonio",
+      "direccion": "Centenario 396",
+      "instagram": "pacific_sanantonio"
+    },
+    {
+      "nombre": "Gimnasio Power Fitness",
+      "direccion": "Lautaro 1940, Barrancas",
+      "instagram": "powerfitnesssanantonio",
+      "nota": "Otro directorio lo ubica en Centenario 396; se usó la dirección de AgendaPro"
+    },
+    {
+      "nombre": "Olimpo Gimnasio",
+      "direccion": "Del Canelo 269, Llolleo",
+      "instagram": "gimnasio_olimpo_",
+      "nota": "Existe una segunda cuenta, @gimnasio.olimpo.llolleo"
+    },
+    {
+      "nombre": "San Antonio Training Box",
+      "direccion": "La Marina 1875, Barrancas",
+      "instagram": "sanantoniotraining"
+    },
+    {
+      "nombre": "Gimnasio Esparta",
+      "direccion": "Perquenco 1172",
+      "instagram": null
+    },
+    {
+      "nombre": "SO2 Fitness",
+      "direccion": "José Miguel Carrera 425, Llolleo",
+      "instagram": null
+    },
+    {
+      "nombre": "EBody Llolleo",
+      "direccion": "Santa Lucía 410, Llolleo",
+      "instagram": null
+    },
+    {
+      "nombre": "American Fit",
+      "direccion": "Sanfuentes 1410",
+      "instagram": null
+    },
+    {
+      "nombre": "Oranges Fitness Sport Gym Club",
+      "direccion": "José Manuel Orella 359",
+      "instagram": null
+    },
+    {
+      "nombre": "Gimnasio Arrayán",
+      "direccion": "Del Canelo 285, Llolleo",
+      "instagram": null
+    },
+    {
+      "nombre": "Fitness Estudio",
+      "direccion": "El Sauce 485, Llolleo",
+      "instagram": null
+    }
+  ],
+  "descartados": "Clubes de artes marciales, academias de baile, canchas y lugares sin dirección exacta (por ejemplo, Minotaurus Box: solo «Pelancura»); Mambo Fitness Center por direcciones distintas entre fuentes",
+  "pruebas": [
+    "backend tests/integracion/contenido.api.test.js (Instagram como usuario, enlace o @)",
+    "frontend src/pages/Establecimientos.test.jsx (enlace en tarjeta y ficha)"
+  ],
+  "capturas": [
+    "Gimnasios_San_Antonio_2026-11-11_mapa.png",
+    "Gimnasios_San_Antonio_2026-11-11_instagram.png",
+    "Gimnasios_San_Antonio_2026-11-11_celular.png"
+  ]
+}

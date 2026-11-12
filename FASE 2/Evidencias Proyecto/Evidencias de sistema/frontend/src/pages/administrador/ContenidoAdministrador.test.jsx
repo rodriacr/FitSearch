@@ -109,7 +109,7 @@ describe('agregar y editar', () => {
     await userEvent.click(within(formulario).getByRole('button', { name: 'Guardar' }));
     expect(await screen.findByText('«Gimnasio Demo Ñuñoa» quedó agregado.')).toBeInTheDocument();
     expect(cuerpoDe(fetch.mock.calls.find((llamada) => metodoDe(llamada) === 'POST'))).toEqual({
-      nombre: 'Gimnasio Demo Ñuñoa', categoria: 'gimnasio', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 3000', ubicacionLat: -33.4569, ubicacionLng: -70.5976,
+      nombre: 'Gimnasio Demo Ñuñoa', categoria: 'gimnasio', comuna: 'Ñuñoa', direccion: 'Av. Irarrázaval 3000', instagram: '', ubicacionLat: -33.4569, ubicacionLng: -70.5976,
     });
   });
 });

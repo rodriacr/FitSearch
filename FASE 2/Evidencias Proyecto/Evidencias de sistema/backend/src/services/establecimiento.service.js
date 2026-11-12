@@ -13,6 +13,7 @@ function formatear(fila) {
     categoria: fila.categoria,
     comuna: fila.comuna ?? null,
     direccion: fila.direccion,
+    instagram: fila.instagram ?? null,
     ubicacionLat: Number(fila.ubicacionLat),
     ubicacionLng: Number(fila.ubicacionLng),
     distanciaKm: fila.distanciaKm === null || fila.distanciaKm === undefined ? null : redondear(fila.distanciaKm),

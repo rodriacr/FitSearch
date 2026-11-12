@@ -476,17 +476,106 @@
       "max": 60,
       "resultados": 12
     },
-    "macrosObjetivo": {
-      "proteinas": 0.3,
-      "carbohidratos": 0.45,
-      "grasas": 0.25
+    "planes": {
+      "metas": {
+        "bajar_peso": {
+          "ajusteCalorias": -0.15,
+          "proteinaGKg": 1.8,
+          "grasasPct": 30
+        },
+        "mantener_peso": {
+          "ajusteCalorias": 0,
+          "proteinaGKg": 1.4,
+          "grasasPct": 30
+        },
+        "aumentar_masa": {
+          "ajusteCalorias": 0.1,
+          "proteinaGKg": 2,
+          "grasasPct": 25
+        },
+        "mejorar_rendimiento": {
+          "ajusteCalorias": 0,
+          "proteinaGKg": 1.6,
+          "carbohidratosGKg": 5
+        },
+        "otro": {
+          "ajusteCalorias": 0,
+          "proteinaGKg": 1.4,
+          "grasasPct": 30
+        }
+      },
+      "referencia": {
+        "pesoKg": 70,
+        "kcal": 2300
+      },
+      "caloriasMinimas": {
+        "femenino": 1200,
+        "masculino": 1500
+      },
+      "proteinaMaxPct": 35,
+      "proteinaMinimaGKg": 0.8,
+      "grasasPct": {
+        "min": 20,
+        "max": 35
+      },
+      "personalizado": {
+        "min": 5,
+        "max": 80
+      },
+      "recomendado": {
+        "proteinas": [
+          10,
+          35
+        ],
+        "carbohidratos": [
+          45,
+          65
+        ],
+        "grasas": [
+          20,
+          35
+        ]
+      },
+      "maxPersonalizados": 10,
+      "nombrePersonalizado": {
+        "max": 40
+      },
+      "metaPeso": {
+        "kcalPorKg": 7700,
+        "ritmos": {
+          "bajar_peso": [
+            0.25,
+            0.5,
+            0.75
+          ],
+          "aumentar_masa": [
+            0.25,
+            0.5
+          ]
+        },
+        "ritmoPorDefecto": {
+          "bajar_peso": 0.5,
+          "aumentar_masa": 0.25
+        },
+        "imc": {
+          "min": 18.5,
+          "max": 30
+        },
+        "pesoKg": {
+          "min": 30,
+          "max": 300
+        }
+      }
     },
     "kcalPorGramo": {
       "proteinas": 4,
       "carbohidratos": 4,
       "grasas": 9
     },
-    "alimentosPorMensaje": 8
+    "alimentosPorMensaje": 8,
+    "estadisticas": {
+      "margenMeta": 0.1
+    }
   },
   "agua": {
     "vasoMl": 250,
@@ -534,6 +623,9 @@
       },
       "direccion": {
         "max": 150
+      },
+      "instagram": {
+        "max": 30
       },
       "categorias": [
         {

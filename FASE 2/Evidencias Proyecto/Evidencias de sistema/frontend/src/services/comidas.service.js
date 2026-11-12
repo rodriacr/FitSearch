@@ -11,6 +11,15 @@ export const buscarAlimentos = (texto) => solicitar(`/comidas/alimentos?q=${enco
 export const registrarComida = (datos) => solicitar('/comidas', { metodo: 'POST', cuerpo: datos });
 export const actualizarComida = (id, datos) => solicitar(`/comidas/${id}`, { metodo: 'PATCH', cuerpo: datos });
 export const eliminarComida = (id) => solicitar(`/comidas/${id}`, { metodo: 'DELETE' });
+// Plan de alimentación (11-11-2026): el de la meta o uno de la lista de personalizados (rige desde hoy), y la meta de
+// peso. Cada llamada responde el plan completo.
+export const obtenerPlan = () => solicitar('/comidas/plan');
+export const elegirPlan = (datos) => solicitar('/comidas/plan', { metodo: 'PUT', cuerpo: datos });
+export const crearPersonalizado = (datos) => solicitar('/comidas/plan/personalizados', { metodo: 'POST', cuerpo: datos });
+export const actualizarPersonalizado = (id, datos) => solicitar(`/comidas/plan/personalizados/${id}`, { metodo: 'PUT', cuerpo: datos });
+export const eliminarPersonalizado = (id) => solicitar(`/comidas/plan/personalizados/${id}`, { metodo: 'DELETE' });
+export const guardarMetaPeso = (datos) => solicitar('/comidas/plan/meta-peso', { metodo: 'PUT', cuerpo: datos });
+export const quitarMetaPeso = () => solicitar('/comidas/plan/meta-peso', { metodo: 'DELETE' });
 
 export const MOMENTOS = reglas.comidas.momentos;
 export const { min: GRAMOS_MIN, max: GRAMOS_MAX } = reglas.comidas.gramos;

@@ -5,6 +5,7 @@ import Alerta from '../Alerta.jsx';
 import Encabezado from '../Encabezado.jsx';
 import BarraInferior from './BarraInferior.jsx';
 import MenuLateral from './MenuLateral.jsx';
+import useMenuCompacto from './useMenuCompacto.js';
 import './DisenoAplicacion.css';
 
 // Estructura común de las pantallas con sesión: encabezado, menú lateral, contenido y barra inferior (DAS, D22).
@@ -14,6 +15,7 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
   const { pathname } = useLocation();
   const tipoNavegacion = useNavigationType();
   const [menuAbierto, setMenuAbierto] = useState(false);
+  const [menuCompacto, alternarMenuCompacto] = useMenuCompacto();
   // El aviso de sesión iniciada o de cuenta creada se muestra una vez, en la primera pantalla.
   const [aviso, setAviso] = useState(avisoSesion);
   const [rutaActual, setRutaActual] = useState(pathname);
@@ -34,7 +36,7 @@ export default function DisenoAplicacion({ espacio = 'usuario' }) {
       <a className="app__saltar" href="#contenido">Saltar al contenido</a>
       <Encabezado menuAbierto={menuAbierto} onAlternarMenu={() => setMenuAbierto(!menuAbierto)} />
       <div className="app__cuerpo">
-        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} />
+        <MenuLateral abierto={menuAbierto} onCerrar={cerrarMenu} espacio={espacio} compacto={menuCompacto} onAlternarCompacto={alternarMenuCompacto} />
         <main id="contenido" className="app__contenido" tabIndex={-1}>
           {aviso && <Alerta tipo={aviso.tipo}>{aviso.texto}</Alerta>}
           {/* Las pantallas pueden descartar el aviso cuando la persona avanza (por ejemplo, en el asistente de perfil). */}

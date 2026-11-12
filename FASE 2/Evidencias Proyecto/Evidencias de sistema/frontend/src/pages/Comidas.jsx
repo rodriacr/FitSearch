@@ -1,12 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Alerta from '../components/Alerta.jsx';
+import Carrusel from '../components/Carrusel.jsx';
 import Icono from '../components/Icono.jsx';
 import ComidasDelDia from '../components/comidas/ComidasDelDia.jsx';
 import EstadisticasComidas from '../components/comidas/EstadisticasComidas.jsx';
-import { AnilloCalorias, BarraNutriente, ProgresoSemanal } from '../components/comidas/GraficosComidas.jsx';
+import { AnilloCalorias, AyudaPanel, BarraNutriente, BarrasFrenteAMeta, LeyendaMeta } from '../components/comidas/GraficosComidas.jsx';
+import { MARGEN_PCT, cercaDeLaMeta, frenteALaMeta, porcentajeDe } from '../components/comidas/metaDiaria.js';
 import RegistrarComida from '../components/comidas/RegistrarComida.jsx';
 import AguaDelDia from '../components/comidas/AguaDelDia.jsx';
+import PlanAlimentacion from '../components/comidas/PlanAlimentacion.jsx';
 import { formatearNumero } from '../services/formato.js';
 import { nombreDia, obtenerDia, obtenerSemana, sumarDias } from '../services/comidas.service.js';
 import './Comidas.css';
@@ -14,7 +17,7 @@ import './Comidas.css';
 const PESTANAS = [
   { clave: 'resumen', nombre: 'Resumen' },
   { clave: 'comidas', nombre: 'Comidas' },
-  { clave: 'plan', nombre: 'Plan de alimentación', proximamente: true },
+  { clave: 'plan', nombre: 'Plan de alimentación' },
   { clave: 'estadisticas', nombre: 'Estadísticas' },
 ];
 const NUTRIENTES = [
@@ -22,6 +25,20 @@ const NUTRIENTES = [
   { clave: 'carbohidratosG', nombre: 'Carbohidratos', color: '#1fa37a' },
   { clave: 'grasasG', nombre: 'Grasas', color: '#f7931e' },
 ];
+
+// Lo que dice la semana del Resumen (11-11-2026): cuántos días completos (con registros y anteriores a hoy, que aún no
+// termina) quedaron cerca de la meta, su promedio de calorías y el promedio de los otros días, para comparar el día que se ve.
+function resumenSemana(semana, fechaActual, hoy) {
+  const completos = semana.dias.filter((dia) => dia.calorias > 0 && dia.fecha < hoy);
+  const otros = semana.dias.filter((dia) => dia.calorias > 0 && !dia.futuro && dia.fecha !== fechaActual && dia.fecha !== hoy);
+  const promedio = (lista) => (lista.length ? Math.round(lista.reduce((suma, dia) => suma + dia.calorias, 0) / lista.length) : null);
+  return {
+    completos: completos.length,
+    cerca: completos.filter((dia) => cercaDeLaMeta(dia.calorias, semana.objetivoCalorias)).length,
+    promedio: promedio(completos),
+    promedioOtros: promedio(otros),
+  };
+}
 
 function TarjetaObjetivo({ objetivo }) {
   const { perfil } = objetivo;
@@ -47,7 +64,8 @@ function TarjetaObjetivo({ objetivo }) {
 
 // Gestor de alimentación del usuario (FS-HU-09 y FS-HU-10; mockup del PO del 26-10-2026). Resumen del día frente al
 // objetivo, progreso de la semana y las comidas del día; los alimentos se registran con sus gramos o desde el asistente.
-// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26).
+// La pestaña Estadísticas muestra la semana o el mes (FS-HU-26) y la de Plan de alimentación, el plan según la meta o uno
+// personalizado (11-11-2026).
 export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
@@ -70,7 +88,10 @@ export default function Comidas() {
   const esHoy = dia && dia.fecha === dia.hoy;
 
   let contenido;
-  if (!datos) {
+  if (pestana === 'plan') {
+    // El plan no depende del día elegido; al guardarlo se recarga el resumen para que use el plan nuevo.
+    contenido = <PlanAlimentacion alGuardar={recargar} />;
+  } else if (!datos) {
     contenido = <p className="comidas__estado" role="status">Cargando tus comidas…</p>;
   } else if (datos.error) {
     contenido = (
@@ -86,11 +107,21 @@ export default function Comidas() {
     contenido = <EstadisticasComidas fecha={dia.fecha} version={intento} alRegistrar={() => abrirRegistro()} />;
   } else {
     const { objetivo, consumo } = dia;
+    const falta = frenteALaMeta(consumo.calorias, objetivo.calorias, 'kcal');
+    const semana = resumenSemana(datos.semana, dia.fecha, dia.hoy);
+    const diferenciaSemana = semana.promedioOtros === null ? null : consumo.calorias - semana.promedioOtros;
     contenido = (
       <div className="comidas__resumen">
         <section className="panel-tarjeta tarjeta-calorias" aria-labelledby="titulo-calorias">
           <h2 id="titulo-calorias" className="panel-tarjeta__titulo">Calorías {esHoy ? 'de hoy' : 'del día'}</h2>
           <p className="texto-secundario tarjeta-calorias__fecha">{nombreDia(dia.fecha)}</p>
+          <AyudaPanel>Lo que llevas {esHoy ? 'hoy' : 'ese día'} frente a la meta diaria de tu plan, y cuánto te falta para llegar a ella.</AyudaPanel>
+          {falta && (
+            <p className={`tarjeta-calorias__falta tarjeta-calorias__falta--${falta.estado}`} role="status">
+              <Icono nombre={falta.estado === 'sobre' ? 'info' : falta.estado === 'cumplida' || falta.estado === 'cerca' ? 'check' : 'diana'} tamano={20} />
+              <span><strong>{falta.texto}</strong>{falta.estado === 'cerca' && ' · ya estás cerca de tu meta'}</span>
+            </p>
+          )}
           <div className="tarjeta-calorias__cuerpo">
             <AnilloCalorias consumo={consumo.calorias} objetivo={objetivo.calorias} />
             <ul className="tarjeta-calorias__macros">
@@ -98,21 +129,39 @@ export default function Comidas() {
                 <li key={nutriente} style={{ '--color-nutriente': color }}>
                   <span className="tarjeta-calorias__punto" aria-hidden="true" />
                   <span className="tarjeta-calorias__nombre">{nombre}</span>
-                  <span>{formatearNumero(consumo[nutriente])} g{objetivo[nutriente] ? ` / ${formatearNumero(objetivo[nutriente])} g` : ''}</span>
-                  {objetivo[nutriente] && <strong>{Math.round((consumo[nutriente] / objetivo[nutriente]) * 100)} %</strong>}
+                  <span>
+                    {formatearNumero(consumo[nutriente])} g{objetivo[nutriente] ? ` / ${formatearNumero(objetivo[nutriente])} g` : ''}
+                    {objetivo[nutriente] && <small>{frenteALaMeta(consumo[nutriente], objetivo[nutriente], 'g', { corto: true }).texto}</small>}
+                  </span>
+                  {objetivo[nutriente] && <strong>{porcentajeDe(consumo[nutriente], objetivo[nutriente])} %</strong>}
                 </li>
               ))}
             </ul>
           </div>
+          {diferenciaSemana !== null && (
+            <p className="tarjeta-calorias__comparacion">
+              <span>Promedio de tus otros días de esta semana: <strong>{formatearNumero(semana.promedioOtros)} kcal</strong></span>
+              <span>{esHoy ? 'Hoy vas' : 'Ese día fueron'} {diferenciaSemana === 0 ? 'igual que tu promedio' : `${formatearNumero(Math.abs(diferenciaSemana))} kcal ${diferenciaSemana > 0 ? 'sobre' : 'bajo'} ese promedio`}</span>
+            </p>
+          )}
           {!objetivo.calorias && <p className="texto-secundario">Completa tu perfil para ver cuánto te falta para tu objetivo diario. <Link to="/perfil">Ir a mi perfil</Link></p>}
         </section>
 
         <section className="panel-tarjeta tarjeta-semana" aria-labelledby="titulo-semana">
-          <div className="tarjeta-semana__encabezado">
-            <h2 id="titulo-semana" className="panel-tarjeta__titulo">Progreso semanal</h2>
-            <p className="tarjeta-semana__leyenda" aria-hidden="true"><span className="tarjeta-semana__consumidas">Consumidas</span><span className="tarjeta-semana__objetivo">Objetivo</span></p>
-          </div>
-          <ProgresoSemanal semana={datos.semana} fechaActual={dia.fecha} />
+          <h2 id="titulo-semana" className="panel-tarjeta__titulo">Progreso semanal</h2>
+          <AyudaPanel>
+            Las calorías de cada día de la semana frente a tu meta. Sobre cada barra ves qué porcentaje de la meta alcanzaste; un día
+            cuenta como cerca de la meta si queda entre {100 - MARGEN_PCT} % y {100 + MARGEN_PCT} %. Hoy se suma al terminar el día.
+          </AyudaPanel>
+          {datos.semana.objetivoCalorias && semana.completos > 0 && (
+            <ul className="tarjeta-semana__resumen">
+              <li><strong>{semana.cerca} de {semana.completos}</strong> {semana.completos === 1 ? 'día completo' : 'días completos'} cerca de tu meta</li>
+              <li>Promedio: <strong>{formatearNumero(semana.promedio)} kcal</strong> ({porcentajeDe(semana.promedio, datos.semana.objetivoCalorias)} % de tu meta)</li>
+            </ul>
+          )}
+          <LeyendaMeta meta={datos.semana.objetivoCalorias} unidad="kcal" />
+          <BarrasFrenteAMeta fechaActual={dia.fecha} meta={datos.semana.objetivoCalorias} descripcion="Calorías consumidas cada día de la semana"
+            dias={datos.semana.dias.map((d) => ({ ...d, conRegistros: d.calorias > 0 }))} />
         </section>
 
         <section className="panel-tarjeta tarjeta-comidas" aria-labelledby="titulo-comidas-dia">
@@ -125,6 +174,7 @@ export default function Comidas() {
 
         <section className="panel-tarjeta tarjeta-nutricional" aria-labelledby="titulo-nutricional">
           <h2 id="titulo-nutricional" className="panel-tarjeta__titulo">Resumen nutricional</h2>
+          <AyudaPanel>Cuánto llevas de cada nutriente y del agua, qué porcentaje de tu meta es y cuánto te falta.</AyudaPanel>
           <BarraNutriente nombre="Calorías" consumo={consumo.calorias} objetivo={objetivo.calorias} unidad="kcal" color="#1c74c9" />
           {NUTRIENTES.map(({ clave: nutriente, nombre, color }) => (
             <BarraNutriente key={nutriente} nombre={nombre} consumo={consumo[nutriente]} objetivo={objetivo[nutriente]} color={color} />
@@ -142,8 +192,10 @@ export default function Comidas() {
         </div>
 
         <p className="comidas__nota texto-secundario">
-          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física), repartido en 30 % proteínas, 45 % carbohidratos y
-          25 % grasas. Es una referencia general que no reemplaza la evaluación de un nutricionista.
+          Objetivo diario estimado con tu perfil (Mifflin-St Jeor y tu actividad física) y repartido según tu plan de alimentación
+          {objetivo.plan && `: ${objetivo.plan.porcentajes.proteinas} % proteínas, ${objetivo.plan.porcentajes.carbohidratos} % carbohidratos y ${objetivo.plan.porcentajes.grasas} % grasas`}.{' '}
+          <button type="button" className="boton-texto comidas__ver-plan" onClick={() => setPestana('plan')}>Ver o cambiar tu plan</button>.
+          Es una referencia general que no reemplaza la evaluación de un nutricionista.
         </p>
       </div>
     );
@@ -162,15 +214,16 @@ export default function Comidas() {
         </button>
       </header>
 
-      <div className="comidas__pestanas" role="group" aria-label="Secciones de Comidas">
+      {/* En celular las pestañas no caben: la fila se desliza y tiene flechas a los costados (11-11-2026). */}
+      <Carrusel className="comidas__pestanas" nombre="secciones" tamano="compacto" role="group" aria-label="Secciones de Comidas">
         {PESTANAS.map(({ clave: valor, nombre, proximamente }) => (proximamente ? (
           <span key={valor} className="comidas__pestana comidas__pestana--proximamente">{nombre} <span className="etiqueta-proximamente">Próximamente</span></span>
         ) : (
           <button key={valor} type="button" className="comidas__pestana" aria-pressed={pestana === valor} onClick={() => setPestana(valor)}>{nombre}</button>
         )))}
-      </div>
+      </Carrusel>
 
-      {dia && pestana !== 'estadisticas' && (
+      {dia && pestana !== 'estadisticas' && pestana !== 'plan' && (
         <nav className="comidas__dia" aria-label="Día">
           <button type="button" className="boton-icono" onClick={() => setFecha(sumarDias(dia.fecha, -1))} aria-label="Día anterior">
             <Icono nombre="chevron" tamano={20} className="comidas__anterior" />

@@ -1,11 +1,11 @@
 const nodemailer = require('nodemailer');
 const config = require('../src/config/env');
-const { smtpConfigurado } = require('../src/services/correo.service');
+const { smtpConfigurado, faltantesSmtp } = require('../src/services/correo.service');
 
 async function comprobar() {
   if (!smtpConfigurado()) {
     console.error(
-      'SMTP pendiente: configura SMTP_USUARIO y SMTP_CONTRASENA en backend/.env. No se envió ningún correo.',
+      `SMTP pendiente: falta ${faltantesSmtp().join(' y ')} en backend/.env (SMTP_CONTRASENA es la contraseña de aplicación de Gmail, no la de la cuenta). No se envió ningún correo.`,
     );
     process.exitCode = 2;
     return;

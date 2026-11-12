@@ -8,17 +8,18 @@ const FORMATOS = {
     id, nombre, sinonimos, calorias: Number(calorias), proteinasG: Number(proteinasG), carbohidratosG: Number(carbohidratosG),
     grasasG: Number(grasasG), activo, enUso,
   }),
-  establecimientos: ({ id, nombre, categoria, comuna, direccion, ubicacionLat, ubicacionLng, activo, enUso }) => ({
-    id, nombre, categoria, comuna, direccion, ubicacionLat: Number(ubicacionLat), ubicacionLng: Number(ubicacionLng), activo, enUso,
+  establecimientos: ({ id, nombre, categoria, comuna, direccion, instagram, ubicacionLat, ubicacionLng, activo, enUso }) => ({
+    id, nombre, categoria, comuna, direccion, instagram: instagram ?? null, ubicacionLat: Number(ubicacionLat), ubicacionLng: Number(ubicacionLng), activo, enUso,
   }),
 };
 // Datos que se guardan de cada catálogo; el resto del cuerpo se ignora.
 const CAMPOS = {
   especialidades: ['nombre'],
   alimentos: ['nombre', 'sinonimos', 'calorias', 'proteinasG', 'carbohidratosG', 'grasasG'],
-  establecimientos: ['nombre', 'categoria', 'comuna', 'direccion', 'ubicacionLat', 'ubicacionLng'],
+  establecimientos: ['nombre', 'categoria', 'comuna', 'direccion', 'instagram', 'ubicacionLat', 'ubicacionLng'],
 };
-const datosDe = (catalogo, cuerpo) => Object.fromEntries(CAMPOS[catalogo].map((campo) => [campo, cuerpo[campo]]));
+// Instagram es opcional: vacío se guarda como NULL (11-11-2026).
+const datosDe = (catalogo, cuerpo) => Object.fromEntries(CAMPOS[catalogo].map((campo) => [campo, campo === 'instagram' ? (cuerpo[campo] || null) : cuerpo[campo]]));
 const elemento = (catalogo, fila) => ({ elemento: FORMATOS[catalogo](fila) });
 
 async function listar(catalogo, parametros) {

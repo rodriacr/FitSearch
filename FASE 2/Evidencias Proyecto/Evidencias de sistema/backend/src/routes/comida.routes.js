@@ -9,6 +9,14 @@ const router = Router();
 router.use(autenticar, autorizarRoles('usuario'));
 router.get('/alimentos', v.busqueda, validar, controlador.alimentos);
 router.get('/semana', v.fechaConsulta, validar, controlador.semana);
+// Plan de alimentación (11-11-2026): según la meta del perfil o uno de la lista de personalizados, y la meta de peso.
+router.get('/plan', controlador.plan);
+router.put('/plan', v.plan, validar, controlador.guardarPlan);
+router.post('/plan/personalizados', v.personalizado, validar, controlador.crearPersonalizado);
+router.put('/plan/personalizados/:id', v.idPersonalizado, v.personalizado, validar, controlador.actualizarPersonalizado);
+router.delete('/plan/personalizados/:id', v.idPersonalizado, validar, controlador.eliminarPersonalizado);
+router.put('/plan/meta-peso', v.metaPeso, validar, controlador.guardarMetaPeso);
+router.delete('/plan/meta-peso', controlador.eliminarMetaPeso);
 router.get('/estadisticas', v.periodo, v.fechaConsulta, validar, controlador.estadisticas);
 router.get('/', v.fechaConsulta, validar, controlador.delDia);
 router.post('/', v.fecha, v.momento, v.alimentoId, v.gramos, validar, controlador.agregar);

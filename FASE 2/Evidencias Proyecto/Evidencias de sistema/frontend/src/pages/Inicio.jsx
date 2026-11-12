@@ -18,6 +18,7 @@ import { obtenerPerfil } from '../services/perfil.service.js';
 import { buscarProfesionales } from '../services/profesional.service.js';
 import { MisCitas } from './Agenda.jsx';
 import { ubicacionSiHayPermiso } from '../services/ubicacion.js';
+import Carrusel from '../components/Carrusel.jsx';
 import './Inicio.css';
 import './InicioRedisenado.css';
 
@@ -69,7 +70,7 @@ function TarjetaProgreso({ kcal, consumidas }) {
           <AguaHoy />
         </li>
       </ul>
-      {kcal && <p className="progreso__nota">Tu meta diaria de calorías se estima con tus datos personales; las calorías de hoy salen de lo que registras en Comidas.</p>}
+      {kcal && <p className="progreso__nota">Tu meta diaria de calorías sale de tus datos personales y de tu plan de alimentación; las calorías de hoy, de lo que registras en Comidas.</p>}
     </section>
   );
 }
@@ -88,14 +89,15 @@ export default function Inicio() {
   const [intento, setIntento] = useState(0);
   const [perfil, setPerfil] = useState(null);
   const [destacados, setDestacados] = useState(null);
-  const [caloriasHoy, setCaloriasHoy] = useState(null);
+  // Calorías de hoy y la meta del plan de alimentación (Comidas); null si aún no se cargan o no se pudieron cargar.
+  const [hoy, setHoy] = useState(null);
 
   useEffect(() => {
     let activo = true;
     // Si las comidas no cargan, la tarjeta muestra «—» y el resto del Inicio sigue igual.
     obtenerDia()
-      .then(({ consumo }) => activo && setCaloriasHoy(consumo.calorias))
-      .catch(() => activo && setCaloriasHoy(null));
+      .then(({ consumo, objetivo }) => activo && setHoy({ calorias: consumo.calorias, meta: objetivo?.calorias ?? null }))
+      .catch(() => activo && setHoy(null));
     return () => { activo = false; };
   }, [intento]);
 
@@ -152,7 +154,7 @@ export default function Inicio() {
 
       <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
-        <ul className="accesos-rapidos">
+        <Carrusel como="ul" className="accesos-rapidos" nombre="accesos rápidos">
           {ACCESOS_RAPIDOS.map((clave) => {
             const { ruta, nombre, icono, proximamente } = SECCIONES[clave];
             return (
@@ -165,7 +167,7 @@ export default function Inicio() {
               </li>
             );
           })}
-        </ul>
+        </Carrusel>
       </section>
 
       <section className="inicio__especialidades" aria-labelledby="titulo-especialidades-inicio">
@@ -183,7 +185,7 @@ export default function Inicio() {
         ) : (
           <>
             <TarjetaObjetivo objetivo={perfil.datos.objetivos.objetivoPrincipal} />
-            <TarjetaProgreso kcal={perfil.datos.requerimientoCaloricoKcal} consumidas={caloriasHoy} />
+            <TarjetaProgreso kcal={hoy?.meta ?? perfil.datos.requerimientoCaloricoKcal} consumidas={hoy?.calorias ?? null} />
           </>
         )}
         <TarjetaCitas />
@@ -200,11 +202,11 @@ export default function Inicio() {
             <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setIntento(intento + 1)}>Reintentar</button>
           </div>
         ) : destacados.profesionales.length ? (
-          <div className="inicio__lista-destacados">
+          <Carrusel className="inicio__lista-destacados" nombre="profesionales destacados">
             {destacados.profesionales.map((profesional) => (
               <TarjetaProfesional key={profesional.id} profesional={profesional} variante="destacado" desde="/profesionales" />
             ))}
-          </div>
+          </Carrusel>
         ) : (
           <EstadoVacio icono="profesional" titulo="Aún no hay profesionales destacados"
             accion={<Link to="/profesionales" className="boton boton--secundario boton--compacto">Explorar profesionales</Link>}>

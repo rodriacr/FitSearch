@@ -1,11 +1,11 @@
 // Gestor de alimentación (FS-HU-09 y FS-HU-10; DAS CU-06). La persona registra alimentos del catálogo con sus gramos y
 // el sistema calcula calorías y macronutrientes; el resumen del día se compara con su objetivo diario, que sale del
-// requerimiento calórico del perfil (Mifflin-St Jeor) y del reparto de macronutrientes de shared/reglas.json.
+// requerimiento calórico del perfil (Mifflin-St Jeor) y del plan de alimentación que rige ese día (según la meta o
+// personalizado; planAlimentacion.service).
 // El asistente IA también puede agregar alimentos (prepararDesdeAsistente y guardarDesdeAsistente) con el mismo cálculo.
 const { comidas: reglas, perfil: reglasPerfil } = require('../../../shared/reglas.json');
 const modelo = require('../models/comida.model');
-const usuarioModel = require('../models/usuario.model');
-const { requerimientoCalorico } = require('./nutricion.service');
+const planes = require('./planAlimentacion.service');
 const { fechaEnChile, horaEnChile, sumarDias, lunesDeLaSemana } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -75,22 +75,19 @@ const formatearRegistro = (registro) => ({
   hora: horaEnChile(registro.fechaCreacion),
 });
 
-// Objetivo diario: requerimiento calórico del perfil y gramos de cada macronutriente según el reparto de reglas.json.
-// Si el perfil está incompleto no hay objetivo, y la pantalla invita a completarlo.
-async function objetivoDiario(usuarioId) {
-  const usuario = await usuarioModel.buscarPorIdConPerfil(usuarioId);
-  const perfil = usuario?.perfil;
-  const datos = {
-    pesoKg: numero(perfil?.pesoKg), alturaCm: numero(perfil?.alturaCm), edad: perfil?.edad ?? null,
-    sexo: perfil?.sexo ?? null, actividadFisica: perfil?.actividadFisica ?? null,
-  };
-  const calorias = requerimientoCalorico(datos);
-  const gramos = (macro) => (calorias === null ? null : Math.round((calorias * reglas.macrosObjetivo[macro]) / reglas.kcalPorGramo[macro]));
+// Objetivo de un día: las calorías y los gramos del plan de alimentación que rige esa fecha (11-11-2026; antes, el
+// requerimiento del perfil con un reparto fijo de 30/45/25). Si el perfil está incompleto no hay objetivo, y la
+// pantalla invita a completarlo.
+async function objetivoDiario(usuarioId, fecha = fechaEnChile()) {
+  const plan = await planes.delDia(usuarioId, fecha);
+  const perfil = plan.usuario?.perfil;
+  const { datos } = plan;
   return {
-    calorias,
-    proteinasG: gramos('proteinas'),
-    carbohidratosG: gramos('carbohidratos'),
-    grasasG: gramos('grasas'),
+    calorias: plan.kcal,
+    proteinasG: plan.proteinasG,
+    carbohidratosG: plan.carbohidratosG,
+    grasasG: plan.grasasG,
+    plan: { tipo: plan.tipo, porcentajes: plan.porcentajes },
     perfil: {
       objetivoPrincipal: reglasPerfil.objetivoPrincipal.find(({ valor }) => valor === perfil?.objetivoPrincipal)?.etiqueta ?? null,
       pesoKg: datos.pesoKg,
@@ -113,7 +110,7 @@ async function buscarAlimentos(texto) {
 
 async function delDia(usuarioId, fecha, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
-  const [filas, objetivo] = await Promise.all([modelo.delDia(usuarioId, fecha), objetivoDiario(usuarioId)]);
+  const [filas, objetivo] = await Promise.all([modelo.delDia(usuarioId, fecha), objetivoDiario(usuarioId, fecha)]);
   const registros = filas.map(formatearRegistro);
   return {
     fecha,
@@ -132,7 +129,8 @@ async function semana(usuarioId, fecha, ahora = new Date()) {
   exigirFechaPasada(fecha, ahora);
   const desde = lunesDeLaSemana(fecha);
   const hasta = sumarDias(desde, 6);
-  const [totales, objetivo] = await Promise.all([modelo.caloriasPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId)]);
+  // El objetivo de la semana es el del plan que rige su último día (o hoy, si la semana no termina).
+  const [totales, objetivo] = await Promise.all([modelo.caloriasPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId, [hasta, fechaEnChile(ahora)].sort()[0])]);
   const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum.calorias ?? 0]));
   const hoy = fechaEnChile(ahora);
   return {
@@ -157,16 +155,16 @@ function limitesDelPeriodo(periodo, fecha) {
   return { desde, hasta: sumarDias(desde, 6) };
 }
 
-// Estadísticas de una semana o un mes (FS-HU-26): calorías y macronutrientes de cada día frente al objetivo diario, y el
-// promedio de los días que tienen registros (un día sin registros no baja el promedio, porque puede ser un olvido).
-async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
-  exigirFechaPasada(fecha, ahora);
-  const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
-  const [totales, objetivo] = await Promise.all([modelo.totalesPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId)]);
+// Un día está «cerca de la meta» si el porcentaje de la meta que alcanzó, redondeado como se muestra en la pantalla,
+// queda dentro del margen de shared/reglas.json (entre 90 % y 110 %).
+const cercaDeLaMeta = (calorias, meta) => Math.abs(Math.round((calorias / meta) * 100) - 100) <= reglas.estadisticas.margenMeta * 100;
+
+// Cada día de un período con sus calorías y macronutrientes (los días sin registros quedan en cero y marcados).
+async function diasDelPeriodo(usuarioId, desde, hasta, hoy) {
+  const totales = await modelo.totalesPorDia(usuarioId, desde, hasta);
   const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum]));
-  const hoy = fechaEnChile(ahora);
   const largo = Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000) + 1;
-  const dias = Array.from({ length: largo }, (_, i) => {
+  return Array.from({ length: largo }, (_, i) => {
     const dia = sumarDias(desde, i);
     const suma = porDia.get(dia);
     return {
@@ -179,23 +177,68 @@ async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
       futuro: dia > hoy,
     };
   });
+}
+
+// Promedio de los días con registros (un día sin registros no baja el promedio, porque puede ser un olvido) y cuántos
+// de ellos quedaron cerca de la meta de calorías. Hoy todavía no termina: no cuenta para el promedio ni para la meta,
+// salvo que sea el único día con registros (11-11-2026).
+function resumirDias(dias, metaCalorias, hoy) {
   const conRegistros = dias.filter((dia) => dia.conRegistros);
+  const completos = conRegistros.filter((dia) => dia.fecha < hoy);
+  const base = completos.length ? completos : conRegistros;
   const promedioDe = (clave, decimales) => {
-    const valor = conRegistros.reduce((total, dia) => total + dia[clave], 0) / conRegistros.length;
+    const valor = base.reduce((total, dia) => total + dia[clave], 0) / base.length;
     return decimales ? redondear(valor) : Math.round(valor);
   };
+  return {
+    diasConRegistros: conRegistros.length,
+    diasCompletos: completos.length,
+    diasCerca: metaCalorias ? completos.filter((dia) => cercaDeLaMeta(dia.calorias, metaCalorias)).length : null,
+    promedio: conRegistros.length === 0 ? null : {
+      calorias: promedioDe('calorias'),
+      ...Object.fromEntries(MACROS.map((macro) => [`${macro}G`, promedioDe(`${macro}G`, true)])),
+    },
+  };
+}
+
+// Estadísticas de una semana o un mes (FS-HU-26): calorías y macronutrientes de cada día frente al objetivo diario y el
+// promedio de los días con registros. Desde el 11-11-2026 también traen el período anterior del mismo largo (para
+// comparar), cuántos días quedaron cerca de la meta, el promedio de calorías de cada comida del día y el reparto del plan.
+async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
+  exigirFechaPasada(fecha, ahora);
+  const hoy = fechaEnChile(ahora);
+  const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
+  const previo = limitesDelPeriodo(periodo, sumarDias(desde, -1));
+  // El objetivo de cada período es el del plan que rige su último día (o hoy, si el período no termina).
+  const [dias, diasPrevios, objetivo, objetivoPrevio, porMomento] = await Promise.all([
+    diasDelPeriodo(usuarioId, desde, hasta, hoy),
+    diasDelPeriodo(usuarioId, previo.desde, previo.hasta, hoy),
+    objetivoDiario(usuarioId, [hasta, hoy].sort()[0]),
+    objetivoDiario(usuarioId, previo.hasta),
+    modelo.caloriasPorMomento(usuarioId, desde, hasta),
+  ]);
+  const actual = resumirDias(dias, objetivo.calorias, hoy);
+  const calorias = new Map(porMomento.map(({ momento, _sum }) => [momento, _sum.calorias ?? 0]));
+  const totalMomentos = [...calorias.values()].reduce((suma, valor) => suma + valor, 0);
   return {
     periodo,
     desde,
     hasta,
     hoy,
-    objetivo: { calorias: objetivo.calorias, proteinasG: objetivo.proteinasG, carbohidratosG: objetivo.carbohidratosG, grasasG: objetivo.grasasG },
-    dias,
-    diasConRegistros: conRegistros.length,
-    promedio: conRegistros.length === 0 ? null : {
-      calorias: promedioDe('calorias'),
-      ...Object.fromEntries(MACROS.map((macro) => [`${macro}G`, promedioDe(`${macro}G`, true)])),
+    objetivo: {
+      calorias: objetivo.calorias, proteinasG: objetivo.proteinasG, carbohidratosG: objetivo.carbohidratosG, grasasG: objetivo.grasasG,
+      porcentajes: objetivo.calorias ? objetivo.plan.porcentajes : null,
     },
+    dias,
+    ...actual,
+    anterior: { desde: previo.desde, hasta: previo.hasta, ...resumirDias(diasPrevios, objetivoPrevio.calorias, hoy) },
+    // Promedio por día con registros de cada comida del día, y su parte del total de calorías del período.
+    momentos: reglas.momentos.map(({ valor, etiqueta }) => ({
+      momento: valor,
+      etiqueta,
+      calorias: actual.diasConRegistros ? Math.round((calorias.get(valor) ?? 0) / actual.diasConRegistros) : 0,
+      porcentaje: totalMomentos ? Math.round(((calorias.get(valor) ?? 0) / totalMomentos) * 100) : 0,
+    })),
   };
 }
 

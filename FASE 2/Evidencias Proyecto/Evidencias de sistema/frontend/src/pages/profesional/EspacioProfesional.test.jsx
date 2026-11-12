@@ -49,6 +49,22 @@ describe('Diseño del profesional', () => {
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 
+  test('el menú del profesional también se compacta a solo íconos y vuelve a expandirse', async () => {
+    simular();
+    renderizarApp('/profesional/inicio');
+    await screen.findByRole('heading', SALUDO);
+    const menu = screen.getByRole('navigation', { name: 'Menú principal' });
+    await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
+    expect(menu).toHaveClass('menu-lateral--compacto');
+    const agenda = within(menu).getByRole('link', { name: 'Agenda' });
+    await userEvent.hover(agenda);
+    expect(document.querySelector('.etiqueta-flotante')).toHaveTextContent('Agenda');
+    // El profesional no tiene la tarjeta del asistente: su menú compacto no agrega el acceso al chat.
+    expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
+    await userEvent.click(within(menu).getByRole('button', { name: 'Expandir menú' }));
+    expect(menu).not.toHaveClass('menu-lateral--compacto');
+  });
+
   test('el menú de la cuenta lleva al perfil profesional', async () => {
     simular();
     renderizarApp('/profesional/inicio');

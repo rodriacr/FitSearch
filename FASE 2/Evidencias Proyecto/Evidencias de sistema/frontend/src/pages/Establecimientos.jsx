@@ -6,7 +6,7 @@ import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import MapaProfesionales from '../components/profesionales/MapaProfesionales.jsx';
 import { enMapa } from '../components/profesionales/ubicacionMapa.js';
-import { CATEGORIAS, direccionCompleta } from '../components/establecimientos/categorias.js';
+import { CATEGORIAS, direccionCompleta, enlaceInstagram } from '../components/establecimientos/categorias.js';
 import { buscarEstablecimientos, obtenerComunasEstablecimientos } from '../services/establecimiento.service.js';
 import { formatearKm } from '../services/formato.js';
 import { obtenerUbicacion, ubicacionSiHayPermiso } from '../services/ubicacion.js';
@@ -26,7 +26,7 @@ const describir = (e) => `${e.nombre}, ${direccionCompleta(e)}`;
 // abre la ficha, se marca con el acento naranjo cuando está elegida en el mapa y con el azul claro mientras el mouse o el
 // foco están sobre ella o sobre su marcador.
 function TarjetaEstablecimiento({ establecimiento, datos, desde, seleccionado, resaltado, onResaltar, onVerEnMapa }) {
-  const { id, nombre, distanciaKm } = establecimiento;
+  const { id, nombre, distanciaKm, instagram } = establecimiento;
   const clases = ['tarjeta-profesional', 'tarjeta-profesional--fila', 'tarjeta-establecimiento',
     seleccionado && 'tarjeta-profesional--seleccionada', resaltado && 'tarjeta-profesional--resaltada'].filter(Boolean).join(' ');
   const resaltar = onResaltar && { onMouseEnter: () => onResaltar(id), onMouseLeave: () => onResaltar(null),
@@ -44,6 +44,12 @@ function TarjetaEstablecimiento({ establecimiento, datos, desde, seleccionado, r
           <span className="tarjeta-profesional__lugar"><Icono nombre="pin" tamano={15} /> {lugar}</span>
         </p>
         <div className="tarjeta-profesional__acciones">
+          {instagram && (
+            <a href={enlaceInstagram(instagram)} target="_blank" rel="noopener noreferrer" className="tarjeta-establecimiento__instagram"
+              aria-label={`Instagram de ${nombre}: @${instagram} (se abre en otra pestaña)`}>
+              <Icono nombre="instagram" tamano={16} /> @{instagram}
+            </a>
+          )}
           {onVerEnMapa && (
             <button type="button" className="tarjeta-profesional__ver-mapa" aria-pressed={seleccionado}
               aria-label={`Ver ${nombre} en el mapa`} onClick={onVerEnMapa}>

@@ -166,6 +166,28 @@ describe('Ficha', () => {
     expect(screen.getByRole('link', { name: 'Volver a gimnasios' })).toHaveAttribute('href', '/gimnasios');
   });
 
+  // Gimnasios de San Antonio (11-11-2026): los que tienen Instagram lo muestran en su tarjeta y en su ficha.
+  test('el Instagram del gimnasio aparece en la tarjeta y en la ficha y abre su perfil en otra pestaña', async () => {
+    simular({
+      listado: () => pagina([establecimiento({ id: 7, nombre: 'Gimnasio Pacific San Antonio', comuna: 'San Antonio', direccion: 'Centenario 396', instagram: 'pacific_sanantonio' }), GIMNASIOS[1]]),
+      ficha: () => [200, { establecimiento: { ...FICHA.establecimiento, instagram: 'pacific_sanantonio' } }],
+    });
+    renderizarApp('/gimnasios');
+    const pacific = (await screen.findByRole('heading', { name: 'Gimnasio Pacific San Antonio' })).closest('article');
+    const enlace = within(pacific).getByRole('link', { name: 'Instagram de Gimnasio Pacific San Antonio: @pacific_sanantonio (se abre en otra pestaña)' });
+    expect(enlace).toHaveAttribute('href', 'https://www.instagram.com/pacific_sanantonio/');
+    expect(enlace).toHaveAttribute('target', '_blank');
+    expect(enlace).toHaveAttribute('rel', 'noopener noreferrer');
+    // Sin cuenta de Instagram no se muestra el enlace.
+    expect(within(screen.getByRole('heading', { name: 'Box Funcional' }).closest('article')).queryByRole('link', { name: /Instagram/ })).not.toBeInTheDocument();
+  });
+
+  test('la ficha muestra el Instagram del gimnasio', async () => {
+    simular({ ficha: () => [200, { establecimiento: { ...FICHA.establecimiento, instagram: 'pacific_sanantonio' } }] });
+    renderizarApp('/gimnasios/3');
+    expect(await screen.findByRole('link', { name: /Instagram de Gimnasio Demo: @pacific_sanantonio/ })).toHaveAttribute('href', 'https://www.instagram.com/pacific_sanantonio/');
+  });
+
   test('sin profesionales asociados lo indica', async () => {
     simular({ ficha: () => [200, { establecimiento: { ...FICHA.establecimiento, totalProfesionales: 0, profesionales: [] } }] });
     renderizarApp('/gimnasios/3');

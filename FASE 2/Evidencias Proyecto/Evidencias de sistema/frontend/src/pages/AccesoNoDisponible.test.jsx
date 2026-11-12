@@ -7,9 +7,18 @@ test.each(['/', '/inicio', '/profesional/perfil'])('una cuenta administrativa en
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify({
     ...SESION, usuario: { ...SESION.usuario, rol: 'administrador', rolConfirmado: true },
   }));
-  simularApi({ '/api/auth/logout': () => [204, null], '/api/administrador/resumen': { usuarios: 0, profesionales: 0, pendientes: 0, verificados: 0, nuevosUsuarios: 0, nuevosProfesionales: 0, registros: [] } });
+  simularApi({
+    '/api/auth/logout': () => [204, null], '/api/administrador/alertas': { verificacionesPendientes: 0 },
+    '/api/administrador/dashboard': {
+      hoy: '2026-11-11', cola: { total: 0, masAntiguaDias: null, primeras: [] }, actividad: [], ultimasCuentas: [],
+      cifras: { cuentas: { actual: 0, anterior: 0 }, reservas: { actual: 0, anterior: 0 }, resenas: { actual: 0, anterior: 0 }, preguntas: { actual: 0, anterior: 0 } },
+      plataforma: { usuariosActivos: 0, usuariosInactivos: 0, profesionalesActivos: 0, establecimientos: {}, profesionales: 0, verificados: 0 },
+    },
+  });
   renderizarApp(ruta);
-  expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
+  // El administrador llega a su dashboard; Cerrar sesión está en el menú de la cuenta, como en los otros espacios.
+  expect(await screen.findByRole('heading', { level: 1, name: /^Hola, / })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: /menú de tu cuenta/ }));
   await userEvent.click(screen.getByRole('button', { name: 'Cerrar sesión' }));
   expect(await screen.findByText('Cerraste sesión correctamente.')).toBeInTheDocument();
   expect(sessionStorage.getItem('fitsearch_sesion')).toBeNull();

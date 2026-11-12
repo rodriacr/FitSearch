@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import Icono from '../Icono.jsx';
+import Carrusel from '../Carrusel.jsx';
 import nutricion from '../../assets/inicio/nutricion.webp';
 import kinesiologia from '../../assets/inicio/kinesiologia.webp';
 import entrenamiento from '../../assets/inicio/bienestar-parque.webp';
@@ -11,20 +12,21 @@ const ESPECIALIDADES = [
   { nombre: 'Entrenamiento personal', imagen: entrenamiento, descripcion: 'Avanza a tu ritmo y con acompañamiento.' },
 ];
 
-// Fotografías ilustrativas de las especialidades; las fichas y reseñas reales siguen en el directorio.
+// Fotografías ilustrativas de las especialidades; las fichas y reseñas reales siguen en el directorio. En el Inicio, en
+// celular, se deslizan como carrusel con flechas a los costados (11-11-2026).
 export default function Especialidades({ variante = 'publica' }) {
-  return (
-    <div className={`especialidades especialidades--${variante}`}>
-      {ESPECIALIDADES.map(({ nombre, imagen, descripcion }, indice) => (
-        <Link data-revelar data-revelar-retardo={indice * 90} key={nombre} to={`/profesionales?${new URLSearchParams({ especialidad: nombre })}`}
-          className="especialidad" aria-label={`Explorar ${nombre}`}>
-          <img className="especialidad__foto" src={imagen} alt="" width={640} height={720} loading="lazy" decoding="async" />
-          <div className="especialidad__contenido">
-            <h3>{nombre}</h3><p>{descripcion}</p>
-            <span className="especialidad__enlace">Explorar <Icono nombre="flecha" tamano={18} /></span>
-          </div>
-        </Link>
-      ))}
-    </div>
-  );
+  const tarjetas = ESPECIALIDADES.map(({ nombre, imagen, descripcion }, indice) => (
+    <Link data-revelar data-revelar-retardo={indice * 90} key={nombre} to={`/profesionales?${new URLSearchParams({ especialidad: nombre })}`}
+      className="especialidad" aria-label={`Explorar ${nombre}`}>
+      <img className="especialidad__foto" src={imagen} alt="" width={640} height={720} loading="lazy" decoding="async" />
+      <div className="especialidad__contenido">
+        <h3>{nombre}</h3><p>{descripcion}</p>
+        <span className="especialidad__enlace">Explorar <Icono nombre="flecha" tamano={18} /></span>
+      </div>
+    </Link>
+  ));
+  if (variante === 'inicio') {
+    return <Carrusel className="especialidades especialidades--inicio" nombre="especialidades">{tarjetas}</Carrusel>;
+  }
+  return <div className={`especialidades especialidades--${variante}`}>{tarjetas}</div>;
 }

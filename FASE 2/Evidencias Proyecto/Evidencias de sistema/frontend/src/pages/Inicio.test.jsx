@@ -1,7 +1,7 @@
 // Inicio del usuario con sesión según el mockup (FS-HU-21): datos reales de la API y estados vacíos.
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import {
   fichaProfesional, listado, llamadasA, parametrosDe, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi,
 } from '../tests/utilidades.jsx';
@@ -59,6 +59,49 @@ describe('Inicio con datos', () => {
     expect(parametrosDe(llamadasA(fetch, '/api/profesionales?')[0][0])).toEqual({ orden: 'destacados', limite: '4' });
   });
 
+
+  // En celular (bajo 40rem) estas tres listas se deslizan como carrusel; el CSS decide el ancho (11-11-2026).
+  test('los accesos rápidos, las especialidades y los destacados son carruseles en celular, sin perder ningún enlace', async () => {
+    simular();
+    renderizarApp('/inicio');
+    const destacadosSeccion = (await screen.findByRole('heading', { name: 'Profesionales destacados' })).closest('section');
+    await within(destacadosSeccion).findByText('Matías Demo');
+    const accesos = screen.getByRole('heading', { name: 'Tus accesos rápidos' }).closest('section').querySelector('ul');
+    const especialidades = screen.getByRole('heading', { name: 'Encuentra a tu profesional' }).closest('section').querySelector('.especialidades');
+    const destacados = destacadosSeccion.querySelector('.inicio__lista-destacados');
+    for (const lista of [accesos, especialidades, destacados]) expect(lista).toHaveClass('carrusel-movil');
+    expect(within(accesos).getAllByRole('link')).toHaveLength(6);
+    expect(within(especialidades).getAllByRole('link')).toHaveLength(3);
+  });
+
+  // Flechas de los carruseles (11-11-2026): cada una aparece solo si hay más tarjetas hacia su lado y mueve la fila.
+  test('las flechas del carrusel aparecen cuando hay más tarjetas y desplazan la fila hacia cada lado', async () => {
+    simular();
+    renderizarApp('/inicio');
+    const seccion = screen.getByRole('heading', { name: 'Encuentra a tu profesional' }).closest('section');
+    const fila = seccion.querySelector('.especialidades');
+    const atras = within(seccion).getByRole('button', { name: 'Ver especialidades anteriores' });
+    const adelante = within(seccion).getByRole('button', { name: 'Ver más especialidades' });
+    // jsdom no calcula tamaños: sin contenido oculto, ninguna flecha está disponible (como en escritorio).
+    expect(atras).toBeDisabled();
+    expect(adelante).toBeDisabled();
+
+    Object.defineProperties(fila, { clientWidth: { value: 300, configurable: true }, scrollWidth: { value: 900, configurable: true } });
+    fila.scrollBy = vi.fn();
+    fireEvent.scroll(fila);
+    await waitFor(() => expect(adelante).toBeEnabled());
+    expect(atras).toBeDisabled();
+    await userEvent.click(adelante);
+    expect(fila.scrollBy).toHaveBeenCalledWith({ left: 240, behavior: 'smooth' });
+
+    // Al final de la fila se apaga la flecha de avanzar y queda la de volver.
+    fila.scrollLeft = 600;
+    fireEvent.scroll(fila);
+    await waitFor(() => expect(adelante).toBeDisabled());
+    expect(atras).toBeEnabled();
+    await userEvent.click(atras);
+    expect(fila.scrollBy).toHaveBeenLastCalledWith({ left: -240, behavior: 'smooth' });
+  });
 
   test('la tarjeta de especialidad abre el directorio con el filtro elegido', async () => {
     const fetch = simular({ extra: {

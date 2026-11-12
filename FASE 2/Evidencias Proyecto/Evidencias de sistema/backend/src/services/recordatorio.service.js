@@ -27,9 +27,13 @@ async function pendientes(ahora) {
     },
     select: {
       id: true,
+      modalidad: true,
       usuario: { select: { nombre: true, correo: true } },
       disponibilidad: {
-        select: { fecha: true, horaInicio: true, horaFin: true, profesional: { select: { usuario: { select: { nombre: true } } } } },
+        select: {
+          fecha: true, horaInicio: true, horaFin: true,
+          profesional: { select: { id: true, especialidad: true, usuario: { select: { nombre: true } } } },
+        },
       },
     },
   });

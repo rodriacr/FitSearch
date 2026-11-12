@@ -24,33 +24,36 @@ model Rol {
 }
 
 model Usuario {
-  id                 Int                 @id @default(autoincrement())
-  nombre             String              @db.VarChar(100)
-  correo             String              @unique @db.VarChar(150)
-  passwordHash       String?             @map("password_hash") @db.VarChar(255)
-  googleId           String?             @unique @map("google_id") @db.VarChar(255)
-  rolId              Int                 @map("rol_id")
+  id                   Int                 @id @default(autoincrement())
+  nombre               String              @db.VarChar(100)
+  correo               String              @unique @db.VarChar(150)
+  passwordHash         String?             @map("password_hash") @db.VarChar(255)
+  googleId             String?             @unique @map("google_id") @db.VarChar(255)
+  rolId                Int                 @map("rol_id")
   // El registro crea toda cuenta como "usuario"; queda en true cuando la persona elige su tipo de cuenta
   // en el primer paso del asistente de perfil (FS-HU-02).
-  rolConfirmado      Boolean             @default(false) @map("rol_confirmado")
-  fechaRegistro      DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
-  activo             Boolean             @default(true)
-  versionSesion      Int                 @default(0) @map("version_sesion")
-  rol                Rol                 @relation(fields: [rolId], references: [id], onDelete: Restrict)
-  perfil             PerfilUsuario?
-  tokensRecuperacion TokenRecuperacion[]
-  informacionSalud   InformacionSalud?
-  profesional        Profesional?
-  favoritos          Favorito[]
-  resenas            Resena[]
-  reservas           Reserva[]
-  listaEspera        ListaEspera[]
-  chats              ChatCita[]
-  mensajesChat       MensajeCita[]
-  conversaciones     Conversacion[]
-  usoAsistente       UsoAsistente?
-  registrosComida    RegistroComida[]
-  registrosAgua      RegistroAgua[]
+  rolConfirmado        Boolean             @default(false) @map("rol_confirmado")
+  fechaRegistro        DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
+  activo               Boolean             @default(true)
+  versionSesion        Int                 @default(0) @map("version_sesion")
+  rol                  Rol                 @relation(fields: [rolId], references: [id], onDelete: Restrict)
+  perfil               PerfilUsuario?
+  tokensRecuperacion   TokenRecuperacion[]
+  informacionSalud     InformacionSalud?
+  profesional          Profesional?
+  favoritos            Favorito[]
+  resenas              Resena[]
+  reservas             Reserva[]
+  listaEspera          ListaEspera[]
+  chats                ChatCita[]
+  mensajesChat         MensajeCita[]
+  conversaciones       Conversacion[]
+  usoAsistente         UsoAsistente?
+  registrosComida      RegistroComida[]
+  registrosAgua        RegistroAgua[]
+  planesAlimentacion   PlanAlimentacion[]
+  planesPersonalizados PlanPersonalizado[]
+  metasPeso            MetaPeso[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -243,6 +246,63 @@ model RegistroComida {
   @@map("registro_comida")
 }
 
+// Plan de alimentación de cada usuario (11-11-2026): «meta» sigue la meta del perfil (calorías y reparto calculados) y
+// «personalizado» guarda los tres porcentajes elegidos (suman 100). Cada cambio rige desde su día: las fechas anteriores
+// conservan el plan que tenían. Sin filas, el plan es el de la meta.
+model PlanAlimentacion {
+  id                  Int                @id @default(autoincrement())
+  usuarioId           Int                @map("usuario_id")
+  desde               DateTime           @db.Date
+  tipo                String             @db.VarChar(20)
+  planPersonalizadoId Int?               @map("plan_personalizado_id")
+  proteinasPct        Int?               @map("proteinas_pct")
+  carbohidratosPct    Int?               @map("carbohidratos_pct")
+  grasasPct           Int?               @map("grasas_pct")
+  fechaActualizacion  DateTime           @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario             Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  planPersonalizado   PlanPersonalizado? @relation(fields: [planPersonalizadoId], references: [id], onDelete: SetNull)
+
+  @@unique([usuarioId, desde])
+  @@index([planPersonalizadoId])
+  @@map("planes_alimentacion")
+}
+
+// Lista de planes personalizados de cada usuario (11-11-2026): un nombre y tres porcentajes que suman 100.
+model PlanPersonalizado {
+  id                 Int                @id @default(autoincrement())
+  usuarioId          Int                @map("usuario_id")
+  nombre             String             @db.VarChar(40)
+  proteinasPct       Int                @map("proteinas_pct")
+  carbohidratosPct   Int                @map("carbohidratos_pct")
+  grasasPct          Int                @map("grasas_pct")
+  fechaCreacion      DateTime           @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  fechaActualizacion DateTime           @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario            @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  planes             PlanAlimentacion[]
+
+  @@unique([usuarioId, nombre])
+  @@map("planes_personalizados")
+}
+
+// Meta de peso de cada usuario (11-11-2026): peso al que quiere llegar y ritmo semanal; ajusta las calorías del plan.
+model MetaPeso {
+  id                 Int      @id @default(autoincrement())
+  usuarioId          Int      @map("usuario_id")
+  // Desde qué día rige (12-11-2026): la meta de una fecha es la última guardada ese día o antes; activa = false la quita.
+  desde              DateTime @db.Date
+  activa             Boolean  @default(true)
+  objetivo           String   @db.VarChar(30)
+  pesoInicialKg      Decimal  @map("peso_inicial_kg") @db.Decimal(5, 2)
+  pesoObjetivoKg     Decimal  @map("peso_objetivo_kg") @db.Decimal(5, 2)
+  ritmoSemanalKg     Decimal  @map("ritmo_semanal_kg") @db.Decimal(3, 2)
+  fechaInicio        DateTime @map("fecha_inicio") @db.Date
+  fechaActualizacion DateTime @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
+  usuario            Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, desde])
+  @@map("metas_peso")
+}
+
 // Agua que registra cada usuario por día (FS-HU-33). Cada suma es una fila, para poder deshacer la última; el total del
 // día es la suma de sus filas.
 model RegistroAgua {
@@ -305,6 +365,8 @@ model Establecimiento {
   ubicacionLat  Decimal       @map("ubicacion_lat") @db.Decimal(10, 7)
   ubicacionLng  Decimal       @map("ubicacion_lng") @db.Decimal(10, 7)
   activo        Boolean       @default(true)
+  // Usuario de Instagram, sin «@» (11-11-2026).
+  instagram     String?       @db.VarChar(30)
   profesionales Profesional[]
 
   @@map("establecimientos")

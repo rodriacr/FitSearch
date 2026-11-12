@@ -32,4 +32,22 @@ const gramosOpcional = body('gramos').optional()
 const algunCambio = body().custom((cuerpo) => cuerpo?.gramos !== undefined || cuerpo?.momento !== undefined)
   .withMessage('Indica los gramos o el momento del día');
 
-module.exports = { id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };
+// Plan de alimentación (11-11-2026). Elegir el plan: el de la meta o uno de la lista de personalizados.
+const plan = [
+  body('tipo').isIn(['meta', 'personalizado']).withMessage('Elige «Según tu meta» o «Personalizado»'),
+  body('personalizadoId').optional({ values: 'null' }).isInt({ min: 1 }).withMessage('Elige uno de tus planes personalizados').toInt(),
+];
+// Un plan personalizado de la lista: nombre y tres porcentajes enteros (el servicio exige que sumen 100).
+const personalizado = [
+  body('nombre').isString().withMessage('Ponle un nombre a tu plan'),
+  body(['proteinas', 'carbohidratos', 'grasas']).isInt().withMessage('Escribe un porcentaje entero').toInt(),
+  body('usar').optional().isBoolean({ strict: true }).withMessage('Indica si quieres usarlo desde hoy'),
+];
+const idPersonalizado = param('id').isInt({ min: 1 }).withMessage('El plan indicado no es válido').toInt();
+// Meta de peso: el peso al que se quiere llegar y el ritmo semanal (el servicio revisa que tengan sentido con el perfil).
+const metaPeso = [
+  body('pesoObjetivoKg').isFloat({ min: 30, max: 300 }).withMessage('Escribe un peso entre 30 y 300 kg').toFloat(),
+  body('ritmoSemanalKg').isFloat({ gt: 0 }).withMessage('Elige a qué ritmo quieres avanzar').toFloat(),
+];
+
+module.exports = { plan, personalizado, idPersonalizado, metaPeso, id, fechaConsulta, fecha, busqueda, periodo, momento, momentoOpcional, alimentoId, gramos, gramosOpcional, algunCambio };

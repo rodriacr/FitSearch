@@ -14,7 +14,7 @@ function datosReserva(id) {
       disponibilidad: {
         select: {
           fecha: true, horaInicio: true, horaFin: true,
-          profesional: { select: { id: true, avisosCorreo: true, recordatorios: true, usuario: persona } },
+          profesional: { select: { id: true, especialidad: true, avisosCorreo: true, recordatorios: true, usuario: persona } },
         },
       },
     },

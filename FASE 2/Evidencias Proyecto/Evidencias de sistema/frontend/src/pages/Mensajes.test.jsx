@@ -65,6 +65,9 @@ describe('usuario', () => {
     renderizarApp('/mensajes');
     const enlace = await screen.findByRole('link', { name: /Camila Rojas/ });
     expect(within(enlace).getByLabelText('1 sin leer')).toBeInTheDocument();
+    // Junto al nombre va la especialidad del profesional (11-11-2026).
+    expect(enlace).toHaveAccessibleName(/^Camila Rojas,\s*Nutrición/);
+    expect(screen.getByRole('link', { name: /^Diego Soto,\s*Kinesiología/ })).toBeInTheDocument();
     expect(screen.getByText('Tú: No podré ir')).toBeInTheDocument();
     expect(screen.getByText('Elige un chat para leerlo y responder.')).toBeInTheDocument();
 
@@ -181,5 +184,7 @@ test('el profesional ve el chat con el cliente en su espacio, con enlace a su fi
   renderizarApp('/profesional/mensajes/5');
   expect(await screen.findByRole('link', { name: 'Ana Pérez' })).toHaveAttribute('href', '/profesional/clientes/4');
   expect(screen.getByText('Cliente · Próxima cita: mar 13 oct, 09:00')).toBeInTheDocument();
+  // En la lista del profesional no se repite «Cliente» junto a cada nombre.
+  expect(screen.getByRole('link', { name: /^Ana Pérez.*sin leer/ })).not.toHaveTextContent('Cliente');
   expect(within(screen.getByRole('list', { name: 'Mensajes' })).getAllByText(/Ana Pérez reservó para el/)).toHaveLength(2);
 });

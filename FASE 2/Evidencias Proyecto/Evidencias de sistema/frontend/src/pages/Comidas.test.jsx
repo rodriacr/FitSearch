@@ -1,13 +1,13 @@
 // Gestor de alimentación (FS-HU-09 y FS-HU-10; mockup del PO del 26-10-2026).
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import reglas from '@shared/reglas.json';
 import { llamadasA, renderizarApp, SESION, simularApi } from '../tests/utilidades.jsx';
 
 const HOY = '2026-10-26';
 const OBJETIVO = {
-  calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70,
+  calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70, plan: { tipo: 'personalizado', porcentajes: { proteinas: 30, carbohidratos: 45, grasas: 25 } },
   perfil: { objetivoPrincipal: 'Mantener peso', pesoKg: 68, alturaCm: 175, actividadFisica: 'Moderada' },
 };
 const registro = (extra) => ({ fecha: HOY, alimentoId: 1, origen: 'manual', ...extra });
@@ -59,11 +59,14 @@ describe('Resumen', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Comidas' })).toBeInTheDocument();
     const calorias = (await screen.findByRole('heading', { name: 'Calorías de hoy' })).closest('section');
     expect(calorias).toHaveTextContent('754kcalde 2.525 kcal');
-    expect(calorias).toHaveTextContent('Proteínas64,1 g / 189 g34 %');
-    expect(calorias).toHaveTextContent('Grasas11,4 g / 70 g16 %');
+    // Cuánto falta para la meta del día, en calorías y en cada macronutriente (11-11-2026).
+    expect(calorias).toHaveTextContent('Te faltan 1.771 kcal');
+    expect(calorias).toHaveTextContent('Proteínas64,1 g / 189 gfaltan 124,9 g34 %');
+    expect(calorias).toHaveTextContent('Grasas11,4 g / 70 gfaltan 58,6 g16 %');
+    expect(calorias).toHaveTextContent('Lo que llevas hoy frente a la meta diaria de tu plan');
 
-    const semanal = screen.getByRole('table', { name: /Calorías consumidas cada día de la semana; objetivo diario: 2525 kcal/ });
-    expect(within(semanal).getByRole('row', { name: 'Lun 26/10 754 kcal' })).toBeInTheDocument();
+    const semanal = screen.getByRole('table', { name: 'Calorías consumidas cada día de la semana; objetivo diario: 2.525 kcal' });
+    expect(within(semanal).getByRole('row', { name: 'Lun 26/10 754 kcal, 30 % de la meta (1.771 kcal bajo la meta)' })).toBeInTheDocument();
     expect(within(semanal).getByRole('row', { name: 'Mar 27/10 Aún no llega' })).toBeInTheDocument();
 
     const comidas = screen.getByRole('heading', { name: 'Comidas de hoy' }).closest('section');
@@ -73,6 +76,7 @@ describe('Resumen', () => {
 
     const nutricional = screen.getByRole('heading', { name: 'Resumen nutricional' }).closest('section');
     expect(within(nutricional).getByRole('progressbar', { name: 'Calorías' })).toHaveAttribute('aria-valuetext', '30 % del objetivo');
+    expect(nutricional).toHaveTextContent('faltan 1.771 kcal');
 
     const objetivo = screen.getByRole('heading', { name: 'Tu objetivo' }).closest('section');
     expect(objetivo).toHaveTextContent('Mantener peso');
@@ -82,10 +86,32 @@ describe('Resumen', () => {
     expect(within(objetivo).getByRole('link', { name: 'Editar' })).toHaveAttribute('href', '/perfil');
     expect(screen.getByRole('link', { name: /Abrir asistente/ })).toHaveAttribute('href', '/asistente/nuevo?inicio=comida');
 
-    // Plan de alimentación todavía no existe: se muestra como Próximamente, sin botón.
+    // Las cuatro secciones están disponibles; la nota dice el reparto del plan y lleva a su pestaña (11-11-2026).
     const pestanas = screen.getByRole('group', { name: 'Secciones de Comidas' });
-    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Estadísticas']);
-    expect(within(pestanas).getAllByText('Próximamente')).toHaveLength(1);
+    expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Plan de alimentación', 'Estadísticas']);
+    expect(within(pestanas).queryByText('Próximamente')).not.toBeInTheDocument();
+    expect(screen.getByText(/repartido según tu plan de alimentación: 30 % proteínas, 45 % carbohidratos y 25 % grasas/)).toBeInTheDocument();
+  });
+
+  test('la semana dice cuántos días completos quedaron cerca de la meta y compara el día con el promedio de los otros', async () => {
+    const calorias = [2500, 2300, 0, 1800, 2600, 0, 0];
+    simular({
+      '/api/comidas/semana': {
+        desde: '2026-10-19', hasta: '2026-10-25', objetivoCalorias: 2525,
+        dias: calorias.map((valor, i) => ({ fecha: `2026-10-${19 + i}`, calorias: valor, futuro: false })),
+      },
+    });
+    renderizarApp('/comidas');
+    const semanal = (await screen.findByRole('heading', { name: 'Progreso semanal' })).closest('section');
+    // 2.500 (99 %), 2.300 (91 %) y 2.600 (103 %) quedan entre 90 % y 110 %; 1.800 (71 %), no. Promedio: 2.300 kcal.
+    expect(semanal).toHaveTextContent('3 de 4 días completos cerca de tu meta');
+    expect(semanal).toHaveTextContent('Promedio: 2.300 kcal (91 % de tu meta)');
+    expect(semanal).toHaveTextContent('un día cuenta como cerca de la meta si queda entre 90 % y 110 %');
+    const tabla = within(semanal).getByRole('table');
+    expect(within(tabla).getByRole('row', { name: 'Vie 23/10 2.600 kcal, 103 % de la meta (75 kcal sobre la meta)' })).toBeInTheDocument();
+    const dia = screen.getByRole('heading', { name: 'Calorías de hoy' }).closest('section');
+    expect(dia).toHaveTextContent('Promedio de tus otros días de esta semana: 2.300 kcal');
+    expect(dia).toHaveTextContent('Hoy vas 1.546 kcal bajo ese promedio');
   });
 
   test('sin perfil completo muestra el consumo sin objetivo e invita a completar el perfil', async () => {
@@ -102,6 +128,28 @@ describe('Resumen', () => {
     renderizarApp('/comidas');
     expect(await screen.findByText('No pudimos cargar tus comidas')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Reintentar' })).toBeInTheDocument();
+  });
+
+  // En celular las pestañas no caben (11-11-2026): la fila se desliza, tiene flechas y muestra entera la pestaña tocada.
+  test('las pestañas se deslizan con flechas y la que se ve a medias se muestra entera al tocarla', async () => {
+    simular();
+    renderizarApp('/comidas');
+    const pestanas = await screen.findByRole('group', { name: 'Secciones de Comidas' });
+    const adelante = screen.getByRole('button', { name: 'Ver más secciones' });
+    expect(adelante).toBeDisabled();
+    Object.defineProperties(pestanas, { clientWidth: { value: 340, configurable: true }, scrollWidth: { value: 520, configurable: true } });
+    pestanas.scrollBy = vi.fn();
+    fireEvent.scroll(pestanas);
+    await waitFor(() => expect(adelante).toBeEnabled());
+    expect(screen.getByRole('button', { name: 'Ver secciones anteriores' })).toBeDisabled();
+
+    // «Comidas» queda cortada por el borde derecho: al tocarla, la fila se corre lo justo para mostrarla entera.
+    const comidas = within(pestanas).getByRole('button', { name: 'Comidas' });
+    pestanas.getBoundingClientRect = () => ({ left: 16, right: 356 });
+    comidas.getBoundingClientRect = () => ({ left: 330, right: 450 });
+    await userEvent.click(comidas);
+    expect(pestanas.scrollBy).toHaveBeenCalledWith({ left: 102, behavior: 'smooth' });
+    expect(comidas).toHaveAttribute('aria-pressed', 'true');
   });
 });
 
@@ -202,20 +250,33 @@ describe('Estadísticas (FS-HU-26)', () => {
   });
   const SEMANA = {
     periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: HOY,
-    objetivo: { calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70 },
+    objetivo: { calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70, porcentajes: { proteinas: 30, carbohidratos: 45, grasas: 25 } },
     dias: [
       diaEstadistica('2026-10-19', [2000, 120.5, 250, 60.3]), diaEstadistica('2026-10-20'), diaEstadistica('2026-10-21', [1500, 80, 190.4, 50]),
       ...['22', '23', '24', '25'].map((d) => diaEstadistica(`2026-10-${d}`)),
     ],
     diasConRegistros: 2,
+    diasCompletos: 2,
+    diasCerca: 0,
     promedio: { calorias: 1750, proteinasG: 100.3, carbohidratosG: 220.2, grasasG: 55.2 },
+    anterior: {
+      desde: '2026-10-12', hasta: '2026-10-18', diasConRegistros: 3, diasCompletos: 3, diasCerca: 1,
+      promedio: { calorias: 2400, proteinasG: 110, carbohidratosG: 260, grasasG: 70 },
+    },
+    momentos: [
+      { momento: 'desayuno', etiqueta: 'Desayuno', calorias: 450, porcentaje: 26 },
+      { momento: 'media_manana', etiqueta: 'Media mañana', calorias: 0, porcentaje: 0 },
+      { momento: 'almuerzo', etiqueta: 'Almuerzo', calorias: 900, porcentaje: 51 },
+      { momento: 'merienda', etiqueta: 'Merienda', calorias: 0, porcentaje: 0 },
+      { momento: 'cena', etiqueta: 'Cena', calorias: 400, porcentaje: 23 },
+    ],
   };
   const VACIA = {
     ...SEMANA, desde: '2026-10-26', hasta: '2026-11-01', diasConRegistros: 0, promedio: null,
     dias: Array.from({ length: 7 }, (_, i) => diaEstadistica(i < 6 ? `2026-10-${26 + i}` : '2026-11-01', null, i > 0)),
   };
   const MES = {
-    ...SEMANA, periodo: 'mes', desde: '2026-10-01', hasta: '2026-10-31', diasConRegistros: 1,
+    ...SEMANA, periodo: 'mes', desde: '2026-10-01', hasta: '2026-10-31', diasConRegistros: 1, diasCompletos: 1,
     dias: Array.from({ length: 31 }, (_, i) => diaEstadistica(`2026-10-${String(i + 1).padStart(2, '0')}`, i === 18 ? [2000, 120.5, 250, 60.3] : null, i > 25)),
     promedio: { calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3 },
   };
@@ -239,17 +300,34 @@ describe('Estadísticas (FS-HU-26)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Semana anterior' }));
     expect(await screen.findByText('Semana del 19 de octubre al 25 de octubre')).toBeInTheDocument();
     const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día de la semana; objetivo diario: 2.525 kcal' });
-    expect(within(calorias).getByRole('row', { name: 'Lun 19/10 2.000 kcal' })).toBeInTheDocument();
+    expect(within(calorias).getByRole('row', { name: 'Lun 19/10 2.000 kcal, 79 % de la meta (525 kcal bajo la meta)' })).toBeInTheDocument();
     expect(within(calorias).getByRole('row', { name: 'Mar 20/10 Sin registros' })).toBeInTheDocument();
     const macros = screen.getByRole('table', { name: /Proteínas consumidas cada día de la semana, en gramos; objetivo diario: 189 g/ });
-    expect(within(macros).getByRole('row', { name: 'Lun 19/10 120,5 g' })).toBeInTheDocument();
+    expect(within(macros).getByRole('row', { name: 'Lun 19/10 120,5 g, 64 % de la meta (68,5 g bajo la meta)' })).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Grasas' }));
     expect(screen.getByRole('table', { name: /Grasas consumidas cada día de la semana, en gramos; objetivo diario: 70 g/ })).toBeInTheDocument();
 
-    const promedio = screen.getByRole('heading', { name: 'Promedio diario' }).closest('section');
-    expect(promedio).toHaveTextContent('Calculado con 2 días con registros de 7 días transcurridos.');
-    expect(within(promedio).getByRole('progressbar', { name: 'Calorías' })).toHaveAttribute('aria-valuetext', '69 % del objetivo');
-    expect(promedio).toHaveTextContent('Proteínas100,3 / 189 g');
+    // Cifras de la semana comparadas con la anterior (11-11-2026), con su explicación.
+    const cifras = screen.getByRole('heading', { name: 'Tu semana en cifras' }).closest('section');
+    expect(cifras).toHaveTextContent('Calculado con 2 días completos con registros.');
+    expect(cifras).toHaveTextContent('Promedio diario1.750 kcal-650 kcal vs. semana anterior69 % de tu meta diaria');
+    expect(cifras).toHaveTextContent('Días cerca de la meta0 de 2-1 vs. semana anterior');
+    expect(cifras).toHaveTextContent('Diferencia con tu meta−775 kcalEn promedio te faltaron 775 kcal al día');
+    expect(cifras).toHaveTextContent('Días con registro2 de 7-1 vs. semana anterior');
+
+    const comparacion = screen.getByRole('heading', { name: 'Comparado con la semana anterior' }).closest('section');
+    expect(comparacion).toHaveTextContent('Calorías−27 %');
+    expect(comparacion).toHaveTextContent('1.750 kcal esta semana2.400 kcal semana anteriormeta 2.525 kcal');
+
+    // Proteínas 401 kcal, carbohidratos 881 kcal y grasas 497 kcal: 23 %, 49 % y 28 % frente a 30 %, 45 % y 25 % del plan.
+    const reparto = screen.getByRole('heading', { name: 'Tu reparto frente a tu plan' }).closest('section');
+    expect(within(reparto).getByRole('img', { name: 'Lo que comiste: Proteínas 23 %, Carbohidratos 49 %, Grasas 28 %' })).toBeInTheDocument();
+    expect(reparto).toHaveTextContent('Proteínas: 7 puntos menos que tu plan');
+    expect(reparto).toHaveTextContent('Carbohidratos: 4 puntos más que tu plan');
+    expect(reparto).toHaveTextContent('Grasas: como en tu plan');
+
+    const momentos = screen.getByRole('list', { name: 'Promedio de calorías de cada comida del día en la semana' });
+    expect(momentos).toHaveTextContent('Almuerzo900 kcal · 51 %');
     expect(screen.getByRole('button', { name: 'Semana siguiente' })).toBeEnabled();
   });
 
@@ -264,7 +342,8 @@ describe('Estadísticas (FS-HU-26)', () => {
     const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día del mes; objetivo diario: 2.525 kcal' });
     expect(within(calorias).getAllByRole('row')).toHaveLength(31);
     expect(within(calorias).getByRole('row', { name: 'Mar 27/10 Aún no llega' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Promedio diario' }).closest('section')).toHaveTextContent('Calculado con 1 día con registros de 26 días transcurridos.');
+    expect(screen.getByRole('heading', { name: 'Tu mes en cifras' }).closest('section')).toHaveTextContent('Calculado con 1 día completo con registros.');
+    expect(screen.getByRole('heading', { name: 'Comparado con el mes anterior' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
   });
 
@@ -304,5 +383,254 @@ describe('Estadísticas (FS-HU-26)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Mes anterior' }));
     // El mes que se ve es octubre (MES): el anterior es septiembre, no noviembre.
     await waitFor(() => expect(parametro(llamadasA(fetch, '/api/comidas/estadisticas').at(-1)[0], 'fecha')).toBe('2026-09-30'));
+  });
+});
+
+// Plan de alimentación (11-11-2026): según la meta del perfil (por defecto) o uno de la lista de personalizados, que rige
+// desde el día en que se elige; y la meta de peso, que ajusta las calorías.
+describe('Plan de alimentación', () => {
+  const porcentajes = (proteinas, carbohidratos, grasas) => ({ proteinas, carbohidratos, grasas });
+  const VOLUMEN = { id: 4, nombre: 'Volumen', porcentajes: porcentajes(40, 35, 25), proteinasG: 253, carbohidratosG: 221, grasasG: 70, enUso: false };
+  const OPCIONES_BAJAR = { ritmos: [0.25, 0.5, 0.75], ritmoPorDefecto: 0.5, rango: { min: 56.7, max: 67.9, porImc: true } };
+  function respuestaPlan({
+    tipo = 'meta', desde = null, personalizadoId = null, nombre = null, propios = porcentajes(15, 55, 30), completo = true, lista = [],
+    objetivo = 'mantener_peso', etiqueta = 'Mantener peso', metaPeso = null, opciones = null, kcal = 2525, ajusteKcal = 0, ritmo = null,
+  } = {}) {
+    const total = completo ? kcal : null;
+    return {
+      plan: { tipo, desde, personalizadoId, nombre, kcal: total, porcentajes: tipo === 'meta' ? porcentajes(15, 55, 30) : propios },
+      meta: { valor: objetivo, etiqueta, ajusteCalorias: objetivo === 'bajar_peso' ? -0.15 : 0, ajusteKcal: completo ? ajusteKcal : null, ritmoSemanalKg: ritmo },
+      metaPeso, opcionesMetaPeso: opciones,
+      recomendado: { kcal: total, porcentajes: porcentajes(15, 55, 30), proteinasG: completo ? 95 : null, carbohidratosG: completo ? 347 : null, grasasG: completo ? 84 : null },
+      perfil: { kcalBase: completo ? 2525 : null, pesoKg: completo ? 68 : null, completo },
+      personalizados: lista, maxPersonalizados: 10,
+    };
+  }
+  const resumenes = (fetch) => fetch.mock.calls.filter(([url, opciones]) => (url === '/api/comidas' || url.startsWith('/api/comidas?')) && (opciones?.method ?? 'GET') === 'GET').length;
+  const llamada = (fetch, metodo, prefijo) => fetch.mock.calls.filter(([url, opciones]) => url.startsWith(prefijo) && opciones?.method === metodo).at(-1);
+  // Simula la API del plan: la lectura responde «inicial» y cada cambio responde lo que diga «alCambiar».
+  async function abrirPlan(usuario, inicial = respuestaPlan(), alCambiar = () => [200, inicial]) {
+    const fetch = simular({
+      '/api/comidas/plan': (url, { method, body }) => (method && method !== 'GET' ? alCambiar(url, method, body ? JSON.parse(body) : null) : [200, inicial]),
+    });
+    renderizarApp('/comidas');
+    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de alimentación' }));
+    await screen.findByRole('heading', { name: 'Tu plan de alimentación' });
+    return fetch;
+  }
+  const tarjetaPlan = () => screen.getByRole('heading', { name: 'Tu plan de alimentación' }).closest('section');
+  const tarjetaPeso = () => screen.getByRole('heading', { name: 'Tu meta de peso' }).closest('section');
+
+  test('muestra el plan de la meta con sus calorías, reparto y gramos, cómo se calcula y el acceso a nutricionistas', async () => {
+    const usuario = userEvent.setup();
+    await abrirPlan(usuario);
+    const plan = tarjetaPlan();
+    expect(plan).toHaveTextContent('Usas el plan según tu meta.');
+    expect(within(plan).getByRole('button', { name: 'Según tu meta' })).toHaveAttribute('aria-pressed', 'true');
+    expect(plan).toHaveTextContent('2.525 kcal al día');
+    expect(plan).toHaveTextContent('Igual a tu gasto diario estimado.');
+    expect(plan).toHaveTextContent('Meta: Mantener peso');
+    expect(plan).toHaveTextContent('Comes lo que gastas, con 1,4 g de proteína por kilo y un 30 % de grasas.');
+    expect(plan).toHaveTextContent('Proteínas15 %95 g');
+    expect(plan).toHaveTextContent('Carbohidratos55 %347 g');
+    expect(plan).toHaveTextContent('Grasas30 %84 g');
+    expect(within(plan).getByRole('link', { name: 'Cambiar meta' })).toHaveAttribute('href', '/perfil');
+    expect(within(plan).queryByRole('button', { name: 'Usar el plan de mi meta' })).not.toBeInTheDocument();
+    // El plan no depende del día: no se muestra la navegación de días.
+    expect(screen.queryByRole('navigation', { name: 'Día' })).not.toBeInTheDocument();
+    // Con «Mantener peso» no hay meta de peso: se explica cuándo se puede fijar.
+    expect(tarjetaPeso()).toHaveTextContent('Puedes fijar un peso al que llegar cuando tu meta sea «Bajar de peso» o «Aumentar masa muscular».');
+
+    const calculo = screen.getByRole('heading', { name: 'Cómo se calcula' }).closest('section');
+    expect(calculo).toHaveTextContent('no baja de 1.200 kcal en mujeres ni de 1.500 kcal en hombres');
+    expect(calculo).toHaveTextContent('cerca de 7.700 kcal por kilo');
+    expect(within(calculo).getByRole('link', { name: 'ISSN (2017): proteína y ejercicio' })).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: 'Buscar nutricionistas' })).toHaveAttribute('href', '/profesionales?especialidad=Nutrici%C3%B3n');
+  });
+
+  test('crea un plan personalizado desde la lista vacía, exige nombre y que sume 100 %, y lo usa desde hoy', async () => {
+    const usuario = userEvent.setup();
+    const creado = respuestaPlan({ tipo: 'personalizado', desde: HOY, personalizadoId: 4, nombre: 'Volumen', propios: porcentajes(40, 30, 30), lista: [{ ...VOLUMEN, porcentajes: porcentajes(40, 30, 30), enUso: true }] });
+    const fetch = await abrirPlan(usuario, respuestaPlan(), () => [201, creado]);
+    await usuario.click(screen.getByRole('button', { name: 'Personalizados' }));
+    expect(screen.getByText(/Aún no tienes planes propios/)).toBeInTheDocument();
+    expect(screen.getByText('0 de 10')).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: /Crear plan personalizado/ }));
+
+    expect(screen.getByRole('heading', { name: 'Nuevo plan personalizado' })).toBeInTheDocument();
+    const guardar = screen.getByRole('button', { name: 'Guardar y usar desde hoy' });
+    expect(screen.getByText('Ponle un nombre para encontrarlo en tu lista.')).toBeInTheDocument();
+    expect(guardar).toBeDisabled();
+    await usuario.type(screen.getByRole('textbox', { name: /Nombre/ }), 'Volumen');
+    // Parte del reparto de la meta.
+    const proteinas = screen.getByRole('spinbutton', { name: 'Proteínas' });
+    expect(proteinas).toHaveValue(15);
+    expect(screen.getByRole('slider', { name: 'Proteínas, deslizador' })).toHaveValue('15');
+    expect(guardar).toBeEnabled();
+
+    await usuario.clear(proteinas);
+    await usuario.type(proteinas, '40');
+    expect(screen.getByText(/Suman 125 %\. Quita 25 % para llegar a 100 %\./)).toBeInTheDocument();
+    expect(guardar).toBeDisabled();
+    expect(screen.getByText(/Fuera de lo recomendado \(10–35 %\)/)).toBeInTheDocument();
+    expect(screen.getByText(/Tu proteína equivale a/)).toHaveTextContent('Tu proteína equivale a 3,7 g por kilo de peso; tu meta recomienda 1,4 g.');
+    await usuario.click(screen.getByRole('button', { name: 'Ajustar carbohidratos a 30 %' }));
+    expect(screen.getByRole('spinbutton', { name: 'Carbohidratos' })).toHaveValue(30);
+    expect(screen.getByText('Suman 100 %')).toBeInTheDocument();
+    expect(screen.getByText(/^253 g al día/)).toBeInTheDocument();
+
+    const antes = resumenes(fetch);
+    await usuario.click(guardar);
+    expect(await screen.findByText('Listo: guardaste «Volumen» y lo usas desde hoy.')).toBeInTheDocument();
+    expect(cuerpo(llamada(fetch, 'POST', '/api/comidas/plan/personalizados'))).toEqual({ nombre: 'Volumen', proteinas: 40, carbohidratos: 30, grasas: 30, usar: true });
+    expect(screen.getByText('Usas «Volumen» desde el 26 de octubre.')).toBeInTheDocument();
+    const lista = screen.getByRole('heading', { name: 'Volumen' }).closest('li');
+    expect(lista).toHaveTextContent('En uso');
+    expect(within(lista).queryByRole('button', { name: 'Usar desde hoy' })).not.toBeInTheDocument();
+    // Al cambiar el plan, el resumen se vuelve a pedir para que el objetivo del día use el plan nuevo.
+    await waitFor(() => expect(resumenes(fetch)).toBeGreaterThan(antes));
+  });
+
+  test('usa, edita y borra planes de la lista', async () => {
+    const usuario = userEvent.setup();
+    const DESCANSO = { ...VOLUMEN, id: 5, nombre: 'Descanso', porcentajes: porcentajes(30, 40, 30) };
+    const inicial = respuestaPlan({ lista: [VOLUMEN, DESCANSO] });
+    const fetch = await abrirPlan(usuario, inicial, (url, method, datos) => {
+      if (method === 'PUT' && url === '/api/comidas/plan') return [200, respuestaPlan({ tipo: 'personalizado', desde: HOY, personalizadoId: 4, nombre: 'Volumen', propios: VOLUMEN.porcentajes, lista: [{ ...VOLUMEN, enUso: true }, DESCANSO] })];
+      if (method === 'PUT') return [200, respuestaPlan({ lista: [VOLUMEN, { ...DESCANSO, nombre: datos.nombre, porcentajes: porcentajes(datos.proteinas, datos.carbohidratos, datos.grasas) }] })];
+      return [200, respuestaPlan({ lista: [VOLUMEN] })];
+    });
+    await usuario.click(screen.getByRole('button', { name: 'Personalizados' }));
+    expect(screen.getByText('2 de 10')).toBeInTheDocument();
+    const volumen = screen.getByRole('heading', { name: 'Volumen' }).closest('li');
+    expect(volumen).toHaveTextContent('Proteínas 40 %');
+
+    await usuario.click(within(volumen).getByRole('button', { name: 'Usar desde hoy' }));
+    expect(await screen.findByText('Listo: desde hoy usas «Volumen».')).toBeInTheDocument();
+    expect(cuerpo(llamada(fetch, 'PUT', '/api/comidas/plan'))).toEqual({ tipo: 'personalizado', personalizadoId: 4 });
+
+    await usuario.click(screen.getByRole('button', { name: 'Editar «Descanso»' }));
+    expect(screen.getByRole('heading', { name: 'Editar «Descanso»' })).toBeInTheDocument();
+    const nombre = screen.getByRole('textbox', { name: /Nombre/ });
+    expect(nombre).toHaveValue('Descanso');
+    await usuario.clear(nombre);
+    await usuario.type(nombre, 'Días de descanso');
+    await usuario.click(screen.getByRole('button', { name: 'Guardar cambios' }));
+    expect(await screen.findByText('Guardaste los cambios de «Días de descanso».')).toBeInTheDocument();
+    expect(cuerpo(llamada(fetch, 'PUT', '/api/comidas/plan/personalizados/5'))).toEqual({ nombre: 'Días de descanso', proteinas: 30, carbohidratos: 40, grasas: 30 });
+
+    await usuario.click(screen.getByRole('button', { name: 'Eliminar «Volumen»' }));
+    expect(screen.getByText('¿Eliminar «Volumen»?')).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Eliminar' }));
+    expect(await screen.findByText('Eliminaste «Volumen».')).toBeInTheDocument();
+    expect(llamada(fetch, 'DELETE', '/api/comidas/plan/personalizados/4')).toBeDefined();
+  });
+
+  test('en el editor, un campo vacío o fuera de 5–80 no se puede guardar, y un error de la API se muestra', async () => {
+    const usuario = userEvent.setup();
+    await abrirPlan(usuario, respuestaPlan(), () => [409, { error: 'Ya tienes un plan con ese nombre' }]);
+    await usuario.click(screen.getByRole('button', { name: 'Personalizados' }));
+    await usuario.click(screen.getByRole('button', { name: /Crear plan personalizado/ }));
+    await usuario.type(screen.getByRole('textbox', { name: /Nombre/ }), 'Volumen');
+    const grasas = screen.getByRole('spinbutton', { name: 'Grasas' });
+    await usuario.clear(grasas);
+    expect(screen.getByText('Escribe un número entero entre 5 y 80.')).toBeInTheDocument();
+    expect(grasas).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByRole('button', { name: 'Solo guardar' })).toBeDisabled();
+    await usuario.type(grasas, '90');
+    expect(screen.getByText('Elige entre 5 % y 80 %.')).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Partir del reparto de mi meta' }));
+    expect(grasas).toHaveValue(30);
+    await usuario.click(screen.getByRole('button', { name: 'Solo guardar' }));
+    expect(await screen.findByText('Ya tienes un plan con ese nombre')).toBeInTheDocument();
+    // El editor sigue abierto para corregir el nombre.
+    expect(screen.getByRole('heading', { name: 'Nuevo plan personalizado' })).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Cancelar' }));
+    expect(screen.getByRole('heading', { name: 'Mis planes personalizados' })).toBeInTheDocument();
+  });
+
+  test('con un personalizado en uso, se puede volver al plan de la meta', async () => {
+    const usuario = userEvent.setup();
+    const fetch = await abrirPlan(
+      usuario,
+      respuestaPlan({ tipo: 'personalizado', desde: '2026-10-20', personalizadoId: 4, nombre: 'Volumen', propios: VOLUMEN.porcentajes, lista: [{ ...VOLUMEN, enUso: true }] }),
+      () => [200, respuestaPlan({ desde: HOY, lista: [VOLUMEN] })],
+    );
+    expect(screen.getByText('Usas «Volumen» desde el 20 de octubre.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Personalizados' })).toHaveAttribute('aria-pressed', 'true');
+    await usuario.click(screen.getByRole('button', { name: 'Según tu meta' }));
+    expect(screen.getByText('Deja de usar «Volumen» desde hoy.')).toBeInTheDocument();
+    await usuario.click(screen.getByRole('button', { name: 'Usar el plan de mi meta' }));
+    expect(await screen.findByText('Listo: desde hoy usas el plan según tu meta.')).toBeInTheDocument();
+    expect(cuerpo(llamada(fetch, 'PUT', '/api/comidas/plan'))).toEqual({ tipo: 'meta' });
+    expect(screen.getByText('Usas el plan según tu meta.')).toBeInTheDocument();
+  });
+
+  test('fija una meta de peso con su ritmo, muestra el avance y se puede quitar', async () => {
+    const usuario = userEvent.setup();
+    const base = { objetivo: 'bajar_peso', etiqueta: 'Bajar de peso', opciones: OPCIONES_BAJAR, kcal: 2146, ajusteKcal: -379 };
+    const conMeta = respuestaPlan({
+      ...base, kcal: 2250, ajusteKcal: -275, ritmo: 0.25,
+      metaPeso: {
+        objetivo: 'bajar_peso', aplica: true, pesoInicialKg: 68, pesoObjetivoKg: 63.5, pesoActualKg: 68, ritmoSemanalKg: 0.25, ajusteKcal: -275,
+        fechaInicio: HOY, faltanKg: 4.5, alcanzada: false, semanas: 18, fechaEstimada: '2027-03-01', avancePct: 0,
+      },
+    });
+    const fetch = await abrirPlan(usuario, respuestaPlan(base), (url, method) => [200, method === 'DELETE' ? respuestaPlan(base) : conMeta]);
+    const peso = tarjetaPeso();
+    const campo = within(peso).getByRole('textbox', { name: /Peso al que quieres llegar/ });
+    const guardar = within(peso).getByRole('button', { name: 'Guardar meta de peso' });
+    expect(peso).toHaveTextContent('Hoy pesas 68 kg. Puedes elegir entre 56,7 y 67,9 kg.');
+    expect(guardar).toBeDisabled();
+    await usuario.type(campo, '72');
+    expect(peso).toHaveTextContent('Para bajar de peso, elige un peso menor a tu peso actual (68 kg).');
+    expect(guardar).toBeDisabled();
+    await usuario.clear(campo);
+    await usuario.type(campo, '50');
+    expect(peso).toHaveTextContent('Con tu altura, bajo 56,7 kg quedarías bajo el rango saludable (IMC 18,5).');
+    await usuario.clear(campo);
+    await usuario.type(campo, '63,5');
+    // Ritmo moderado por defecto: 4,5 kg a 0,5 kg por semana son 9 semanas.
+    expect(within(peso).getByRole('radio', { name: /Moderado/ })).toBeChecked();
+    expect(peso).toHaveTextContent('(9 semanas)');
+    await usuario.click(within(peso).getByRole('radio', { name: /Suave/ }));
+    expect(peso).toHaveTextContent('(18 semanas)');
+    expect(within(peso).getByRole('radio', { name: /Suave/ })).toHaveAccessibleName(/−275 kcal al día/);
+
+    await usuario.click(guardar);
+    expect(await within(tarjetaPeso()).findByText('Guardaste tu meta de peso; tus calorías ya siguen el ritmo que elegiste.')).toBeInTheDocument();
+    expect(cuerpo(llamada(fetch, 'PUT', '/api/comidas/plan/meta-peso'))).toEqual({ pesoObjetivoKg: 63.5, ritmoSemanalKg: 0.25 });
+    expect(tarjetaPeso()).toHaveTextContent('De 68 kg a 63,5 kg');
+    expect(within(tarjetaPeso()).getByRole('progressbar', { name: 'Avance de tu meta de peso' })).toHaveAttribute('aria-valuenow', '0');
+    expect(tarjetaPeso()).toHaveTextContent('Te faltan 4,5 kg. A 0,25 kg por semana llegarías cerca del 1 de marzo de 2027 (18 semanas).');
+    expect(tarjetaPlan()).toHaveTextContent('Tu gasto diario estimado (2.525 kcal) menos 275 kcal, para bajar 0,25 kg por semana.');
+
+    await usuario.click(within(tarjetaPeso()).getByRole('button', { name: 'Quitar meta' }));
+    await usuario.click(within(tarjetaPeso()).getByRole('button', { name: 'Quitar' }));
+    expect(await within(tarjetaPeso()).findByText('Quitaste tu meta de peso.')).toBeInTheDocument();
+    expect(llamada(fetch, 'DELETE', '/api/comidas/plan/meta-peso')).toBeDefined();
+  });
+
+  test('con el perfil incompleto muestra el reparto sin calorías ni gramos e invita a completarlo', async () => {
+    const usuario = userEvent.setup();
+    await abrirPlan(usuario, respuestaPlan({ completo: false }));
+    const plan = tarjetaPlan();
+    expect(plan).toHaveTextContent('Completa tu peso, altura, edad, sexo y actividad física para calcular tus calorías y gramos.');
+    expect(within(plan).getByRole('link', { name: 'Ir a mi perfil' })).toHaveAttribute('href', '/perfil');
+    expect(plan).toHaveTextContent('— kcal al día');
+    expect(plan).toHaveTextContent('Proteínas15 %—');
+  });
+
+  test('si el plan no carga muestra el error y permite reintentar', async () => {
+    const usuario = userEvent.setup();
+    // Falla hasta que se toca Reintentar (en desarrollo React monta dos veces y pide el plan dos veces).
+    let falla = true;
+    simular({ '/api/comidas/plan': () => (falla ? [500, { error: 'No pudimos cargar tu plan' }] : [200, respuestaPlan()]) });
+    renderizarApp('/comidas');
+    await usuario.click(within(await screen.findByRole('group', { name: 'Secciones de Comidas' })).getByRole('button', { name: 'Plan de alimentación' }));
+    expect(await screen.findByText('No pudimos cargar tu plan')).toBeInTheDocument();
+    falla = false;
+    await usuario.click(screen.getByRole('button', { name: 'Reintentar' }));
+    expect(await screen.findByRole('heading', { name: 'Tu plan de alimentación' })).toBeInTheDocument();
   });
 });
