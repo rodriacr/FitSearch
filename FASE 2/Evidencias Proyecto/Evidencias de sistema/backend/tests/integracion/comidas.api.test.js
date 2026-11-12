@@ -93,9 +93,11 @@ test('el progreso semanal trae los 7 días de la semana', async () => {
 
 test('las estadísticas responden la semana por defecto o el mes pedido, y validan el período y la fecha', async () => {
   modelo.totalesPorDia.mockResolvedValue([]);
+  modelo.caloriasPorMomento.mockResolvedValue([]);
   const semana = await conSesion(request(app).get('/api/comidas/estadisticas'));
   expect(semana.status).toBe(200);
-  expect(semana.body).toMatchObject({ periodo: 'semana', diasConRegistros: 0, promedio: null });
+  expect(semana.body).toMatchObject({ periodo: 'semana', diasConRegistros: 0, diasCerca: 0, promedio: null, anterior: { diasConRegistros: 0, promedio: null } });
+  expect(semana.body.momentos).toHaveLength(5);
   expect(semana.body.dias).toHaveLength(7);
   expect(semana.body.objetivo.calorias).toBe(2525);
   const mes = await conSesion(request(app).get('/api/comidas/estadisticas?periodo=mes&fecha=2026-02-10'));

@@ -59,11 +59,14 @@ describe('Resumen', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Comidas' })).toBeInTheDocument();
     const calorias = (await screen.findByRole('heading', { name: 'Calorías de hoy' })).closest('section');
     expect(calorias).toHaveTextContent('754kcalde 2.525 kcal');
-    expect(calorias).toHaveTextContent('Proteínas64,1 g / 189 g34 %');
-    expect(calorias).toHaveTextContent('Grasas11,4 g / 70 g16 %');
+    // Cuánto falta para la meta del día, en calorías y en cada macronutriente (11-11-2026).
+    expect(calorias).toHaveTextContent('Te faltan 1.771 kcal');
+    expect(calorias).toHaveTextContent('Proteínas64,1 g / 189 gfaltan 124,9 g34 %');
+    expect(calorias).toHaveTextContent('Grasas11,4 g / 70 gfaltan 58,6 g16 %');
+    expect(calorias).toHaveTextContent('Lo que llevas hoy frente a la meta diaria de tu plan');
 
-    const semanal = screen.getByRole('table', { name: /Calorías consumidas cada día de la semana; objetivo diario: 2525 kcal/ });
-    expect(within(semanal).getByRole('row', { name: 'Lun 26/10 754 kcal' })).toBeInTheDocument();
+    const semanal = screen.getByRole('table', { name: 'Calorías consumidas cada día de la semana; objetivo diario: 2.525 kcal' });
+    expect(within(semanal).getByRole('row', { name: 'Lun 26/10 754 kcal, 30 % de la meta (1.771 kcal bajo la meta)' })).toBeInTheDocument();
     expect(within(semanal).getByRole('row', { name: 'Mar 27/10 Aún no llega' })).toBeInTheDocument();
 
     const comidas = screen.getByRole('heading', { name: 'Comidas de hoy' }).closest('section');
@@ -73,6 +76,7 @@ describe('Resumen', () => {
 
     const nutricional = screen.getByRole('heading', { name: 'Resumen nutricional' }).closest('section');
     expect(within(nutricional).getByRole('progressbar', { name: 'Calorías' })).toHaveAttribute('aria-valuetext', '30 % del objetivo');
+    expect(nutricional).toHaveTextContent('faltan 1.771 kcal');
 
     const objetivo = screen.getByRole('heading', { name: 'Tu objetivo' }).closest('section');
     expect(objetivo).toHaveTextContent('Mantener peso');
@@ -87,6 +91,27 @@ describe('Resumen', () => {
     expect(within(pestanas).getAllByRole('button').map((boton) => boton.textContent)).toEqual(['Resumen', 'Comidas', 'Plan de alimentación', 'Estadísticas']);
     expect(within(pestanas).queryByText('Próximamente')).not.toBeInTheDocument();
     expect(screen.getByText(/repartido según tu plan de alimentación: 30 % proteínas, 45 % carbohidratos y 25 % grasas/)).toBeInTheDocument();
+  });
+
+  test('la semana dice cuántos días completos quedaron cerca de la meta y compara el día con el promedio de los otros', async () => {
+    const calorias = [2500, 2300, 0, 1800, 2600, 0, 0];
+    simular({
+      '/api/comidas/semana': {
+        desde: '2026-10-19', hasta: '2026-10-25', objetivoCalorias: 2525,
+        dias: calorias.map((valor, i) => ({ fecha: `2026-10-${19 + i}`, calorias: valor, futuro: false })),
+      },
+    });
+    renderizarApp('/comidas');
+    const semanal = (await screen.findByRole('heading', { name: 'Progreso semanal' })).closest('section');
+    // 2.500 (99 %), 2.300 (91 %) y 2.600 (103 %) quedan entre 90 % y 110 %; 1.800 (71 %), no. Promedio: 2.300 kcal.
+    expect(semanal).toHaveTextContent('3 de 4 días completos cerca de tu meta');
+    expect(semanal).toHaveTextContent('Promedio: 2.300 kcal (91 % de tu meta)');
+    expect(semanal).toHaveTextContent('un día cuenta como cerca de la meta si queda entre 90 % y 110 %');
+    const tabla = within(semanal).getByRole('table');
+    expect(within(tabla).getByRole('row', { name: 'Vie 23/10 2.600 kcal, 103 % de la meta (75 kcal sobre la meta)' })).toBeInTheDocument();
+    const dia = screen.getByRole('heading', { name: 'Calorías de hoy' }).closest('section');
+    expect(dia).toHaveTextContent('Promedio de tus otros días de esta semana: 2.300 kcal');
+    expect(dia).toHaveTextContent('Hoy vas 1.546 kcal bajo ese promedio');
   });
 
   test('sin perfil completo muestra el consumo sin objetivo e invita a completar el perfil', async () => {
@@ -225,20 +250,33 @@ describe('Estadísticas (FS-HU-26)', () => {
   });
   const SEMANA = {
     periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: HOY,
-    objetivo: { calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70 },
+    objetivo: { calorias: 2525, proteinasG: 189, carbohidratosG: 284, grasasG: 70, porcentajes: { proteinas: 30, carbohidratos: 45, grasas: 25 } },
     dias: [
       diaEstadistica('2026-10-19', [2000, 120.5, 250, 60.3]), diaEstadistica('2026-10-20'), diaEstadistica('2026-10-21', [1500, 80, 190.4, 50]),
       ...['22', '23', '24', '25'].map((d) => diaEstadistica(`2026-10-${d}`)),
     ],
     diasConRegistros: 2,
+    diasCompletos: 2,
+    diasCerca: 0,
     promedio: { calorias: 1750, proteinasG: 100.3, carbohidratosG: 220.2, grasasG: 55.2 },
+    anterior: {
+      desde: '2026-10-12', hasta: '2026-10-18', diasConRegistros: 3, diasCompletos: 3, diasCerca: 1,
+      promedio: { calorias: 2400, proteinasG: 110, carbohidratosG: 260, grasasG: 70 },
+    },
+    momentos: [
+      { momento: 'desayuno', etiqueta: 'Desayuno', calorias: 450, porcentaje: 26 },
+      { momento: 'media_manana', etiqueta: 'Media mañana', calorias: 0, porcentaje: 0 },
+      { momento: 'almuerzo', etiqueta: 'Almuerzo', calorias: 900, porcentaje: 51 },
+      { momento: 'merienda', etiqueta: 'Merienda', calorias: 0, porcentaje: 0 },
+      { momento: 'cena', etiqueta: 'Cena', calorias: 400, porcentaje: 23 },
+    ],
   };
   const VACIA = {
     ...SEMANA, desde: '2026-10-26', hasta: '2026-11-01', diasConRegistros: 0, promedio: null,
     dias: Array.from({ length: 7 }, (_, i) => diaEstadistica(i < 6 ? `2026-10-${26 + i}` : '2026-11-01', null, i > 0)),
   };
   const MES = {
-    ...SEMANA, periodo: 'mes', desde: '2026-10-01', hasta: '2026-10-31', diasConRegistros: 1,
+    ...SEMANA, periodo: 'mes', desde: '2026-10-01', hasta: '2026-10-31', diasConRegistros: 1, diasCompletos: 1,
     dias: Array.from({ length: 31 }, (_, i) => diaEstadistica(`2026-10-${String(i + 1).padStart(2, '0')}`, i === 18 ? [2000, 120.5, 250, 60.3] : null, i > 25)),
     promedio: { calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3 },
   };
@@ -262,17 +300,34 @@ describe('Estadísticas (FS-HU-26)', () => {
     await usuario.click(screen.getByRole('button', { name: 'Semana anterior' }));
     expect(await screen.findByText('Semana del 19 de octubre al 25 de octubre')).toBeInTheDocument();
     const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día de la semana; objetivo diario: 2.525 kcal' });
-    expect(within(calorias).getByRole('row', { name: 'Lun 19/10 2.000 kcal' })).toBeInTheDocument();
+    expect(within(calorias).getByRole('row', { name: 'Lun 19/10 2.000 kcal, 79 % de la meta (525 kcal bajo la meta)' })).toBeInTheDocument();
     expect(within(calorias).getByRole('row', { name: 'Mar 20/10 Sin registros' })).toBeInTheDocument();
     const macros = screen.getByRole('table', { name: /Proteínas consumidas cada día de la semana, en gramos; objetivo diario: 189 g/ });
-    expect(within(macros).getByRole('row', { name: 'Lun 19/10 120,5 g' })).toBeInTheDocument();
+    expect(within(macros).getByRole('row', { name: 'Lun 19/10 120,5 g, 64 % de la meta (68,5 g bajo la meta)' })).toBeInTheDocument();
     await usuario.click(screen.getByRole('button', { name: 'Grasas' }));
     expect(screen.getByRole('table', { name: /Grasas consumidas cada día de la semana, en gramos; objetivo diario: 70 g/ })).toBeInTheDocument();
 
-    const promedio = screen.getByRole('heading', { name: 'Promedio diario' }).closest('section');
-    expect(promedio).toHaveTextContent('Calculado con 2 días con registros de 7 días transcurridos.');
-    expect(within(promedio).getByRole('progressbar', { name: 'Calorías' })).toHaveAttribute('aria-valuetext', '69 % del objetivo');
-    expect(promedio).toHaveTextContent('Proteínas100,3 / 189 g');
+    // Cifras de la semana comparadas con la anterior (11-11-2026), con su explicación.
+    const cifras = screen.getByRole('heading', { name: 'Tu semana en cifras' }).closest('section');
+    expect(cifras).toHaveTextContent('Calculado con 2 días completos con registros.');
+    expect(cifras).toHaveTextContent('Promedio diario1.750 kcal-650 kcal vs. semana anterior69 % de tu meta diaria');
+    expect(cifras).toHaveTextContent('Días cerca de la meta0 de 2-1 vs. semana anterior');
+    expect(cifras).toHaveTextContent('Diferencia con tu meta−775 kcalEn promedio te faltaron 775 kcal al día');
+    expect(cifras).toHaveTextContent('Días con registro2 de 7-1 vs. semana anterior');
+
+    const comparacion = screen.getByRole('heading', { name: 'Comparado con la semana anterior' }).closest('section');
+    expect(comparacion).toHaveTextContent('Calorías−27 %');
+    expect(comparacion).toHaveTextContent('1.750 kcal esta semana2.400 kcal semana anteriormeta 2.525 kcal');
+
+    // Proteínas 401 kcal, carbohidratos 881 kcal y grasas 497 kcal: 23 %, 49 % y 28 % frente a 30 %, 45 % y 25 % del plan.
+    const reparto = screen.getByRole('heading', { name: 'Tu reparto frente a tu plan' }).closest('section');
+    expect(within(reparto).getByRole('img', { name: 'Lo que comiste: Proteínas 23 %, Carbohidratos 49 %, Grasas 28 %' })).toBeInTheDocument();
+    expect(reparto).toHaveTextContent('Proteínas: 7 puntos menos que tu plan');
+    expect(reparto).toHaveTextContent('Carbohidratos: 4 puntos más que tu plan');
+    expect(reparto).toHaveTextContent('Grasas: como en tu plan');
+
+    const momentos = screen.getByRole('list', { name: 'Promedio de calorías de cada comida del día en la semana' });
+    expect(momentos).toHaveTextContent('Almuerzo900 kcal · 51 %');
     expect(screen.getByRole('button', { name: 'Semana siguiente' })).toBeEnabled();
   });
 
@@ -287,7 +342,8 @@ describe('Estadísticas (FS-HU-26)', () => {
     const calorias = screen.getByRole('table', { name: 'Calorías consumidas cada día del mes; objetivo diario: 2.525 kcal' });
     expect(within(calorias).getAllByRole('row')).toHaveLength(31);
     expect(within(calorias).getByRole('row', { name: 'Mar 27/10 Aún no llega' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: 'Promedio diario' }).closest('section')).toHaveTextContent('Calculado con 1 día con registros de 26 días transcurridos.');
+    expect(screen.getByRole('heading', { name: 'Tu mes en cifras' }).closest('section')).toHaveTextContent('Calculado con 1 día completo con registros.');
+    expect(screen.getByRole('heading', { name: 'Comparado con el mes anterior' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Mes siguiente' })).toBeDisabled();
   });
 

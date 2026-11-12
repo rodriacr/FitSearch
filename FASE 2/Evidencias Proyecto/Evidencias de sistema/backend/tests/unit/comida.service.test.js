@@ -24,6 +24,7 @@ beforeEach(() => {
   jest.resetAllMocks();
   usuarioModel.buscarPorIdConPerfil.mockResolvedValue({ id: 1, perfil: perfilCompleto });
   modelo.crear.mockImplementation(async ({ fecha, ...datos }) => registro({ id: 50, fecha: new Date(`${fecha}T00:00:00Z`), ...datos, fechaCreacion: AHORA }));
+  modelo.caloriasPorMomento.mockResolvedValue([]);
 });
 
 test('calcula el aporte de una porción a partir del valor por 100 g', () => {
@@ -102,7 +103,7 @@ test('las estadísticas de la semana traen cada día con sus macronutrientes y e
   const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-22' }, AHORA);
   expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-10-19', '2026-10-25');
   expect(datos).toMatchObject({ periodo: 'semana', desde: '2026-10-19', hasta: '2026-10-25', hoy: '2026-10-26', diasConRegistros: 2 });
-  expect(datos.objetivo).toEqual({ calorias: 2525, proteinasG: 95, carbohidratosG: 347, grasasG: 84 });
+  expect(datos.objetivo).toEqual({ calorias: 2525, proteinasG: 95, carbohidratosG: 347, grasasG: 84, porcentajes: { proteinas: 15, carbohidratos: 55, grasas: 30 } });
   expect(datos.dias).toHaveLength(7);
   expect(datos.dias[0]).toEqual({ fecha: '2026-10-19', calorias: 2000, proteinasG: 120.5, carbohidratosG: 250, grasasG: 60.3, conRegistros: true, futuro: false });
   expect(datos.dias[1]).toEqual({ fecha: '2026-10-20', calorias: 0, proteinasG: 0, carbohidratosG: 0, grasasG: 0, conRegistros: false, futuro: false });
@@ -128,8 +129,43 @@ test('sin perfil completo las estadísticas no tienen objetivo, pero sí los dí
   usuarioModel.buscarPorIdConPerfil.mockResolvedValue({ id: 1, perfil: null });
   modelo.totalesPorDia.mockResolvedValue([total('2026-10-26', 900, '40.00', '100.00', '30.00')]);
   const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-26' }, AHORA);
-  expect(datos.objetivo).toEqual({ calorias: null, proteinasG: null, carbohidratosG: null, grasasG: null });
+  expect(datos.objetivo).toEqual({ calorias: null, proteinasG: null, carbohidratosG: null, grasasG: null, porcentajes: null });
   expect(datos.promedio).toEqual({ calorias: 900, proteinasG: 40, carbohidratosG: 100, grasasG: 30 });
+  // Sin meta no se cuentan días cerca de ella.
+  expect(datos.diasCerca).toBeNull();
+});
+
+test('compara con el período anterior, cuenta los días cerca de la meta y reparte las calorías por comida (11-11-2026)', async () => {
+  modelo.totalesPorDia.mockImplementation(async (_usuario, desde) => (desde === '2026-10-19'
+    ? [total('2026-10-19', 2500, '90.00', '340.00', '80.00'), total('2026-10-20', 2300, '85.00', '300.00', '75.00'), total('2026-10-21', 1800, '70.00', '240.00', '60.00')]
+    : [total('2026-10-13', 2000, '80.00', '260.00', '70.00')]));
+  modelo.caloriasPorMomento.mockResolvedValue([
+    { momento: 'almuerzo', _sum: { calorias: 3300 } }, { momento: 'desayuno', _sum: { calorias: 1500 } }, { momento: 'cena', _sum: { calorias: 1800 } },
+  ]);
+  const datos = await servicio.estadisticas(1, { periodo: 'semana', fecha: '2026-10-22' }, AHORA);
+  expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-10-12', '2026-10-18');
+  expect(modelo.caloriasPorMomento).toHaveBeenCalledWith(1, '2026-10-19', '2026-10-25');
+  // Meta de 2.525 kcal con margen de ±10 %: 2.500 (99 %) y 2.300 (91 %) quedan cerca; 1.800 (71 %), no.
+  expect(datos.diasCerca).toBe(2);
+  expect(datos.anterior).toEqual({
+    desde: '2026-10-12', hasta: '2026-10-18', diasConRegistros: 1, diasCompletos: 1, diasCerca: 0,
+    promedio: { calorias: 2000, proteinasG: 80, carbohidratosG: 260, grasasG: 70 },
+  });
+  // 6.600 kcal en 3 días con registros: el almuerzo promedia 1.100 kcal por día y es la mitad del total.
+  expect(datos.momentos).toEqual([
+    { momento: 'desayuno', etiqueta: 'Desayuno', calorias: 500, porcentaje: 23 },
+    { momento: 'media_manana', etiqueta: 'Media mañana', calorias: 0, porcentaje: 0 },
+    { momento: 'almuerzo', etiqueta: 'Almuerzo', calorias: 1100, porcentaje: 50 },
+    { momento: 'merienda', etiqueta: 'Merienda', calorias: 0, porcentaje: 0 },
+    { momento: 'cena', etiqueta: 'Cena', calorias: 600, porcentaje: 27 },
+  ]);
+  // Hoy (26-10) aún no termina: cuenta como día con registros, pero no para el promedio ni para la meta.
+  modelo.totalesPorDia.mockResolvedValue([total('2026-10-25', 2500, '90.00', '340.00', '80.00'), total('2026-10-26', 800, '30.00', '100.00', '20.00')]);
+  const octubre = await servicio.estadisticas(1, { periodo: 'mes', fecha: '2026-10-26' }, AHORA);
+  expect(octubre).toMatchObject({ diasConRegistros: 2, diasCompletos: 1, diasCerca: 1, promedio: { calorias: 2500 } });
+  // En el mes, el período anterior es el mes completo previo.
+  await servicio.estadisticas(1, { periodo: 'mes', fecha: '2026-03-10' }, AHORA);
+  expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, '2026-02-01', '2026-02-28');
 });
 
 test('agregar calcula y guarda el aporte con el nombre del catálogo; un alimento inexistente responde 404', async () => {

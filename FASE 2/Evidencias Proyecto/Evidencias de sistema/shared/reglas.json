@@ -572,7 +572,10 @@
       "carbohidratos": 4,
       "grasas": 9
     },
-    "alimentosPorMensaje": 8
+    "alimentosPorMensaje": 8,
+    "estadisticas": {
+      "margenMeta": 0.1
+    }
   },
   "agua": {
     "vasoMl": 250,

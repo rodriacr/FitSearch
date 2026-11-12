@@ -93,6 +93,19 @@ async function rechaza(nombre, promesa) {
     const estadisticas = await check('Estadísticas de la semana', api('get', '/comidas/estadisticas', undefined, token), 200);
     ok('Las estadísticas usan el plan vigente', estadisticas.objetivo.calorias === 1660 && estadisticas.objetivo.proteinasG === 145);
 
+    // Estadísticas ampliadas (11-11-2026): período anterior, días cerca de la meta y calorías de cada comida del día, con
+    // la agrupación por momento en MySQL. Ayer: 1.600 kcal (96 % de 1.660); una semana antes: 900 kcal (54 %).
+    const comida = (fecha, momento, calorias) => ({
+      usuarioId, fecha: dia(fecha), momento, descripcionAlimento: 'Comida de prueba', gramos: 100, calorias, proteinasG: 10, carbohidratosG: 20, grasasG: 5,
+    });
+    await prisma.registroComida.createMany({ data: [comida(ayer, 'almuerzo', 1200), comida(ayer, 'cena', 400), comida(sumarDias(ayer, -7), 'desayuno', 900)] });
+    const ampliadas = await check('Estadísticas de la semana de ayer', api('get', `/comidas/estadisticas?fecha=${ayer}`, undefined, token), 200);
+    ok('Ayer cuenta como día completo y cerca de la meta', ampliadas.diasConRegistros === 1 && ampliadas.diasCompletos === 1 && ampliadas.diasCerca === 1);
+    ok('Trae la semana anterior para comparar', ampliadas.anterior.diasConRegistros === 1 && ampliadas.anterior.promedio.calorias === 900 && ampliadas.anterior.diasCerca === 0);
+    const porMomento = Object.fromEntries(ampliadas.momentos.map(({ momento, calorias, porcentaje }) => [momento, [calorias, porcentaje]]));
+    ok('Reparte las calorías por comida del día', porMomento.almuerzo[0] === 1200 && porMomento.almuerzo[1] === 75 && porMomento.cena[1] === 25 && porMomento.desayuno[0] === 0);
+    ok('Trae el reparto del plan', ampliadas.objetivo.porcentajes && ampliadas.objetivo.porcentajes.proteinas + ampliadas.objetivo.porcentajes.carbohidratos + ampliadas.objetivo.porcentajes.grasas === 100);
+
     // Borrar el plan en uso: desde hoy vuelve el de la meta; los días pasados conservan su copia.
     const borrado = await check('Borra el plan en uso', api('delete', `/comidas/plan/personalizados/${idVolumen}`, undefined, token), 200);
     ok('Desde hoy vuelve el plan de la meta', borrado.plan.tipo === 'meta' && borrado.personalizados.length === 1);

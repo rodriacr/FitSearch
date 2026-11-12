@@ -155,17 +155,16 @@ function limitesDelPeriodo(periodo, fecha) {
   return { desde, hasta: sumarDias(desde, 6) };
 }
 
-// Estadísticas de una semana o un mes (FS-HU-26): calorías y macronutrientes de cada día frente al objetivo diario, y el
-// promedio de los días que tienen registros (un día sin registros no baja el promedio, porque puede ser un olvido).
-async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
-  exigirFechaPasada(fecha, ahora);
-  const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
-  // El objetivo del período es el del plan que rige su último día (o hoy, si el período no termina).
-  const [totales, objetivo] = await Promise.all([modelo.totalesPorDia(usuarioId, desde, hasta), objetivoDiario(usuarioId, [hasta, fechaEnChile(ahora)].sort()[0])]);
+// Un día está «cerca de la meta» si el porcentaje de la meta que alcanzó, redondeado como se muestra en la pantalla,
+// queda dentro del margen de shared/reglas.json (entre 90 % y 110 %).
+const cercaDeLaMeta = (calorias, meta) => Math.abs(Math.round((calorias / meta) * 100) - 100) <= reglas.estadisticas.margenMeta * 100;
+
+// Cada día de un período con sus calorías y macronutrientes (los días sin registros quedan en cero y marcados).
+async function diasDelPeriodo(usuarioId, desde, hasta, hoy) {
+  const totales = await modelo.totalesPorDia(usuarioId, desde, hasta);
   const porDia = new Map(totales.map(({ fecha: dia, _sum }) => [dia.toISOString().slice(0, 10), _sum]));
-  const hoy = fechaEnChile(ahora);
   const largo = Math.round((Date.parse(`${hasta}T00:00:00Z`) - Date.parse(`${desde}T00:00:00Z`)) / 86400000) + 1;
-  const dias = Array.from({ length: largo }, (_, i) => {
+  return Array.from({ length: largo }, (_, i) => {
     const dia = sumarDias(desde, i);
     const suma = porDia.get(dia);
     return {
@@ -178,23 +177,68 @@ async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
       futuro: dia > hoy,
     };
   });
+}
+
+// Promedio de los días con registros (un día sin registros no baja el promedio, porque puede ser un olvido) y cuántos
+// de ellos quedaron cerca de la meta de calorías. Hoy todavía no termina: no cuenta para el promedio ni para la meta,
+// salvo que sea el único día con registros (11-11-2026).
+function resumirDias(dias, metaCalorias, hoy) {
   const conRegistros = dias.filter((dia) => dia.conRegistros);
+  const completos = conRegistros.filter((dia) => dia.fecha < hoy);
+  const base = completos.length ? completos : conRegistros;
   const promedioDe = (clave, decimales) => {
-    const valor = conRegistros.reduce((total, dia) => total + dia[clave], 0) / conRegistros.length;
+    const valor = base.reduce((total, dia) => total + dia[clave], 0) / base.length;
     return decimales ? redondear(valor) : Math.round(valor);
   };
+  return {
+    diasConRegistros: conRegistros.length,
+    diasCompletos: completos.length,
+    diasCerca: metaCalorias ? completos.filter((dia) => cercaDeLaMeta(dia.calorias, metaCalorias)).length : null,
+    promedio: conRegistros.length === 0 ? null : {
+      calorias: promedioDe('calorias'),
+      ...Object.fromEntries(MACROS.map((macro) => [`${macro}G`, promedioDe(`${macro}G`, true)])),
+    },
+  };
+}
+
+// Estadísticas de una semana o un mes (FS-HU-26): calorías y macronutrientes de cada día frente al objetivo diario y el
+// promedio de los días con registros. Desde el 11-11-2026 también traen el período anterior del mismo largo (para
+// comparar), cuántos días quedaron cerca de la meta, el promedio de calorías de cada comida del día y el reparto del plan.
+async function estadisticas(usuarioId, { periodo, fecha }, ahora = new Date()) {
+  exigirFechaPasada(fecha, ahora);
+  const hoy = fechaEnChile(ahora);
+  const { desde, hasta } = limitesDelPeriodo(periodo, fecha);
+  const previo = limitesDelPeriodo(periodo, sumarDias(desde, -1));
+  // El objetivo de cada período es el del plan que rige su último día (o hoy, si el período no termina).
+  const [dias, diasPrevios, objetivo, objetivoPrevio, porMomento] = await Promise.all([
+    diasDelPeriodo(usuarioId, desde, hasta, hoy),
+    diasDelPeriodo(usuarioId, previo.desde, previo.hasta, hoy),
+    objetivoDiario(usuarioId, [hasta, hoy].sort()[0]),
+    objetivoDiario(usuarioId, previo.hasta),
+    modelo.caloriasPorMomento(usuarioId, desde, hasta),
+  ]);
+  const actual = resumirDias(dias, objetivo.calorias, hoy);
+  const calorias = new Map(porMomento.map(({ momento, _sum }) => [momento, _sum.calorias ?? 0]));
+  const totalMomentos = [...calorias.values()].reduce((suma, valor) => suma + valor, 0);
   return {
     periodo,
     desde,
     hasta,
     hoy,
-    objetivo: { calorias: objetivo.calorias, proteinasG: objetivo.proteinasG, carbohidratosG: objetivo.carbohidratosG, grasasG: objetivo.grasasG },
-    dias,
-    diasConRegistros: conRegistros.length,
-    promedio: conRegistros.length === 0 ? null : {
-      calorias: promedioDe('calorias'),
-      ...Object.fromEntries(MACROS.map((macro) => [`${macro}G`, promedioDe(`${macro}G`, true)])),
+    objetivo: {
+      calorias: objetivo.calorias, proteinasG: objetivo.proteinasG, carbohidratosG: objetivo.carbohidratosG, grasasG: objetivo.grasasG,
+      porcentajes: objetivo.calorias ? objetivo.plan.porcentajes : null,
     },
+    dias,
+    ...actual,
+    anterior: { desde: previo.desde, hasta: previo.hasta, ...resumirDias(diasPrevios, objetivoPrevio.calorias, hoy) },
+    // Promedio por día con registros de cada comida del día, y su parte del total de calorías del período.
+    momentos: reglas.momentos.map(({ valor, etiqueta }) => ({
+      momento: valor,
+      etiqueta,
+      calorias: actual.diasConRegistros ? Math.round((calorias.get(valor) ?? 0) / actual.diasConRegistros) : 0,
+      porcentaje: totalMomentos ? Math.round(((calorias.get(valor) ?? 0) / totalMomentos) * 100) : 0,
+    })),
   };
 }
 

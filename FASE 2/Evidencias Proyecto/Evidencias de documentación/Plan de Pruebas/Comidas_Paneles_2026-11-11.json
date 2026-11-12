@@ -1,0 +1,38 @@
+{
+  "fecha": "2026-11-11",
+  "rama": "feat/menu-compacto-y-carruseles",
+  "pedido": "PO: mejorar los paneles de Comidas: cuánto falta para la meta del día, qué tan cerca se llegó a la meta en la semana, valores comparativos, más vistas en las estadísticas y una breve explicación en cada panel",
+  "resumen": [
+    "Calorías del día: «Te faltan X kcal», «Llegaste a tu meta» o «Te pasaste por X kcal», con ícono y texto; cada macronutriente dice cuántos gramos faltan",
+    "Comparación del día con el promedio de los otros días de la semana",
+    "Progreso semanal: barra de cada día con la línea de la meta, la franja de ±10 % (cerca de la meta) y el porcentaje alcanzado sobre cada barra; cuántos días completos quedaron cerca de la meta y el promedio de la semana",
+    "Resumen nutricional: cuánto falta de cada nutriente y del agua",
+    "Cada panel tiene una línea que explica qué muestra"
+  ],
+  "estadisticas": [
+    "Cifras del período: promedio diario (frente a la semana o el mes anterior y como porcentaje de la meta), días cerca de la meta, diferencia promedio con la meta y días con registro",
+    "Calorías por día y macronutrientes por día frente a la meta, con la franja de ±10 % y el detalle de cada día al pasar el mouse",
+    "Comparado con el período anterior: promedio de calorías y de cada macronutriente de este período frente al anterior, con la marca de la meta y el porcentaje de cambio",
+    "Tu reparto frente a tu plan: de qué macronutriente vienen las calorías, comparado con el reparto del plan de alimentación",
+    "Calorías por comida del día: promedio de cada comida y su parte del total"
+  ],
+  "reglas": [
+    "Un día está cerca de la meta si su porcentaje, redondeado como se muestra, queda entre 90 % y 110 % (shared/reglas.json, comidas.estadisticas.margenMeta = 0,1)",
+    "Hoy aún no termina: se muestra en los gráficos, pero no cuenta para el promedio ni para los días cerca de la meta, salvo que sea el único día con registros",
+    "Los conteos de días (cerca de la meta y con registro) solo se comparan con el período anterior cuando el período ya terminó"
+  ],
+  "api": "GET /api/comidas/estadisticas agrega diasCompletos, diasCerca, anterior (período anterior del mismo largo), momentos (calorías promedio por comida y porcentaje) y objetivo.porcentajes",
+  "pruebasAutomatizadas": {
+    "backendJest": "564/564",
+    "frontendVitest": "423/423",
+    "lint": "sin errores en backend y frontend",
+    "build": "correcto",
+    "mysqlPlan": "npm run test:mysql:plan 63/63 (5 comprobaciones nuevas de las estadísticas ampliadas)"
+  },
+  "revisionVisual": "Cuenta temporal con 3 semanas de comidas (borrada al terminar), en escritorio (1280 px) y celular (375 px), sin desborde horizontal: Comidas_Paneles_2026-11-11_*.png",
+  "pendiente": [
+    "Commit y fusión del PR #52",
+    "Actualizar el DAS con la respuesta ampliada de GET /api/comidas/estadisticas"
+  ],
+  "aceptacion": "Aceptado por el Product Owner el 11-11-2026"
+}
