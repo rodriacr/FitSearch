@@ -69,8 +69,11 @@ console.error = (texto, ...resto) => (/\[(recordatorio|aviso)\]/.test(String(tex
     const b = await crear('usuario');
     const c = await crear('usuario');
     const hoy = fechaEnChile();
-    const dia = sumarDias(hoy, 3);
-    const otroDia = sumarDias(hoy, 4);
+    // El horario y el bloqueo van en días seguidos de una misma semana (lunes a domingo), desde pasado mañana: así la
+    // reserva confirmada queda fuera de las 24 horas del recordatorio y el horario, dentro de los próximos 7 días del
+    // buscador. Antes eran hoy + 3 y hoy + 4, que caían en semanas distintas cuando hoy + 3 era domingo (revisión del PR #49).
+    const dia = [sumarDias(hoy, 2), sumarDias(hoy, 3)].find((d) => lunesDeLaSemana(d) === lunesDeLaSemana(sumarDias(d, 1)));
+    const otroDia = sumarDias(dia, 1);
 
     // Horarios en serie y fechas bloqueadas.
     const serie = await check('Serie de 3 bloques de 45 min', api(p, 'post', '/disponibilidades/serie', { fecha: dia, horaInicio: '09:00', horaFin: '11:30', duracion: 45 }), 201);
