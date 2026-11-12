@@ -326,6 +326,14 @@ Las pruebas de integración del backend simulan el acceso a datos, por lo que no
 cd backend && npm run test:mysql:agenda
 ```
 
+Para medir el rendimiento (QS1) y la concurrencia de reservas (QS5), con la API levantada:
+
+```bash
+cd backend && npm run test:carga
+```
+
+Crea 500 profesionales temporales, mide la búsqueda, la ficha y el inicio de sesión con varias conexiones simultáneas (`CARGA_CONEXIONES`, por defecto 20) y prueba 50 reservas simultáneas sobre el mismo horario; luego borra sus datos. Con `-- --guardar-evidencia` guarda el resultado en `Plan de Pruebas`.
+
 Del mismo modo, `npm run test:mysql:asistente` comprueba el límite diario del asistente con solicitudes simultáneas y `npm run test:mysql:comidas` comprueba que los alimentos pedidos en el chat y los mensajes se guarden juntos o no se guarde nada. Ninguna de las dos consulta al proveedor de IA. Las dos muestran el resultado en la consola y solo reescriben su evidencia en `Plan de Pruebas` si se agrega la opción, por ejemplo `npm run test:mysql:comidas -- --guardar-evidencia`. `npm run test:mysql:especialidades` comprueba que guardar una ficha y eliminar su especialidad al mismo tiempo no deje la ficha con una especialidad inexistente: una de las dos operaciones espera a la otra (revisión del PR #42).
 
 ## Convenciones de trabajo
