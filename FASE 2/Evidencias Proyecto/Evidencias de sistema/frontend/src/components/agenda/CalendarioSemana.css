@@ -1,0 +1,245 @@
+/* Calendario semanal del profesional (mejoras del 09-11-2026). Todo se mide desde dos variables: --alto-hora (una hora)
+   y --margen-rejilla (aire sobre la primera línea). Las líneas de las horas, las etiquetas del costado y la posición de
+   cada horario usan las mismas cuentas, así quedan alineados al píxel. La cabecera va dentro del área que se desplaza
+   (pegada arriba): comparte el ancho con las columnas y la barra de desplazamiento no las corre. */
+.semana {
+  --rail: 3.25rem;
+  --columna-min: 4.5rem;
+  --alto-hora: 4rem;
+  --margen-rejilla: 0.75rem;
+  --linea: #e1e9f0;
+  --linea-media: #f0f4f8;
+  position: relative;
+  max-height: min(44rem, calc(100dvh - 12rem));
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio);
+  scrollbar-gutter: stable;
+}
+.semana__cabecera,
+.semana__rejilla {
+  display: grid;
+  grid-template-columns: var(--rail) repeat(7, minmax(var(--columna-min), 1fr));
+  min-width: calc(var(--rail) + 7 * var(--columna-min));
+}
+.semana__cabecera {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  background: var(--color-superficie);
+  border-bottom: 1px solid var(--color-borde);
+}
+.semana__esquina { border-right: 0; }
+.semana__dia {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: 0.15rem;
+  padding: 0.55rem 0.25rem 0.45rem;
+  border-left: 1px solid var(--linea);
+}
+.semana__dia-nombre {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-texto-secundario);
+}
+.semana__dia-numero {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  font-size: 1rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primario-oscuro);
+}
+.semana__dia--hoy .semana__dia-numero { color: #fff; background: var(--color-primario); }
+.semana__dia-cuenta { min-height: 1rem; font-size: 0.68rem; line-height: 1rem; color: var(--color-texto-secundario); white-space: nowrap; }
+.semana__dia-bloqueo { display: inline-flex; align-items: center; gap: 0.2rem; font-weight: 600; }
+
+.semana__rejilla {
+  position: relative;
+  height: calc(var(--margen-rejilla) * 2 + var(--alto-hora) * var(--horas));
+}
+.semana__horas { position: relative; }
+.semana__horas span {
+  position: absolute;
+  right: 0.55rem;
+  transform: translateY(-50%);
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-texto-secundario);
+}
+.semana__columna {
+  position: relative;
+  border-left: 1px solid var(--linea);
+  cursor: cell;
+  /* Línea entera en cada hora y una más tenue en la media hora, desde el margen superior. */
+  background-image:
+    repeating-linear-gradient(to bottom, var(--linea) 0 1px, transparent 1px var(--alto-hora)),
+    repeating-linear-gradient(to bottom, transparent 0 calc(var(--alto-hora) / 2), var(--linea-media) calc(var(--alto-hora) / 2) calc(var(--alto-hora) / 2 + 1px), transparent calc(var(--alto-hora) / 2 + 1px) var(--alto-hora));
+  background-position: 0 var(--margen-rejilla);
+}
+.semana__columna--pasada { background-color: #fafbfc; cursor: default; }
+.semana__columna--hoy { background-color: rgb(11 79 128 / 3.5%); }
+.semana__columna--bloqueada {
+  cursor: not-allowed;
+  background-image:
+    repeating-linear-gradient(135deg, rgb(95 111 128 / 9%) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(to bottom, var(--linea) 0 1px, transparent 1px var(--alto-hora));
+  background-position: 0 0, 0 var(--margen-rejilla);
+}
+
+/* ---------- Un horario dentro de la semana ---------- */
+.horario {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  column-gap: 0.25rem;
+  margin-top: 1px;
+  padding: 0.25rem 0.4rem;
+  overflow: hidden;
+  border: 1px solid;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 0.72rem;
+  line-height: 1.25;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, transform 160ms var(--curva-salida);
+}
+.horario__hora { font-weight: 700; font-variant-numeric: tabular-nums; }
+.horario__quien { grid-column: 1 / -1; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.horario__marcas { grid-row: 1; grid-column: 2; display: inline-flex; align-items: center; gap: 0.15rem; }
+.horario__primera { font-size: 0.62rem; font-weight: 700; }
+/* Bloques de media hora o menos: una sola fila (hora, nombre y marcas). */
+.horario--corto { grid-template-columns: auto minmax(0, 1fr) auto; align-content: center; column-gap: 0.3rem; padding-block: 0; }
+.horario--corto .horario__quien { grid-column: auto; }
+.horario--corto .horario__marcas { grid-row: auto; grid-column: auto; }
+
+.horario--libre { color: var(--color-primario); background: #f3f8fc; border-color: #c4d9e8; }
+.horario--pendiente { color: #833705; background: #fff4ea; border-color: #f0c39d; }
+.horario--confirmada { color: #145236; background: #e8f6ef; border-color: #a6dac1; }
+.horario--pasado { opacity: 0.62; }
+.horario--elegido {
+  z-index: 2;
+  opacity: 1;
+  box-shadow: 0 0 0 2px var(--color-primario), 0 6px 14px rgb(11 79 128 / 18%);
+}
+.horario:active { transform: scale(0.98); }
+@media (hover: hover) and (pointer: fine) {
+  .horario:hover { z-index: 2; box-shadow: 0 4px 12px rgb(11 79 128 / 16%); }
+  .horario--elegido:hover { box-shadow: 0 0 0 2px var(--color-primario), 0 6px 14px rgb(11 79 128 / 18%); }
+}
+
+/* Hora actual: línea del color de acción con un punto al inicio. */
+.semana__ahora {
+  position: absolute;
+  left: -1px;
+  right: 0;
+  z-index: 3;
+  height: 2px;
+  margin-top: -1px;
+  background: var(--color-accion);
+  pointer-events: none;
+}
+.semana__ahora::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-accion);
+}
+
+/* ---------- Vista de un día (pantallas angostas) ---------- */
+.semana-dia { display: grid; gap: 0.85rem; }
+.semana-dia__selector { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
+.semana-dia__opcion {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 0.1rem;
+  min-height: 4.25rem;
+  padding: 0.4rem 0;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  font: inherit;
+  color: var(--color-primario-oscuro);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--curva-salida);
+}
+.semana-dia__opcion span { font-size: 0.66rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--color-texto-secundario); }
+.semana-dia__opcion strong { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.semana-dia__opcion--hoy { border-color: var(--color-primario); }
+.semana-dia__opcion[aria-pressed='true'] { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.semana-dia__opcion[aria-pressed='true'] span { color: rgb(255 255 255 / 85%); }
+.semana-dia__opcion:active { transform: scale(var(--escala-presion)); }
+.semana-dia__punto { width: 6px; height: 6px; border-radius: 50%; background: #9fc0d8; }
+.semana-dia__punto--citas { background: var(--color-acento); }
+.semana-dia__punto--vacio { background: transparent; }
+.semana-dia__opcion[aria-pressed='true'] .semana-dia__punto:not(.semana-dia__punto--vacio) { background: #fff; }
+
+.semana-dia__titulo { margin: 0.25rem 0 0; font-size: 1rem; color: var(--color-primario-oscuro); }
+.semana-dia__titulo::first-letter { text-transform: uppercase; }
+.semana-dia__bloqueo {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+  background: #eef2f6;
+}
+.semana-dia__bloqueo .icono { margin-top: 0.15rem; }
+.semana-dia__lista { display: grid; gap: 0.5rem; margin: 0; padding: 0; list-style: none; }
+.semana-dia__horario {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  min-height: 3.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid;
+  border-radius: 12px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow 150ms ease, transform 160ms var(--curva-salida);
+}
+.semana-dia__horario:active { transform: scale(0.99); }
+.semana-dia__hora { display: grid; font-weight: 700; font-variant-numeric: tabular-nums; }
+.semana-dia__hora small { font-size: 0.75rem; font-weight: 500; opacity: 0.8; }
+.semana-dia__quien { display: grid; gap: 0.1rem; min-width: 0; }
+.semana-dia__quien strong { overflow: hidden; font-size: 0.95rem; white-space: nowrap; text-overflow: ellipsis; }
+.semana-dia__quien span { font-size: 0.8rem; opacity: 0.85; }
+.semana-dia__flecha { transform: rotate(-90deg); opacity: 0.7; }
+.semana-dia__vacio {
+  margin: 0;
+  padding: 1.25rem 1rem;
+  border: 1px dashed #b6d3e4;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  text-align: center;
+  color: var(--color-texto-secundario);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .horario, .semana-dia__opcion, .semana-dia__horario { transition: none; }
+  .horario:active, .semana-dia__opcion:active, .semana-dia__horario:active { transform: none; }
+}

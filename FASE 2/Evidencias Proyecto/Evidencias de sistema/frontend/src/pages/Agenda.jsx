@@ -85,7 +85,36 @@ function useVolverFoco(abierta) {
   };
 }
 
-export function MisCitas({ compacto = false }) {
+const MODALIDAD = { presencial: 'Presencial', online: 'Online' };
+
+// Datos de la reserva que eligió el usuario al reservar (09-11-2026) y acceso a la conversación (FS-HU-31).
+function DetallesCita({ r, profesional, compacto }) {
+  const datos = [MODALIDAD[r.modalidad], r.primeraVisita === true && 'Primera visita', r.estado === 'cancelada' && r.canceladaPor
+    && `Cancelada por ${r.canceladaPor === 'profesional' ? (profesional ? 'ti' : 'el profesional') : profesional ? 'la persona' : 'ti'}`].filter(Boolean);
+  const conversacion = profesional ? `/profesional/mensajes?reserva=${r.id}` : `/mensajes?reserva=${r.id}`;
+  const pasadaConfirmada = !profesional && r.estado === 'confirmada' && !futura(r);
+  return (
+    <>
+      {datos.length > 0 && <p className="agenda__datos">{datos.join(' · ')}</p>}
+      {!compacto && (r.estado !== 'cancelada' || r.mensajesNoLeidos > 0) && (
+        <p className="agenda__enlaces">
+          <Link to={conversacion} className="agenda__enlace">
+            <Icono nombre="chat" tamano={16} /> Mensajes
+            {r.mensajesNoLeidos > 0 && <span className="agenda__no-leidos" aria-label={`${r.mensajesNoLeidos} sin leer`}>{r.mensajesNoLeidos}</span>}
+          </Link>
+          {/* Reseñas verificadas: después de una cita confirmada, la persona puede calificar al profesional. */}
+          {pasadaConfirmada && (
+            <Link to={`/profesionales/${r.profesional.id}#titulo-resenas`} className="agenda__enlace">
+              <Icono nombre="estrella" tamano={16} /> Calificar
+            </Link>
+          )}
+        </p>
+      )}
+    </>
+  );
+}
+
+export function MisCitas({ compacto = false, onCambio }) {
   const { sesion } = useSesion();
   const profesional = sesion.usuario.rol === 'profesional';
   const [revision, setRevision] = useState(0);
@@ -116,6 +145,7 @@ export function MisCitas({ compacto = false }) {
       foco.olvidar();
       setConfirmacion(null);
       setRevision((r) => r + 1);
+      onCambio?.();
     } catch (e) {
       setError(e.message);
     } finally {
@@ -200,6 +230,7 @@ export function MisCitas({ compacto = false }) {
                 <strong>{fechaHorario(r.horario)}</strong>
               </p>
               <p className="agenda__mensaje">{r.mensaje}</p>
+              <DetallesCita r={r} profesional={profesional} compacto={compacto} />
             </div>
             {!compacto && r.estado !== 'cancelada' && futura(r) && (
               <div

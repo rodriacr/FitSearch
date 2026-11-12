@@ -11,6 +11,8 @@ const simular = ({ ficha = MI_FICHA, clima = CLIMA } = {}) => simularApi({
   '/api/profesionales/mi-ficha': { ficha },
   '/api/clima': clima,
   '/api/disponibilidades': { horarios: [] },
+  // Resumen semanal real (FS-HU-28, 09-11-2026).
+  '/api/profesional/reportes': { semanaActual: { reservas: 3, confirmadas: 2, canceladas: 1, pendientes: 0, clientesNuevos: 1 } },
 });
 
 beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
@@ -56,12 +58,12 @@ describe('Diseño del profesional', () => {
     expect(within(panel).queryByRole('link', { name: 'Mi perfil' })).not.toBeInTheDocument();
   });
 
-  test('una sección que aún no existe muestra "Próximamente" y vuelve al Inicio del profesional', async () => {
-    simular();
-    renderizarApp('/profesional/mensajes');
-    expect(screen.getByRole('heading', { level: 1, name: 'Mensajes' })).toBeInTheDocument();
-    expect(screen.getByText(/Pronto podrás leer los mensajes/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Volver al inicio' })).toHaveAttribute('href', '/profesional/inicio');
+  // Clientes (PR #50) ya no es «Próximamente»; su lista e historial se prueban en Clientes.test.jsx.
+  test('Clientes ya existe y no ofrece el buscador del usuario', async () => {
+    simularApi({ '/api/profesional/clientes': { clientes: [], zonaHoraria: 'America/Santiago' } });
+    renderizarApp('/profesional/clientes');
+    expect(await screen.findByText('Aún no tienes clientes')).toBeInTheDocument();
+    expect(screen.queryByText('Próximamente')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Buscar profesionales/ })).not.toBeInTheDocument();
   });
 });
@@ -146,8 +148,9 @@ describe('Inicio del profesional', () => {
     const accesos = (await screen.findByRole('heading', { name: 'Accesos rápidos' })).closest('section');
     expect(within(accesos).getByRole('link', { name: /Mi perfil profesional/ })).toHaveAttribute('href', '/profesional/perfil');
     expect(within(accesos).getByRole('link', { name: /Publicar horario/ })).toHaveAttribute('href', '/profesional/agenda');
-    expect(within(accesos).getByRole('link', { name: 'Clientes' })).toHaveAttribute('href', '/profesional/clientes');
-    // Solo Mensajes sigue pendiente.
-    expect(within(accesos).getAllByText('Próximamente')).toHaveLength(1);
+    // Clientes y Mensajes ya existen (FS-HU-27 y FS-HU-31).
+    expect(within(accesos).queryByText('Próximamente')).not.toBeInTheDocument();
+    expect(within(accesos).getByRole('link', { name: /Clientes/ })).toHaveAttribute('href', '/profesional/clientes');
+    expect(within(accesos).getByRole('link', { name: /Mensajes/ })).toHaveAttribute('href', '/profesional/mensajes');
   });
 });

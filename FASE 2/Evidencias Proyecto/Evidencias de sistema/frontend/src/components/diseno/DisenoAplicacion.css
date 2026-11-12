@@ -60,6 +60,22 @@
 .notificaciones__vacio .icono { color: #9fb3c4; }
 .notificaciones__vacio p { margin: 0; }
 .notificaciones__vacio strong { display: block; color: var(--color-texto); margin-bottom: 0.15rem; }
+/* Aviso de mensajes nuevos (FS-HU-31): contador sobre la campana y acceso directo en el panel. */
+.notificaciones__boton { position: relative; }
+.notificaciones__contador {
+  position: absolute; top: 0.15rem; right: 0.1rem; display: grid; place-items: center; min-width: 1rem; height: 1rem; padding: 0 0.25rem;
+  border: 2px solid var(--color-superficie); border-radius: 999px; font-size: 0.62rem; font-weight: 700; line-height: 1; color: #fff; background: var(--color-accion);
+  box-sizing: content-box;
+}
+.notificaciones__aviso {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; padding: 0.7rem 0.75rem; border-radius: 10px;
+  font-size: 0.85rem; color: var(--color-texto-secundario); text-decoration: none;
+}
+.notificaciones__aviso strong { display: block; color: var(--color-texto); }
+.notificaciones__aviso-icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 50%; color: var(--color-acento-oscuro); background: #fff1e6; }
+@media (hover: hover) and (pointer: fine) {
+  .notificaciones__aviso:hover { background: var(--color-superficie-suave); }
+}
 
 /* ---------- Menú lateral (panel en celular, columna fija en escritorio) ---------- */
 /* Se abre en 300 ms con la curva de los cajones de iOS y se cierra más rápido (200 ms): al cerrar, quien usa la app

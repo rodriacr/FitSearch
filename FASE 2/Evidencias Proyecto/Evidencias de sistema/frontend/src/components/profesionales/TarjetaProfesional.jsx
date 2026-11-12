@@ -3,11 +3,36 @@ import { etiquetaModalidad, formatearKm, iniciales } from '../../services/format
 import { Calificacion } from '../Calificacion.jsx';
 import Icono from '../Icono.jsx';
 import BotonFavorito from './BotonFavorito.jsx';
+import { diaCorto } from '../agenda/semana.js';
+import { precioCLP } from '../profesional/experiencia.js';
 import './TarjetaProfesional.css';
 
 // Ficha resumida de un profesional. "destacado" es la versión compacta del Inicio; "completa", la de favoritos; "fila",
 // la del buscador junto al mapa (SC-27): horizontal, con «Ver en el mapa» y resaltada cuando su marcador lo está.
 // No hay fotos de perfil todavía (llegarán con FS-HU-04): se muestran las iniciales.
+
+// Próximas horas libres (09-11-2026): cada una abre la ficha con esa hora elegida.
+function HorasDisponibles({ profesional, desde }) {
+  const { id, nombre, proximaHora, proximasHoras = [] } = profesional;
+  if (!proximaHora) return <p className="tarjeta-profesional__sin-horas">Sin horas disponibles por ahora</p>;
+  const estado = desde ? { desde } : undefined;
+  return (
+    <div className="tarjeta-profesional__horas">
+      <p className="tarjeta-profesional__proxima"><Icono nombre="calendario" tamano={15} /> Próxima hora: <strong>{diaCorto(proximaHora.fecha)}, {proximaHora.horaInicio}</strong></p>
+      {proximasHoras.length > 0 && (
+        <ul className="tarjeta-profesional__horarios" aria-label={`Horas disponibles con ${nombre}`}>
+          {proximasHoras.map((h) => (
+            <li key={h.id}>
+              <Link to={`/profesionales/${id}?hora=${h.id}`} state={estado} className="hora-rapida" aria-label={`Reservar con ${nombre} el ${diaCorto(h.fecha)} a las ${h.horaInicio}`}>
+                <span>{diaCorto(h.fecha).split(' ').slice(0, 2).join(' ')}</span><strong>{h.horaInicio}</strong>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 export default function TarjetaProfesional({
   profesional, variante = 'completa', nivelTitulo = 3, desde, onCambioFavorito, id: idElemento,
   seleccionado = false, resaltado = false, onResaltar, onVerEnMapa,
@@ -41,7 +66,14 @@ export default function TarjetaProfesional({
             <Calificacion promedio={calificacion.promedio} total={calificacion.total} />
             <span className="tarjeta-profesional__lugar"><Icono nombre="pin" tamano={15} /> {lugar}</span>
           </p>
+          {profesional.precioDesde || profesional.aniosExperiencia ? (
+            <p className="tarjeta-profesional__linea tarjeta-profesional__extra">
+              {profesional.precioDesde ? <span>Consulta desde <strong>{precioCLP(profesional.precioDesde)}</strong></span> : null}
+              {profesional.aniosExperiencia ? <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span> : null}
+            </p>
+          ) : null}
           <p className="tarjeta-profesional__descripcion">{descripcion || 'Este profesional todavía no ha añadido una descripción de sus servicios.'}</p>
+          {'proximaHora' in profesional && <HorasDisponibles profesional={profesional} desde={desde} />}
           <div className="tarjeta-profesional__acciones">
             {onVerEnMapa && (
               <button type="button" className="tarjeta-profesional__ver-mapa" aria-pressed={seleccionado}

@@ -3,7 +3,19 @@ const modelo = require('../models/profesional.model');
 const resenaModel = require('../models/resena.model');
 const especialidadModel = require('../models/especialidad.model');
 const ErrorHttp = require('../utils/ErrorHttp');
-const { profesionales: reglas } = require('../../../shared/reglas.json');
+const { profesionales: reglas, agenda: reglasAgenda } = require('../../../shared/reglas.json');
+const { fechaEnChile, horaEnChile, sumarDias } = require('../utils/fechaChile');
+
+// Momento actual en Chile para calcular las horas libres: el día y los segundos desde la medianoche.
+function ahoraEnChile(ahora = new Date()) {
+  const hora = horaEnChile(ahora);
+  return { hoy: fechaEnChile(ahora), hora, segundos: Number(hora.slice(0, 2)) * 3600 + Number(hora.slice(3, 5)) * 60 };
+}
+const lista = (valor) => {
+  if (Array.isArray(valor)) return valor;
+  if (typeof valor === 'string') { try { const leido = JSON.parse(valor); return Array.isArray(leido) ? leido : []; } catch { return []; } }
+  return [];
+};
 
 const redondear = (valor, decimales = 1) => Math.round(Number(valor) * 10 ** decimales) / 10 ** decimales;
 
@@ -25,13 +37,35 @@ function formatearFicha(fila) {
     calificacion: { promedio: totalResenas ? redondear(fila.promedio) : null, total: totalResenas },
     distanciaKm: fila.distanciaKm === null || fila.distanciaKm === undefined ? null : redondear(fila.distanciaKm),
     esFavorito: Boolean(Number(fila.esFavorito)),
+    // FS-HU-29 y precio referencial (09-11-2026). MySQL entrega JSON ya leído; por las dudas también se acepta texto.
+    aniosExperiencia: fila.aniosExperiencia === null || fila.aniosExperiencia === undefined ? null : Number(fila.aniosExperiencia),
+    formacion: lista(fila.formacion),
+    atiendeA: lista(fila.atiendeA),
+    registroSis: fila.registroSis ?? null,
+    precioDesde: fila.precioDesde === null || fila.precioDesde === undefined ? null : Number(fila.precioDesde),
   };
 }
 
-async function listar({ limite = reglas.porPagina, pagina = 1, ...filtros }) {
-  const { filas, total } = await modelo.listar({ ...filtros, pagina, limite });
+async function listar({ limite = reglas.porPagina, pagina = 1, disponible, ...filtros }) {
+  const ahora = ahoraEnChile();
+  const dias = reglasAgenda.filtroDisponible.find((opcion) => opcion.valor === disponible)?.dias;
+  const conHorasHasta = dias === undefined ? null : sumarDias(ahora.hoy, dias);
+  const { filas, total } = await modelo.listar({ ...filtros, ahora, conHorasHasta, pagina, limite });
+  // Próximas horas libres de cada tarjeta: se muestran y se pueden elegir desde el buscador.
+  const { cantidad, dias: horizonte } = reglasAgenda.proximasHoras;
+  const horas = await modelo.proximasHoras(filas.map((fila) => Number(fila.id)), ahora, sumarDias(ahora.hoy, horizonte));
+  const porProfesional = new Map();
+  for (const h of horas) {
+    const id = Number(h.profesionalId);
+    const delProfesional = porProfesional.get(id) || [];
+    if (delProfesional.length < cantidad) porProfesional.set(id, [...delProfesional, { id: Number(h.id), fecha: h.fecha, horaInicio: h.horaInicio, horaFin: h.horaFin }]);
+  }
   return {
-    profesionales: filas.map(formatearFicha),
+    profesionales: filas.map((fila) => ({
+      ...formatearFicha(fila),
+      proximaHora: fila.proximaHora ? { fecha: fila.proximaHora.slice(0, 10), horaInicio: fila.proximaHora.slice(11, 16) } : null,
+      proximasHoras: porProfesional.get(Number(fila.id)) || [],
+    })),
     pagina,
     total,
     totalPaginas: Math.ceil(total / limite),
@@ -60,6 +94,8 @@ function formatearResena(fila, usuarioId) {
     autor: nombrePublico(fila.usuario.nombre),
     puntaje: fila.puntaje,
     comentario: fila.comentario ?? null,
+    // «Cita verificada»: la reseña está respaldada por una cita confirmada que ya ocurrió (09-11-2026).
+    verificada: Boolean(fila.reservaId),
     fecha: fila.fechaActualizacion.toISOString(),
     propia: fila.usuarioId === usuarioId,
   };
@@ -71,12 +107,21 @@ const puedeResenar = (usuario, fila) => usuario.rol === 'usuario' && Number(fila
 async function ficha(id, usuario) {
   const fila = await modelo.buscarPorId(id, usuario.id);
   if (!fila) throw new ErrorHttp(404, 'No encontramos este profesional');
-  const [grupos, propia] = await Promise.all([resenaModel.distribucion(id), resenaModel.buscarDelUsuario(usuario.id, id)]);
+  const habilitado = puedeResenar(usuario, fila);
+  const { hoy: fecha, hora } = ahoraEnChile();
+  const [grupos, propia, cita] = await Promise.all([
+    resenaModel.distribucion(id),
+    resenaModel.buscarDelUsuario(usuario.id, id),
+    habilitado ? resenaModel.citaVerificable(usuario.id, id, { fecha, hora }) : null,
+  ]);
+  // Reseñas verificadas (09-11-2026): una reseña nueva exige una cita confirmada que ya ocurrió; la propia se puede editar.
+  const conCita = Boolean(propia || cita);
   return {
     profesional: formatearFicha(fila),
     resumenResenas: resumirResenas(grupos),
     miResena: propia ? formatearResena(propia, usuario.id) : null,
-    puedeResenar: puedeResenar(usuario, fila),
+    puedeResenar: habilitado && conCita,
+    ...(habilitado && !conCita && { motivoSinResena: 'sin_cita' }),
   };
 }
 
@@ -111,5 +156,5 @@ async function verificarPerfil(id, administradorId) {
 }
 
 module.exports = {
-  listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil,
+  ahoraEnChile, listar, ficha, filtros, formatearFicha, resumirResenas, nombrePublico, formatearResena, obtenerMiFicha, guardarMiFicha, verificarPerfil,
 };

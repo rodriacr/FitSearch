@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { formatearFecha, formatearNumero, textoResenas } from '../../services/formato.js';
@@ -97,9 +98,19 @@ function FormularioResena({ nombre, inicial, onGuardar, onCancelar }) {
   );
 }
 
+// Filtro de la lista (09-11-2026): todas, positivas (4 y 5 estrellas) o negativas (1 y 2).
+const FILTROS = [
+  { valor: '', nombre: 'Todas', cuenta: (d) => Object.values(d).reduce((a, b) => a + b, 0) },
+  { valor: 'positivas', nombre: 'Positivas', cuenta: (d) => (d[5] || 0) + (d[4] || 0) },
+  { valor: 'negativas', nombre: 'Negativas', cuenta: (d) => (d[2] || 0) + (d[1] || 0) },
+];
+
 // Resumen, reseña propia (crear, editar o eliminar) y reseñas de otras personas, paginadas.
-export default function Resenas({ profesionalId, nombre, resumen, miResena, puedeResenar, onCambio }) {
+export default function Resenas({ profesionalId, nombre, resumen, miResena, puedeResenar, motivoSinResena, onCambio }) {
   const { sesion } = useSesion();
+  const { hash } = useLocation();
+  const seccion = useRef(null);
+  const [tipo, setTipo] = useState('');
   const [pagina, setPagina] = useState(1);
   const [version, setVersion] = useState(0);
   const [lista, setLista] = useState(null);
@@ -107,16 +118,21 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
   const [confirmandoBorrado, setConfirmandoBorrado] = useState(false);
   const [mensaje, setMensaje] = useState('');
   const [error, setError] = useState('');
-  const clave = `${profesionalId}-${pagina}-${version}`;
+  const clave = `${profesionalId}-${tipo}-${pagina}-${version}`;
   const cargando = lista?.clave !== clave;
 
   useEffect(() => {
     let activo = true;
-    listarResenas(profesionalId, pagina)
+    listarResenas(profesionalId, pagina, tipo)
       .then((datos) => activo && setLista({ clave, ...datos }))
       .catch((fallo) => activo && setLista({ clave, error: fallo.message }));
     return () => { activo = false; };
-  }, [clave, profesionalId, pagina]);
+  }, [clave, profesionalId, pagina, tipo]);
+
+  // Desde «Calificar» en Mis citas se llega con #titulo-resenas: la sección queda a la vista.
+  useEffect(() => {
+    if (hash === '#titulo-resenas') seccion.current?.scrollIntoView?.({ block: 'start' });
+  }, [hash]);
 
   const recargar = () => { setPagina(1); setVersion((valor) => valor + 1); };
   const guardar = async (datos) => {
@@ -141,13 +157,15 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
 
   let aviso = null;
   if (!puedeResenar) {
-    aviso = sesion?.usuario.rol === 'usuario'
-      ? 'Esta es tu propia ficha profesional: no puedes calificarte.'
-      : 'Solo las cuentas de usuario pueden calificar a profesionales.';
+    aviso = motivoSinResena === 'sin_cita'
+      ? `Podrás calificar a ${nombre} después de tu cita confirmada con este profesional. Así, todas las reseñas nuevas vienen de una atención real.`
+      : sesion?.usuario.rol === 'usuario'
+        ? 'Esta es tu propia ficha profesional: no puedes calificarte.'
+        : 'Solo las cuentas de usuario pueden calificar a profesionales.';
   }
 
   return (
-    <section className="ficha__seccion resenas" aria-labelledby="titulo-resenas">
+    <section ref={seccion} className="ficha__seccion resenas" aria-labelledby="titulo-resenas">
       <h2 id="titulo-resenas">Calificaciones y reseñas</h2>
       <ResumenResenas resumen={resumen} />
       <Alerta tipo="exito">{mensaje}</Alerta>
@@ -181,10 +199,22 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
         </div>
       )}
 
-      <h3>Lo que dicen otras personas</h3>
+      <div className="resenas__barra">
+        <h3>Lo que dicen otras personas</h3>
+        {resumen.total > 0 && (
+          <div className="segmentos resenas__filtro" role="group" aria-label="Filtrar reseñas">
+            {FILTROS.map(({ valor, nombre: texto, cuenta }) => (
+              <button key={valor || 'todas'} type="button" className="segmentos__opcion" aria-pressed={tipo === valor}
+                onClick={() => { setTipo(valor); setPagina(1); }}>
+                {texto} <span className="cifra">({cuenta(resumen.distribucion)})</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {cargando ? <p className="texto-secundario" role="status">Cargando reseñas…</p> : lista.error ? <Alerta>{lista.error}</Alerta> : !lista.resenas.length ? (
-        <EstadoVacio compacto icono="estrella" titulo="Este profesional aún no tiene reseñas">
-          {puedeResenar && !miResena ? '¡Sé la primera persona en dejar una reseña!' : null}
+        <EstadoVacio compacto icono="estrella" titulo={tipo ? `No hay reseñas ${tipo}` : 'Este profesional aún no tiene reseñas'}>
+          {!tipo && puedeResenar && !miResena ? '¡Sé la primera persona en dejar una reseña!' : null}
         </EstadoVacio>
       ) : (
         <>
@@ -196,6 +226,7 @@ export default function Resenas({ profesionalId, nombre, resumen, miResena, pued
                   <p>
                     <strong>{resena.autor}</strong>
                     {resena.propia && <span className="etiqueta-rol">Tu reseña</span>}
+                    {resena.verificada && <span className="resena__verificada"><Icono nombre="check" tamano={14} /> Cita verificada</span>}
                     <time dateTime={resena.fecha}>{formatearFecha(resena.fecha)}</time>
                   </p>
                 </div>

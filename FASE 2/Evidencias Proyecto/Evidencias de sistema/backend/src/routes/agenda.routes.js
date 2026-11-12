@@ -1,10 +1,10 @@
 const { Router } = require('express');
-const { param, body, matchedData } = require('express-validator');
+const { param, body, query, matchedData } = require('express-validator');
 const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
 const validar = require('../middlewares/validar');
 const servicio = require('../services/agenda.service');
 const router = Router();
-router.use(['/disponibilidades', '/reservas'], autenticar);
+router.use(['/disponibilidades', '/reservas', '/agenda'], autenticar);
 const id = () => param('id').isInt({ min: 1, max: 2147483647 }).toInt();
 const bloque = [
   body('fecha').isString(),
@@ -32,6 +32,39 @@ router.post(
           matchedData(req),
         ),
       ),
+);
+// Varios bloques de igual duración entre dos horas del mismo día.
+router.post(
+  '/disponibilidades/serie',
+  autorizarRoles('profesional'),
+  bloque,
+  body('duracion').isInt({ min: 1, max: 600 }).withMessage('Elige la duración de cada bloque').toInt(),
+  validar,
+  async (req, res) =>
+    res.status(201).json(await servicio.guardarSerie(req.usuario.id, matchedData(req))),
+);
+// Calendario semanal del profesional y fechas bloqueadas (mejoras del 09-11-2026).
+router.get(
+  '/agenda/semana',
+  autorizarRoles('profesional'),
+  query('desde').optional().isString(),
+  validar,
+  async (req, res) => res.json(await servicio.semana(req.usuario.id, matchedData(req).desde)),
+);
+router.get('/agenda/bloqueos', autorizarRoles('profesional'), async (req, res) =>
+  res.json(await servicio.listarBloqueos(req.usuario.id)),
+);
+router.post(
+  '/agenda/bloqueos',
+  autorizarRoles('profesional'),
+  body('fechaInicio').isString(),
+  body('fechaFin').isString(),
+  body('motivo').optional({ values: 'null' }).isString(),
+  validar,
+  async (req, res) => res.status(201).json(await servicio.crearBloqueo(req.usuario.id, matchedData(req))),
+);
+router.delete('/agenda/bloqueos/:id', autorizarRoles('profesional'), id(), validar, async (req, res) =>
+  res.json(await servicio.eliminarBloqueo(req.usuario.id, matchedData(req).id)),
 );
 router.put(
   '/disponibilidades/:id',
@@ -67,6 +100,9 @@ router.post(
   autorizarRoles('usuario'),
   body('disponibilidadId').isInt({ min: 1, max: 2147483647 }).toInt(),
   body('mensaje').isString(),
+  // Presencial u online cuando el profesional atiende de ambas formas, y si es la primera visita (09-11-2026).
+  body('modalidad').optional().isString(),
+  body('primeraVisita').optional().isBoolean().withMessage('Indica si es tu primera visita').toBoolean(true),
   validar,
   async (req, res) =>
     res

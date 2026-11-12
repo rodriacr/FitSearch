@@ -7,6 +7,7 @@ import Icono from '../components/Icono.jsx';
 import BotonFavorito from '../components/profesionales/BotonFavorito.jsx';
 import Resenas from '../components/profesionales/Resenas.jsx';
 import ReservarHora from '../components/reservas/ReservarHora.jsx';
+import ExperienciaPublica from '../components/profesionales/ExperienciaPublica.jsx';
 import { direccionDe, etiquetaModalidad, iniciales } from '../services/formato.js';
 import { obtenerProfesional } from '../services/profesional.service.js';
 import './Profesionales.css';
@@ -72,7 +73,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
     );
   }
 
-  const { profesional, resumenResenas, miResena, puedeResenar } = datos;
+  const { profesional, resumenResenas, miResena, puedeResenar, motivoSinResena } = datos;
   const { nombre, especialidad, descripcion, comuna, modalidad, verificado, establecimiento, calificacion, ubicacionLat, ubicacionLng } = profesional;
   const actualizarResenas = (resumen, resena) => setDatos({
     ...datos, resumenResenas: resumen, miResena: resena,
@@ -95,6 +96,7 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
             <span><Icono nombre="pin" tamano={16} /> {comuna || 'Comuna por confirmar'}</span>
             <span className="tarjeta-profesional__modalidad">{etiquetaModalidad(modalidad)}</span>
             {verificado && <span className="ficha__verificado"><Icono nombre="escudo" tamano={16} /> Verificado</span>}
+            {profesional.aniosExperiencia > 0 && <span>{profesional.aniosExperiencia} {profesional.aniosExperiencia === 1 ? 'año' : 'años'} de experiencia</span>}
           </div>
         </div>
         {!vistaPrevia && <BotonFavorito profesional={profesional} className="ficha__favorito" />}
@@ -115,11 +117,12 @@ export default function FichaProfesional({ idProfesional, vistaPrevia = false })
             Ver ubicación en Google Maps <Icono nombre="flecha" tamano={16} />
           </a>
         </section>
+        <ExperienciaPublica profesional={profesional} />
       </div>
 
       {!vistaPrevia && <ReservarHora profesional={profesional} />}
       <Resenas profesionalId={profesional.id} nombre={nombre} resumen={resumenResenas} miResena={miResena}
-        puedeResenar={puedeResenar} onCambio={actualizarResenas} />
+        puedeResenar={puedeResenar} motivoSinResena={motivoSinResena} onCambio={actualizarResenas} />
     </article>
   );
 }

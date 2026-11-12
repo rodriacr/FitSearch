@@ -90,3 +90,37 @@
 @media (prefers-reduced-motion: reduce) {
   .reserva__hora { transition: none; }
 }
+
+/* ---------- Mejoras del 09-11-2026 ---------- */
+/* Primera visita y modalidad: dos botones del mismo ancho; la radio real sigue ahí para el teclado. */
+.opciones-reserva { display: grid; gap: 0.45rem; margin: 0.25rem 0 0; padding: 0; border: 0; min-width: 0; }
+.opciones-reserva legend { padding: 0; margin-bottom: 0.45rem; font-size: 0.95rem; font-weight: 600; }
+.opciones-reserva__grupo { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.5rem; }
+.opciones-reserva__opcion { position: relative; display: grid; }
+.opciones-reserva__opcion input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.opciones-reserva__opcion span {
+  display: grid; place-items: center; min-height: 2.75rem; padding: 0.35rem 0.75rem; border: 1px solid var(--color-borde);
+  border-radius: var(--radio-control); font-size: 0.9rem; font-weight: 500; text-align: center; color: var(--color-primario);
+  background: var(--color-superficie); transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.opciones-reserva__opcion input:checked + span { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.opciones-reserva__opcion input:focus-visible + span { outline: 3px solid var(--color-foco); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .opciones-reserva__opcion input:not(:checked):hover + span { border-color: var(--color-primario); }
+}
+.reserva-enviada__estado--confirmada { color: #145236; background: #e8f6ef; }
+
+/* «Avísame si se libera una hora». */
+.lista-espera {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.75rem 0.9rem; padding: 1rem;
+  border: 1px dashed #b6d3e4; border-radius: 12px; background: var(--color-superficie-suave);
+}
+.lista-espera__icono { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: 50%; color: var(--color-acento-oscuro); background: #fff1e6; }
+.lista-espera__texto { display: grid; gap: 0.2rem; }
+.lista-espera__texto strong { color: var(--color-primario-oscuro); }
+.lista-espera__texto > span { font-size: 0.9rem; color: var(--color-texto-secundario); }
+.lista-espera .boton { grid-column: 1 / -1; justify-self: start; }
+@media (min-width: 40rem) {
+  .lista-espera { grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; }
+  .lista-espera .boton { grid-column: auto; }
+}

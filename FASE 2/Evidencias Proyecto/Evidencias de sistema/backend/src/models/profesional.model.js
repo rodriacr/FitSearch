@@ -17,9 +17,20 @@ const ORDENES = {
   resenas: Prisma.sql`totalResenas DESC, promedio DESC, u.nombre ASC`,
   // Inicio: primero los verificados por la plataforma y luego los mejor calificados.
   destacados: Prisma.sql`p.verificado DESC, promedio DESC, totalResenas DESC, p.id ASC`,
+  // «Disponibles antes» (09-11-2026): la próxima hora libre más cercana primero; sin horas, al final.
+  disponibilidad: Prisma.sql`proximaHora IS NULL, proximaHora ASC, promedio DESC, p.id ASC`,
 };
 
-function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe }) {
+// Horarios que se pueden reservar ahora (alias d): futuros en hora de Chile, no retirados, sin reserva activa y fuera de
+// las fechas bloqueadas por el profesional (mejoras del 09-11-2026).
+function horariosLibres({ hoy, segundos }) {
+  return Prisma.sql`d.retirado = FALSE
+    AND (d.fecha > ${hoy} OR (d.fecha = ${hoy} AND TIME_TO_SEC(d.hora_inicio) > ${segundos}))
+    AND NOT EXISTS (SELECT 1 FROM reservas rv WHERE rv.disponibilidad_id = d.id AND rv.estado IN ('pendiente', 'confirmada'))
+    AND NOT EXISTS (SELECT 1 FROM bloqueos_agenda b WHERE b.profesional_id = d.profesional_id AND d.fecha BETWEEN b.fecha_inicio AND b.fecha_fin)`;
+}
+
+function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
   const distancia = ubicacion
     ? Prisma.sql`ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000`
     : Prisma.sql`NULL`;
@@ -35,6 +46,10 @@ function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);
   if (ubicacion && distanciaKm) condiciones.push(Prisma.sql`${distancia} <= ${distanciaKm}`);
+  // «Con horas disponibles»: al menos un horario libre hasta la fecha indicada (filtro del buscador).
+  if (ahora && conHorasHasta) {
+    condiciones.push(Prisma.sql`EXISTS (SELECT 1 FROM disponibilidades d WHERE d.profesional_id = p.id AND ${horariosLibres(ahora)} AND d.fecha <= ${conHorasHasta})`);
+  }
   if (soloFavoritosDe) condiciones.push(Prisma.sql`EXISTS (SELECT 1 FROM favoritos fs WHERE fs.profesional_id = p.id AND fs.usuario_id = ${soloFavoritosDe})`);
 
   const desde = Prisma.sql`
@@ -45,18 +60,38 @@ function construirConsulta({ q, especialidad, comuna, modalidad, calificacionMin
     LEFT JOIN (SELECT profesional_id, AVG(puntaje) AS promedio, COUNT(*) AS total FROM resenas GROUP BY profesional_id) c
       ON c.profesional_id = p.id
     WHERE ${Prisma.join(condiciones, ' AND ')}`;
-  return { desde, distancia };
+  // Próxima hora libre ('AAAA-MM-DD HH:MM') para la tarjeta del buscador y el orden «Disponibles antes».
+  const proxima = ahora
+    ? Prisma.sql`(SELECT MIN(CONCAT(DATE_FORMAT(d.fecha, '%Y-%m-%d'), ' ', TIME_FORMAT(d.hora_inicio, '%H:%i')))
+        FROM disponibilidades d WHERE d.profesional_id = p.id AND ${horariosLibres(ahora)})`
+    : Prisma.sql`NULL`;
+  return { desde, distancia, proxima };
+}
+
+// Columnas de la ficha pública que agregó FS-HU-29 (experiencia) y el precio referencial (09-11-2026).
+const COLUMNAS_EXPERIENCIA = Prisma.sql`p.anios_experiencia AS aniosExperiencia, p.formacion, p.atiende_a AS atiendeA,
+  p.registro_sis AS registroSis, p.precio_desde AS precioDesde`;
+
+// Próximas horas libres de los profesionales de una página del buscador, hasta "hasta" (las agrupa el servicio).
+function proximasHoras(ids, ahora, hasta) {
+  if (!ids.length) return [];
+  return prisma.$queryRaw`
+    SELECT d.id, d.profesional_id AS profesionalId, DATE_FORMAT(d.fecha, '%Y-%m-%d') AS fecha,
+      TIME_FORMAT(d.hora_inicio, '%H:%i') AS horaInicio, TIME_FORMAT(d.hora_fin, '%H:%i') AS horaFin
+    FROM disponibilidades d
+    WHERE d.profesional_id IN (${Prisma.join(ids)}) AND ${horariosLibres(ahora)} AND d.fecha <= ${hasta}
+    ORDER BY d.profesional_id, d.fecha, d.hora_inicio`;
 }
 
 async function listar({ usuarioId, orden = 'nombre', pagina = 1, limite = 12, ...filtros }) {
-  const { desde, distancia } = construirConsulta(filtros);
+  const { desde, distancia, proxima } = construirConsulta(filtros);
   const [filas, [{ total }]] = await Promise.all([
     prisma.$queryRaw`
       SELECT p.id, u.nombre, p.especialidad, p.descripcion, p.comuna, p.direccion, p.modalidad, p.verificado,
         p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
         e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
         COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
-        ${distancia} AS distanciaKm,
+        ${distancia} AS distanciaKm, ${proxima} AS proximaHora, ${COLUMNAS_EXPERIENCIA},
         EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
       ${desde}
       ORDER BY ${ORDENES[orden] || ORDENES.nombre}
@@ -74,7 +109,7 @@ async function buscarPorId(id, usuarioId) {
       p.ubicacion_lat AS ubicacionLat, p.ubicacion_lng AS ubicacionLng,
       e.nombre AS establecimientoNombre, e.direccion AS establecimientoDireccion,
       COALESCE(c.promedio, 0) AS promedio, COALESCE(c.total, 0) AS totalResenas,
-      ${distancia} AS distanciaKm,
+      ${distancia} AS distanciaKm, ${COLUMNAS_EXPERIENCIA},
       EXISTS (SELECT 1 FROM favoritos f WHERE f.profesional_id = p.id AND f.usuario_id = ${usuarioId}) AS esFavorito
     ${desde} AND p.id = ${id}`;
   return filas[0] || null;
@@ -141,4 +176,6 @@ function verificarPerfil(id, administradorId) {
   return verificacion.decidir(id, { accion: 'aprobar', administradorId });
 }
 
-module.exports = { listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha, verificarPerfil };
+module.exports = {
+  listar, buscarPorId, existe, filtros, escaparLike, obtenerPorUsuario, guardarFicha, verificarPerfil, proximasHoras,
+};

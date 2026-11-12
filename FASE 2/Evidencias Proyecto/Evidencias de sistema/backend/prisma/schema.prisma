@@ -44,6 +44,9 @@ model Usuario {
   favoritos          Favorito[]
   resenas            Resena[]
   reservas           Reserva[]
+  listaEspera        ListaEspera[]
+  chats              ChatCita[]
+  mensajesChat       MensajeCita[]
   conversaciones     Conversacion[]
   usoAsistente       UsoAsistente?
   registrosComida    RegistroComida[]
@@ -74,12 +77,27 @@ model Profesional {
   // Dirección de atención propia (SC-24): obligatoria si atiende presencial o de ambas formas; opcional si atiende solo online.
   direccion             String?                @db.VarChar(150)
   modalidad             String                 @default("presencial") @db.VarChar(20)
+  // FS-HU-29: experiencia y formación que se muestran en la ficha pública. formacion = [{ titulo, institucion, anio }];
+  // atiende_a = valores de shared/reglas.json (profesionales.atiendeA). El registro de la Superintendencia de Salud y el
+  // precio referencial (solo informativo: FitSearch no cobra) los escribe el profesional.
+  aniosExperiencia      Int?                   @map("anios_experiencia") @db.TinyInt
+  formacion             Json?
+  atiendeA              Json?                  @map("atiende_a")
+  registroSis           String?                @map("registro_sis") @db.VarChar(20)
+  precioDesde           Int?                   @map("precio_desde")
+  // FS-HU-29: preferencias de la cuenta (confirmar las reservas nuevas sin revisarlas, avisos por correo y recordatorio al usuario).
+  autoconfirmar         Boolean                @default(false) @map("confirmacion_automatica")
+  avisosCorreo          Boolean                @default(true) @map("avisos_correo")
+  recordatorios         Boolean                @default(true)
   usuario               Usuario                @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   establecimiento       Establecimiento?       @relation(fields: [establecimientoId], references: [id], onDelete: SetNull)
   favoritos             Favorito[]
   resenas               Resena[]
   documentos            DocumentoProfesional[]
   disponibilidades      Disponibilidad[]
+  bloqueos              BloqueoAgenda[]
+  listaEspera           ListaEspera[]
+  chats                 ChatCita[]
 
   @@index([especialidad])
   @@index([comuna])
@@ -117,14 +135,23 @@ model Disponibilidad {
 }
 
 model Reserva {
-  id               Int            @id @default(autoincrement())
-  usuarioId        Int            @map("usuario_id")
-  disponibilidadId Int            @map("disponibilidad_id")
-  mensaje          String         @db.VarChar(500)
-  estado           String         @default("pendiente") @db.VarChar(20)
-  fechaCreacion    DateTime       @default(now()) @map("fecha_creacion") @db.DateTime(0)
-  usuario          Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
-  disponibilidad   Disponibilidad @relation(fields: [disponibilidadId], references: [id], onDelete: Restrict)
+  id                  Int            @id @default(autoincrement())
+  usuarioId           Int            @map("usuario_id")
+  disponibilidadId    Int            @map("disponibilidad_id")
+  mensaje             String         @db.VarChar(500)
+  estado              String         @default("pendiente") @db.VarChar(20)
+  fechaCreacion       DateTime       @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  // Mejoras de la reserva (09-11-2026): presencial u online cuando el profesional atiende de ambas formas, si es la primera
+  // visita, quién la cancela y cuándo cambió de estado (reportes, FS-HU-28) y cuándo se envió el recordatorio por correo.
+  modalidad           String?        @db.VarChar(20)
+  primeraVisita       Boolean?       @map("primera_visita")
+  canceladaPor        String?        @map("cancelada_por") @db.VarChar(20)
+  fechaCambio         DateTime?      @map("fecha_cambio") @db.DateTime(0)
+  recordatorioEn      DateTime?      @map("recordatorio_enviado") @db.DateTime(0)
+  recordatorioIntento DateTime?      @map("recordatorio_intento") @db.DateTime(0)
+  usuario             Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  disponibilidad      Disponibilidad @relation(fields: [disponibilidadId], references: [id], onDelete: Restrict)
+  resenas             Resena[]
 
   @@index([disponibilidadId, estado])
   @@index([usuarioId])
@@ -252,12 +279,16 @@ model Resena {
   profesionalId      Int         @map("profesional_id")
   puntaje            Int         @db.TinyInt
   comentario         String?     @db.VarChar(500)
+  // Cita confirmada y ya pasada que respalda la reseña («Cita verificada»). Las reseñas anteriores al 09-11-2026 no la tienen.
+  reservaId          Int?        @map("reserva_id")
   fechaCreacion      DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
   fechaActualizacion DateTime    @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
   usuario            Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
   profesional        Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+  reserva            Reserva?    @relation(fields: [reservaId], references: [id], onDelete: SetNull)
 
   @@unique([usuarioId, profesionalId])
+  @@index([reservaId])
   @@index([profesionalId])
   @@map("resenas")
 }
@@ -334,4 +365,72 @@ model InformacionSalud {
   usuario            Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
   @@map("informacion_salud")
+}
+
+// Fechas bloqueadas de la agenda (vacaciones, congresos). Mientras dura un bloqueo, sus horarios no se muestran ni se
+// reservan y no se publican horarios nuevos en esas fechas. No se puede bloquear un día con reservas activas.
+model BloqueoAgenda {
+  id            Int         @id @default(autoincrement())
+  profesionalId Int         @map("profesional_id")
+  fechaInicio   DateTime    @map("fecha_inicio") @db.Date
+  fechaFin      DateTime    @map("fecha_fin") @db.Date
+  motivo        String?     @db.VarChar(100)
+  fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@index([profesionalId, fechaInicio])
+  @@map("bloqueos_agenda")
+}
+
+// «Avísame si se libera una hora»: el usuario espera una hora con un profesional que no tiene ninguna. Al publicarse un
+// horario o cancelarse una reserva futura, FitSearch le avisa por correo una vez y lo saca de la lista.
+model ListaEspera {
+  id            Int         @id @default(autoincrement())
+  usuarioId     Int         @map("usuario_id")
+  profesionalId Int         @map("profesional_id")
+  fechaCreacion DateTime    @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  avisoIntento  DateTime?   @map("aviso_intento") @db.DateTime(0)
+  usuario       Usuario     @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional   Profesional @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, profesionalId])
+  @@index([profesionalId])
+  @@map("lista_espera")
+}
+
+// Chat entre un usuario y un profesional (FS-HU-31; decisión del PO del 09-11-2026): uno por pareja, con todo su historial,
+// aunque tengan varias reservas o alguna se cancele. Cada participante puede eliminarlo para sí: se guarda hasta qué mensaje
+// y desde cuándo lo borró. Si la otra persona vuelve a escribir, el chat reaparece solo con lo nuevo.
+model ChatCita {
+  id                      Int           @id @default(autoincrement())
+  usuarioId               Int           @map("usuario_id")
+  profesionalId           Int           @map("profesional_id")
+  borradoUsuarioHasta     Int           @default(0) @map("borrado_usuario_hasta")
+  borradoUsuarioEn        DateTime?     @map("borrado_usuario_en") @db.DateTime(0)
+  borradoProfesionalHasta Int           @default(0) @map("borrado_profesional_hasta")
+  borradoProfesionalEn    DateTime?     @map("borrado_profesional_en") @db.DateTime(0)
+  fechaCreacion           DateTime      @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  usuario                 Usuario       @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  profesional             Profesional   @relation(fields: [profesionalId], references: [id], onDelete: Cascade)
+  mensajes                MensajeCita[]
+
+  @@unique([usuarioId, profesionalId])
+  @@index([profesionalId])
+  @@map("chats")
+}
+
+// Mensajes de un chat (FS-HU-31). leido marca los que ya vio quien los recibe (el aviso de mensaje nuevo).
+model MensajeCita {
+  id            Int      @id @default(autoincrement())
+  chatId        Int      @map("chat_id")
+  autorId       Int      @map("autor_id")
+  texto         String   @db.VarChar(1000)
+  leido         Boolean  @default(false)
+  fechaCreacion DateTime @default(now()) @map("fecha_creacion") @db.DateTime(0)
+  chat          ChatCita @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  autor         Usuario  @relation(fields: [autorId], references: [id], onDelete: Cascade)
+
+  @@index([chatId, id])
+  @@index([autorId])
+  @@map("mensajes_chat")
 }

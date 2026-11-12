@@ -20,6 +20,8 @@ function filtrosDesdeConsulta(query) {
     orden: query.orden || 'nombre',
     pagina: entero(query.pagina, 1),
     limite: entero(query.limite, reglas.porPagina),
+    // Con horas libres hoy, en 3 días o en la semana (09-11-2026); solo si se pidió.
+    ...(query.disponible && { disponible: query.disponible }),
   };
 }
 

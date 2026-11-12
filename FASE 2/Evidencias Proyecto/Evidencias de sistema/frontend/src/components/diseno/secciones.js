@@ -36,22 +36,17 @@ export const SECCIONES_PROFESIONAL = {
     ruta: '/profesional/agenda', nombre: 'Agenda', icono: 'calendario',
     descripcion: 'Pronto podrás publicar tus horarios disponibles y ver tus citas de la semana.',
   },
-  // Clientes y Reportes del profesional (FS-HU-27 y FS-HU-28).
+  // FS-HU-27 y FS-HU-28 (Clientes y Reportes, PR #50), FS-HU-29 y FS-HU-31 (Configuración y Mensajes, PR #49).
   clientes: { ruta: '/profesional/clientes', nombre: 'Clientes', icono: 'grupo' },
   perfil: { ruta: '/profesional/perfil', nombre: 'Perfil profesional', icono: 'medico' },
-  mensajes: {
-    ruta: '/profesional/mensajes', nombre: 'Mensajes', icono: 'chat', proximamente: true,
-    descripcion: 'Pronto podrás leer los mensajes que te dejen las personas al reservar una hora contigo.',
-  },
+  mensajes: { ruta: '/profesional/mensajes', nombre: 'Mensajes', icono: 'chat' },
   reportes: { ruta: '/profesional/reportes', nombre: 'Reportes', icono: 'grafico' },
-  configuracion: {
-    ruta: '/profesional/configuracion', nombre: 'Configuración', icono: 'ajustes', proximamente: true,
-    descripcion: 'Pronto podrás ajustar las preferencias de tu cuenta profesional.',
-  },
+  configuracion: { ruta: '/profesional/configuracion', nombre: 'Configuración', icono: 'ajustes' },
 };
 
 export const ESPACIOS = {
-  usuario: { secciones: SECCIONES, menu: MENU_LATERAL, barra: BARRA_INFERIOR },
+  // Mensajes de las reservas (FS-HU-31) va al final del menú del usuario, después de Mis citas.
+  usuario: { secciones: { ...SECCIONES, mensajes: { ruta: '/mensajes', nombre: 'Mensajes', icono: 'chat' } }, menu: [...MENU_LATERAL, 'mensajes'], barra: BARRA_INFERIOR },
   profesional: {
     secciones: SECCIONES_PROFESIONAL,
     menu: ['inicio', 'agenda', 'clientes', 'perfil', 'mensajes', 'reportes', 'configuracion'],

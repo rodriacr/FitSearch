@@ -19,13 +19,17 @@ import InicioSesion from './pages/InicioSesion.jsx';
 import Perfil from './pages/Perfil.jsx';
 import Portada from './pages/Portada.jsx';
 import InicioProfesional from './pages/profesional/InicioProfesional.jsx';
+// Mejoras del 09-11-2026: agenda semanal, clientes (FS-HU-27), reportes (FS-HU-28), configuración (FS-HU-29) y mensajes (FS-HU-31).
+import AgendaSemanal from './pages/profesional/AgendaSemanal.jsx';
+import Clientes, { HistorialCliente } from './pages/profesional/Clientes.jsx';
+import Configuracion from './pages/profesional/Configuracion.jsx';
+import Reportes from './pages/profesional/Reportes.jsx';
+import Mensajes from './pages/Mensajes.jsx';
 import PerfilProfesional from './pages/profesional/PerfilProfesional.jsx';
 import VistaPublica from './pages/profesional/VistaPublica.jsx';
 import Profesionales from './pages/Profesionales.jsx';
 import Proximamente from './pages/Proximamente.jsx';
-import AgendaProfesional, { MisCitas } from './pages/Agenda.jsx';
-import Clientes, { HistorialCliente } from './pages/profesional/Clientes.jsx';
-import Reportes from './pages/profesional/Reportes.jsx';
+import { MisCitas } from './pages/Agenda.jsx';
 import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
 import Registro from './pages/Registro.jsx';
 import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
@@ -78,6 +82,7 @@ export default function App() {
                 <Route key={`${ruta}/:id`} path={`${ruta}/:id`} element={<FichaEstablecimiento key={categoria} categoria={categoria} />} />,
               ])}
               <Route path="/citas" element={<MisCitas />} />
+              <Route path="/mensajes/:id?" element={<Mensajes />} />
               <Route path="/asistente/:id?" element={<Asistente />} />
               <Route path="/comidas" element={<Comidas />} />
               <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
@@ -92,11 +97,13 @@ export default function App() {
               <Route path="/profesional" element={<Navigate to={SECCIONES_PROFESIONAL.inicio.ruta} replace />} />
               <Route path={SECCIONES_PROFESIONAL.inicio.ruta} element={<InicioProfesional />} />
               <Route path={SECCIONES_PROFESIONAL.perfil.ruta} element={<PerfilProfesional />} />
-              <Route path="/profesional/agenda" element={<AgendaProfesional />} />
+              <Route path="/profesional/agenda" element={<AgendaSemanal />} />
               <Route path="/profesional/perfil/publico" element={<VistaPublica />} />
               <Route path={SECCIONES_PROFESIONAL.clientes.ruta} element={<Clientes />} />
               <Route path={`${SECCIONES_PROFESIONAL.clientes.ruta}/:id`} element={<HistorialCliente />} />
               <Route path={SECCIONES_PROFESIONAL.reportes.ruta} element={<Reportes />} />
+              <Route path="/profesional/configuracion" element={<Configuracion />} />
+              <Route path="/profesional/mensajes/:id?" element={<Mensajes />} />
               {SECCIONES_PROXIMAMENTE_PROFESIONAL.map((clave) => (
                 <Route key={clave} path={SECCIONES_PROFESIONAL[clave].ruta}
                   element={<Proximamente key={clave} seccion={clave} espacio="profesional" />} />

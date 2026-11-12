@@ -64,6 +64,10 @@
 .resumen-semanal strong { font-size: 1.4rem; color: var(--color-primario); }
 .resumen-semanal__nota { margin: 0.75rem 0 0; font-size: 0.85rem; }
 .panel-tarjeta__titulo .etiqueta-proximamente { margin-left: auto; }
+.resumen-semanal__enlace { display: inline-flex; align-items: center; gap: 0.3rem; margin-left: auto; font-size: 0.85rem; font-weight: 600; color: var(--color-acento-oscuro); text-decoration: none; }
+@media (hover: hover) and (pointer: fine) {
+  .resumen-semanal__enlace:hover { text-decoration: underline; text-underline-offset: 3px; }
+}
 
 @media (min-width: 40rem) {
   .inicio-prof__hero { grid-template-columns: 1fr auto; align-items: start; padding: 2rem 2rem 4.5rem; min-height: 15rem; }

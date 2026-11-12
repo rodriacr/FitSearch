@@ -1,0 +1,64 @@
+/* Experiencia del profesional (FS-HU-29): resumen y formulario dentro de su perfil. */
+.experiencia { display: grid; gap: 1rem; }
+.experiencia__datos { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.75rem; margin: 0; }
+.experiencia__datos div { display: grid; gap: 0.2rem; padding: 0.75rem 0.85rem; border-radius: 12px; background: var(--color-superficie-suave); }
+.experiencia__datos dt { font-size: 0.78rem; color: var(--color-texto-secundario); }
+.experiencia__datos dd { margin: 0; font-weight: 600; color: var(--color-texto); }
+.experiencia__subtitulo { margin: 0.25rem 0 0; font-size: 0.95rem; color: var(--color-primario-oscuro); }
+.experiencia__editar { justify-self: start; }
+.experiencia__vacia { display: grid; justify-items: start; gap: 0.85rem; }
+.experiencia__vacia p { margin: 0; color: var(--color-texto-secundario); }
+
+.formacion { display: grid; gap: 0.6rem; margin: 0; padding: 0; list-style: none; }
+.formacion li { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 0.65rem; }
+.formacion .icono { margin-top: 0.1rem; color: var(--color-primario); }
+.formacion span { display: grid; gap: 0.05rem; }
+.formacion strong { font-size: 0.92rem; color: var(--color-texto); }
+.formacion small { font-size: 0.82rem; color: var(--color-texto-secundario); }
+
+.experiencia-formulario { display: grid; gap: 1rem; }
+.experiencia-formulario .campo { margin: 0; min-width: 0; }
+.experiencia-formulario__fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 1rem; align-items: start; }
+.experiencia-formulario__precio { position: relative; }
+.experiencia-formulario__precio > span { position: absolute; left: 0.95rem; font-weight: 600; color: var(--color-texto-secundario); pointer-events: none; }
+.experiencia-formulario__precio .campo__control { width: 100%; padding-left: 1.85rem; }
+.experiencia-formulario__grupo { display: grid; gap: 0.6rem; margin: 0; padding: 0; border: 0; min-width: 0; }
+.experiencia-formulario__grupo legend { padding: 0; margin-bottom: 0.5rem; }
+.experiencia-formulario__grupo .boton-texto { justify-self: start; }
+.experiencia-formulario__acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+.opciones-atiende { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.opcion-atiende { position: relative; display: inline-flex; }
+.opcion-atiende input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; }
+.opcion-atiende span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.5rem;
+  padding: 0.35rem 0.95rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--color-primario);
+  background: var(--color-superficie);
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+.opcion-atiende input:checked + span { color: #fff; background: var(--color-primario); border-color: var(--color-primario); }
+.opcion-atiende input:focus-visible + span { outline: 3px solid var(--color-foco); outline-offset: 2px; }
+
+.estudio {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem 0.75rem;
+  align-items: end;
+  padding: 0.85rem;
+  border: 1px solid var(--color-borde);
+  border-radius: 12px;
+  background: var(--color-superficie-suave);
+}
+.estudio > .campo:nth-child(-n + 2) { grid-column: 1 / -1; }
+.estudio__quitar { align-self: end; width: 2.75rem; height: 2.75rem; color: var(--color-error); }
+@media (min-width: 40rem) {
+  .estudio { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr) 6rem auto; }
+  .estudio > .campo:nth-child(-n + 2) { grid-column: auto; }
+}

@@ -1,5 +1,5 @@
 const { body, param, query } = require('express-validator');
-const { profesionales: reglas, resena } = require('../../../shared/reglas.json');
+const { profesionales: reglas, resena, agenda } = require('../../../shared/reglas.json');
 
 const valores = (opciones) => opciones.map((opcion) => opcion.valor);
 // "destacados" no se ofrece en el selector de orden: lo usa el Inicio para elegir sus fichas.
@@ -24,6 +24,9 @@ const listar = [
   unico('distanciaKm', 'Indica una sola distancia').isIn(reglas.distanciasKm.map(String))
     .withMessage(`La distancia debe ser una de: ${reglas.distanciasKm.join(', ')} km`),
   unico('orden', 'Indica un solo orden').isIn(ORDENES).withMessage('Selecciona un orden válido'),
+  // Con horas libres hoy, en los próximos 3 días o en la semana (09-11-2026).
+  unico('disponible', 'Indica un solo filtro de disponibilidad').isIn(valores(agenda.filtroDisponible))
+    .withMessage('Selecciona una disponibilidad válida'),
   unico('pagina', 'Indica una sola página').isInt({ min: 1, max: 100000 }).withMessage('La página debe ser un entero entre 1 y 100000'),
   unico('limite', 'Indica un solo límite').isInt({ min: 1, max: reglas.porPagina })
     .withMessage(`El límite debe ser un entero entre 1 y ${reglas.porPagina}`),
@@ -38,6 +41,11 @@ const listar = [
 
 const pagina = [
   unico('pagina', 'Indica una sola página').isInt({ min: 1, max: 100000 }).withMessage('La página debe ser un entero entre 1 y 100000'),
+];
+
+// Filtro de reseñas de la ficha (09-11-2026): todas, positivas o negativas.
+const tipoResena = [
+  unico('tipo', 'Indica un solo filtro de reseñas').isIn(['positivas', 'negativas']).withMessage('Elige reseñas positivas o negativas'),
 ];
 
 const id = (nombre = 'id') => param(nombre).isInt({ min: 1 }).withMessage('El profesional indicado no es válido');
@@ -65,4 +73,4 @@ const ubicar = [
     .withMessage(`La dirección admite hasta ${reglas.direccion.max} caracteres`),
 ];
 
-module.exports = { listar, pagina, id, guardarResena, ubicar };
+module.exports = { listar, pagina, tipoResena, id, guardarResena, ubicar };

@@ -24,7 +24,21 @@ test('la ficha convierte los tipos de MySQL y redondea la distancia', () => {
   expect(ficha).toEqual({
     id: 2, nombre: 'Diego Demo', especialidad: 'Kinesiología', descripcion: null, comuna: null, direccion: null, modalidad: 'ambas', verificado: true,
     ubicacionLat: -33.689, ubicacionLng: -71.213, establecimiento: null, calificacion: { promedio: 3.7, total: 3 }, distanciaKm: 12.3, esFavorito: false,
+    aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null,
   });
+});
+
+test('la ficha muestra la experiencia (FS-HU-29) y acepta el JSON como texto o ya leído', () => {
+  const base = { id: 1, nombre: 'Ana', especialidad: 'Nutrición', modalidad: 'online', verificado: 0, ubicacionLat: '0', ubicacionLng: '0', promedio: 0, totalResenas: 0n, esFavorito: 0n };
+  const ficha = formatearFicha({
+    ...base, aniosExperiencia: 7, formacion: '[{"titulo":"Nutricionista","institucion":"U. de Chile","anio":2018}]',
+    atiendeA: ['adultos', 'deportistas'], registroSis: '93952', precioDesde: 30000,
+  });
+  expect(ficha).toMatchObject({
+    aniosExperiencia: 7, formacion: [{ titulo: 'Nutricionista', institucion: 'U. de Chile', anio: 2018 }],
+    atiendeA: ['adultos', 'deportistas'], registroSis: '93952', precioDesde: 30000,
+  });
+  expect(formatearFicha({ ...base, formacion: 'no es json' }).formacion).toEqual([]);
 });
 
 test('la búsqueda por texto escapa los comodines de LIKE', () => {

@@ -48,6 +48,27 @@
 .tarjeta-profesional--fila .tarjeta-profesional__nombre { margin: 0; padding-right: 2.75rem; }
 .tarjeta-profesional__linea { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.6rem; margin: 0; }
 .tarjeta-profesional--fila .tarjeta-profesional__descripcion { margin: 0; -webkit-line-clamp: 2; line-clamp: 2; }
+/* Precio referencial, experiencia y próximas horas libres en la tarjeta del buscador (09-11-2026). Las horas van sobre
+   el enlace que cubre la tarjeta (z-index 2), igual que «Ver en el mapa». */
+.tarjeta-profesional__extra { font-size: 0.82rem; color: var(--color-texto-secundario); }
+.tarjeta-profesional__extra span + span::before { content: '·'; margin-right: 0.6rem; }
+.tarjeta-profesional__extra strong { font-weight: 600; color: var(--color-texto); }
+.tarjeta-profesional__horas { display: grid; gap: 0.45rem; width: 100%; padding: 0.6rem 0.7rem; border-radius: 12px; background: var(--color-superficie-suave); }
+.tarjeta-profesional__proxima { display: flex; align-items: center; gap: 0.35rem; margin: 0; font-size: 0.82rem; color: var(--color-texto-secundario); }
+.tarjeta-profesional__proxima .icono { color: var(--color-primario); }
+.tarjeta-profesional__proxima strong { color: var(--color-primario-oscuro); }
+.tarjeta-profesional__horarios { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.4rem; margin: 0; padding: 0; list-style: none; }
+.hora-rapida {
+  position: relative; z-index: 2; display: grid; justify-items: center; gap: 0; min-height: 2.75rem; padding: 0.3rem 0.25rem;
+  border: 1px solid #a6dac1; border-radius: 10px; font-size: 0.7rem; line-height: 1.25; text-decoration: none; color: #145236; background: #e8f6ef;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 160ms var(--curva-salida);
+}
+.hora-rapida strong { font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+.hora-rapida:active { transform: scale(var(--escala-presion)); }
+@media (hover: hover) and (pointer: fine) {
+  .hora-rapida:hover { border-color: #1f7a52; background: #d6efe3; }
+}
+.tarjeta-profesional__sin-horas { margin: 0; font-size: 0.8rem; font-style: italic; color: var(--color-texto-secundario); }
 .tarjeta-profesional__acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; width: 100%; padding-top: 0.25rem; }
 .tarjeta-profesional__ver-mapa {
   position: relative; z-index: 2; display: inline-flex; align-items: center; gap: 0.3rem; min-height: 2.25rem; padding: 0.3rem 0.8rem;

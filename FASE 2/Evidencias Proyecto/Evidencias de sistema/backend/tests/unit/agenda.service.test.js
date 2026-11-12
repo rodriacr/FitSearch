@@ -1,4 +1,7 @@
 jest.mock('../../src/models/agenda.model');
+// Los avisos por correo y el conteo de mensajes se prueban en sus propios archivos.
+jest.mock('../../src/services/aviso.service');
+jest.mock('../../src/services/chat.service');
 const modelo = require('../../src/models/agenda.model');
 const servicio = require('../../src/services/agenda.service');
 const ahora = new Date('2026-10-11T18:00:00Z');
