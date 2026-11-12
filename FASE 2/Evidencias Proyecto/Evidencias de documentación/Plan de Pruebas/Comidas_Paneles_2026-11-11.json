@@ -27,7 +27,7 @@
     "frontendVitest": "423/423",
     "lint": "sin errores en backend y frontend",
     "build": "correcto",
-    "mysqlPlan": "npm run test:mysql:plan 63/63 (5 comprobaciones nuevas de las estadísticas ampliadas)"
+    "mysqlPlan": "npm run test:mysql:plan 75/75 (12-11-2026, tras la revisión del PR #52)"
   },
   "revisionVisual": "Cuenta temporal con 3 semanas de comidas (borrada al terminar), en escritorio (1280 px) y celular (375 px), sin desborde horizontal: Comidas_Paneles_2026-11-11_*.png",
   "pendiente": [

@@ -47,7 +47,7 @@ function calcular(perfil, guardado, meta = null) {
 // Plan que rige en una fecha (lo usan el resumen del día, la semana y las estadísticas de Comidas).
 async function delDia(usuarioId, fecha, usuario) {
   const [cuenta, guardado, meta] = await Promise.all([
-    usuario ?? usuarioModel.buscarPorIdConPerfil(usuarioId), modelo.vigente(usuarioId, fecha), modelo.metaPeso(usuarioId),
+    usuario ?? usuarioModel.buscarPorIdConPerfil(usuarioId), modelo.vigente(usuarioId, fecha), modelo.metaPeso(usuarioId, fecha),
   ]);
   return { ...calcular(cuenta?.perfil, guardado, meta), usuario: cuenta };
 }
@@ -87,7 +87,7 @@ function resumenMetaPeso(meta, datos, hoy) {
 async function obtener(usuarioId, ahora = new Date()) {
   const hoy = fechaEnChile(ahora);
   const [usuario, guardado, lista, meta] = await Promise.all([
-    usuarioModel.buscarPorIdConPerfil(usuarioId), modelo.vigente(usuarioId, hoy), modelo.personalizados(usuarioId), modelo.metaPeso(usuarioId),
+    usuarioModel.buscarPorIdConPerfil(usuarioId), modelo.vigente(usuarioId, hoy), modelo.personalizados(usuarioId), modelo.metaPeso(usuarioId, hoy),
   ]);
   const plan = calcular(usuario?.perfil, guardado, meta);
   const { objetivo } = plan.datos;
@@ -190,15 +190,15 @@ async function guardar(usuarioId, { tipo, personalizadoId }, ahora = new Date())
 
 async function crearPersonalizado(usuarioId, { usar: usarlo = false, ...valores }, ahora = new Date()) {
   const datos = datosPersonalizado(valores);
-  if (await modelo.contarPersonalizados(usuarioId) >= planes.maxPersonalizados) {
-    throw new ErrorHttp(409, `Puedes guardar hasta ${planes.maxPersonalizados} planes personalizados; borra uno para crear otro`);
-  }
+  // El límite se revisa en la misma transacción que crea el plan (revisión del PR #52): con 9 planes, dos solicitudes
+  // simultáneas ya no dejan 11; una se acepta y la otra responde 409.
   let creado;
   try {
-    creado = await modelo.crearPersonalizado(usuarioId, datos);
+    creado = await modelo.crearPersonalizado(usuarioId, datos, planes.maxPersonalizados);
   } catch (error) {
     throw nombreRepetido(error);
   }
+  if (!creado) throw new ErrorHttp(409, `Puedes guardar hasta ${planes.maxPersonalizados} planes personalizados; borra uno para crear otro`);
   if (usarlo) await usar(usuarioId, creado, fechaEnChile(ahora));
   return obtener(usuarioId, ahora);
 }
@@ -259,20 +259,23 @@ async function guardarMetaPeso(usuarioId, { pesoObjetivoKg, ritmoSemanalKg }, ah
   if (!planes.metaPeso.ritmos[objetivo].includes(ritmoSemanalKg)) errores.ritmoSemanalKg = 'Elige uno de los ritmos disponibles';
   if (Object.keys(errores).length) throw new ErrorHttp(400, 'Revisa tu meta de peso', errores);
 
-  // Si la meta sigue en la misma dirección se conserva el punto de partida, para no perder el avance.
-  const anterior = await modelo.metaPeso(usuarioId);
+  // Si la meta sigue en la misma dirección se conserva el punto de partida, para no perder el avance. La meta nueva rige
+  // desde hoy: los días anteriores conservan la que tenían (revisión del PR #52).
+  const hoy = fechaEnChile(ahora);
+  const anterior = await modelo.metaPeso(usuarioId, hoy);
   const inicial = numero(anterior?.pesoInicialKg);
   const seguir = anterior?.objetivo === objetivo && (bajar ? peso < inicial : peso > inicial);
-  await modelo.guardarMetaPeso(usuarioId, {
+  await modelo.guardarMetaPeso(usuarioId, hoy, {
     objetivo, pesoObjetivoKg: peso, ritmoSemanalKg,
     pesoInicialKg: seguir ? inicial : pesoKg,
-    fechaInicio: seguir ? anterior.fechaInicio : new Date(`${fechaEnChile(ahora)}T00:00:00Z`),
+    fechaInicio: seguir ? anterior.fechaInicio : new Date(`${hoy}T00:00:00Z`),
   });
   return obtener(usuarioId, ahora);
 }
 
+// Quitar la meta rige desde hoy: los días anteriores conservan la meta que tenían.
 async function eliminarMetaPeso(usuarioId, ahora = new Date()) {
-  await modelo.eliminarMetaPeso(usuarioId);
+  await modelo.eliminarMetaPeso(usuarioId, fechaEnChile(ahora));
   return obtener(usuarioId, ahora);
 }
 

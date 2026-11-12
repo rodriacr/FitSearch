@@ -138,7 +138,6 @@ describe('plan de alimentación', () => {
   beforeEach(() => {
     planModelo.personalizados.mockResolvedValue([VOLUMEN]);
     planModelo.obtenerPersonalizado.mockImplementation(async (id, usuarioId) => (id === 4 && usuarioId === 1 ? VOLUMEN : null));
-    planModelo.contarPersonalizados.mockResolvedValue(1);
     planModelo.crearPersonalizado.mockImplementation(async (usuarioId, datos) => ({ id: 9, ...datos }));
   });
 
@@ -159,7 +158,7 @@ describe('plan de alimentación', () => {
   test('crea un personalizado y lo usa desde hoy; valida nombre, porcentajes y el tipo de «usar»', async () => {
     const creado = await conSesion(request(app).post('/api/comidas/plan/personalizados')).send({ nombre: 'Competencia', proteinas: '25', carbohidratos: 55, grasas: 20, usar: true });
     expect(creado.status).toBe(201);
-    expect(planModelo.crearPersonalizado).toHaveBeenCalledWith(1, { nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
+    expect(planModelo.crearPersonalizado).toHaveBeenCalledWith(1, { nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 }, 10);
     expect(planModelo.guardar).toHaveBeenCalledWith(1, HOY, { tipo: 'personalizado', planPersonalizadoId: 9, proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
 
     const suma = await conSesion(request(app).post('/api/comidas/plan/personalizados')).send({ nombre: 'Mal', proteinas: 30, carbohidratos: 50, grasas: 25 });
@@ -201,7 +200,7 @@ describe('plan de alimentación', () => {
     usuarioModel.buscarPorIdConPerfil.mockResolvedValue({ id: 1, perfil: { pesoKg: '68', alturaCm: '175', edad: 30, sexo: 'masculino', actividadFisica: 'moderada', objetivoPrincipal: 'bajar_peso' } });
     const guardada = await conSesion(request(app).put('/api/comidas/plan/meta-peso')).send({ pesoObjetivoKg: '63.5', ritmoSemanalKg: 0.5 });
     expect(guardada.status).toBe(200);
-    expect(planModelo.guardarMetaPeso).toHaveBeenCalledWith(1, expect.objectContaining({ objetivo: 'bajar_peso', pesoObjetivoKg: 63.5, ritmoSemanalKg: 0.5, pesoInicialKg: 68 }));
+    expect(planModelo.guardarMetaPeso).toHaveBeenCalledWith(1, HOY, expect.objectContaining({ objetivo: 'bajar_peso', pesoObjetivoKg: 63.5, ritmoSemanalKg: 0.5, pesoInicialKg: 68 }));
     expect(guardada.body.opcionesMetaPeso).toMatchObject({ ritmos: [0.25, 0.5, 0.75], rango: { min: 56.7, max: 67.9 } });
     const fuera = await conSesion(request(app).put('/api/comidas/plan/meta-peso')).send({ pesoObjetivoKg: 20, ritmoSemanalKg: 0.5 });
     expect(fuera.status).toBe(400);
@@ -209,6 +208,6 @@ describe('plan de alimentación', () => {
     const ritmo = await conSesion(request(app).put('/api/comidas/plan/meta-peso')).send({ pesoObjetivoKg: 64 });
     expect(ritmo.body.detalles.ritmoSemanalKg).toBe('Elige a qué ritmo quieres avanzar');
     expect((await conSesion(request(app).delete('/api/comidas/plan/meta-peso'))).status).toBe(200);
-    expect(planModelo.eliminarMetaPeso).toHaveBeenCalledWith(1);
+    expect(planModelo.eliminarMetaPeso).toHaveBeenCalledWith(1, HOY);
   });
 });

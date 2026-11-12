@@ -75,15 +75,14 @@ describe('elegir el plan', () => {
 
 describe('lista de personalizados', () => {
   test('crea uno con el nombre ordenado y, si se pide, lo usa desde hoy', async () => {
-    modelo.contarPersonalizados.mockResolvedValue(2);
     modelo.crearPersonalizado.mockResolvedValue({ id: 6, nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
     await servicio.crearPersonalizado(7, { nombre: '  Competencia  ', proteinas: 25, carbohidratos: 55, grasas: 20, usar: true }, AHORA);
-    expect(modelo.crearPersonalizado).toHaveBeenCalledWith(7, { nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
+    // El máximo va al modelo, que lo revisa en la misma transacción que crea el plan.
+    expect(modelo.crearPersonalizado).toHaveBeenCalledWith(7, { nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 }, 10);
     expect(modelo.guardar).toHaveBeenCalledWith(7, HOY, { tipo: 'personalizado', planPersonalizadoId: 6, proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
   });
 
   test('crear sin «usar» solo lo agrega a la lista', async () => {
-    modelo.contarPersonalizados.mockResolvedValue(0);
     modelo.crearPersonalizado.mockResolvedValue({ id: 6, nombre: 'Competencia', proteinasPct: 25, carbohidratosPct: 55, grasasPct: 20 });
     await servicio.crearPersonalizado(7, { nombre: 'Competencia', proteinas: 25, carbohidratos: 55, grasas: 20 }, AHORA);
     expect(modelo.guardar).not.toHaveBeenCalled();
@@ -102,12 +101,14 @@ describe('lista de personalizados', () => {
   });
 
   test('un nombre repetido responde 409 y no se pasa del máximo de 10', async () => {
-    modelo.contarPersonalizados.mockResolvedValue(3);
     modelo.crearPersonalizado.mockRejectedValue(Object.assign(new Error('único'), { code: 'P2002' }));
     await expect(servicio.crearPersonalizado(7, { nombre: 'volumen', proteinas: 30, carbohidratos: 40, grasas: 30 }, AHORA))
       .rejects.toMatchObject({ estado: 409, message: 'Ya tienes un plan con ese nombre' });
-    modelo.contarPersonalizados.mockResolvedValue(10);
-    await expect(servicio.crearPersonalizado(7, { nombre: 'Otro', proteinas: 30, carbohidratos: 40, grasas: 30 }, AHORA)).rejects.toMatchObject({ estado: 409 });
+    // Con el máximo alcanzado, el modelo no crea nada (devuelve null) y la respuesta es 409.
+    modelo.crearPersonalizado.mockResolvedValue(null);
+    await expect(servicio.crearPersonalizado(7, { nombre: 'Otro', proteinas: 30, carbohidratos: 40, grasas: 30, usar: true }, AHORA))
+      .rejects.toMatchObject({ estado: 409, message: 'Puedes guardar hasta 10 planes personalizados; borra uno para crear otro' });
+    expect(modelo.guardar).not.toHaveBeenCalled();
   });
 
   test('editar el plan en uso cambia el de hoy; editar otro no toca el plan vigente', async () => {
@@ -141,6 +142,7 @@ describe('meta de peso', () => {
   test('ajusta las calorías al ritmo elegido y muestra cuánto falta, el avance y la fecha estimada', async () => {
     modelo.metaPeso.mockResolvedValue(META);
     const r = await servicio.obtener(7, AHORA);
+    expect(modelo.metaPeso).toHaveBeenCalledWith(7, HOY);
     // 0,5 kg por semana × 7.700 kcal / 7 días = 550 kcal menos al día: 1.953 − 550 = 1.403 kcal.
     expect(r.plan.kcal).toBe(1403);
     expect(r.meta).toMatchObject({ ajusteKcal: -550, ritmoSemanalKg: 0.5 });
@@ -168,12 +170,13 @@ describe('meta de peso', () => {
 
   test('guarda la meta desde el peso actual, y al ajustarla en la misma dirección conserva el punto de partida', async () => {
     await servicio.guardarMetaPeso(7, { pesoObjetivoKg: 62.04, ritmoSemanalKg: 0.25 }, AHORA);
-    expect(modelo.guardarMetaPeso).toHaveBeenCalledWith(7, {
+    // La meta rige desde hoy: es una fila con fecha, no reemplaza la de días anteriores (revisión del PR #52).
+    expect(modelo.guardarMetaPeso).toHaveBeenCalledWith(7, HOY, {
       objetivo: 'bajar_peso', pesoObjetivoKg: 62, ritmoSemanalKg: 0.25, pesoInicialKg: 70, fechaInicio: new Date(`${HOY}T00:00:00Z`),
     });
     modelo.metaPeso.mockResolvedValue(META);
     await servicio.guardarMetaPeso(7, { pesoObjetivoKg: 66, ritmoSemanalKg: 0.75 }, AHORA);
-    expect(modelo.guardarMetaPeso).toHaveBeenLastCalledWith(7, expect.objectContaining({ pesoInicialKg: 74, fechaInicio: META.fechaInicio, pesoObjetivoKg: 66 }));
+    expect(modelo.guardarMetaPeso).toHaveBeenLastCalledWith(7, HOY, expect.objectContaining({ pesoInicialKg: 74, fechaInicio: META.fechaInicio, pesoObjetivoKg: 66 }));
   });
 
   test.each([
@@ -191,7 +194,7 @@ describe('meta de peso', () => {
     await expect(servicio.guardarMetaPeso(7, { pesoObjetivoKg: 82, ritmoSemanalKg: 0.25 }, AHORA))
       .rejects.toMatchObject({ detalles: { pesoObjetivoKg: 'Con tu altura, sobre 81,6 kg pasarías un IMC de 30' } });
     await servicio.guardarMetaPeso(7, { pesoObjetivoKg: 74, ritmoSemanalKg: 0.25 }, AHORA);
-    expect(modelo.guardarMetaPeso).toHaveBeenCalledWith(7, expect.objectContaining({ objetivo: 'aumentar_masa', pesoInicialKg: 70, pesoObjetivoKg: 74 }));
+    expect(modelo.guardarMetaPeso).toHaveBeenCalledWith(7, HOY, expect.objectContaining({ objetivo: 'aumentar_masa', pesoInicialKg: 70, pesoObjetivoKg: 74 }));
   });
 
   test('sin una meta de peso en el perfil o sin peso actual no se puede guardar', async () => {
@@ -201,8 +204,16 @@ describe('meta de peso', () => {
     await expect(servicio.guardarMetaPeso(7, { pesoObjetivoKg: 65, ritmoSemanalKg: 0.5 }, AHORA)).rejects.toMatchObject({ estado: 400, message: 'Primero anota tu peso actual en Mi perfil' });
   });
 
-  test('quitar la meta de peso la borra', async () => {
+  test('quitar la meta de peso rige desde hoy', async () => {
     await servicio.eliminarMetaPeso(7, AHORA);
-    expect(modelo.eliminarMetaPeso).toHaveBeenCalledWith(7);
+    expect(modelo.eliminarMetaPeso).toHaveBeenCalledWith(7, HOY);
+  });
+
+  test('cada día usa la meta que regía ese día: ayer sin meta conserva su objetivo aunque hoy haya una', async () => {
+    // El modelo responde según la fecha: hoy hay meta (−550 kcal) y ayer no.
+    modelo.metaPeso.mockImplementation(async (_usuario, fecha) => (fecha === HOY ? META : null));
+    expect((await servicio.delDia(7, HOY)).kcal).toBe(1403);
+    expect((await servicio.delDia(7, '2026-11-10')).kcal).toBe(1660);
+    expect(modelo.metaPeso).toHaveBeenCalledWith(7, '2026-11-10');
   });
 });

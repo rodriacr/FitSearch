@@ -53,7 +53,7 @@ model Usuario {
   registrosAgua        RegistroAgua[]
   planesAlimentacion   PlanAlimentacion[]
   planesPersonalizados PlanPersonalizado[]
-  metaPeso             MetaPeso?
+  metasPeso            MetaPeso[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -287,7 +287,10 @@ model PlanPersonalizado {
 // Meta de peso de cada usuario (11-11-2026): peso al que quiere llegar y ritmo semanal; ajusta las calorías del plan.
 model MetaPeso {
   id                 Int      @id @default(autoincrement())
-  usuarioId          Int      @unique @map("usuario_id")
+  usuarioId          Int      @map("usuario_id")
+  // Desde qué día rige (12-11-2026): la meta de una fecha es la última guardada ese día o antes; activa = false la quita.
+  desde              DateTime @db.Date
+  activa             Boolean  @default(true)
   objetivo           String   @db.VarChar(30)
   pesoInicialKg      Decimal  @map("peso_inicial_kg") @db.Decimal(5, 2)
   pesoObjetivoKg     Decimal  @map("peso_objetivo_kg") @db.Decimal(5, 2)
@@ -296,6 +299,7 @@ model MetaPeso {
   fechaActualizacion DateTime @default(now()) @updatedAt @map("fecha_actualizacion") @db.DateTime(0)
   usuario            Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
 
+  @@unique([usuarioId, desde])
   @@map("metas_peso")
 }
 

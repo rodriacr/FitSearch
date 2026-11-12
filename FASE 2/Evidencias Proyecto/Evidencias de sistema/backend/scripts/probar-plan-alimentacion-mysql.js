@@ -113,30 +113,54 @@ async function rechaza(nombre, promesa) {
     ok('La fila de hoy queda como meta y sin porcentajes', deHoy.tipo === 'meta' && deHoy.proteinasPct === null && deHoy.planPersonalizadoId === null);
     await check('Un plan ajeno o borrado responde 404', api('put', '/comidas/plan', { tipo: 'personalizado', personalizadoId: idVolumen }, token), 404);
 
+    // Límite de 10 con solicitudes simultáneas (revisión del PR #52): con 9 planes, dos a la vez dejan 10 y no 11.
+    const enLista = await prisma.planPersonalizado.count({ where: { usuarioId } });
+    await prisma.planPersonalizado.createMany({
+      data: Array.from({ length: 9 - enLista }, (_, i) => ({ usuarioId, nombre: `Relleno ${i + 1}`, proteinasPct: 30, carbohidratosPct: 40, grasasPct: 30 })),
+    });
+    const simultaneas = await Promise.all(['A', 'B', 'C'].map((letra) => nuevo(`Simultáneo ${letra}`, 30, 40, 30, false)));
+    const estados = simultaneas.map((r) => r.status).sort();
+    ok('Tres solicitudes a la vez con 9 planes: una se acepta y dos responden 409', estados.join() === '201,409,409');
+    ok('Quedan exactamente 10 planes', (await prisma.planPersonalizado.count({ where: { usuarioId } })) === 10);
+    await prisma.planPersonalizado.deleteMany({ where: { usuarioId, nombre: { startsWith: 'Relleno' } } });
+
     // Meta de peso: de 70 a 64 kg a 0,5 kg por semana → 550 kcal menos al día (1.953 − 550 = 1.403 kcal).
     await check('Rechaza un peso bajo un IMC de 18,5', api('put', '/comidas/plan/meta-peso', { pesoObjetivoKg: 48, ritmoSemanalKg: 0.5 }, token), 400);
     await check('Rechaza un peso mayor al actual para bajar', api('put', '/comidas/plan/meta-peso', { pesoObjetivoKg: 72, ritmoSemanalKg: 0.5 }, token), 400);
+    const objetivoDe = async (nombre, fecha) => (await check(nombre, api('get', `/comidas?fecha=${fecha}`, undefined, token), 200)).objetivo.calorias;
+    const ayerSinMeta = await objetivoDe('Objetivo de ayer antes de la meta', ayer);
     const conMeta = await check('Guarda la meta de peso', api('put', '/comidas/plan/meta-peso', { pesoObjetivoKg: 64, ritmoSemanalKg: 0.5 }, token), 200);
+    // La meta rige desde hoy (revisión del PR #52): antes, el objetivo de ayer pasaba de 1.660 a 1.403 kcal.
+    ok('Guardar la meta no cambia el objetivo de ayer', (await objetivoDe('Objetivo de ayer con la meta nueva', ayer)) === ayerSinMeta && conMeta.plan.kcal !== ayerSinMeta);
     ok('Las calorías siguen el ritmo elegido', conMeta.plan.kcal === 1403 && conMeta.meta.ajusteKcal === -550);
     ok('Faltan 6 kg: 12 semanas al ritmo elegido', conMeta.metaPeso.faltanKg === 6 && conMeta.metaPeso.semanas === 12 && conMeta.metaPeso.fechaEstimada === sumarDias(hoy, 84));
     await prisma.perfilUsuario.update({ where: { usuarioId }, data: { pesoKg: 67 } });
     const avance = await check('Avance tras bajar 3 kg', api('get', '/comidas/plan', undefined, token), 200);
     ok('Lleva el 50 % de la meta', avance.metaPeso.avancePct === 50 && avance.metaPeso.pesoInicialKg === 70);
+    // Como si la meta se hubiera guardado ayer: al ajustarla hoy, ayer conserva su ritmo de 0,5 kg y hoy rige el de 0,25 kg.
+    await prisma.metaPeso.updateMany({ where: { usuarioId }, data: { desde: dia(ayer) } });
     await check('Ajustar la meta conserva el punto de partida', api('put', '/comidas/plan/meta-peso', { pesoObjetivoKg: 65, ritmoSemanalKg: 0.25 }, token), 200);
-    ok('El punto de partida sigue en 70 kg', Number((await prisma.metaPeso.findUnique({ where: { usuarioId } })).pesoInicialKg) === 70);
+    ok('El punto de partida sigue en 70 kg', Number((await prisma.metaPeso.findFirst({ where: { usuarioId }, orderBy: { desde: 'desc' } })).pesoInicialKg) === 70);
+    const ayerConMeta = await objetivoDe('Objetivo de ayer tras ajustar la meta', ayer);
+    ok('Ajustar la meta hoy no cambia la de ayer (ayer −550 kcal, hoy −275 kcal)', (await objetivoDe('Objetivo de hoy tras ajustar la meta', hoy)) - ayerConMeta === 275);
     await prisma.perfilUsuario.update({ where: { usuarioId }, data: { objetivoPrincipal: 'mantener_peso' } });
     const otraMeta = await check('Plan con otra meta en el perfil', api('get', '/comidas/plan', undefined, token), 200);
     ok('La meta de peso deja de aplicarse si cambia la meta del perfil', otraMeta.metaPeso.aplica === false && otraMeta.plan.kcal === otraMeta.perfil.kcalBase);
-    await check('Quita la meta de peso', api('delete', '/comidas/plan/meta-peso', undefined, token), 200);
-    ok('La meta de peso se borró', (await prisma.metaPeso.count({ where: { usuarioId } })) === 0);
+    await prisma.perfilUsuario.update({ where: { usuarioId }, data: { objetivoPrincipal: 'bajar_peso' } });
+    const sinMeta = await check('Quita la meta de peso', api('delete', '/comidas/plan/meta-peso', undefined, token), 200);
+    ok('Hoy ya no hay meta de peso', sinMeta.metaPeso === null && sinMeta.meta.ritmoSemanalKg === null);
+    ok('Quitar la meta no cambia el objetivo de ayer', (await objetivoDe('Objetivo de ayer tras quitar la meta', ayer)) === ayerConMeta);
+    const filasMeta = await prisma.metaPeso.findMany({ where: { usuarioId }, orderBy: { desde: 'asc' } });
+    ok('Queda la meta de ayer y la baja de hoy', filasMeta.length === 2 && filasMeta[0].activa && !filasMeta[1].activa);
 
     // Restricciones de las tablas (por si alguien escribe sin pasar por la API).
     await rechaza('La tabla rechaza porcentajes que no suman 100', prisma.$executeRaw`INSERT INTO planes_alimentacion (usuario_id, desde, tipo, proteinas_pct, carbohidratos_pct, grasas_pct) VALUES (${usuarioId}, '2020-01-01', 'personalizado', 50, 30, 30)`);
     await rechaza('La tabla rechaza un plan de meta con porcentajes', prisma.$executeRaw`INSERT INTO planes_alimentacion (usuario_id, desde, tipo, proteinas_pct, carbohidratos_pct, grasas_pct) VALUES (${usuarioId}, '2020-01-01', 'meta', 30, 45, 25)`);
     await rechaza('La tabla rechaza un tipo desconocido', prisma.$executeRaw`INSERT INTO planes_alimentacion (usuario_id, desde, tipo) VALUES (${usuarioId}, '2020-01-01', 'estandar')`);
     await rechaza('La tabla no acepta dos planes el mismo día', prisma.planAlimentacion.create({ data: { usuarioId, desde: dia(ayer), tipo: 'meta' } }));
+    await rechaza('La tabla no acepta dos metas de peso el mismo día', prisma.metaPeso.create({ data: { usuarioId, desde: dia(ayer), objetivo: 'bajar_peso', pesoInicialKg: 70, pesoObjetivoKg: 65, ritmoSemanalKg: 0.5, fechaInicio: dia(ayer) } }));
     await rechaza('La lista rechaza porcentajes que no suman 100', prisma.$executeRaw`INSERT INTO planes_personalizados (usuario_id, nombre, proteinas_pct, carbohidratos_pct, grasas_pct) VALUES (${usuarioId}, 'Raro', 50, 30, 30)`);
-    await rechaza('La meta de peso rechaza un peso objetivo en la dirección contraria', prisma.$executeRaw`INSERT INTO metas_peso (usuario_id, objetivo, peso_inicial_kg, peso_objetivo_kg, ritmo_semanal_kg, fecha_inicio) VALUES (${usuarioId}, 'bajar_peso', 70, 75, 0.5, '2026-11-11')`);
+    await rechaza('La meta de peso rechaza un peso objetivo en la dirección contraria', prisma.$executeRaw`INSERT INTO metas_peso (usuario_id, desde, objetivo, peso_inicial_kg, peso_objetivo_kg, ritmo_semanal_kg, fecha_inicio) VALUES (${usuarioId}, '2020-01-01', 'bajar_peso', 70, 75, 0.5, '2026-11-11')`);
 
     await prisma.usuario.delete({ where: { id: usuarioId } });
     const quedan = await Promise.all([prisma.planAlimentacion.count({ where: { usuarioId } }), prisma.planPersonalizado.count({ where: { usuarioId } })]);
