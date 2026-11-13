@@ -26,7 +26,14 @@ function Resumen({ experiencia, onEditar }) {
   if (sinDatos) {
     return (
       <div className="experiencia__vacia">
-        <p>Cuenta tus años de experiencia, tu formación y a quién atiendes. Las fichas completas generan más confianza.</p>
+        <div className="experiencia__ilustracion" aria-hidden="true"><Icono nombre="birrete" tamano={62} /><Icono nombre="maletin" tamano={44} /></div>
+        <h3>Completa tu experiencia profesional</h3>
+        <p>Agrega tus años de experiencia, tus estudios y el público que atiendes.</p>
+        <ul className="experiencia__guia" aria-label="Información que puedes agregar">
+          <li><Icono nombre="maletin" tamano={27} /> Experiencia</li>
+          <li><Icono nombre="birrete" tamano={29} /> Formación</li>
+          <li><Icono nombre="grupo" tamano={29} /> Público que atiendes</li>
+        </ul>
         <button type="button" className="boton boton--principal boton--compacto" onClick={onEditar}><Icono nombre="mas" tamano={18} /> Agregar experiencia</button>
       </div>
     );

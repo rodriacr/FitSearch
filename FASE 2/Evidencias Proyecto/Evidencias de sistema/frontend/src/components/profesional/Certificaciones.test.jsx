@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { test, expect } from 'vitest';
 import Certificaciones, { Documentos } from './Certificaciones.jsx';
@@ -17,6 +17,27 @@ async function adjuntarObligatorios() {
     await waitFor(() => expect(screen.getByRole('button', { name: `Reemplazar documento: ${nombre}` })).toBeDisabled());
   }
 }
+
+test('el historial muestra los tres movimientos recientes y permite expandir y volver a reducir', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  const historial = [
+    { accion: 'solicitud', fecha: '2026-10-10T10:00:00Z' },
+    { accion: 'aprobar', fecha: '2026-10-11T10:00:00Z' },
+    { accion: 'revocar', fecha: '2026-10-12T10:00:00Z', motivo: 'Actualizar documentos' },
+    { accion: 'documento', fecha: '2026-10-13T10:00:00Z' },
+  ];
+  simularApi({ '/api/verificaciones/mi-solicitud': { solicitud: { estado: 'sin_solicitud', rut: '', documentos: [], historial } } });
+  render(<Certificaciones />);
+  const region = within(await screen.findByRole('region', { name: 'Historial de verificación' }));
+  expect(region.getAllByRole('listitem')).toHaveLength(3);
+  expect(region.getAllByRole('listitem')[0]).toHaveTextContent('Documento actualizado');
+  expect(region.queryByText('Solicitud enviada')).not.toBeInTheDocument();
+  await userEvent.click(region.getByRole('button', { name: 'Ver historial completo' }));
+  expect(region.getAllByRole('listitem')).toHaveLength(4);
+  expect(region.getByRole('button', { name: 'Ver menos' })).toHaveAttribute('aria-expanded', 'true');
+  await userEvent.click(region.getByRole('button', { name: 'Ver menos' }));
+  expect(region.getAllByRole('listitem')).toHaveLength(3);
+});
 
 test('permite corregir y reenviar una solicitud rechazada con documentos nuevos', async () => {
   sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));

@@ -53,6 +53,45 @@ export function Documentos({ documentos, onError }) {
     </div>
   );
 }
+const EVENTOS = {
+  documento: { nombre: 'Documento actualizado', icono: 'documento' },
+  solicitud: { nombre: 'Solicitud enviada', icono: 'escudo' },
+  aprobar: { nombre: 'Solicitud aprobada', icono: 'check', tono: 'exito' },
+  rechazar: { nombre: 'Solicitud rechazada', icono: 'info', tono: 'aviso' },
+  revocar: { nombre: 'Verificación revocada', icono: 'reloj', tono: 'aviso' },
+};
+
+function Historial({ movimientos = [] }) {
+  const [completo, setCompleto] = useState(false);
+  const ordenados = movimientos.map((movimiento, indice) => ({ ...movimiento, indice }))
+    .sort((a, b) => (Date.parse(b.fecha) || 0) - (Date.parse(a.fecha) || 0) || b.indice - a.indice);
+  const visibles = completo ? ordenados : ordenados.slice(0, 3);
+  return (
+    <section className="certificaciones__historial" aria-labelledby="titulo-historial-verificacion">
+      <h3 id="titulo-historial-verificacion">Historial de verificación</h3>
+      <p>{!ordenados.length ? 'Aún no hay movimientos.' : completo ? 'Todos los movimientos' : `Últimos ${visibles.length} movimientos`}</p>
+      <ul id="historial-verificacion-lista">
+        {visibles.map((h) => {
+          const evento = EVENTOS[h.accion] || { nombre: h.accion.replaceAll('_', ' '), icono: 'info' };
+          return (
+            <li key={h.indice} className={`certificaciones__evento${evento.tono ? ` certificaciones__evento--${evento.tono}` : ''}`}>
+              <Icono nombre={evento.icono} tamano={21} />
+              <div><strong>{evento.nombre}</strong>{h.motivo && <small>{h.motivo}</small>}</div>
+              <time dateTime={h.fecha}>{new Date(h.fecha).toLocaleString('es-CL', { dateStyle: 'medium', timeStyle: 'short' })}</time>
+            </li>
+          );
+        })}
+      </ul>
+      {ordenados.length > 3 && (
+        <button type="button" className="certificaciones__ver-historial" aria-expanded={completo}
+          aria-controls="historial-verificacion-lista" onClick={() => setCompleto(!completo)}>
+          {completo ? 'Ver menos' : 'Ver historial completo'} <Icono nombre="chevron" tamano={17} />
+        </button>
+      )}
+    </section>
+  );
+}
+
 export default function Certificaciones() {
   const [solicitud, setSolicitud] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -310,15 +349,7 @@ export default function Certificaciones() {
               </form>
             </>
           )}
-          <h3>Historial</h3>
-          <ul>
-            {solicitud.historial.map((h, i) => (
-              <li key={i}>
-                {new Date(h.fecha).toLocaleString('es-CL')}: {h.accion}
-                {h.motivo && ` — ${h.motivo}`}
-              </li>
-            ))}
-          </ul>
+          <Historial movimientos={solicitud.historial} />
         </>
       )}
     </section>
