@@ -52,4 +52,4 @@ Clientes, historial, Reportes y Resumen semanal en celular (370 px):
 
 ![Pantallas en celular](evidencias-clientes-reportes/celular-370.jpg)
 
-Los casos CP-160 a CP-169 usan una numeración provisional después de los casos del Plan de Pruebas 1.0.1 (hasta CP-157) y se agregan a la Planilla de Casos de Prueba al consolidar la documentación después de la fusión del PR. Estas comprobaciones no equivalen a aceptación del PO.
+Los casos CP-160 a CP-169 usan una numeración provisional después de los casos del Plan de Pruebas 1.0.1 (hasta CP-157). Se registraron en la Planilla de Casos de Prueba el 13-11-2026, después de la fusión del PR #50, y los criterios de aceptación de FS-HU-27 y FS-HU-28 se ampliaron a 5 escenarios cada uno. Estas comprobaciones no equivalen a aceptación del PO.
