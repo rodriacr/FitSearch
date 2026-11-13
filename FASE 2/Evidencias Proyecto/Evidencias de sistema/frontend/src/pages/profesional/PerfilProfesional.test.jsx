@@ -29,6 +29,9 @@ function simularServidor({ ficha = null, alGuardar } = {}) {
       return respuestaJson(200, { ficha: estado.ficha });
     }
     if (url === '/api/profesionales/mi-ficha') return respuestaJson(200, { ficha: estado.ficha });
+    if (url === '/api/profesionales/mi-ficha/experiencia') return respuestaJson(200, {
+      experiencia: { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null },
+    });
     if (url === `/api/profesionales/${estado.ficha?.id}`) {
       const { id, ...datos } = estado.ficha;
       return respuestaJson(200, {
@@ -143,11 +146,10 @@ describe('Con ficha', () => {
     simularServidor({ ficha: MI_FICHA });
     renderizarApp('/profesional/perfil');
     const sinDireccion = within(await screen.findByRole('region', { name: 'Atención' }));
-    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde «Editar perfil»/)).toBeInTheDocument();
+    expect(sinDireccion.getByText(/Agrega tu dirección de atención desde "Editar perfil"/)).toBeInTheDocument();
   });
 
-  // FS-HU-29 (09-11-2026): la pestaña Experiencia ya no es «Próximamente». Su formulario se prueba en Experiencia.test.jsx.
-  test('la pestaña Experiencia invita a completar la experiencia, sin simular datos', async () => {
+  test('Información reúne la experiencia y mantiene solo dos pestañas, sin simular datos', async () => {
     const fetch = simularServidor({ ficha: MI_FICHA });
     const servidor = fetch.getMockImplementation();
     const vacia = { aniosExperiencia: null, formacion: [], atiendeA: [], registroSis: null, precioDesde: null };
@@ -155,8 +157,8 @@ describe('Con ficha', () => {
       ? respuestaJson(200, { experiencia: vacia }) : servidor(url, opciones)));
     renderizarApp('/profesional/perfil');
 
-    await userEvent.click(await screen.findByRole('tab', { name: 'Experiencia' }));
-    expect(screen.getByRole('tab', { name: 'Experiencia' })).toHaveAttribute('aria-selected', 'true');
+    expect(await screen.findByRole('tab', { name: 'Información' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual(['Información', 'Certificaciones']);
     const panel = screen.getByRole('tabpanel');
     expect(await within(panel).findByRole('button', { name: 'Agregar experiencia' })).toBeInTheDocument();
     expect(within(panel).queryByText('Próximamente')).not.toBeInTheDocument();
@@ -169,9 +171,9 @@ describe('Con ficha', () => {
     informacion.focus();
 
     await userEvent.keyboard('{ArrowRight}');
-    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveFocus();
-    expect(screen.getByRole('tab', { name: 'Horarios' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Horarios');
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
+    expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Certificaciones');
 
     await userEvent.keyboard('{End}');
     expect(screen.getByRole('tab', { name: 'Certificaciones' })).toHaveFocus();
@@ -197,5 +199,26 @@ describe('Con ficha', () => {
 
     expect(screen.getByRole('heading', { level: 1, name: 'Matías Rojas' })).toBeInTheDocument();
     expect(huboPut(fetch)).toBe(false);
+  });
+
+  test('copia el enlace de la ficha compartida, no la ruta privada del profesional', async () => {
+    const usuario = userEvent.setup();
+    const copiar = vi.spyOn(navigator.clipboard, 'writeText').mockResolvedValue();
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
+    expect(copiar).toHaveBeenCalledWith(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
+    expect(await screen.findByText('Enlace de tu perfil copiado.')).toBeInTheDocument();
+  });
+
+  test('si el navegador impide copiar, permite seleccionar el enlace manualmente', async () => {
+    const usuario = userEvent.setup();
+    vi.spyOn(navigator.clipboard, 'writeText').mockRejectedValue(new Error('Sin permiso'));
+    simularServidor({ ficha: MI_FICHA });
+    renderizarApp('/profesional/perfil');
+    await usuario.click(await screen.findByRole('button', { name: 'Copiar enlace' }));
+    expect(await screen.findByRole('textbox', { name: /No pudimos copiarlo automáticamente/ }))
+      .toHaveValue(`${window.location.origin}/profesionales/${MI_FICHA.id}`);
+    expect(screen.queryByText('Enlace de tu perfil copiado.')).not.toBeInTheDocument();
   });
 });

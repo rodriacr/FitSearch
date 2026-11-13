@@ -6,7 +6,6 @@ import Icono from '../../components/Icono.jsx';
 import FormularioFicha from '../../components/profesional/FormularioFicha.jsx';
 import Certificaciones from '../../components/profesional/Certificaciones.jsx';
 import Experiencia from '../../components/profesional/Experiencia.jsx';
-import { HorariosProfesional } from '../Agenda.jsx';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { direccionDe, etiquetaModalidad, iniciales } from '../../services/formato.js';
 import { obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
@@ -14,11 +13,49 @@ import './PerfilProfesional.css';
 
 const PESTANAS = [
   { clave: 'informacion', nombre: 'Información' },
-  { clave: 'horarios', nombre: 'Horarios' },
-  // FS-HU-29: años de experiencia, formación, a quién atiende, registro en la Superintendencia de Salud y precio referencial.
-  { clave: 'experiencia', nombre: 'Experiencia' },
   { clave: 'certificaciones', nombre: 'Certificaciones' },
 ];
+
+function CompartirPerfil({ id }) {
+  const [copiando, setCopiando] = useState(false);
+  const [copiado, setCopiado] = useState(false);
+  const [manual, setManual] = useState(false);
+  const enlace = new URL(`/profesionales/${id}`, window.location.origin).href;
+
+  async function copiar() {
+    setCopiando(true);
+    setCopiado(false);
+    setManual(false);
+    try {
+      await navigator.clipboard.writeText(enlace);
+      setCopiado(true);
+    } catch {
+      setManual(true);
+    } finally {
+      setCopiando(false);
+    }
+  }
+
+  return (
+    <footer className="perfil-prof__acciones">
+      <div className="perfil-prof__botones">
+        <button type="button" className="boton boton--secundario boton--compacto" disabled={copiando} onClick={copiar}>
+          <Icono nombre={copiado ? 'check' : 'enlace'} tamano={18} /> {copiado ? 'Enlace copiado' : 'Copiar enlace'}
+        </button>
+        <Link to="/profesional/perfil/publico" className="boton boton--secundario boton--compacto">
+          <Icono nombre="ojo" tamano={18} /> Ver mi perfil público
+        </Link>
+      </div>
+      {copiado && <p className="perfil-prof__copia" role="status">Enlace de tu perfil copiado.</p>}
+      {manual && (
+        <label className="perfil-prof__enlace-manual">
+          No pudimos copiarlo automáticamente. Selecciona y copia este enlace:
+          <input readOnly value={enlace} onFocus={(e) => e.target.select()} />
+        </label>
+      )}
+    </footer>
+  );
+}
 
 function Pestanas({ activa, onCambiar }) {
   const alTeclear = (evento, indice) => {
@@ -54,28 +91,40 @@ function Informacion({ profesional }) {
   return (
     <>
       <section className="perfil-prof__bloque" aria-labelledby="titulo-sobre-mi">
-        <h3 id="titulo-sobre-mi">Sobre mí</h3>
+        <div className="perfil-prof__titulo-bloque">
+          <span className="perfil-prof__icono-bloque"><Icono nombre="usuario" tamano={28} /></span>
+          <h2 id="titulo-sobre-mi">Sobre mí</h2>
+        </div>
         <p>{descripcion || 'Todavía no agregas una descripción. Cuéntales a las personas cómo es tu atención desde "Editar perfil".'}</p>
       </section>
       <section className="perfil-prof__bloque" aria-labelledby="titulo-atencion">
-        <h3 id="titulo-atencion">Atención</h3>
-        <ul className="perfil-prof__datos">
-          <li>
-            <Icono nombre="pin" tamano={18} />
+        <h2 id="titulo-atencion">Atención</h2>
+        <div className="perfil-prof__datos">
+          <div className="perfil-prof__dato">
+            <Icono nombre="pin" tamano={25} />
             <span>
               {direccionDe(profesional) || (establecimiento?.nombre ? `${establecimiento.nombre}, ${comuna}` : comuna || 'Comuna por confirmar')}
-              {!direccion && modalidad !== 'online' && <> · Agrega tu dirección de atención desde «Editar perfil».</>}
+              {!direccion && modalidad !== 'online' && <small>Agrega tu dirección de atención desde "Editar perfil".</small>}
             </span>
-          </li>
-          <li><Icono nombre="persona" tamano={18} /> Modalidad: {etiquetaModalidad(modalidad)}</li>
-          <li>
+          </div>
+          <div className="perfil-prof__dato"><Icono nombre="grupo" tamano={25} /> Modalidad: {etiquetaModalidad(modalidad)}</div>
+        </div>
+        {ubicacionLat !== null && ubicacionLat !== undefined && ubicacionLng !== null && ubicacionLng !== undefined && (
+          <p className="perfil-prof__mapa">
             <Icono nombre="mira" tamano={18} />
             <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${ubicacionLat},${ubicacionLng}`)}`}
               target="_blank" rel="noopener noreferrer" aria-label={`Ver la ubicación de atención de ${nombre} en Google Maps (nueva pestaña)`}>
               Ver ubicación en Google Maps
             </a>
-          </li>
-        </ul>
+          </p>
+        )}
+      </section>
+      <section className="perfil-prof__experiencia" aria-labelledby="titulo-experiencia">
+        <div className="perfil-prof__titulo-bloque">
+          <span className="perfil-prof__icono-bloque"><Icono nombre="maletin" tamano={28} /></span>
+          <div><h2 id="titulo-experiencia">Experiencia y formación</h2><p>Comparte tu trayectoria y a quiénes atiendes.</p></div>
+        </div>
+        <Experiencia />
       </section>
     </>
   );
@@ -139,6 +188,9 @@ export default function PerfilProfesional() {
       <Alerta tipo="exito">{mensaje}</Alerta>
       <div className="perfil-prof__grilla">
         <aside className="perfil-prof__tarjeta perfil-prof__identidad" aria-label="Tu ficha">
+          <div className="perfil-prof__cabecera" aria-hidden="true">
+            <Icono nombre={profesional.especialidad === 'Entrenamiento personal' ? 'mancuerna' : profesional.especialidad === 'Nutrición' ? 'comida' : 'medico'} tamano={38} />
+          </div>
           <span className="perfil-prof__avatar" aria-hidden="true">{iniciales(sesion.usuario.nombre)}</span>
           <h1>{profesional.nombre}</h1>
           <p className="perfil-prof__especialidad">{profesional.especialidad}</p>
@@ -162,17 +214,9 @@ export default function PerfilProfesional() {
         <section className="perfil-prof__tarjeta perfil-prof__detalle" aria-label="Detalle de tu perfil">
           <Pestanas activa={pestana} onCambiar={setPestana} />
           <div id={`panel-${activa.clave}`} role="tabpanel" aria-labelledby={`pestana-${activa.clave}`} className="perfil-prof__panel">
-            {activa.clave === 'certificaciones' ? <Certificaciones /> : activa.clave === 'horarios' ? <HorariosProfesional />
-              : activa.clave === 'experiencia' ? <Experiencia /> : activa.proximamente ? (
-              <div className="perfil-prof__proximamente">
-                <span className="etiqueta-proximamente">Próximamente</span>
-                <p>{activa.proximamente}</p>
-              </div>
-            ) : <Informacion profesional={profesional} />}
+            {activa.clave === 'certificaciones' ? <Certificaciones /> : <Informacion profesional={profesional} />}
           </div>
-          <Link to="/profesional/perfil/publico" className="boton boton--secundario boton--compacto perfil-prof__publico">
-            <Icono nombre="ojo" tamano={18} /> Ver mi perfil público
-          </Link>
+          <CompartirPerfil id={profesional.id} />
         </section>
       </div>
     </div>

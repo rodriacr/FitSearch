@@ -9,6 +9,8 @@ const TRAZOS = {
   flecha: <path d="M5 12h14m-6-6 6 6-6 6" />,
   flechaIzquierda: <path d="M19 12H5m6-6-6 6 6 6" />,
   maletin: <><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2M3 13h18" /></>,
+  enlace: <><path d="m10 14 4-4M8 16l-1 1a4 4 0 0 1-5-5l4-4a4 4 0 0 1 5 0M16 8l1-1a4 4 0 0 1 5 5l-4 4a4 4 0 0 1-5 0" /></>,
+  documento: <><path d="M14 3H5v18h14V8Z" /><path d="M14 3v5h5M8 12h8M8 16h6" /></>,
   salir: <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4m7 14 5-5-5-5m5 5H9" />,
   balanza: <><rect x="3" y="3" width="18" height="18" rx="3" /><path d="M8 9a4 4 0 0 1 8 0Z" /><path d="m12 9 1.2-2" /></>,
   regla: <><rect x="7" y="2" width="10" height="20" rx="2" /><path d="M7 6h4M7 10h3M7 14h4M7 18h3" /></>,
