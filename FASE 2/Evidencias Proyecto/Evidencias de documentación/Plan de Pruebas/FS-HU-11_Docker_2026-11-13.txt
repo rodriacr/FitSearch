@@ -1,0 +1,85 @@
+FS-HU-11 — Evidencia de instalación con Docker
+Fecha: 13-11-2026 16:15 (hora de Chile)
+Equipo: Windows 10 IoT Enterprise LTSC 2021 (19044), WSL 2, Ubuntu 26.04
+Rama: feat/fs-hu-11-docker, sobre origin/main 090a87c
+
+=== Limpieza total (configuración temporal + imágenes + caché)
+imágenes: 0  volúmenes: 0
+
+=== Saltos de línea (deben ser LF)
+LF ok: backend/docker/migrar.sh
+LF ok: backend/Dockerfile
+LF ok: frontend/Dockerfile
+LF ok: frontend/nginx.conf
+LF ok: docker-compose.yml
+LF ok: .env.example
+
+=== Crear .env de prueba desde .env.example (valores aleatorios, no secretos reales)
+líneas con CAMBIAR restantes (solo SMTP_CONTRASENA esperada): 2
+.env ignorado por git: sí
+
+=== docker compose up --build (cronometrado)
+código: 0  TIEMPO_INSTALACION_SEGUNDOS=102
+SERVICE    IMAGE                STATUS                    PORTS
+backend    fitsearch-backend    Up 21 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
+frontend   fitsearch-frontend   Up 5 seconds (healthy)    0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+mysql      mysql:8.4            Up 42 seconds (healthy)   3306/tcp, 33060/tcp
+
+=== Usuarios de los procesos (sin privilegios)
+backend:  uid=1000 (node)
+frontend: uid=101 (nginx)
+=== Red (sin network_mode) y resolución por nombre
+network_mode: no (red de Compose por defecto)
+fitsearch_default (bridge)
+backend resuelve mysql -> 172.18.0.2
+errores P1001 en el log del backend: 0
+=== Migraciones y datos iniciales
+21 migrations found in prisma/migrations
+All migrations have been successfully applied.
+Roles cargados: usuario, profesional, administrador
+API de FitSearch escuchando en http://localhost:3000/api
+migraciones aplicadas en BD: 21
+carpetas en prisma/migrations: 21
+roles: usuario,profesional,administrador
+base fitsearch_shadow: fitsearch_shadow
+=== API y web
+GET :3000/api/salud -> 200
+GET :8080/api/salud (Nginx) -> 200
+GET :8080/ -> 200
+GET :8080/profesionales (ruta SPA) -> 200
+GET :8080/api/especialidades -> 200
+=== Persistencia: dato real (cuenta temporal @example.test) + down / up
+registro -> 201 (respuesta con token: sí)
+antes:   usuarios con ese correo = 1
+después: usuarios con ese correo = 1
+No pending migrations to apply.
+login tras reinicio -> 200
+cuenta temporal eliminada: quedan 0
+=== Tamaño de imágenes
+fitsearch-backend:latest 805MB
+fitsearch-frontend:latest 76.8MB
+mysql:8.4 1.12GB
+
+=== .env sin variables obligatorias
+código: 1
+time="2026-11-13T16:17:28-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-11-13T16:17:28-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
+error while interpolating services.backend.environment.JWT_SECRET: required variable JWT_SECRET is missing a value: Falta JWT_SECRET en .env
+error while interpolating services.mysql.environment.MYSQL_PASSWORD: required variable MYSQL_PASSWORD is missing a value: Falta MYSQL_PASSWORD en .env
+error while interpolating services.mysql.environment.MYSQL_ROOT_PASSWORD: required variable MYSQL_ROOT_PASSWORD is missing a value: Falta MYSQL_ROOT_PASSWORD en .env
+=== Archivos sensibles dentro de las imágenes
+backend .env: 0
+backend documentos copiados: 0
+frontend .env: 0
+=== Escritura fuera del volumen (debe fallar)
+touch: cannot touch '/app/backend/src/x': Permission denied
+=== Contraseña de MySQL distinta a la del volumen (debe terminar con un mensaje claro, sin 10 reintentos)
+Error: P1000: Authentication failed against database server, the provided database credentials for `fitsearch` are not valid.
+MySQL rechazó la contraseña del usuario fitsearch. Si MYSQL_PASSWORD cambió después de la primera instalación,
+vuelve a la contraseña original o, si no necesitas los datos, borra el volumen con: docker compose down -v
+código: 1  duración: 1 s
+=== Versiones
+Docker Engine 29.9.3
+5.7.1
+
+Notas: las contraseñas y JWT_SECRET de .env se generaron con openssl rand y no se muestran. La cuenta temporal @example.test se eliminó al terminar.

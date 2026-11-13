@@ -71,7 +71,8 @@ FitSearch/
 │           │   │   └── config/        # Variables de entorno
 │           │   └── tests/             # Pruebas unitarias y de integración
 │           ├── shared/            # Reglas y catálogos comunes a frontend y backend (reglas.json)
-│           └── docker-compose.yml
+│           ├── .env.example       # Variables de docker-compose.yml (FS-HU-11)
+│           └── docker-compose.yml # mysql + backend + frontend (backend/Dockerfile, frontend/Dockerfile)
 ├── FASE 3/                # Evidencias de la Fase 3
 └── README.md
 ```
@@ -324,7 +325,32 @@ El avance se muestra frente a una meta general de 2.000 ml (`shared/reglas.json`
 
 ## Ejecución con Docker
 
-_Pendiente (FS-HU-11, Sprint 5)._
+Levanta la aplicación completa en tres contenedores (FS-HU-11): **mysql** (MySQL 8.4), **backend** (API Node.js, sin privilegios) y **frontend** (build de Vite servido por Nginx sin privilegios, que reenvía `/api` al backend). Al arrancar, el backend aplica las migraciones pendientes de Prisma y carga los roles; no hace falta ejecutar `crear_base_datos.sql` ni `npm install`.
+
+Requisitos: Docker Engine con Docker Compose v2. En Windows, Docker Desktop exige Windows 10 22H2 (19045) o Windows 11; en versiones anteriores (por ejemplo Windows 10 LTSC 21H2) se usa Docker Engine dentro de una distribución Ubuntu de WSL 2. Detalle en el Manual Técnico de despliegue.
+
+```bash
+cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
+cp .env.example .env        # completar MYSQL_ROOT_PASSWORD, MYSQL_PASSWORD y JWT_SECRET
+docker compose up --build
+```
+
+| Dirección | Qué es |
+|---|---|
+| http://localhost:8080 | Aplicación web |
+| http://localhost:3000/api/salud | Estado de la API (`{"estado":"ok"}`) |
+
+Las contraseñas de `.env` forman parte de la URL de conexión: usar solo letras y números (por ejemplo `openssl rand -hex 16`). MySQL guarda las contraseñas con que se creó su volumen: si después se cambia `MYSQL_PASSWORD`, el backend se detiene con `P1000` y un mensaje que lo explica; hay que volver a la contraseña original o, si los datos no importan, ejecutar `docker compose down -v`. El resto de las variables es opcional (correo, Google, asistente IA) y está explicado en `.env.example`. Si se cambia `GOOGLE_CLIENT_ID`, reconstruir con `docker compose up --build`, porque el frontend lo recibe al compilarse.
+
+| Comando | Efecto |
+|---|---|
+| `docker compose up -d --build` | Construye y levanta en segundo plano |
+| `docker compose logs -f backend` | Muestra el log de la API (migraciones, enlaces de correo cuando no hay SMTP) |
+| `docker compose down` | Detiene y elimina los contenedores; **conserva** los datos (volúmenes `mysql-datos` y `verificaciones`) |
+| `docker compose down -v` | Además **borra** la base de datos y los documentos de verificación |
+| `docker compose exec -e NODE_ENV=development backend node prisma/seed-profesionales.js` | Carga los profesionales ficticios «Demo» (opcional, solo para revisión) |
+
+Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (`mysql`, `backend`); no se usa `network_mode: host`. Casos de prueba y evidencia: [FS-HU-11 — Docker](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Plan%20de%20Pruebas/FS-HU-11_Docker.md).
 
 ## Pruebas
 

@@ -1,3 +1,78 @@
-# FitSearch — docker-compose
-# Placeholder: la orquestación completa (frontend con Nginx, backend Node.js/Express y MySQL)
-# se implementa en la historia FS-HU-11 (Sprint 5). Ver README.md.
+# FitSearch — despliegue con Docker (FS-HU-11).
+# Uso, desde esta carpeta ("Evidencias de sistema"):
+#   cp .env.example .env      # y completar los valores marcados con CAMBIAR
+#   docker compose up --build
+# Web: http://localhost:8080   API: http://localhost:3000/api/salud
+# Los contenedores se comunican por la red interna de Compose usando el nombre del servicio (mysql, backend).
+
+name: fitsearch
+
+services:
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Falta MYSQL_ROOT_PASSWORD en .env}
+      MYSQL_DATABASE: fitsearch
+      MYSQL_USER: fitsearch
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Falta MYSQL_PASSWORD en .env}
+    volumes:
+      - mysql-datos:/var/lib/mysql
+      - ./backend/docker/crear_shadow.sql:/docker-entrypoint-initdb.d/01-crear_shadow.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      PORT: 3000
+      DATABASE_URL: mysql://fitsearch:${MYSQL_PASSWORD}@mysql:3306/fitsearch
+      SHADOW_DATABASE_URL: mysql://fitsearch:${MYSQL_PASSWORD}@mysql:3306/fitsearch_shadow
+      JWT_SECRET: ${JWT_SECRET:?Falta JWT_SECRET en .env}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-8h}
+      JWT_REMEMBER_EXPIRES_IN: ${JWT_REMEMBER_EXPIRES_IN:-30d}
+      BCRYPT_COST: ${BCRYPT_COST:-10}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8080}
+      RECOVERY_TOKEN_MINUTES: ${RECOVERY_TOKEN_MINUTES:-60}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USUARIO: ${SMTP_USUARIO:-}
+      SMTP_CONTRASENA: ${SMTP_CONTRASENA:-CAMBIAR}
+      SMTP_REMITENTE: ${SMTP_REMITENTE:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      IA_URL_BASE: ${IA_URL_BASE:-https://api.groq.com/openai/v1}
+      IA_MODELO: ${IA_MODELO:-openai/gpt-oss-120b}
+      IA_API_KEY: ${IA_API_KEY:-}
+      IA_MENSAJES_POR_DIA: ${IA_MENSAJES_POR_DIA:-30}
+      VERIFICATION_STORAGE_DIR: /app/backend/storage/verificaciones
+    volumes:
+      - verificaciones:/app/backend/storage/verificaciones
+    ports:
+      - "${PUERTO_API:-3000}:3000"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${PUERTO_WEB:-8080}:8080"
+
+volumes:
+  mysql-datos:
+  verificaciones:
