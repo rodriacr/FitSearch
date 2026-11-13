@@ -1,0 +1,11 @@
+# Contexto de build de docker-compose.yml (FS-HU-11): nunca copiar dependencias locales, builds ni secretos.
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+**/.env
+**/.env.*
+!**/.env.example
+**/storage/verificaciones
+docker-compose.yml
+.dockerignore
