@@ -1,5 +1,5 @@
 FS-HU-11 — Evidencia de instalación con Docker
-Fecha: 13-11-2026 15:23 (hora de Chile)
+Fecha: 13-11-2026 16:15 (hora de Chile)
 Equipo: Windows 10 IoT Enterprise LTSC 2021 (19044), WSL 2, Ubuntu 26.04
 Rama: feat/fs-hu-11-docker, sobre origin/main 090a87c
 
@@ -19,7 +19,7 @@ líneas con CAMBIAR restantes (solo SMTP_CONTRASENA esperada): 2
 .env ignorado por git: sí
 
 === docker compose up --build (cronometrado)
-código: 0  TIEMPO_INSTALACION_SEGUNDOS=105
+código: 0  TIEMPO_INSTALACION_SEGUNDOS=102
 SERVICE    IMAGE                STATUS                    PORTS
 backend    fitsearch-backend    Up 21 seconds (healthy)   0.0.0.0:3000->3000/tcp, [::]:3000->3000/tcp
 frontend   fitsearch-frontend   Up 5 seconds (healthy)    0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
@@ -56,14 +56,14 @@ No pending migrations to apply.
 login tras reinicio -> 200
 cuenta temporal eliminada: quedan 0
 === Tamaño de imágenes
-fitsearch-backend:latest 801MB
+fitsearch-backend:latest 805MB
 fitsearch-frontend:latest 76.8MB
 mysql:8.4 1.12GB
 
 === .env sin variables obligatorias
 código: 1
-time="2026-11-13T15:25:23-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
-time="2026-11-13T15:25:23-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-11-13T16:17:28-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
+time="2026-11-13T16:17:28-03:00" level=warning msg="The \"MYSQL_PASSWORD\" variable is not set. Defaulting to a blank string."
 error while interpolating services.backend.environment.JWT_SECRET: required variable JWT_SECRET is missing a value: Falta JWT_SECRET en .env
 error while interpolating services.mysql.environment.MYSQL_PASSWORD: required variable MYSQL_PASSWORD is missing a value: Falta MYSQL_PASSWORD en .env
 error while interpolating services.mysql.environment.MYSQL_ROOT_PASSWORD: required variable MYSQL_ROOT_PASSWORD is missing a value: Falta MYSQL_ROOT_PASSWORD en .env
@@ -74,10 +74,10 @@ frontend .env: 0
 === Escritura fuera del volumen (debe fallar)
 touch: cannot touch '/app/backend/src/x': Permission denied
 === Contraseña de MySQL distinta a la del volumen (debe terminar con un mensaje claro, sin 10 reintentos)
+Error: P1000: Authentication failed against database server, the provided database credentials for `fitsearch` are not valid.
 MySQL rechazó la contraseña del usuario fitsearch. Si MYSQL_PASSWORD cambió después de la primera instalación,
 vuelve a la contraseña original o, si no necesitas los datos, borra el volumen con: docker compose down -v
-Error: P1000: Authentication failed against database server, the provided database credentials for `fitsearch` are not valid.
-código: 1  duración: 2 s
+código: 1  duración: 1 s
 === Versiones
 Docker Engine 29.9.3
 5.7.1
