@@ -74,4 +74,4 @@ Registro, recuperación y contraseña nueva en celular (360 px):
   - Tab y Shift+Tab giran entre las dos acciones.
   - Ese navegador no tiene barra de direcciones, así que ahí el foco no puede escapar del cuadro, ni siquiera sin la corrección. Por eso la salida del foco la comprueban las dos pruebas nuevas.
 
-Los casos CP-152 a CP-156 siguen la numeración de los PR abiertos, que llegan hasta el CP-151. Se agregan a la Planilla de Casos de Prueba al consolidar la documentación después de la fusión. Estas comprobaciones no equivalen a la aceptación del PO.
+Los casos CP-152 a CP-156 siguen la numeración de los PR abiertos, que llegan hasta el CP-151. Se registraron en la Planilla de Casos de Prueba el 13-11-2026, después de la fusión del PR #43. Estas comprobaciones no equivalen a la aceptación del PO.
