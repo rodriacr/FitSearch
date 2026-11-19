@@ -24,7 +24,9 @@
 .perfil-editor__navegacion { padding: .5rem; display: grid; gap: .3rem; }
 .perfil-editor__navegacion button { display: flex; align-items: center; text-align: left; gap: .75rem; width: 100%; padding: .85rem .7rem; border: none; border-left: 3px solid transparent; border-radius: .6rem; background: none; font: inherit; font-size: .86rem; line-height: 1.4; color: #164f76; cursor: pointer; }
 .perfil-editor__navegacion button .icono { flex-shrink: 0; }
-.perfil-editor__navegacion button[aria-current] { border-left-color: #0577aa; background: linear-gradient(100deg, #dff2ff, #f1f8ff); color: #005686; font-weight: 600; }
+/* Sección actual (18-11-2026, pedido del PO, igual que el menú lateral): sin recuadro ni barra al costado; se reconoce
+   por el ícono marcado en azul vivo (Icono activo) y el nombre en negrita. */
+.perfil-editor__navegacion button[aria-current] { color: #005686; font-weight: 600; }
 .perfil-editor__contenido { min-width: 0; padding: 1.6rem; }
 .perfil-editor__seccion { min-width: 0; }
 .perfil-editor__seccion > summary { display: none; }
@@ -95,7 +97,7 @@
 @keyframes confirmar-foto-fondo { from { opacity: 0; } }
 @keyframes confirmar-foto-entrada { from { opacity: 0; transform: translateY(8px) scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .confirmar-foto, .confirmar-foto__tarjeta { animation: none; } }
-@media (hover: hover) { .perfil-editor__navegacion button:hover { background: #eff7fd; } .perfil-editor__camara:hover { background: #eaf6ff; } }
+@media (hover: hover) { .perfil-editor__navegacion button:hover { background: var(--color-info-fondo); } .perfil-editor__camara:hover { background: #eaf6ff; } }
 @media (max-width: 68rem) { .perfil-editor__grilla { grid-template-columns: 14.5rem minmax(0, 1fr); gap: 1rem; } .perfil-editor__contenido { padding: 1.15rem; } }
 @media (max-width: 48rem) {
   .perfil-editor__grilla { grid-template-columns: 1fr; }

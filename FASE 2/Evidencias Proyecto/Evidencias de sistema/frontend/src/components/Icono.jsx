@@ -43,9 +43,6 @@ const TRAZOS = {
   chispa: <><path d="M11 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z" /><path d="M19 15v5M16.5 17.5h5" /></>,
   campana: <><path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" /><path d="M10 20.5a2 2 0 0 0 4 0" /></>,
   menu: <path d="M4 7h16M4 12h16M4 17h16" />,
-  // Contraer y expandir el menú lateral (11-11-2026): el panel con la flecha hacia donde se mueve.
-  contraer: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /><path d="m16 10-2 2 2 2" /></>,
-  expandir: <><rect x="3" y="4" width="18" height="16" rx="2" /><path d="M9 4v16" /><path d="m14 10 2 2-2 2" /></>,
   cerrar: <path d="M6 6l12 12M18 6 6 18" />,
   chevron: <path d="m6 9 6 6 6-6" />,
   // Flechas de los carruseles (11-11-2026).
@@ -82,12 +79,50 @@ const TRAZOS = {
   robot: <><rect x="5" y="8" width="14" height="11" rx="3" /><path d="M12 8V5" /><circle cx="12" cy="4" r="1" /><path d="M9.5 13h.01M14.5 13h.01M10 16.5h4M3 12v3M21 12v3" /></>,
 };
 
+// Versión de la opción seleccionada en toda la app (18-11-2026, pedido del PO): menú lateral, barra inferior, secciones
+// del perfil y pestañas. Lo que en el ícono de línea es blanco por dentro se pinta del color del ícono, y las líneas
+// interiores quedan blancas (.icono__detalle y .icono__claro en index.css). Los íconos que son solo líneas o en los que
+// el relleno no se entiende (buscar, mancuerna, comida, medico, grafico, ajustes, objetivos) conservan su dibujo con un
+// trazo más grueso (.icono--activo-linea). En ambos casos van en el azul vivo de .icono--activo.
+const ACTIVOS = {
+  // La puerta es un hueco del relleno (no un parche blanco), para que tome el color del fondo también al pasar el mouse.
+  casa: <><path d="M5 10 12 4.5l7 5.5v10h-4.1v-5.7a1 1 0 0 0-1-1h-3.8a1 1 0 0 0-1 1V20H5Z" fill="currentColor" /><path d="M3 11 12 4l9 7" /></>,
+  profesional: <><circle cx="10" cy="8" r="4" fill="currentColor" /><path d="M3 21c0-4 3.1-7 7-7 1.2 0 2.3.3 3.2.8C12.4 16.6 12.2 19 12.8 21Z" fill="currentColor" />
+    <circle cx="17.5" cy="17.5" r="2.5" fill="currentColor" /><path d="m19.3 19.3 2.2 2.2" /></>,
+  hospital: <><path d="M6 3h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3.1v-4.4h-5.8V21H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z" fill="currentColor" />
+    <path className="icono__detalle" d="M12 7.5v6M9 10.5h6" /></>,
+  chispa: <><path d="M11 3c.6 4.2 2.8 6.4 7 7-4.2.6-6.4 2.8-7 7-.6-4.2-2.8-6.4-7-7 4.2-.6 6.4-2.8 7-7Z" fill="currentColor" /><path d="M19 15v5M16.5 17.5h5" /></>,
+  usuario: <><circle cx="12" cy="8" r="4" fill="currentColor" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7Z" fill="currentColor" /></>,
+  corazon: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" fill="currentColor" />,
+  calendario: <><rect x="3" y="5" width="18" height="16" rx="2" fill="currentColor" /><path d="M8 3v4M16 3v4" />
+    <path className="icono__detalle" d="M3.9 10h16.2" strokeLinecap="butt" />
+    <path className="icono__detalle" d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" strokeWidth="2.2" /></>,
+  chat: <><path d="M4 5h16v11H9l-5 4Z" fill="currentColor" /><path className="icono__detalle" d="M8 9h8M8 12h5" /></>,
+  grupo: <><circle cx="9" cy="8" r="3.5" fill="currentColor" /><path d="M2.5 20c.6-3.6 3.2-5.5 6.5-5.5s5.9 1.9 6.5 5.5Z" fill="currentColor" />
+    <path d="M16 4.6a3.5 3.5 0 0 1 0 6.8M18 14.8c2 .7 3.2 2.5 3.5 5.2" /></>,
+  escudo: <><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6Z" fill="currentColor" /><path className="icono__detalle" d="m9 12 2 2 4-4" /></>,
+  capas: <><path d="m12 3 9 5-9 5-9-5Z" fill="currentColor" /><path d="m3 13 9 5 9-5" /><path d="m3 17 9 5 9-5" /></>,
+  // Secciones del perfil, pestañas de la ficha pública y de la agenda.
+  balanza: <><rect x="3" y="3" width="18" height="18" rx="3" fill="currentColor" /><path className="icono__claro" d="M8 9a4 4 0 0 1 8 0Z" />
+    <path d="m12 9 1.2-2" /></>,
+  pin: <><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z" fill="currentColor" /><circle className="icono__claro" cx="12" cy="10" r="2.6" /></>,
+  birrete: <><path d="m2 9 10-5 10 5-10 5Z" fill="currentColor" /><path d="M6 11v5c3 2 9 2 12 0v-5l-6 3Z" fill="currentColor" />
+    <path className="icono__detalle" d="M7.2 11.6 12 14l4.8-2.4" strokeWidth="1.4" /><path d="M22 9v6" /></>,
+  info: <><circle cx="12" cy="12" r="9" fill="currentColor" /><path className="icono__detalle" d="M12 11v5M12 8h.01" /></>,
+  documento: <><path d="M14 3H5v18h14V8Z" fill="currentColor" /><path className="icono__detalle" d="M14 3v5h5M8 12h8M8 16h6" /></>,
+  // Conversación abierta en el asistente (fijada).
+  chincheta: <><path d="M9 4h6l-1 6 3 3H7l3-3Z" fill="currentColor" /><path d="M12 13v8" /></>,
+};
+
 // "relleno" pinta el interior del ícono (estrella de la calificación, corazón de un favorito guardado).
-export default function Icono({ nombre, tamano = 20, className = '', relleno = false }) {
+// "activo" usa la versión de la sección actual (ACTIVOS) o, si el ícono es solo líneas, lo marca para el tono intenso.
+export default function Icono({ nombre, tamano = 20, className = '', relleno = false, activo = false }) {
+  const version = activo ? ACTIVOS[nombre] : undefined;
+  const claseActivo = activo ? ` icono--activo${version ? '' : ' icono--activo-linea'}` : '';
   return (
-    <svg className={`icono${relleno ? ' icono--relleno' : ''} ${className}`} width={tamano} height={tamano} viewBox="0 0 24 24" fill="none"
+    <svg className={`icono${relleno ? ' icono--relleno' : ''}${claseActivo} ${className}`} width={tamano} height={tamano} viewBox="0 0 24 24" fill="none"
       stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      {TRAZOS[nombre]}
+      {version ?? TRAZOS[nombre]}
     </svg>
   );
 }

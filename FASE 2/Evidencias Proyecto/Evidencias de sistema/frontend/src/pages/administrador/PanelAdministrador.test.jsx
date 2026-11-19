@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, expect, test, vi } from 'vitest';
 import { llamadasA, renderizarApp, SESION, simularApi } from '../../tests/utilidades.jsx';
@@ -166,8 +166,11 @@ test('el administrador tiene el mismo encabezado: su cuenta dice Administrador y
   const menu = screen.getByRole('navigation', { name: 'Menú principal' });
   expect(within(menu).getAllByRole('link').map((enlace) => enlace.textContent)).toEqual(['Dashboard', 'Verificaciones', 'Profesionales', 'Usuarios', 'Reportes', 'Contenido']);
   expect(within(menu).queryByRole('button', { name: 'Cerrar sesión' })).not.toBeInTheDocument();
-  await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
-  expect(localStorage.getItem('fitsearch_menu_compacto')).toBe('1');
+  // Mismo menú contraído que los otros espacios (18-11-2026): se despliega al acercar el mouse y no tiene botón para contraerlo.
+  expect(menu).not.toHaveClass('menu-lateral--desplegado');
+  expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
+  await userEvent.hover(within(menu).getByRole('link', { name: 'Usuarios' }));
+  await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
   expect(within(menu).getByRole('link', { name: 'Usuarios' })).toHaveAttribute('href', '/admin/usuarios');
 });
 

@@ -87,7 +87,7 @@ export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaE
           {resumen}
           <nav className="perfil-editor__navegacion" aria-label="Secciones del perfil">
             {secciones.map((s) => <button key={s.id} type="button" aria-current={activa === s.id ? 'page' : undefined}
-              onClick={() => onCambiar(s.id)}><Icono nombre={s.icono} tamano={21} />{s.titulo}</button>)}
+              onClick={() => onCambiar(s.id)}><Icono nombre={s.icono} tamano={21} activo={activa === s.id} />{s.titulo}</button>)}
           </nav>
           {pie}
         </aside>
@@ -95,7 +95,7 @@ export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaE
           {secciones.map((s) => (
             <details key={s.id} className="perfil-editor__seccion" open={activa === s.id}>
               <summary onClick={(e) => { e.preventDefault(); onCambiar(activa === s.id ? '' : s.id); }}>
-                <Icono nombre={s.icono} tamano={22} /><span>{s.titulo}</span><span className="perfil-editor__chevron" aria-hidden="true">⌄</span>
+                <Icono nombre={s.icono} tamano={22} activo={activa === s.id} /><span>{s.titulo}</span><span className="perfil-editor__chevron" aria-hidden="true">⌄</span>
               </summary>
               {activa === s.id && <div className="perfil-editor__panel"><header><h2><Icono nombre={s.icono} tamano={25} />{s.titulo}</h2>{s.ayuda && <p>{s.ayuda}</p>}</header>{s.contenido}</div>}
             </details>

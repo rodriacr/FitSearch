@@ -107,19 +107,23 @@
   color: var(--color-texto); font-size: 0.92rem; font-weight: 500; text-decoration: none;
 }
 .menu-lateral__enlace .icono { color: var(--color-primario); }
-/* Cambios al pasar el mouse: solo con mouse (en el celular el toque los dejaba "pegados"). Van antes de .active para
-   que el enlace de la pantalla actual conserve su estilo. */
+/* Cambios al pasar el mouse: solo con mouse (en el celular el toque los dejaba "pegados"). En el menú lateral el recuadro
+   también aparece sobre la sección actual (18-11-2026, pedido del PO). */
 @media (hover: hover) and (pointer: fine) {
   .boton-icono:hover, .menu-usuario__boton:hover, .desplegable__opcion:hover { background: var(--color-superficie-suave); }
   .desplegable__opcion:hover { color: var(--color-primario); }
-  .menu-lateral__enlace:hover { background: var(--color-superficie-suave); color: var(--color-primario); }
+  /* El recuadro celeste que antes marcaba la sección actual ahora aparece al pasar el mouse por cualquier opción. */
+  .menu-lateral__enlace:hover { background: var(--color-info-fondo); color: var(--color-primario); }
   .tarjeta-recomendacion__boton:hover { background: #fff7f0; }
 }
-/* La sección actual se marca con una píldora y el ícono relleno de color, sin la barra al costado. */
-.menu-lateral__enlace.active { background: var(--color-info-fondo); color: var(--color-primario-oscuro); font-weight: 600; }
-.menu-lateral__enlace.active .icono { color: var(--color-primario); }
-/* El botón para compactar el menú y el acceso al chat del menú compacto solo existen en escritorio (ver más abajo). */
-.menu-lateral__compactar, .menu-lateral__chat { display: none; }
+/* La sección actual se reconoce por el ícono relleno (Icono activo) y el nombre en azul oscuro, sin recuadro de fondo
+   (18-11-2026, pedido del PO; antes era una píldora celeste). */
+.menu-lateral__enlace.active { color: var(--color-primario-oscuro); font-weight: 600; }
+/* Todos los íconos de la sección actual van en el mismo azul vivo (.icono--activo en index.css), más intenso que el de
+   las demás opciones; los de solo líneas (Gimnasios, Comidas, Reportes…) además engrosan el trazo. */
+.menu-lateral__enlace.active .icono { color: var(--color-primario-vivo); }
+/* El acceso al chat del menú contraído solo existe en escritorio con mouse (ver más abajo). */
+.menu-lateral__chat { display: none; }
 
 .tarjeta-recomendacion {
   position: relative; display: grid; gap: 0.5rem; margin-top: auto; padding: 1.25rem 1.1rem; border-radius: var(--radio); color: #fff;
@@ -144,20 +148,21 @@
 .app--profesional .menu-lateral__enlace { min-width: 0; }
 
 /* ---------- Barra inferior (celular y tableta) ---------- */
-/* Tantas columnas como enlaces (5 en el usuario, 4 en el profesional). Cada una mide al menos su etiqueta, para que
-   «Profesionales» no se salga a 360 px, y el resto del ancho se reparte por igual. */
+/* Tantas columnas como enlaces (5 en el usuario, 4 en el profesional y el administrador), del mismo ancho.
+   Desde el 18-11-2026 (pedido del PO) muestra solo los íconos: la sección actual tiene el ícono relleno y el nombre queda
+   para lectores de pantalla. */
 .barra-inferior {
-  position: fixed; right: 0; bottom: 0; left: 0; z-index: 30; display: grid; grid-auto-columns: minmax(min-content, 1fr); grid-auto-flow: column;
+  position: fixed; right: 0; bottom: 0; left: 0; z-index: 30; display: grid; grid-auto-columns: 1fr; grid-auto-flow: column;
   padding: 0.3rem 0.25rem calc(0.3rem + env(safe-area-inset-bottom)); background: var(--color-superficie);
   border-top: 1px solid var(--color-borde); box-shadow: 0 -4px 16px rgb(11 79 128 / 8%);
 }
 .barra-inferior__enlace {
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem; min-height: 3.25rem;
-  padding-inline: 0.15rem; border-radius: 10px; color: var(--color-texto-secundario); font-size: 0.7rem; font-weight: 500; text-decoration: none;
-  white-space: nowrap;
+  position: relative; display: flex; align-items: center; justify-content: center; min-height: 3rem;
+  border-radius: 10px; color: var(--color-texto-secundario); text-decoration: none;
 }
-.barra-inferior__enlace.active { color: var(--color-primario); font-weight: 600; }
-.barra-inferior__enlace.active .icono { color: var(--color-acento-oscuro); }
+.barra-inferior__texto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+/* La sección actual va en el mismo azul vivo del resto de la app (pedido del PO del 18-11-2026; antes era naranjo). */
+.barra-inferior__enlace.active, .barra-inferior__enlace.active .icono { color: var(--color-primario-vivo); }
 
 @media (min-width: 40rem) {
   .encabezado { padding-inline: 1.5rem 1rem; }
@@ -174,58 +179,66 @@
   .menu-lateral {
     position: sticky; top: 4.25rem; z-index: 1; width: 16rem; height: calc(100vh - 4.25rem); height: calc(100dvh - 4.25rem); flex-shrink: 0;
     padding: 1.25rem 1rem; box-shadow: none; border-right: 1px solid var(--color-borde); transform: none; visibility: visible;
-    transition: width 220ms var(--curva-cajon), padding 220ms var(--curva-cajon);
   }
   .menu-lateral__fondo, .menu-lateral__cabecera { display: none; }
   .app__contenido { width: 100%; max-width: 76rem; margin-inline: auto; }
-  .menu-lateral--compacto + .app__contenido { max-width: 87.25rem; }
+  .barra-inferior { display: none; }
+  .app__contenido { padding: 1.5rem 2rem 3rem; }
+}
 
-  /* ---------- Menú compacto (11-11-2026): solo íconos, a elección; el nombre aparece al pasar el mouse o al enfocar ---------- */
-  /* Los textos no se cortan en dos líneas y la tarjeta mantiene su ancho: al expandir, la columna los va descubriendo. */
-  .menu-lateral__enlace { white-space: nowrap; }
-  .menu-lateral__texto { transition: opacity 160ms ease 60ms; }
-  .tarjeta-recomendacion { min-width: 14rem; }
-  .menu-lateral__lema p { min-width: 13rem; }
-  .menu-lateral__compactar {
-    display: flex; align-items: center; gap: 0.6rem; width: 100%; min-height: 2.5rem; margin: -0.35rem 0 -0.5rem; padding: 0.4rem 0.8rem;
-    border: 0; border-radius: 10px; background: none; color: var(--color-texto-secundario); font: inherit; font-size: 0.82rem; font-weight: 500;
-    white-space: nowrap; cursor: pointer; transition: background-color 150ms ease, color 150ms ease;
+/* ---------- Menú contraído en escritorio con mouse (18-11-2026, pedido del PO; reemplaza «Contraer menú») ----------
+   Siempre muestra solo los íconos y se despliega al acercar el mouse o al recorrerlo con el teclado (useMenuDesplegable).
+   Desplegado se monta sobre el contenido: el margen negativo descuenta lo que crece, así la columna sigue ocupando
+   4,75rem y el contenido no se mueve. Los íconos quedan en el mismo lugar en ambos estados y solo aparecen los nombres.
+   En pantallas táctiles grandes no hay mouse que se acerque: ahí el menú sigue completo, como en el bloque anterior. */
+@media (min-width: 64rem) and (hover: hover) and (pointer: fine) {
+  .menu-lateral {
+    z-index: 15; width: 4.75rem; padding-inline: 0.875rem;
+    transition: width 220ms var(--curva-cajon), margin-right 220ms var(--curva-cajon), box-shadow 220ms ease;
   }
-  .menu-lateral--compacto { width: 4.75rem; padding-inline: 0.875rem; }
-  .menu-lateral--compacto .menu-lateral__texto {
-    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); opacity: 0; transition: none;
-  }
-  .menu-lateral--compacto .menu-lateral__compactar,
-  .menu-lateral--compacto .menu-lateral__enlace { justify-content: center; padding-inline: 0; }
-  .menu-lateral--compacto .menu-lateral__enlace { position: relative; }
-  .menu-lateral--compacto .menu-lateral__lista .etiqueta-proximamente {
+  .menu-lateral--desplegado { width: 16rem; margin-right: -11.25rem; box-shadow: 12px 0 32px rgb(6 38 63 / 14%); }
+  .app__contenido { max-width: 87.25rem; }
+
+  /* Cada opción mide 3rem contraída: el ícono queda centrado y el nombre, oculto pero legible para lectores de pantalla,
+     aparece al desplegarse sin cortarse en dos líneas. */
+  .menu-lateral__enlace { position: relative; overflow: hidden; padding-inline: 0.875rem; white-space: nowrap; }
+  .menu-lateral__texto { opacity: 0; transition: opacity 100ms ease; }
+  .menu-lateral--desplegado .menu-lateral__texto { opacity: 1; transition: opacity 180ms ease 60ms; }
+  .menu-lateral:not(.menu-lateral--desplegado) .menu-lateral__lista .etiqueta-proximamente {
     position: absolute; top: 0.45rem; right: 0.45rem; width: 0.5rem; height: 0.5rem; padding: 0; overflow: hidden; font-size: 0;
     background: var(--color-acento-claro);
   }
-  .menu-lateral--compacto .tarjeta-recomendacion { display: none; }
-  .menu-lateral--compacto .menu-lateral__chat {
-    display: grid; place-items: center; width: 3rem; height: 3rem; margin: auto auto 0; border-radius: 14px; color: #fff;
+
+  /* Usuario: contraído, la tarjeta del asistente es un acceso con ícono; al desplegarse vuelve la tarjeta completa. */
+  .tarjeta-recomendacion { display: none; min-width: 14rem; }
+  .menu-lateral--desplegado .tarjeta-recomendacion { display: grid; transition: opacity 200ms ease 80ms; }
+  @starting-style {
+    .menu-lateral--desplegado .tarjeta-recomendacion { opacity: 0; }
+  }
+  .menu-lateral__chat {
+    display: grid; place-items: center; width: 3rem; height: 3rem; margin-top: auto; border-radius: 14px; color: #fff;
     background:
       radial-gradient(circle at 90% 0%, rgb(247 147 30 / 35%), transparent 55%),
       linear-gradient(160deg, #0f5f96 0%, #0b4f80 55%, #06263f 100%);
     box-shadow: 0 6px 14px rgb(6 38 63 / 22%);
     transition: transform 150ms var(--curva-salida), box-shadow 150ms ease;
   }
-  .menu-lateral--compacto .menu-lateral__lema { justify-items: center; padding-inline: 0; }
-  .menu-lateral--compacto .menu-lateral__lema p { display: none; }
-  .menu-lateral--compacto .menu-lateral__lema img { width: 2.25rem; }
-  .barra-inferior { display: none; }
-  .app__contenido { padding: 1.5rem 2rem 3rem; }
+  .menu-lateral__chat:hover { transform: translateY(var(--elevacion-hover)); box-shadow: 0 10px 20px rgb(6 38 63 / 26%); }
+  .menu-lateral--desplegado .menu-lateral__chat { display: none; }
+
+  /* Profesional y administrador: el logo queda fijo en la columna y el lema aparece a su lado al desplegarse. */
+  .menu-lateral__lema { grid-template-columns: 2.25rem auto; align-items: center; padding-inline: 0.375rem; }
+  .menu-lateral__lema img { width: 2.25rem; }
+  .menu-lateral__lema p { min-width: 10.5rem; opacity: 0; transition: opacity 100ms ease; }
+  .menu-lateral--desplegado .menu-lateral__lema p { opacity: 1; transition: opacity 180ms ease 60ms; }
 }
 
-@media (min-width: 64rem) and (hover: hover) and (pointer: fine) {
-  .menu-lateral__compactar:hover { background: var(--color-superficie-suave); color: var(--color-primario); }
-  .menu-lateral--compacto .menu-lateral__chat:hover { transform: translateY(var(--elevacion-hover)); box-shadow: 0 10px 20px rgb(6 38 63 / 26%); }
-}
-
-/* Movimiento reducido: el menú del celular aparece y se va sin deslizarse; el fondo y los desplegables solo se funden. */
+/* Movimiento reducido: el menú del celular aparece y se va sin deslizarse; el fondo y los desplegables solo se funden.
+   El menú contraído del escritorio se despliega de inmediato. */
 @media (prefers-reduced-motion: reduce) {
-  .menu-lateral, .menu-lateral--abierto, .menu-lateral__texto { transition: none; }
+  .menu-lateral, .menu-lateral--abierto, .menu-lateral__texto, .menu-lateral__lema p,
+  .menu-lateral--desplegado .menu-lateral__texto, .menu-lateral--desplegado .menu-lateral__lema p,
+  .menu-lateral--desplegado .tarjeta-recomendacion { transition: none; }
   @starting-style {
     .desplegable__panel { transform: none; }
   }

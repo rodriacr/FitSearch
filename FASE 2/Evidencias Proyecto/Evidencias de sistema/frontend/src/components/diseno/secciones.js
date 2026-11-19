@@ -24,7 +24,8 @@ export const ACCESOS_RAPIDOS = ['profesionales', 'centros', 'gimnasios', 'citas'
 export const BARRA_INFERIOR = [
   { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
   { seccion: 'profesionales', nombre: 'Profesionales', icono: 'buscar' },
-  { seccion: 'asistente', nombre: 'Chat IA', icono: 'chat' },
+  // Mismo ícono que «Asistente IA» en el menú lateral (18-11-2026, pedido del PO).
+  { seccion: 'asistente', nombre: 'Chat IA', icono: 'chispa' },
   { seccion: 'comidas', nombre: 'Comidas', icono: 'comida' },
   { seccion: 'perfil', nombre: 'Perfil', icono: 'usuario' },
 ];

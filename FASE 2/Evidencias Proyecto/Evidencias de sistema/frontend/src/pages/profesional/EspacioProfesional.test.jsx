@@ -1,5 +1,5 @@
 // Espacio propio del profesional (DAS, D25 y D26): menú, Inicio con clima y separación de las pantallas del usuario.
-import { screen, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
@@ -51,20 +51,20 @@ describe('Diseño del profesional', () => {
     expect(screen.getByRole('link', { name: 'FitSearch, ir al inicio' })).toHaveAttribute('href', '/profesional/inicio');
   });
 
-  test('el menú del profesional también se compacta a solo íconos y vuelve a expandirse', async () => {
+  // 18-11-2026 (pedido del PO): el mismo menú contraído del usuario, sin botón para contraerlo.
+  test('el menú del profesional también queda contraído y se despliega al acercar el mouse', async () => {
     simular();
     renderizarApp('/profesional/inicio');
     await screen.findByRole('heading', SALUDO);
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
-    await userEvent.click(within(menu).getByRole('button', { name: 'Contraer menú' }));
-    expect(menu).toHaveClass('menu-lateral--compacto');
-    const agenda = within(menu).getByRole('link', { name: 'Agenda' });
-    await userEvent.hover(agenda);
-    expect(document.querySelector('.etiqueta-flotante')).toHaveTextContent('Agenda');
-    // El profesional no tiene la tarjeta del asistente: su menú compacto no agrega el acceso al chat.
+    expect(menu).not.toHaveClass('menu-lateral--desplegado');
+    expect(within(menu).queryByRole('button', { name: /Contraer menú|Expandir menú/ })).not.toBeInTheDocument();
+    // El profesional no tiene la tarjeta del asistente: su menú contraído no agrega el acceso al chat.
     expect(within(menu).queryByRole('link', { name: 'Abrir chat con el asistente IA' })).not.toBeInTheDocument();
-    await userEvent.click(within(menu).getByRole('button', { name: 'Expandir menú' }));
-    expect(menu).not.toHaveClass('menu-lateral--compacto');
+    await userEvent.hover(within(menu).getByRole('link', { name: 'Agenda' }));
+    await waitFor(() => expect(menu).toHaveClass('menu-lateral--desplegado'));
+    await userEvent.unhover(menu);
+    await waitFor(() => expect(menu).not.toHaveClass('menu-lateral--desplegado'));
   });
 
   test('el menú de la cuenta lleva al perfil profesional', async () => {

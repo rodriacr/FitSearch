@@ -28,7 +28,7 @@ export default function PestanasFicha({ pestanas, etiqueta }) {
         {pestanas.map(({ id, titulo, icono }) => (
           <button key={id} ref={(boton) => { botones.current.set(id, boton); }} type="button" role="tab" id={`pestana-${id}`}
             aria-selected={id === actual.id} aria-controls={`panel-${id}`} tabIndex={id === actual.id ? 0 : -1} onClick={() => setActiva(id)}>
-            <Icono nombre={icono} tamano={18} /> {titulo}
+            <Icono nombre={icono} tamano={18} activo={id === actual.id} /> {titulo}
           </button>
         ))}
       </div>

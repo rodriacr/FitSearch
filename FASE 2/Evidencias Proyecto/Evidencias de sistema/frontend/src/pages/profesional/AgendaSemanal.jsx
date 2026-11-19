@@ -150,7 +150,7 @@ export default function AgendaSemanal() {
             <button key={valor} ref={(el) => { pestanas.current[indice] = el; }} type="button" role="tab" id={`pestana-${valor}`}
               aria-selected={vista === valor} aria-controls={`vista-${valor}`} tabIndex={vista === valor ? 0 : -1}
               className="agenda-semanal__pestana" onClick={() => cambiarVista(valor)} onKeyDown={(e) => teclaPestana(e, indice)}>
-              <Icono nombre={icono} tamano={18} /> {texto}
+              <Icono nombre={icono} tamano={18} activo={vista === valor} /> {texto}
               {valor === 'reservas' && pendientes?.length > 0 && (
                 <span className="agenda-semanal__contador" aria-label={`, ${pendientes.length} por confirmar`}>{pendientes.length}</span>
               )}

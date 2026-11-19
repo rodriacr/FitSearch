@@ -80,7 +80,7 @@ function ItemConversacion({ conversacion, activa, ahora }) {
     <li>
       <Link to={`/asistente/${conversacion.id}`} className={`conversacion-item${activa ? ' conversacion-item--activa' : ''}`}
         aria-current={activa ? 'page' : undefined}>
-        <span className="conversacion-item__icono" aria-hidden="true"><Icono nombre={conversacion.fijada ? 'chincheta' : 'chat'} tamano={18} /></span>
+        <span className="conversacion-item__icono" aria-hidden="true"><Icono nombre={conversacion.fijada ? 'chincheta' : 'chat'} tamano={18} activo={activa} /></span>
         <span className="conversacion-item__texto">
           <span className="conversacion-item__titulo">{conversacion.titulo}</span>
           {conversacion.vistaPrevia && <span className="conversacion-item__vista">{conversacion.vistaPrevia}</span>}

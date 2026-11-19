@@ -163,6 +163,9 @@ describe('Perfil profesional editable', () => {
     expect(nav.getAllByRole('button').map((b) => b.textContent))
       .toEqual(['Información personal', 'Lugar de atención', 'Experiencia y formación', 'Certificaciones']);
     expect(nav.getByRole('button', { name: 'Información personal' })).toHaveAttribute('aria-current', 'page');
+    // La sección actual lleva el ícono marcado, igual que el menú lateral (18-11-2026).
+    expect(nav.getByRole('button', { name: 'Información personal' }).querySelector('.icono--activo')).not.toBeNull();
+    expect(nav.getByRole('button', { name: 'Lugar de atención' }).querySelector('.icono--activo')).toBeNull();
     expect(await screen.findByLabelText(/^Tu presentación \(opcional\)/)).toBeInTheDocument();
     expect(await screen.findByLabelText('Especialidad (obligatorio)')).toHaveValue('Entrenamiento personal');
     expect(screen.queryByLabelText('Comuna (obligatorio)')).not.toBeInTheDocument();
