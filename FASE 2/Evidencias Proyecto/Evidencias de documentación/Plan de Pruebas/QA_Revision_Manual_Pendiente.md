@@ -36,6 +36,8 @@ Ejecutar sobre la versión integrada, anotando commit, navegador, tamaño de ven
 - **CP-024:** cuenta de Google que todavía no existe en FitSearch; se crea una sola cuenta sin contraseña, con sesión, y se abre la elección de tipo de cuenta.
 - **CP-025:** correo ya registrado con contraseña; Google se vincula a esa cuenta, conserva su rol y no crea un duplicado.
 
+Actualización del PO: reportó que pudo registrar la cuenta con Google e iniciar sesión; CP-024 queda aprobado con evidencia testimonial. CP-025 permanece pendiente porque requiere un correo previamente registrado con contraseña.
+
 El PO realiza la interacción con su cuenta en el navegador. Registrar únicamente resultado, fecha, entorno y evidencia sin credenciales. «Google ya funciona» no confirma que ambos escenarios hayan sido ejecutados.
 
 ## Revisión independiente

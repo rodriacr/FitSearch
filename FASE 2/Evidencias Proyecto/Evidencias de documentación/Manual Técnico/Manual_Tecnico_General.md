@@ -135,7 +135,7 @@ npm run build
 
 Los scripts `test:mysql:plan`, `test:mysql:especialidades`, `test:mysql:agenda` y `test:mysql:mejoras` requieren MySQL configurado y crean datos temporales de prueba. Revisar su configuración antes de ejecutarlos; agenda puede intentar enviar avisos. `test:carga` requiere la API en ejecución, genera carga y datos temporales y termina con código 1 si no cumple o no logra limpiar. Ejecutarlos en un entorno de pruebas preparado, sin una demostración en curso.
 
-Al corte: backend 628 y frontend 489 pruebas aprobadas; lint/build correctos; 223 comprobaciones MySQL reales aprobadas. Las 33 comprobaciones adicionales de validadores y formatos se registran en `Plan de Pruebas/QA_Comprobaciones_2026-11-16.json`. La Planilla conserva 248 CP, con 246 aprobados y Google real CP-024/025 pendiente. QA estándar: 21 OK, 11 NA y 24 pendientes. Los avisos SMTP y la repetición final de Docker no se acreditaron en este entorno.
+Al corte: backend 628 y frontend 489 pruebas aprobadas; lint/build correctos; 223 comprobaciones MySQL reales aprobadas. Las 33 comprobaciones adicionales de validadores y formatos se registran en `Plan de Pruebas/QA_Comprobaciones_2026-11-16.json`. La Planilla conserva 248 CP, con 247 aprobados y Google real CP-025 pendiente (CP-024 aprobado por reporte del PO). QA estándar: 21 OK, 11 NA y 24 pendientes. Los avisos SMTP y la repetición final de Docker no se acreditaron en este entorno.
 
 La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máximo 121 ms con 50 conexiones; login p95 2753 ms a esa carga, sobre el objetivo de 2 s. Se conserva esa limitación y el resultado `NO CUMPLE` de esa ejecución. No afirmar que toda la aplicación está certificada bajo cualquier carga.
 
@@ -154,6 +154,6 @@ La evidencia de carga histórica registra 515 profesionales: búsqueda p95 máxi
 
 ## 9. Documentos relacionados y pendientes
 
-Referencias: DAS 1.35, Plan de Pruebas 1.0.2, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
+Referencias: DAS 1.35, Plan de Pruebas 1.0.3, Planilla de Casos, Registro de Defectos, manual Docker 1.1 y `Sprint 5/Cierre_Tecnico_Sprint5_2026-11-16.md`. Los valores de versión corresponden al corte indicado; revisar cambios posteriores antes de operar otra entrega.
 
-Faltan la revisión del manual por el equipo/PO, aceptación de historias y cambios, criterios finales de FS-HU-32, validación de horas y retrospectiva, QA residual, revisión independiente y reemplazo manual en Drive. Este manual completa el contenido general que no cubría el documento de Docker; no atribuye ese trabajo a una persona por su asignación inicial en el backlog.
+Faltan la revisión del manual por el equipo/PO, aceptación de historias y cambios, validación de horas y acuerdos de retrospectiva (criterios FS-HU-32 y tres aportes ya registrados), QA residual, revisión independiente y reemplazo manual en Drive. Este manual completa el contenido general que no cubría el documento de Docker; no atribuye ese trabajo a una persona por su asignación inicial en el backlog.
