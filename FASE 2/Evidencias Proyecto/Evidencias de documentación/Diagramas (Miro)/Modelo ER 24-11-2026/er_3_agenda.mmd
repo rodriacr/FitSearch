@@ -1,0 +1,40 @@
+erDiagram
+  usuarios {
+    INT id PK
+  }
+  profesionales {
+    INT id PK
+  }
+  disponibilidades {
+    INT id PK
+    INT profesional_id FK
+  }
+  reservas {
+    INT id PK
+    INT usuario_id FK
+    INT disponibilidad_id FK
+  }
+  bloqueos_agenda {
+    INT id PK
+    INT profesional_id FK
+  }
+  lista_espera {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  resenas {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+    INT reserva_id FK
+  }
+  profesionales ||--o{ disponibilidades : "profesional_id"
+  usuarios ||--o{ reservas : "usuario_id"
+  disponibilidades ||--o{ reservas : "disponibilidad_id"
+  profesionales ||--o{ bloqueos_agenda : "profesional_id"
+  usuarios ||--o{ lista_espera : "usuario_id"
+  profesionales ||--o{ lista_espera : "profesional_id"
+  usuarios ||--o{ resenas : "usuario_id"
+  profesionales ||--o{ resenas : "profesional_id"
+  reservas |o--o{ resenas : "reserva_id"

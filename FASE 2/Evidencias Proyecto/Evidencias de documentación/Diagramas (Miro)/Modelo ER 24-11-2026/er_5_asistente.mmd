@@ -1,0 +1,34 @@
+erDiagram
+  usuarios {
+    INT id PK
+  }
+  conversaciones {
+    INT id PK
+    INT usuario_id FK
+  }
+  mensajes {
+    INT id PK
+    INT conversacion_id FK
+  }
+  uso_asistente {
+    INT usuario_id PK,FK
+  }
+  alimentos {
+    INT id PK
+    VARCHAR80 nombre UK
+  }
+  registro_comida {
+    INT id PK
+    INT usuario_id FK
+    INT alimento_id FK
+  }
+  registro_agua {
+    INT id PK
+    INT usuario_id FK
+  }
+  usuarios ||--o{ conversaciones : "usuario_id"
+  conversaciones ||--o{ mensajes : "conversacion_id"
+  usuarios ||--|o uso_asistente : "usuario_id"
+  usuarios ||--o{ registro_comida : "usuario_id"
+  alimentos |o--o{ registro_comida : "alimento_id"
+  usuarios ||--o{ registro_agua : "usuario_id"

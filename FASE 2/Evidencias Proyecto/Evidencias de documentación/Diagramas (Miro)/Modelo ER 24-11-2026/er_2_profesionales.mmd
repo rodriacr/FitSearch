@@ -1,0 +1,31 @@
+erDiagram
+  usuarios {
+    INT id PK
+  }
+  profesionales {
+    INT id PK
+    INT usuario_id FK,UK
+    INT establecimiento_id FK
+  }
+  documentos_profesionales {
+    INT id PK
+    INT profesional_id FK
+    VARCHAR50 clave UK
+  }
+  establecimientos {
+    INT id PK
+  }
+  especialidades {
+    INT id PK
+    VARCHAR100 nombre UK
+  }
+  favoritos {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  usuarios ||--|o profesionales : "usuario_id"
+  establecimientos |o--o{ profesionales : "establecimiento_id"
+  profesionales ||--o{ documentos_profesionales : "profesional_id"
+  usuarios ||--o{ favoritos : "usuario_id"
+  profesionales ||--o{ favoritos : "profesional_id"
