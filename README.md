@@ -49,9 +49,9 @@ FitSearch/
 ├── FASE 1/                # Evidencias de la Fase 1 (individuales y grupales)
 ├── FASE 2/                # Evidencias de la Fase 2
 │   ├── Evidencias Individuales/
-│   ├── Evidencias Grupales/        # Guía 2.4 y planillas de evaluación
+│   ├── Evidencias Grupales/        # Guía 2.4, informe 2.6 y planilla de evaluación del avance
 │   └── Evidencias Proyecto/
-│       ├── Evidencias de documentación/   # DAS, DoD, diagramas, sprints (con sus capturas), plan de pruebas y control (matriz de cambios y EDT)
+│       ├── Evidencias de documentación/   # DAS, DoD, diagramas, sprints (con sus capturas), plan de pruebas, control (matriz de cambios y EDT) y manuales técnico y de usuario
 │       └── Evidencias de sistema/         # Código de la aplicación
 │           ├── frontend/          # React + Vite
 │           │   └── src/
@@ -75,7 +75,7 @@ FitSearch/
 │           ├── shared/            # Reglas y catálogos comunes a frontend y backend (reglas.json)
 │           ├── .env.example       # Variables de docker-compose.yml (FS-HU-11)
 │           └── docker-compose.yml # mysql + backend + frontend (backend/Dockerfile, frontend/Dockerfile)
-├── FASE 3/                # Evidencias de la Fase 3
+├── FASE 3/                # Evidencias de la Fase 3: diarios 3.1 y presentación final (HTML y PDF)
 └── README.md
 ```
 
@@ -87,7 +87,7 @@ cd "FASE 2/Evidencias Proyecto/Evidencias de sistema"
 
 ## Requisitos previos
 
-La instalación local, arquitectura, configuración, API, operación y pruebas se reúnen en el [Manual Técnico General](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Manual%20T%C3%A9cnico/Manual_Tecnico_General.md). El manual de Docker complementa ese documento para el despliegue con contenedores.
+El [Manual Técnico](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Manual%20T%C3%A9cnico/Manual_Tecnico_FitSearch.pdf) (Word y PDF, versión 1.0 del 24-11-2026) reúne requerimientos, herramientas, instalación con Docker y local, configuración, casos de uso, módulo de administración, modelo entidad-relación y diccionario de datos de las 32 tablas. El [Manual de Usuario](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Manual%20de%20Usuario/Manual_de_Usuario_FitSearch.pdf) explica, paso a paso y con capturas, cada función del usuario, del profesional y del administrador. El [Manual Técnico General](FASE%202/Evidencias%20Proyecto/Evidencias%20de%20documentaci%C3%B3n/Manual%20T%C3%A9cnico/Manual_Tecnico_General.md) se conserva como referencia rápida de la API y el diagnóstico, y el manual de Docker complementa el despliegue con contenedores.
 
 - Node.js 20 LTS o superior y npm
 - MySQL 8
