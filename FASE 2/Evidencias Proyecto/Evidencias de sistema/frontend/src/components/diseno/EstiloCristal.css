@@ -24,9 +24,6 @@
 .app .marca img { width: 2.45rem; height: 2.45rem; }
 .app .marca > span { font-size: 1.55rem; }
 .app .encabezado__menu { order: -1; margin-right: .4rem; background: light-dark(rgb(255 255 255 / 62%), var(--color-superficie)); box-shadow: var(--cristal-sombra); }
-.app__cuerpo { display: block; }
-.app .app__contenido { width: 100%; max-width: none; margin: 0; padding: .5rem 1rem 7.5rem; }
-.app .contenedor-perfil { max-width: none; }
 
 .navegacion-lateral {
   position: fixed; z-index: 45; top: .75rem; bottom: .75rem; left: .75rem; width: min(20rem, calc(100vw - 2rem));
@@ -34,9 +31,13 @@
   visibility: hidden; transition: transform 220ms ease, visibility 0s 220ms;
 }
 .navegacion-lateral--abierta { transform: none; visibility: visible; transition: transform 220ms ease; }
-.app .menu-lateral, .menu-sesion, .app .perfil-editor__identidad, .app .perfil-editor__contenido, .perfil-editor__previa {
+.app .menu-lateral, .menu-sesion {
   background: var(--cristal-fondo); border: 1px solid var(--cristal-borde); border-radius: 1.5rem;
   box-shadow: var(--cristal-sombra); -webkit-backdrop-filter: blur(22px) saturate(125%); backdrop-filter: blur(22px) saturate(125%);
+}
+.app .perfil-editor__identidad, .app .perfil-editor__contenido {
+  background: var(--color-superficie); border: 1px solid var(--color-borde); border-radius: 1.5rem;
+  box-shadow: var(--sombra-tarjeta);
 }
 .app .menu-lateral {
   position: relative; inset: auto; width: 100%; height: auto; min-height: 0; flex: 1; gap: .5rem;
@@ -77,7 +78,7 @@
 .app .notificaciones--lateral .notificaciones__aviso strong { margin-bottom: .25rem; }
 .app .menu-lateral__fondo { background: rgb(25 37 48 / 24%); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
 
-.app .perfil-editor { max-width: 91rem; padding-bottom: 1rem; color: light-dark(#1b3048, var(--color-primario)); }
+.app .perfil-editor { padding-bottom: 1rem; color: light-dark(#1b3048, var(--color-primario)); }
 .app .perfil-editor__cabecera { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; padding: 0; margin: 0 0 1.35rem; border: 0; border-radius: 0; background: none; overflow: visible; }
 .app .perfil-editor__cabecera::after { display: none; }
 .app .perfil-editor__cabecera h1 { margin: 0; font-size: clamp(1.5rem, 2.5vw, 2.15rem); color: light-dark(#142b43, var(--color-primario)); line-height: 1.2; letter-spacing: -.04em; }
@@ -102,7 +103,6 @@
 .app .perfil-editor__navegacion button { flex: none; width: auto; padding: 1rem .5rem .85rem; font-size: .9rem; color: light-dark(#526176, var(--color-texto-secundario)); border: 0; border-bottom: 3px solid transparent; border-radius: 0; white-space: nowrap; }
 .app .perfil-editor__navegacion button[aria-current] { color: light-dark(#183149, var(--color-primario)); border-bottom-color: #cc5b17; font-weight: 600; }
 .app .perfil-editor__navegacion button:focus-visible { outline: 2px solid #29779a; outline-offset: -4px; }
-.app .perfil-editor__grilla { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 1.25rem; }
 .app .perfil-editor__contenido { padding: 1.5rem; }
 .app .perfil-editor__panel > header { margin-bottom: 1.2rem; }
 .app .perfil-editor__panel > header h2 { color: light-dark(#193149, var(--color-primario)); font-size: 1.2rem; margin: 0; }
@@ -119,15 +119,6 @@
 .app .perfil-editor .boton--principal { background: linear-gradient(125deg, #dc741e, #c85508); box-shadow: 0 4px 12px rgb(188 82 20 / 16%); }
 .app .perfil-editor .boton--secundario { background: light-dark(rgb(255 255 255 / 45%), var(--color-superficie)); color: light-dark(#243e56, var(--color-texto-secundario)); border-color: light-dark(#c7d2dc, var(--color-borde)); }
 .app .perfil-editor__acciones { padding-top: 1rem; border-color: light-dark(#dce0e3, var(--color-borde)); }
-.perfil-editor__previa { padding: 1.25rem; }
-.perfil-editor__previa h2 { font-size: 1rem; color: light-dark(#193149, var(--color-primario)); margin: 0 0 1.1rem; }
-.perfil-previa__persona { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; min-width: 0; }
-.perfil-previa__persona > div { min-width: 0; flex: 1 1 10rem; overflow-wrap: anywhere; }
-.perfil-previa__persona strong { color: light-dark(#20354a, var(--color-texto-secundario)); font-size: .95rem; }
-.perfil-previa__persona p { font-size: .8rem; color: light-dark(#4b6176, var(--color-texto-secundario)); margin: .2rem 0 0; }
-.perfil-previa__avatar { display: grid; place-items: center; width: 3rem; height: 3rem; flex: 0 0 3rem; border: 2px solid light-dark(white, var(--color-borde)); border-radius: 50%; background: light-dark(#e3edf7, var(--color-info-fondo)); color: light-dark(#183149, var(--color-primario)); font-weight: 600; }
-.perfil-previa__avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
-.perfil-previa__presentacion { font-size: .85rem; color: light-dark(#4b6176, var(--color-texto-secundario)); line-height: 1.65; overflow-wrap: anywhere; white-space: pre-line; margin: 1rem 0 0; }
 .perfil-editor__pie { display: flex; justify-content: flex-start; padding-top: .5rem; }
 .app .perfil-editor__pie .boton { font-size: .85rem; }
 .app .perfil-editor__pendiente { margin-bottom: 1rem; }
@@ -145,16 +136,11 @@
   .app .menu-lateral { position: absolute; top: 50%; left: 0; transform: translateY(-50%); max-height: calc(100dvh - 18rem); padding: .65rem; z-index: 1; }
   .app .menu-lateral__cabecera { display: none; }
   .menu-sesion { position: absolute; bottom: 0; left: 0; width: 100%; }
-  .app .app__cuerpo { padding-left: 17.25rem; padding-right: 2rem; }
-  .app .app__contenido { max-width: 96rem; margin: 0 auto; padding: .75rem 0 5rem; }
-  .app .perfil-editor__grilla--con-previa { grid-template-columns: minmax(0, 1fr) 15rem; }
   .app .perfil-editor__meta { max-width: 42%; }
   .app .menu-lateral__fondo { display: none; }
   .app .barra-inferior { display: none; }
 }
 @media (max-width: 79rem) and (min-width: 64rem) {
-  .app .perfil-editor__grilla--con-previa { grid-template-columns: minmax(0, 1fr); }
-  .app .perfil-editor__previa { max-width: none; }
   .app .perfil-editor__meta { max-width: none; justify-content: flex-start; }
 }
 @media (max-width: 42rem) {
@@ -185,6 +171,6 @@
   .app .perfil-editor__panel > header p { font-size: .82rem; }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .app .menu-lateral, .menu-sesion, .app .perfil-editor__identidad, .app .perfil-editor__contenido, .perfil-editor__previa { background: light-dark(#f7f7f6, var(--color-superficie)); }
+  .app .menu-lateral, .menu-sesion { background: light-dark(#f7f7f6, var(--color-superficie)); }
 }
 @media (prefers-reduced-motion: reduce) { .navegacion-lateral, .navegacion-lateral--abierta { transition: none; } }

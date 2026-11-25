@@ -145,17 +145,17 @@ function VistaSemana({ datos, rango, ahora, dia, onDia, seleccionId, onElegirHor
                   </button>
                 );
               })}
-              {previa?.fecha === d.fecha && (() => {
-                const duracion = aMinutos(previa.horaFin) - aMinutos(previa.horaInicio);
+              {previa?.fecha === d.fecha && previa.bloques.map((bloque) => {
+                const duracion = aMinutos(bloque.horaFin) - aMinutos(bloque.horaInicio);
                 const alto = (altoHora * duracion) / 60;
                 return (
-                  <span className={['horario', 'horario--nuevo', alto < BLOQUE_MINI ? 'horario--mini' : alto < BLOQUE_CORTO && 'horario--corto'].filter(Boolean).join(' ')}
-                    aria-hidden="true" style={{ top: posicion(aMinutos(previa.horaInicio)), height: `calc(var(--alto-hora) * ${duracion / 60} - 2px)` }}>
-                    <span className="horario__hora">{previa.horaInicio}</span>
+                  <span key={bloque.horaInicio} className={['horario', 'horario--nuevo', alto < BLOQUE_MINI ? 'horario--mini' : alto < BLOQUE_CORTO && 'horario--corto'].filter(Boolean).join(' ')}
+                    aria-hidden="true" style={{ top: posicion(aMinutos(bloque.horaInicio)), height: `calc(var(--alto-hora) * ${duracion / 60} - 2px)` }}>
+                    <span className="horario__hora">{bloque.horaInicio}</span>
                     <span className="horario__quien">Nuevo horario</span>
                   </span>
                 );
-              })()}
+              })}
               {d.fecha === hoy && aMinutos(horaAhora) >= rango.inicio && aMinutos(horaAhora) <= rango.fin && (
                 <span className="semana__ahora" style={{ top: posicion(aMinutos(horaAhora)) }} aria-hidden="true" />
               )}

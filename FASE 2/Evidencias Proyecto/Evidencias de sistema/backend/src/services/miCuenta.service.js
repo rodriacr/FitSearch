@@ -96,6 +96,7 @@ async function exportar(usuarioId) {
       nombre: u.nombre, correo: u.correo, tipoDeCuenta: u.rol.nombre, fechaRegistro: u.fechaRegistro,
       tieneContrasena: Boolean(u.passwordHash), vinculadaConGoogle: Boolean(u.googleId),
       contactoYPresentacion: u.datosCuenta,
+      ...(u.rol.nombre === 'usuario' && { preferencias: { recordatoriosCitas: u.recordatoriosCitas, avisosMensajesCorreo: u.avisosMensajesCorreo } }),
     },
     perfil: u.perfil,
     informacionDeSalud: u.informacionSalud,
@@ -238,6 +239,7 @@ async function eliminar(usuarioId, datos, reloj = new Date()) {
         nombre: NOMBRE_ELIMINADO[rol] || NOMBRE_ELIMINADO.usuario,
         correo: `eliminado-${usuarioId}-${crypto.randomBytes(6).toString('hex')}@fitsearch.invalid`,
         passwordHash: null, googleId: null, activo: false, eliminadoEn: reloj, versionSesion: { increment: 1 },
+        recordatoriosCitas: false, avisosMensajesCorreo: false, ultimoAvisoMensajes: null,
       },
     });
     return { futuras, claves };

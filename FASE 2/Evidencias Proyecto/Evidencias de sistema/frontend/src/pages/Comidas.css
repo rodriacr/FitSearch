@@ -1,5 +1,5 @@
 /* Gestor de alimentación (FS-HU-09 y FS-HU-10), según el mockup del PO del 26-10-2026. */
-.comidas { width: 100%; max-width: 76rem; margin: 0 auto; display: flex; flex-direction: column; gap: 1rem; }
+.comidas { display: flex; flex-direction: column; gap: 1rem; container: comidas / inline-size; }
 .comidas__encabezado { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .comidas__icono {
   display: grid; place-items: center; flex-shrink: 0; width: 3.5rem; height: 3.5rem; border: 2px solid var(--color-primario);
@@ -31,7 +31,16 @@
 .comidas__siguiente { transform: rotate(-90deg); }
 .comidas__estado { display: flex; flex-direction: column; align-items: flex-start; gap: 0.75rem; padding: 1rem 0; }
 
+.comidas__cuadricula { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 1rem; }
+.comidas__cuadricula > * { min-width: 0; }
+.comidas__cuadricula > .panel-tarjeta { border-radius: 20px; }
+.comidas__fila-completa { grid-column: 1 / -1; }
+@container comidas (min-width: 52rem) {
+  .comidas__cuadricula { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
 .comidas__resumen { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+.comidas__resumen > *, .comidas__pie > * { min-width: 0; }
 .comidas__resumen .panel-tarjeta { border-radius: 20px; }
 .comidas__nota { margin: 0; font-size: 0.8rem; }
 .comidas__nota .comidas__ver-plan { display: inline; min-height: 0; padding: 0; font-size: inherit; text-decoration: underline; text-underline-offset: 0.2em; }
@@ -41,16 +50,15 @@
 }
 @media (min-width: 64rem) {
   .comidas__resumen {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    grid-template-areas: "calorias semana" "comidas nutricional" "comidas pie" "nota nota";
-    align-items: start;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
   }
-  .tarjeta-calorias { grid-area: calorias; }
-  .tarjeta-semana { grid-area: semana; }
-  .tarjeta-comidas { grid-area: comidas; }
-  .tarjeta-nutricional { grid-area: nutricional; }
-  .comidas__pie { grid-area: pie; }
-  .comidas__nota { grid-area: nota; }
+  .comidas__resumen > :is(.hoy-te-toca, .comidas__pie, .comidas__nota) { grid-column: 1 / -1; }
+  .comidas__resumen > :is(.tarjeta-calorias, .tarjeta-semana, .tarjeta-comidas) { display: flex; flex-direction: column; }
+  .comidas__resumen .tarjeta-calorias__cuerpo { flex: 1; }
+  .comidas__resumen .tarjeta-semana > .frente-meta { flex: 1; display: flex; flex-direction: column; }
+  .comidas__resumen .tarjeta-semana .frente-meta__area { flex: 1; min-height: 10rem; }
+  .comidas__resumen .comidas-del-dia--compacta { flex: 1; }
 }
 
 /* Calorías del día */
@@ -257,8 +265,9 @@
   color: var(--color-texto-secundario); font: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer;
 }
 .estadisticas__opcion[aria-pressed="true"] { background: var(--color-boton, var(--color-primario)); color: #fff; }
-.estadisticas__graficos { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
-.estadisticas__graficos .panel-tarjeta { border-radius: 20px; }
+.estadisticas__serie { display: flex; flex-direction: column; }
+.estadisticas__grafico { margin-top: auto; }
+.estadisticas__graficos--mes > .estadisticas__serie { grid-column: 1 / -1; }
 .estadisticas__encabezado-tarjeta { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 0.75rem; margin-bottom: 0.75rem; }
 .estadisticas__encabezado-tarjeta .panel-tarjeta__titulo { margin: 0; }
 .estadisticas__sin-datos { margin: 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
@@ -292,10 +301,6 @@
 .reparto-plan__diferencias { display: grid; gap: 0.2rem; margin: 0.85rem 0 0; padding: 0; list-style: none; font-size: 0.8rem; color: var(--color-texto-secundario); }
 .reparto-plan__diferencias strong { color: var(--color-texto); }
 
-@media (min-width: 64rem) {
-  .estadisticas__graficos { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-  .estadisticas__cifras, .estadisticas__ancho { grid-column: 1 / -1; }
-}
 @media (prefers-reduced-motion: reduce) {
   .frente-meta__barra, .frente-meta__ayuda { transition: none; }
 }

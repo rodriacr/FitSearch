@@ -1,25 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Alerta from '../Alerta.jsx';
 import Icono from '../Icono.jsx';
 import { solicitar } from '../../services/api.js';
-import { textoDuracion } from '../../services/agenda.js';
+import { ahoraChile, textoDuracion } from '../../services/agenda.js';
+import { fechaValida } from '../../services/reservas.js';
 import { aHora, aMinutos, bloquesPrevistos, diaCorto, diaLargo, ESTADOS, estadoVisible, NOTA_ESTADO, sumarDias } from './semana.js';
+import '../Interruptor.css';
 import './PanelesAgenda.css';
 
 const { duraciones, serie, bloqueo: reglasBloqueo } = reglas.agenda;
 
 // Marco común de los paneles del costado: título, botón para cerrar y foco al abrirse.
-function Panel({ titulo, onCerrar, children, id }) {
+function Panel({ titulo, onCerrar, children, id, ocupado = false }) {
   const encabezado = useRef(null);
   useEffect(() => { encabezado.current?.focus({ preventScroll: true }); }, [id]);
   return (
-    <section className="panel-agenda" aria-labelledby={`${id}-titulo`} onKeyDown={(e) => { if (e.key === 'Escape' && onCerrar) onCerrar(); }}>
+    <section className="panel-agenda" aria-labelledby={`${id}-titulo`} onKeyDown={(e) => { if (e.key === 'Escape' && !ocupado) onCerrar?.(); }}>
       <header className="panel-agenda__cabecera">
         <h2 id={`${id}-titulo`} ref={encabezado} tabIndex={-1}>{titulo}</h2>
         {onCerrar && (
-          <button type="button" className="boton-icono panel-agenda__cerrar" aria-label="Cerrar panel" onClick={onCerrar}>
+          <button type="button" className="boton-icono panel-agenda__cerrar" aria-label="Cerrar panel" onClick={onCerrar} disabled={ocupado}>
             <Icono nombre="cerrar" tamano={20} />
           </button>
         )}
@@ -133,91 +135,167 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
   );
 }
 
-const lista = (horas) => (horas.length < 2 ? horas.join('') : `${horas.slice(0, -1).join(', ')} y ${horas.at(-1)}`);
+export function ReservaFueraDelCalendario({ onCerrar }) {
+  return (
+    <Panel id="reserva-fuera-calendario" titulo="Reserva fuera del calendario" onCerrar={onCerrar}>
+      <p className="panel-agenda__texto">La reserva seleccionada ya no aparece en el calendario. Puedes consultarla en el historial.</p>
+      <Link className="boton boton--secundario boton--compacto" to="/profesional/agenda?vista=reservas&grupo=historial" onClick={onCerrar}>Volver al historial</Link>
+    </Panel>
+  );
+}
+
+const cantidadHorarios = (n) => `${n} ${n === 1 ? 'horario' : 'horarios'}`;
+
+function primerosCampos(inicial, ahora) {
+  const hoy = ahora.slice(0, 10);
+  let fecha = inicial?.fecha ?? hoy;
+  let horaInicio = inicial?.hora ?? '09:00';
+  if (!inicial?.hora && fecha === hoy) {
+    const siguienteMediaHora = (Math.floor(aMinutos(ahora.slice(11)) / 30) + 1) * 30;
+    if (siguienteMediaHora + 60 >= 24 * 60) fecha = sumarDias(hoy, 1);
+    else horaInicio = aHora(Math.max(aMinutos(horaInicio), siguienteMediaHora));
+  }
+  return {
+    fecha, horaInicio,
+    horaFin: aHora(Math.min(aMinutos(horaInicio) + (inicial?.hora ? 60 : 240), 23 * 60 + 59)),
+    dividir: !inicial?.hora, duracion: 60,
+  };
+}
+
+function validarPublicacion(campos, ahora, hasta, bloqueado, cantidad) {
+  const { fecha, horaInicio, horaFin } = campos;
+  if (!fechaValida(fecha) || fecha < ahora.slice(0, 10) || fecha > hasta) return 'Elige un día dentro de los próximos 12 meses.';
+  if (bloqueado) return 'Este día está bloqueado. Elige otro día para publicar.';
+  if (!horaInicio || !horaFin || horaInicio >= horaFin) return 'La hora de término debe ser posterior a la de inicio.';
+  if (`${fecha}T${horaInicio}` <= ahora) return 'El horario debe comenzar más tarde, en hora de Chile.';
+  if (!cantidad) return 'En ese rango no cabe un bloque completo de la duración elegida.';
+  if (cantidad > serie.maxBloques) return `Puedes publicar hasta ${serie.maxBloques} horarios a la vez.`;
+  return '';
+}
 
 // Publicar horarios: uno solo o varios bloques de igual duración en el mismo día (POST /disponibilidades/serie).
 // onPrevia: avisa el día y las horas que se están por publicar, para marcarlos en el calendario (15-11-2026).
-export function PublicarHorarios({ inicial, hoy, onPublicado, onCerrar, onPrevia }) {
-  const horaInicial = inicial?.hora || '09:00';
-  const [campos, setCampos] = useState({
-    fecha: inicial?.fecha || hoy,
-    horaInicio: horaInicial,
-    horaFin: aHora(Math.min(aMinutos(horaInicial) + (inicial?.hora ? 60 : 240), 23 * 60 + 45)),
-    dividir: !inicial?.hora,
-    duracion: 60,
-  });
+export function PublicarHorarios({ inicial, ahora, datos, cargandoAgenda, errorAgenda, onDia, onPublicado, onCerrar, onPrevia, onRevisar }) {
+  const [campos, setCampos] = useState(() => primerosCampos(inicial, ahora));
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
-  const previstos = bloquesPrevistos(campos);
+  const hoy = ahora.slice(0, 10);
+  const hasta = sumarDias(hoy, 365);
+  const { fecha, horaInicio, horaFin, dividir, duracion } = campos;
+  const conoceDia = datos && fecha >= datos.desde && fecha <= datos.hasta;
+  const bloqueado = conoceDia && datos.bloqueos.some((b) => b.fechaInicio <= fecha && fecha <= b.fechaFin);
+  const bloques = useMemo(() => bloquesPrevistos(campos), [campos]);
+  const validacion = validarPublicacion(campos, ahora, hasta, bloqueado, bloques.length);
+  const previstos = useMemo(() => {
+    if (!conoceDia || validacion) return [];
+    const horarios = datos.horarios.filter((h) => h.fecha === fecha && !h.retirado);
+    return bloques.map((bloque) => ({
+      ...bloque,
+      ocupado: horarios.some((h) => h.horaInicio < bloque.horaFin && h.horaFin > bloque.horaInicio),
+    }));
+  }, [bloques, conoceDia, datos, fecha, validacion]);
+  const libres = useMemo(() => previstos.filter((b) => !b.ocupado), [previstos]);
+  const disponibles = libres.length;
+  const conflictos = previstos.length - disponibles;
+  const resto = previstos.length ? aMinutos(horaFin) - aMinutos(previstos.at(-1).horaFin) : 0;
   const cambiar = (cambio) => { setError(''); setCampos((actual) => ({ ...actual, ...cambio })); };
+  const sincronizarDia = useEffectEvent((dia) => onDia(dia));
   useEffect(() => {
-    const { fecha, horaInicio, horaFin } = campos;
-    onPrevia?.(fecha && horaInicio && horaFin && horaInicio < horaFin ? { fecha, horaInicio, horaFin } : null);
-  }, [campos, onPrevia]);
-  useEffect(() => () => onPrevia?.(null), [onPrevia]);
+    if (fechaValida(fecha) && fecha >= hoy && fecha <= hasta) sincronizarDia(fecha);
+  }, [fecha, hoy, hasta]);
+  useEffect(() => {
+    onPrevia(libres.length ? { fecha, bloques: libres } : null);
+  }, [fecha, libres, onPrevia]);
+  useEffect(() => () => onPrevia(null), [onPrevia]);
 
   async function publicar(evento) {
     evento.preventDefault();
-    if (!previstos.length) { setError('Entre esas horas no cabe un bloque completo. Revisa el inicio, el término y la duración.'); return; }
+    if (ocupado || !disponibles) return;
+    const vigente = validarPublicacion(campos, ahoraChile(), hasta, bloqueado, bloques.length);
+    if (vigente) { setError(vigente); return; }
     setOcupado(true);
+    setError('');
     try {
-      const { fecha, horaInicio, horaFin, duracion } = campos;
-      if (campos.dividir) {
+      if (dividir) {
         const r = await solicitar('/disponibilidades/serie', { metodo: 'POST', cuerpo: { fecha, horaInicio, horaFin, duracion } });
-        const omitidos = r.omitidos.length ? ` ${r.omitidos.length} no se publicaron porque chocaban con otro horario.` : '';
-        onPublicado(`Publicaste ${r.horarios.length} ${r.horarios.length === 1 ? 'horario' : 'horarios'} el ${diaLargo(fecha)}.${omitidos}`, fecha);
+        if (!r.horarios.length) {
+          setError('Los horarios coinciden con otros que ya están publicados. Ajusta el rango e inténtalo de nuevo.');
+          onRevisar(fecha);
+          return;
+        }
+        const omitidos = r.omitidos.length ? ` ${cantidadHorarios(r.omitidos.length)} con cruce: ${r.omitidos.map((b) => `${b.horaInicio}–${b.horaFin}`).join(', ')}.` : '';
+        onPublicado(`Publicaste ${cantidadHorarios(r.horarios.length)} el ${diaLargo(fecha)}.${omitidos}`, fecha);
       } else {
         await solicitar('/disponibilidades', { metodo: 'POST', cuerpo: { fecha, horaInicio, horaFin } });
         onPublicado(`Publicaste el horario del ${diaLargo(fecha)}, ${horaInicio} – ${horaFin}.`, fecha);
       }
     } catch (e) {
       setError(e.message);
+      if (e.estado === 409) onRevisar(fecha);
     } finally {
       setOcupado(false);
     }
   }
 
   return (
-    <Panel id="publicar-horarios" titulo="Publicar horarios" onCerrar={onCerrar}>
+    <Panel id="publicar-horarios" titulo="Publicar horarios" onCerrar={onCerrar} ocupado={ocupado}>
       <form className="formulario-agenda" onSubmit={publicar} noValidate>
-        <label className="campo formulario-agenda__fecha">
-          <span className="campo__etiqueta">Día</span>
-          <input className="campo__control" type="date" required min={hoy} value={campos.fecha} onChange={(e) => cambiar({ fecha: e.target.value })} />
-        </label>
-        <div className="formulario-agenda__horas">
+        <fieldset className="publicar-horarios__campos" disabled={ocupado}>
           <label className="campo">
-            <span className="campo__etiqueta">Desde</span>
-            <input className="campo__control" type="time" step="900" required value={campos.horaInicio} onChange={(e) => cambiar({ horaInicio: e.target.value })} />
+            <span className="campo__etiqueta">Día</span>
+            <input className="campo__control" type="date" required min={hoy} max={hasta} value={fecha} onChange={(e) => cambiar({ fecha: e.target.value })} />
           </label>
-          <label className="campo">
-            <span className="campo__etiqueta">Hasta</span>
-            <input className="campo__control" type="time" step="900" required value={campos.horaFin} onChange={(e) => cambiar({ horaFin: e.target.value })} />
-          </label>
-        </div>
-        <label className="interruptor">
-          <input type="checkbox" checked={campos.dividir} onChange={(e) => cambiar({ dividir: e.target.checked })} />
-          <span className="interruptor__pista" aria-hidden="true" />
-          <span>Dividir en varios bloques</span>
-        </label>
-        {campos.dividir && (
-          <div className="segmentos" role="group" aria-label="Duración de cada bloque">
-            {duraciones.map((minutos) => (
-              <button key={minutos} type="button" className="segmentos__opcion" aria-pressed={campos.duracion === minutos} onClick={() => cambiar({ duracion: minutos })}>
-                {textoDuracion(minutos)}
-              </button>
-            ))}
+          <div className="formulario-agenda__horas">
+            <label className="campo">
+              <span className="campo__etiqueta">Desde</span>
+              <input className="campo__control" type="time" required value={horaInicio} onChange={(e) => cambiar({ horaInicio: e.target.value })} />
+            </label>
+            <label className="campo">
+              <span className="campo__etiqueta">Hasta</span>
+              <input className="campo__control" type="time" required value={horaFin} onChange={(e) => cambiar({ horaFin: e.target.value })} />
+            </label>
           </div>
-        )}
-        <p className="formulario-agenda__previa" aria-live="polite">
-          {previstos.length
-            ? previstos.length > serie.maxBloques
-              ? `Son ${previstos.length} bloques: publica hasta ${serie.maxBloques} de una vez.`
-              : `${previstos.length === 1 ? 'Se publicará 1 horario' : `Se publicarán ${previstos.length} horarios`}: ${lista(previstos.slice(0, 6).map((b) => b.horaInicio))}${previstos.length > 6 ? ' y más' : ''}.`
-            : 'Elige un inicio y un término con al menos un bloque completo.'}
-        </p>
+          <label className="interruptor">
+            <input type="checkbox" checked={dividir} onChange={(e) => cambiar({ dividir: e.target.checked })} />
+            <span className="interruptor__pista" aria-hidden="true" />
+            <span>Dividir en varios bloques</span>
+          </label>
+          {dividir && (
+            <div className="publicar-horarios__duracion">
+              <span id="duracion-bloques" className="campo__etiqueta">Duración de cada bloque</span>
+              <div className="segmentos" role="group" aria-labelledby="duracion-bloques">
+                {duraciones.map((minutos) => (
+                  <button key={minutos} type="button" className="segmentos__opcion" aria-pressed={duracion === minutos} onClick={() => cambiar({ duracion: minutos })}>
+                    {textoDuracion(minutos)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </fieldset>
+        <div className="publicar-horarios__previa">
+          {!validacion && !conoceDia ? (
+            <>
+              <p role={errorAgenda ? 'alert' : 'status'}>
+                {cargandoAgenda ? 'Comprobando la agenda del día…' : errorAgenda ? 'No pudimos comprobar la agenda del día.' : 'Comprueba la agenda del día para ver los cruces.'}
+              </p>
+              {!cargandoAgenda && <button type="button" className="boton-texto" onClick={() => onRevisar(fecha)}>Comprobar disponibilidad</button>}
+            </>
+          ) : (
+            <p aria-live="polite">{validacion || (disponibles ? `${cantidadHorarios(disponibles)} para publicar` : 'Todos los bloques coinciden con horarios publicados.')}</p>
+          )}
+          {conflictos > 0 && disponibles > 0 && <p className="publicar-horarios__cruces">{cantidadHorarios(conflictos)} con cruce en tu agenda.</p>}
+          {resto > 0 && <p>Quedan {textoDuracion(resto)} fuera de los bloques completos.</p>}
+          {previstos.length > 0 && (
+            <details>
+              <summary>Ver bloques</summary>
+              <ul>{previstos.map((b) => <li key={b.horaInicio}><span>{b.horaInicio}–{b.horaFin}</span>{b.ocupado && <span className="publicar-horarios__cruces">Con cruce</span>}</li>)}</ul>
+            </details>
+          )}
+        </div>
         <Alerta>{error}</Alerta>
-        <button className="boton boton--principal" disabled={ocupado || !previstos.length || previstos.length > serie.maxBloques}>
-          {ocupado ? 'Publicando…' : 'Publicar'}
+        <button className="boton boton--principal" disabled={ocupado || !disponibles}>
+          {ocupado ? 'Publicando…' : disponibles > 1 ? `Publicar ${cantidadHorarios(disponibles)}` : 'Publicar horario'}
         </button>
       </form>
     </Panel>
@@ -368,7 +446,7 @@ function ReservasDelDia({ datos, dia, onDia, onElegirHorario }) {
 
 // Resumen del costado cuando no hay nada elegido: las reservas del día, lo que falta confirmar y la lista de espera.
 // En pantallas angostas el calendario ya muestra la lista del día, así que aquí se omite (conLista).
-export function ResumenAgenda({ datos, dia, onDia, onElegirHorario, conLista = true, pendientes, onElegirPendiente }) {
+export function ResumenAgenda({ datos, dia, onDia, onElegirHorario, conLista = true, pendientes, errorPendientes, onReintentarPendientes, onElegirPendiente }) {
   return (
     <div className="resumen-agenda">
       {conLista && <ReservasDelDia datos={datos} dia={dia} onDia={onDia} onElegirHorario={onElegirHorario} />}
@@ -376,7 +454,7 @@ export function ResumenAgenda({ datos, dia, onDia, onElegirHorario, conLista = t
         <h2 id="titulo-por-confirmar" className="panel-agenda__titulo-chico">
           Por confirmar {pendientes?.length ? <span className="resumen-agenda__contador">{pendientes.length}</span> : null}
         </h2>
-        {!pendientes ? <p className="texto-secundario" role="status">Cargando…</p> : pendientes.length ? (
+        {errorPendientes ? <div><p role="alert">No pudimos comprobar las solicitudes pendientes. {errorPendientes}</p><button type="button" className="boton-texto" onClick={onReintentarPendientes}>Reintentar solicitudes</button></div> : !pendientes ? <p className="texto-secundario" role="status">Cargando…</p> : pendientes.length ? (
           <ul className="panel-agenda__lista">
             {pendientes.slice(0, 5).map((r) => (
               <li key={r.id}>

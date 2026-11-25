@@ -1,5 +1,5 @@
 /* Clientes del profesional (FS-HU-27) y su historial. */
-.clientes { display: grid; gap: 1rem; max-width: 60rem; margin: 0 auto; }
+.clientes { display: grid; gap: 1rem; }
 .clientes h1 { margin: 0; font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
 .clientes__cabecera { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
 .clientes__cabecera p { margin: 0.35rem 0 0; }

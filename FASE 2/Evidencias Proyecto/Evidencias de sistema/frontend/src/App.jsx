@@ -1,3 +1,6 @@
+import { Suspense } from 'react';
+import diferirPantalla from './services/diferirPantalla.jsx';
+import CargaPantalla from './components/CargaPantalla.jsx';
 import AvisosGuardado from './components/AvisosGuardado.jsx';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import DisenoAplicacion from './components/diseno/DisenoAplicacion.jsx';
@@ -5,37 +8,41 @@ import { SECCIONES, SECCIONES_PROFESIONAL, SECCIONES_PROXIMAMENTE, SECCIONES_PRO
 import RutaProtegida from './components/RutaProtegida.jsx';
 import VolverArriba from './components/VolverArriba.jsx';
 import { useSesion } from './context/SesionContext.jsx';
-import ElegirPerfil from './pages/ElegirPerfil.jsx';
-import Asistente from './pages/Asistente.jsx';
-import Comidas from './pages/Comidas.jsx';
-import AccesoNoDisponible from './pages/AccesoNoDisponible.jsx';
-import { LienzoAdministrador, ListadoAdministrador, DetalleVerificacion } from './pages/administrador/PanelAdministrador.jsx';
-import DashboardAdministrador from './pages/administrador/DashboardAdministrador.jsx';
-import ReportesAdministrador from './pages/administrador/ReportesAdministrador.jsx';
-import ContenidoAdministrador from './pages/administrador/ContenidoAdministrador.jsx';
-import Establecimientos from './pages/Establecimientos.jsx';
-import Favoritos from './pages/Favoritos.jsx';
-import FichaEstablecimiento from './pages/FichaEstablecimiento.jsx';
-import FichaProfesional from './pages/FichaProfesional.jsx';
-import Inicio from './pages/Inicio.jsx';
-import InicioSesion from './pages/InicioSesion.jsx';
-import Perfil from './pages/Perfil.jsx';
-import Portada from './pages/Portada.jsx';
-import InicioProfesional from './pages/profesional/InicioProfesional.jsx';
+const ElegirPerfil = diferirPantalla(() => import('./pages/ElegirPerfil.jsx'));
+const Asistente = diferirPantalla(() => import('./pages/Asistente.jsx'));
+const Comidas = diferirPantalla(() => import('./pages/Comidas.jsx'));
+const AccesoNoDisponible = diferirPantalla(() => import('./pages/AccesoNoDisponible.jsx'));
+const LienzoAdministrador = diferirPantalla(() => import('./pages/administrador/PanelAdministrador.jsx').then((m) => ({ default: m.LienzoAdministrador })));
+const ListadoAdministrador = diferirPantalla(() => import('./pages/administrador/PanelAdministrador.jsx').then((m) => ({ default: m.ListadoAdministrador })));
+const DetalleVerificacion = diferirPantalla(() => import('./pages/administrador/PanelAdministrador.jsx').then((m) => ({ default: m.DetalleVerificacion })));
+const DashboardAdministrador = diferirPantalla(() => import('./pages/administrador/DashboardAdministrador.jsx'));
+const ReportesAdministrador = diferirPantalla(() => import('./pages/administrador/ReportesAdministrador.jsx'));
+const ContenidoAdministrador = diferirPantalla(() => import('./pages/administrador/ContenidoAdministrador.jsx'));
+const Establecimientos = diferirPantalla(() => import('./pages/Establecimientos.jsx'));
+const Favoritos = diferirPantalla(() => import('./pages/Favoritos.jsx'));
+const ConfiguracionUsuario = diferirPantalla(() => import('./pages/ConfiguracionUsuario.jsx'));
+const FichaEstablecimiento = diferirPantalla(() => import('./pages/FichaEstablecimiento.jsx'));
+const FichaProfesional = diferirPantalla(() => import('./pages/FichaProfesional.jsx'));
+const Inicio = diferirPantalla(() => import('./pages/Inicio.jsx'));
+const InicioSesion = diferirPantalla(() => import('./pages/InicioSesion.jsx'));
+const Perfil = diferirPantalla(() => import('./pages/Perfil.jsx'));
+const Portada = diferirPantalla(() => import('./pages/Portada.jsx'));
+const InicioProfesional = diferirPantalla(() => import('./pages/profesional/InicioProfesional.jsx'));
 // Mejoras del 09-11-2026: agenda semanal, clientes (FS-HU-27), reportes (FS-HU-28), configuración (FS-HU-29) y mensajes (FS-HU-31).
-import AgendaSemanal from './pages/profesional/AgendaSemanal.jsx';
-import Clientes, { HistorialCliente } from './pages/profesional/Clientes.jsx';
-import Configuracion from './pages/profesional/Configuracion.jsx';
-import Reportes from './pages/profesional/Reportes.jsx';
-import Mensajes from './pages/Mensajes.jsx';
-import PerfilProfesional from './pages/profesional/PerfilProfesional.jsx';
-import VistaPublica from './pages/profesional/VistaPublica.jsx';
-import Profesionales from './pages/Profesionales.jsx';
-import Proximamente from './pages/Proximamente.jsx';
-import { MisCitas } from './pages/Agenda.jsx';
-import RecuperarContrasena from './pages/RecuperarContrasena.jsx';
-import Registro from './pages/Registro.jsx';
-import RestablecerContrasena from './pages/RestablecerContrasena.jsx';
+const AgendaSemanal = diferirPantalla(() => import('./pages/profesional/AgendaSemanal.jsx'));
+const Clientes = diferirPantalla(() => import('./pages/profesional/Clientes.jsx'));
+const HistorialCliente = diferirPantalla(() => import('./pages/profesional/Clientes.jsx').then((m) => ({ default: m.HistorialCliente })));
+const Configuracion = diferirPantalla(() => import('./pages/profesional/Configuracion.jsx'));
+const Reportes = diferirPantalla(() => import('./pages/profesional/Reportes.jsx'));
+const Mensajes = diferirPantalla(() => import('./pages/Mensajes.jsx'));
+const PerfilProfesional = diferirPantalla(() => import('./pages/profesional/PerfilProfesional.jsx'));
+const VistaPublica = diferirPantalla(() => import('./pages/profesional/VistaPublica.jsx'));
+const Profesionales = diferirPantalla(() => import('./pages/Profesionales.jsx'));
+const Proximamente = diferirPantalla(() => import('./pages/Proximamente.jsx'));
+const MisCitas = diferirPantalla(() => import('./pages/Agenda.jsx').then((m) => ({ default: m.MisCitas })));
+const RecuperarContrasena = diferirPantalla(() => import('./pages/RecuperarContrasena.jsx'));
+const Registro = diferirPantalla(() => import('./pages/Registro.jsx'));
+const RestablecerContrasena = diferirPantalla(() => import('./pages/RestablecerContrasena.jsx'));
 import { CATEGORIAS } from './components/establecimientos/categorias.js';
 import { ACCESO_NO_DISPONIBLE, destinoTrasIngreso, ELEGIR_PERFIL } from './services/navegacion.js';
 
@@ -52,7 +59,7 @@ export default function App() {
     <>
       <VolverArriba />
       <AvisosGuardado />
-      <Routes>
+      <CargaPantalla><Suspense fallback={<p className="pagina-cargando" role="status">Cargando pantalla…</p>}><Routes>
         <Route path="/" element={soloInvitado(<Portada />)} />
         <Route path="/registro" element={soloInvitado(<Registro />)} />
         <Route path="/iniciar-sesion" element={soloInvitado(<InicioSesion />)} />
@@ -83,6 +90,7 @@ export default function App() {
               <Route path="/profesionales" element={<Profesionales />} />
               <Route path="/profesionales/:id" element={<FichaProfesional />} />
               <Route path="/favoritos" element={<Favoritos />} />
+              <Route path={SECCIONES.configuracion.ruta} element={<ConfiguracionUsuario />} />
               {/* Centros de salud y gimnasios (FS-HU-25): la misma lista y ficha para cada categoría. */}
               {Object.entries(CATEGORIAS).flatMap(([categoria, { ruta }]) => [
                 <Route key={ruta} path={ruta} element={<Establecimientos key={categoria} categoria={categoria} />} />,
@@ -92,7 +100,7 @@ export default function App() {
               <Route path="/mensajes/:id?" element={<Mensajes />} />
               <Route path="/asistente/:id?" element={<Asistente />} />
               <Route path="/comidas" element={<Comidas />} />
-              <Route path="/perfil" element={<div className="contenedor-perfil"><Perfil /></div>} />
+              <Route path="/perfil" element={<Perfil />} />
               {SECCIONES_PROXIMAMENTE.map((clave) => (
                 <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />
               ))}
@@ -119,7 +127,7 @@ export default function App() {
           </Route>
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+      </Routes></Suspense></CargaPantalla>
     </>
   );
 }

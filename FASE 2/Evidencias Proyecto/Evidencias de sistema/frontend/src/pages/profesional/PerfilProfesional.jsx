@@ -13,7 +13,7 @@ import useCuentaPerfil from '../../components/perfil/useCuentaPerfil.js';
 import { useSesion } from '../../context/SesionContext.jsx';
 import { enMapa } from '../../components/profesionales/ubicacionMapa.js';
 import { useEspecialidades } from '../../services/especialidades.js';
-import { etiquetaModalidad, iniciales } from '../../services/formato.js';
+import { etiquetaModalidad } from '../../services/formato.js';
 import { guardarMiFicha, obtenerMiFicha, obtenerProfesional } from '../../services/profesional.service.js';
 import './PerfilProfesional.css';
 
@@ -143,14 +143,6 @@ export default function PerfilProfesional() {
     nombre={cuentaEstado.cuenta?.nombre || p?.nombre || sesion.usuario.nombre} rol={p?.especialidad || 'Profesional'} cuentaEstado={cuentaEstado}
     activa={activa} onCambiar={(s) => { setActiva(s); setMensaje(''); }} secciones={secciones}
     cabeceraAcciones={p && <Link to="/profesional/perfil/publico" className="boton boton--secundario boton--compacto"><Icono nombre="ojo" tamano={18} /> Ver mi perfil público</Link>}
-    vistaPrevia={p && <>
-      <h2>Así se ve tu perfil</h2>
-      <div className="perfil-previa__persona">
-        <span className="perfil-previa__avatar" aria-hidden="true">{cuentaEstado.cuenta?.foto ? <img src={cuentaEstado.cuenta.foto} alt="" /> : iniciales(cuentaEstado.cuenta?.nombre || p.nombre)}</span>
-        <div><strong>{cuentaEstado.cuenta?.nombre || p.nombre}</strong><p>{p.especialidad}</p><p>{p.modalidad === 'online' ? 'Atención online' : p.comuna}</p></div>
-      </div>
-      <p className="perfil-previa__presentacion">{cuentaEstado.cuenta?.biografia || 'Tu presentación aparecerá aquí cuando la guardes.'}</p>
-    </>}
     identidad={p && <>
       <span className={p.verificado ? 'perfil-prof__verificado' : 'perfil-prof__sin-verificar'}>
         <Icono nombre="escudo" tamano={16} />{p.verificado ? 'Verificado' : 'Sin verificar'}

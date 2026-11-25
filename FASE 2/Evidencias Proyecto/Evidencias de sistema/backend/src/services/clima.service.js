@@ -1,14 +1,12 @@
 // Clima actual para el Inicio del profesional (DAS, D26). Fuente: Open-Meteo (gratuita, sin clave ni cuenta;
 // datos bajo licencia CC BY 4.0, por eso la interfaz la menciona). Si el servicio falla, el Inicio sigue funcionando.
-const profesionalModel = require('../models/profesional.model');
+const { lugarDelPunto } = require('./geocodificacion.service');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 const URL_API = 'https://api.open-meteo.com/v1/forecast';
 const DURACION_CACHE_MS = 30 * 60 * 1000;
 const TIEMPO_ESPERA_MS = 4000;
 const MAXIMO_EN_CACHE = 500;
-// Sin ubicación de atención (incluido solo online), se muestra el clima del centro de Santiago.
-const POR_DEFECTO = { lugar: 'Santiago', lat: -33.45, lng: -70.67 };
 
 // Códigos WMO que entrega Open-Meteo, agrupados en los estados que la interfaz sabe dibujar.
 const ESTADOS = [
@@ -37,39 +35,41 @@ async function consultarOpenMeteo(lat, lng) {
   return current;
 }
 
-async function actual(usuarioId) {
-  const ficha = await profesionalModel.obtenerPorUsuario(usuarioId);
-  // La ubicación se redondea a 2 decimales (cerca de 1 km): basta para el clima y no viaja exacta a un tercero.
-  const redondear = (valor) => Math.round(Number(valor) * 100) / 100;
-  const tieneUbicacion = ficha && ficha.modalidad !== 'online'
-    && ficha.ubicacionLat != null && ficha.ubicacionLng != null
-    && Number.isFinite(Number(ficha.ubicacionLat)) && Number.isFinite(Number(ficha.ubicacionLng));
-  const lat = tieneUbicacion ? redondear(ficha.ubicacionLat) : POR_DEFECTO.lat;
-  const lng = tieneUbicacion ? redondear(ficha.ubicacionLng) : POR_DEFECTO.lng;
+// La fuente es siempre la posición del navegador, nunca la ficha profesional ni una ciudad supuesta.
+const enCurso = new Map();
+function coordenada(valor, minimo, maximo) {
+  if (!['number', 'string'].includes(typeof valor) || String(valor).trim() === '') return null;
+  const numero = Number(valor);
+  return Number.isFinite(numero) && numero >= minimo && numero <= maximo ? Math.round(numero * 100) / 100 : null;
+}
+async function actual(punto = {}) {
+  if (!punto || typeof punto !== 'object') throw new ErrorHttp(400, 'Necesitamos tu ubicación actual para consultar el clima.');
+  const lat = coordenada(punto.lat, -90, 90);
+  const lng = coordenada(punto.lng, -180, 180);
+  if (lat === null || lng === null) throw new ErrorHttp(400, 'Necesitamos tu ubicación actual para consultar el clima.');
   const clave = `${lat},${lng}`;
-
   let datos = cache.get(clave);
-  if (!datos || Date.now() - datos.momento > DURACION_CACHE_MS) {
-    try {
-      datos = { momento: Date.now(), actual: await consultarOpenMeteo(lat, lng) };
-    } catch {
-      throw new ErrorHttp(503, 'El clima no está disponible en este momento');
+  if (!datos || Date.now() - datos.momento >= DURACION_CACHE_MS) {
+    if (!enCurso.has(clave)) {
+      const carga = Promise.all([
+        consultarOpenMeteo(lat, lng),
+        lugarDelPunto({ lat, lng }).catch(() => null),
+      ]).then(([actual, lugar]) => {
+        const nueva = { momento: Date.now(), actual, lugar };
+        if (cache.size >= MAXIMO_EN_CACHE) cache.clear();
+        cache.set(clave, nueva);
+        return nueva;
+      }).finally(() => enCurso.delete(clave));
+      enCurso.set(clave, carga);
     }
-    if (cache.size >= MAXIMO_EN_CACHE) cache.clear();
-    cache.set(clave, datos);
+    try { datos = await enCurso.get(clave); }
+    catch { throw new ErrorHttp(503, 'El clima no está disponible en este momento'); }
   }
-
   const { estado, descripcion } = describir(datos.actual.weather_code);
   return {
-    lugar: tieneUbicacion ? ficha.comuna || POR_DEFECTO.lugar : POR_DEFECTO.lugar,
-    temperatura: Math.round(datos.actual.temperature_2m),
-    estado,
-    descripcion,
-    esDeDia: datos.actual.is_day === 1,
-    fuente: 'Open-Meteo',
+    lugar: datos.lugar || 'Ubicación actual', temperatura: Math.round(datos.actual.temperature_2m),
+    estado, descripcion, esDeDia: datos.actual.is_day === 1, fuente: 'Open-Meteo',
   };
 }
-
-const reiniciarCache = () => cache.clear();
-
+const reiniciarCache = () => { cache.clear(); enCurso.clear(); };
 module.exports = { actual, describir, reiniciarCache };

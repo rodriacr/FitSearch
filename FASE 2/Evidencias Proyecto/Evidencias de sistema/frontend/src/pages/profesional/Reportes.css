@@ -1,6 +1,6 @@
 /* Reportes del profesional (FS-HU-28). */
 /* Contenedor de las consultas de ancho del gráfico común (en el celular nombra una semana sí y otra no, 15-11-2026). */
-.reportes { display: grid; gap: 1rem; max-width: 64rem; margin: 0 auto; container-type: inline-size; }
+.reportes { display: grid; gap: 1rem; container-type: inline-size; }
 .reportes h1 { margin: 0; font-size: clamp(1.4rem, 3.5vw, 1.8rem); }
 .reportes__cabecera { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 1rem; }
 .reportes__cabecera p { margin: 0.35rem 0 0; }

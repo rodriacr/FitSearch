@@ -36,6 +36,9 @@ model Usuario {
   fechaRegistro        DateTime            @default(now()) @map("fecha_registro") @db.DateTime(0)
   activo               Boolean             @default(true)
   versionSesion        Int                 @default(0) @map("version_sesion")
+  recordatoriosCitas   Boolean             @default(true) @map("recordatorios_citas")
+  avisosMensajesCorreo Boolean             @default(false) @map("avisos_mensajes_correo")
+  ultimoAvisoMensajes  DateTime?           @map("ultimo_aviso_mensajes") @db.DateTime(0)
   // SC-42: cuándo la persona eliminó su cuenta. La fila queda anonimizada (nombre «Usuario eliminado», sin correo real,
   // contraseña ni Google) y desactivada, para conservar sin datos personales las citas y reseñas pasadas.
   eliminadoEn          DateTime?           @map("eliminado_en") @db.DateTime(0)

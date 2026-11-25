@@ -11,7 +11,7 @@ import useMenuDesplegable from './useMenuDesplegable.js';
 import { inicioDe } from '../../services/navegacion.js';
 import { useSesion } from '../../context/SesionContext.jsx';
 
-export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', tema, onTema }) {
+export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', tema, onTema, mostrarNotificaciones = true }) {
   const { secciones, menu } = ESPACIOS[espacio];
   const { sesion } = useSesion();
   const { desplegado, propiedades } = useMenuDesplegable();
@@ -73,10 +73,10 @@ export default function MenuLateral({ abierto, onCerrar, espacio = 'usuario', te
                   {proximamente && <span className="etiqueta-proximamente">Próximamente</span>}
                 </>}
               </NavLink>
-              {indice === posicionAvisos && <Notificaciones ubicacion="lateral" />}
+              {mostrarNotificaciones && indice === posicionAvisos && <Notificaciones ubicacion="lateral" />}
             </li>;
           })}
-          {posicionAvisos === -1 && <li><Notificaciones ubicacion="lateral" /></li>}
+          {mostrarNotificaciones && posicionAvisos === -1 && <li><Notificaciones ubicacion="lateral" /></li>}
         </ul>
       </nav>
       <MenuMas tema={tema} onTema={onTema} onNavegar={onCerrar} />

@@ -2,16 +2,11 @@
    Desde 75rem la columna derecha (objetivo, progreso y citas) acompaña al contenido principal. */
 .inicio {
   display: grid; gap: 1.5rem;
-  grid-template-areas: "aviso" "hero" "accesos" "panel" "destacados" "banner";
+  grid-template-areas: "hero" "accesos" "panel" "destacados" "banner";
 }
 .inicio > * { min-width: 0; }
 .inicio h2 { margin: 0; font-size: 1.1rem; }
 
-.inicio__aviso {
-  grid-area: aviso; display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; padding: 0.9rem 1.1rem;
-  border-radius: var(--radio); color: var(--color-primario); background: var(--color-info-fondo); border: 1px solid light-dark(#c9dcea, var(--color-borde));
-}
-.inicio__aviso p { flex: 1 1 14rem; margin: 0; font-size: 0.9rem; }
 
 /* Hero con el buscador "¿Qué necesitas hoy?" */
 .inicio__hero {
@@ -145,8 +140,8 @@
 @media (min-width: 75rem) {
   .inicio {
     grid-template-columns: minmax(0, 1fr) 19rem;
-    grid-template-areas: "aviso aviso" "hero panel" "accesos panel" "destacados panel" "banner panel";
-    grid-template-rows: auto auto auto auto 1fr;
+    grid-template-areas: "hero panel" "accesos panel" "destacados panel" "banner panel";
+    grid-template-rows: auto auto auto 1fr;
     align-items: start;
   }
   .inicio__panel { grid-template-columns: 1fr; }

@@ -1,12 +1,4 @@
 /* Plan de alimentación de Comidas (11-11-2026): mismas tarjetas, radios y colores de macronutrientes que el resto de la página. */
-.plan { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.plan .panel-tarjeta { border-radius: 20px; }
-/* Dos columnas solo con espacio de sobra; con el menú abierto en 1024 px la tarjeta del plan quedaba angosta. */
-@media (min-width: 72rem) {
-  .plan { grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); }
-}
-
-.plan__columna { display: grid; gap: 1rem; min-width: 0; }
 .plan__principal { display: grid; gap: 1.1rem; container: plan / inline-size; }
 .plan__principal > .alerta { margin: 0; }
 .plan__encabezado .panel-tarjeta__titulo { margin: 0; }
@@ -153,7 +145,7 @@
 }
 
 /* Meta de peso. */
-.meta-peso { display: grid; gap: 0.9rem; }
+.meta-peso { display: grid; align-content: start; gap: 0.9rem; }
 .meta-peso .panel-tarjeta__titulo { margin: 0; }
 .meta-peso > p, .meta-peso > .alerta { margin: 0; }
 .meta-peso > p { font-size: 0.88rem; line-height: 1.55; }
@@ -187,7 +179,6 @@
 .plan__principal > .alerta--exito, .plan__principal > .alerta--error { margin: 0; }
 
 /* Columna lateral: cómo se calcula y el aviso con acceso a nutricionistas. */
-.plan__lateral { display: grid; gap: 1rem; }
 .plan-calculo .panel-tarjeta__titulo { margin-bottom: 0.6rem; }
 .plan-calculo__pasos { display: grid; gap: 0.6rem; margin: 0; padding-left: 1.2rem; font-size: 0.86rem; line-height: 1.55; }
 .plan-calculo__pasos li::marker { color: var(--color-primario); font-weight: 700; }

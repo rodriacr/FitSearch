@@ -125,8 +125,8 @@ function comunaDelPunto(direccion) {
   return null;
 }
 
-async function consultarPunto({ lat, lng }) {
-  const consulta = new URLSearchParams({ lat, lon: lng, format: 'jsonv2', addressdetails: '1', zoom: '18', 'accept-language': 'es' });
+async function consultarPunto({ lat, lng }, zoom = '18') {
+  const consulta = new URLSearchParams({ lat, lon: lng, format: 'jsonv2', addressdetails: '1', zoom, 'accept-language': 'es' });
   const respuesta = await enTurno(() => fetch(`${URL_INVERSA}?${consulta}`, {
     headers: { 'User-Agent': AGENTE }, signal: AbortSignal.timeout(TIEMPO_ESPERA_MS),
   }));
@@ -162,7 +162,23 @@ async function direccionDelPunto({ lat, lng }) {
   return resultado;
 }
 
+// Nombre de ciudad o comuna para el clima. Recibe coordenadas aproximadas y no busca una dirección particular.
+async function lugarDelPunto({ lat, lng }) {
+  const clave = `clima|${lat.toFixed(2)}|${lng.toFixed(2)}`;
+  const guardada = cache.get(clave);
+  if (guardada && Date.now() - guardada.momento < DURACION_CACHE_MS) return guardada.nombre;
+  const lugar = await consultarPunto({ lat, lng }, '12');
+  const direccion = lugar?.address;
+  const ubicada = direccion && comunaDelPunto(direccion);
+  const nombre = ubicada?.comuna || direccion?.city || direccion?.town || direccion?.village || direccion?.municipality || null;
+  if (nombre) {
+    if (cache.size >= MAXIMO_EN_CACHE) cache.clear();
+    cache.set(clave, { momento: Date.now(), nombre });
+  }
+  return nombre;
+}
+
 // Para las pruebas: vacía la caché y permite acortar la espera entre consultas.
 const reiniciar = ({ intervaloMs = INTERVALO_MS } = {}) => { cache.clear(); ultimaConsulta = 0; intervalo = intervaloMs; };
 
-module.exports = { ubicar, direccionDelPunto, calleYNumero, reiniciar };
+module.exports = { ubicar, direccionDelPunto, lugarDelPunto, calleYNumero, reiniciar };

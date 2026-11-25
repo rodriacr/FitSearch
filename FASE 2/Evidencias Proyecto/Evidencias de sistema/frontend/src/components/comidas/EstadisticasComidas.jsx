@@ -106,8 +106,8 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
     const reparto = repartoDeCalorias(promedio);
     const momentos = datos.momentos.map(({ etiqueta, calorias, porcentaje }) => ({ etiqueta, valor: calorias, detalle: `kcal · ${porcentaje} %` }));
     contenido = (
-      <div className="estadisticas__graficos" aria-busy={cargando}>
-        <section className="panel-tarjeta estadisticas__cifras" aria-labelledby="titulo-estadisticas-resumen">
+      <div className={`comidas__cuadricula${datos.periodo === 'mes' ? ' estadisticas__graficos--mes' : ''}`} aria-busy={cargando}>
+        <section className="panel-tarjeta estadisticas__cifras comidas__fila-completa" aria-labelledby="titulo-estadisticas-resumen">
           <h2 id="titulo-estadisticas-resumen" className="panel-tarjeta__titulo">{mensual ? 'Tu mes en cifras' : 'Tu semana en cifras'}</h2>
           <AyudaPanel>
             Cuánto comiste en promedio y qué tan seguido te acercaste a tu meta de calorías. Las flechas comparan con {mensual ? 'el mes anterior' : 'la semana anterior'}.
@@ -117,18 +117,20 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
           {!objetivo.calorias && <p className="texto-secundario">Completa tu perfil para comparar con tu objetivo diario. <Link to="/perfil">Ir a mi perfil</Link></p>}
         </section>
 
-        <section className="panel-tarjeta estadisticas__ancho" aria-labelledby="titulo-estadisticas-calorias">
+        <section className="panel-tarjeta estadisticas__serie" aria-labelledby="titulo-estadisticas-calorias">
           <h2 id="titulo-estadisticas-calorias" className="panel-tarjeta__titulo">Calorías por día</h2>
           <AyudaPanel>
             Cada barra es lo que comiste ese día. La línea punteada es tu meta y la franja, el margen de ±{MARGEN_PCT} % en que el día cuenta como cerca de ella.
             {mensual ? ' Pasa el mouse sobre una barra para ver su detalle.' : ' Sobre cada barra ves qué porcentaje de tu meta alcanzaste.'}
           </AyudaPanel>
-          <LeyendaMeta meta={objetivo.calorias} unidad="kcal" />
-          <BarrasFrenteAMeta dias={dias} clave="calorias" meta={objetivo.calorias} unidad="kcal" color="#1c74c9" mensual={mensual} fechaActual={datos.hoy}
-            descripcion={`Calorías consumidas cada día ${mensual ? 'del mes' : 'de la semana'}`} />
+          <div className="estadisticas__grafico">
+            <LeyendaMeta meta={objetivo.calorias} unidad="kcal" />
+            <BarrasFrenteAMeta dias={dias} clave="calorias" meta={objetivo.calorias} unidad="kcal" color="#1c74c9" mensual={mensual} fechaActual={datos.hoy}
+              descripcion={`Calorías consumidas cada día ${mensual ? 'del mes' : 'de la semana'}`} />
+          </div>
         </section>
 
-        <section className="panel-tarjeta" aria-labelledby="titulo-estadisticas-macros">
+        <section className="panel-tarjeta estadisticas__serie" aria-labelledby="titulo-estadisticas-macros">
           <div className="estadisticas__encabezado-tarjeta">
             <h2 id="titulo-estadisticas-macros" className="panel-tarjeta__titulo">Macronutrientes por día</h2>
             <div className="estadisticas__opciones" role="group" aria-label="Macronutriente del gráfico">
@@ -138,9 +140,11 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
             </div>
           </div>
           <AyudaPanel>Los gramos de {elegido.nombre.toLowerCase()} de cada día frente a la meta de tu plan. Elige otro macronutriente con los botones.</AyudaPanel>
-          <LeyendaMeta meta={objetivo[nutriente]} unidad="g" color={elegido.color} />
-          <BarrasFrenteAMeta dias={dias} clave={nutriente} meta={objetivo[nutriente]} unidad="g" color={elegido.color} mensual={mensual} fechaActual={datos.hoy}
-            descripcion={`${elegido.nombre} consumidas cada día ${mensual ? 'del mes' : 'de la semana'}, en gramos`} />
+          <div className="estadisticas__grafico">
+            <LeyendaMeta meta={objetivo[nutriente]} unidad="g" color={elegido.color} />
+            <BarrasFrenteAMeta dias={dias} clave={nutriente} meta={objetivo[nutriente]} unidad="g" color={elegido.color} mensual={mensual} fechaActual={datos.hoy}
+              descripcion={`${elegido.nombre} consumidas cada día ${mensual ? 'del mes' : 'de la semana'}, en gramos`} />
+          </div>
         </section>
 
         <section className="panel-tarjeta" aria-labelledby="titulo-estadisticas-comparacion">
@@ -169,7 +173,7 @@ export default function EstadisticasComidas({ fecha, version, alRegistrar }) {
           )}
         </section>
 
-        <section className="panel-tarjeta estadisticas__momentos" aria-labelledby="titulo-estadisticas-momentos">
+        <section className="panel-tarjeta estadisticas__momentos comidas__fila-completa" aria-labelledby="titulo-estadisticas-momentos">
           <h2 id="titulo-estadisticas-momentos" className="panel-tarjeta__titulo">Calorías por comida del día</h2>
           <AyudaPanel>En qué momento del día comes más: el promedio de calorías de cada comida en los días con registros y su parte del total.</AyudaPanel>
           <Barras filas={momentos} etiquetaLector={`Promedio de calorías de cada comida del día ${mensual ? 'en el mes' : 'en la semana'}`} />

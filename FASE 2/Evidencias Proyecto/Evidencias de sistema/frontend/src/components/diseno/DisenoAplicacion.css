@@ -3,12 +3,7 @@
 .app { display: flex; flex-direction: column; min-height: 100vh; min-height: 100dvh; background: var(--color-fondo); }
 .app__saltar { position: fixed; top: -5rem; left: 1rem; z-index: 60; padding: 0.75rem 1rem; border-radius: var(--radio-control); background: var(--color-superficie); box-shadow: var(--sombra-tarjeta); }
 .app__saltar:focus { top: 1rem; }
-/* El cuerpo ocupa todo el ancho para que el menú quede pegado al borde izquierdo en cualquier pantalla (11-11-2026: antes
-   tenía un máximo de 92rem centrado y en pantallas anchas quedaba una franja vacía a cada lado). */
-.app__cuerpo { display: flex; flex: 1; width: 100%; }
-.app__contenido { flex: 1; min-width: 0; padding: 1rem 1rem 6.5rem; }
 .app__contenido:focus { outline: none; }
-.contenedor-perfil { width: 100%; max-width: 64rem; margin: 0 auto; }
 
 /* ---------- Encabezado ---------- */
 .encabezado {
@@ -181,9 +176,7 @@
     padding: 1.25rem 1rem; box-shadow: none; border-right: 1px solid var(--color-borde); transform: none; visibility: visible;
   }
   .menu-lateral__fondo, .menu-lateral__cabecera { display: none; }
-  .app__contenido { width: 100%; max-width: 76rem; margin-inline: auto; }
   .barra-inferior { display: none; }
-  .app__contenido { padding: 1.5rem 2rem 3rem; }
 }
 
 /* ---------- Menú contraído en escritorio con mouse (18-11-2026, pedido del PO; reemplaza «Contraer menú») ----------
@@ -197,7 +190,6 @@
     transition: width 220ms var(--curva-cajon), margin-right 220ms var(--curva-cajon), box-shadow 220ms ease;
   }
   .menu-lateral--desplegado { width: 16rem; margin-right: -11.25rem; box-shadow: 12px 0 32px rgb(6 38 63 / 14%); }
-  .app__contenido { max-width: 87.25rem; }
 
   /* Cada opción mide 3rem contraída: el ícono queda centrado y el nombre, oculto pero legible para lectores de pantalla,
      aparece al desplegarse sin cortarse en dos líneas. */

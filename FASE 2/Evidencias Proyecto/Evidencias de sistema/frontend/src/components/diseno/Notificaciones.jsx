@@ -1,13 +1,13 @@
 import { createPortal } from 'react-dom';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useSesion } from '../../context/SesionContext.jsx';
-import { solicitar } from '../../services/api.js';
+import useAvisosMensajes from '../../services/useAvisosMensajes.js';
 import Icono from '../Icono.jsx';
 import useDesplegable from './useDesplegable.js';
 import { posicionNotificaciones } from './posicionNotificaciones.js';
 
-const CADA_SEGUNDOS = 60;
+
 
 // Avisos de mensajes y verificaciones. Desde FS-HU-31 avisa los mensajes sin leer de los chats: se consulta al cargar, al cambiar
 // de pantalla y cada minuto (si la pestaña está a la vista). Al administrador le avisa las verificaciones pendientes
@@ -16,22 +16,10 @@ export default function Notificaciones({ ubicacion = 'encabezado' }) {
   const panel = useRef(null);
   const { abierto, setAbierto, contenedor, boton } = useDesplegable(panel);
   const { sesion } = useSesion();
-  const { pathname } = useLocation();
+
   const rol = sesion?.usuario.rol;
   const administrador = rol === 'administrador';
-  const conMensajes = rol === 'usuario' || rol === 'profesional' || administrador;
-  const [noLeidos, setNoLeidos] = useState(0);
-
-  useEffect(() => {
-    if (!conMensajes) return undefined;
-    let activo = true;
-    const consultar = () => (administrador
-      ? solicitar('/administrador/alertas').then(({ verificacionesPendientes }) => activo && setNoLeidos(verificacionesPendientes))
-      : solicitar('/chats/no-leidos').then(({ total }) => activo && setNoLeidos(total))).catch(() => {});
-    consultar();
-    const temporizador = setInterval(() => { if (document.visibilityState !== 'hidden') consultar(); }, CADA_SEGUNDOS * 1000);
-    return () => { activo = false; clearInterval(temporizador); };
-  }, [conMensajes, administrador, pathname]);
+  const { total: noLeidos, cargando, error, reintentar } = useAvisosMensajes();
 
   const lateral = ubicacion === 'lateral';
   const [destino, setDestino] = useState(null);
@@ -72,7 +60,7 @@ export default function Notificaciones({ ubicacion = 'encabezado' }) {
         <section ref={panel} id="panel-notificaciones" className={`desplegable__panel notificaciones__panel${lateral ? ' notificaciones__panel--lateral' : ''}`} aria-label="Panel de notificaciones" style={lateral ? { ...posicion, visibility: posicion ? 'visible' : 'hidden' } : undefined}>
           <button type="button" className="boton-icono notificaciones__cerrar" aria-label="Cerrar notificaciones" onClick={() => { setAbierto(false); boton.current?.focus(); }}><Icono nombre="cerrar" tamano={20} /></button>
           <p className="notificaciones__titulo">Notificaciones</p>
-          {noLeidos > 0 && administrador ? (
+          {cargando ? <p role="status">Comprobando notificaciones…</p> : error ? <div><p role="alert">No pudimos comprobar tus notificaciones.</p><button type="button" className="boton-texto" onClick={reintentar}>Reintentar</button></div> : noLeidos > 0 && administrador ? (
             <Link to="/admin/verificaciones" className="notificaciones__aviso" onClick={() => setAbierto(false)}>
               <span className="notificaciones__aviso-icono"><Icono nombre="escudo" tamano={20} /></span>
               <span>

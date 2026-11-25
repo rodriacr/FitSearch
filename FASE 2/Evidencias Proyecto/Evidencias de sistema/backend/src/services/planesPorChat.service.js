@@ -6,6 +6,7 @@ const modelo = require('../models/chat.model');
 const planComida = require('./planComida.service');
 const planAlimentacion = require('./planAlimentacion.service');
 const { formatear } = require('./chat.service');
+const avisos = require('./aviso.service');
 const ErrorHttp = require('../utils/ErrorHttp');
 
 const MAX_NOTA = 500;
@@ -52,6 +53,7 @@ async function enviar(usuario, chatId, { tipo, plan, texto }) {
     data: { chatId: chat.id, autorId: usuario.id, texto: nota || `Te envié ${que}: «${adjunto.plan.nombre}».`, adjunto: { ...adjunto, automatico: !nota } },
     select: modelo.seleccionMensaje,
   });
+  if (chat.usuario?.avisosMensajesCorreo) avisos.avisarMensajeNuevo(chat.usuarioId, mensaje.id);
   return { mensaje: formatear(mensaje, usuario.id) };
 }
 

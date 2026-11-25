@@ -1,4 +1,8 @@
 import { solicitar } from './api.js';
+import { ubicarParaClima } from './ubicacionClima.js';
 
-// Clima actual del lugar de atención del profesional (DAS, D26). Si no está disponible, el Inicio lo oculta.
-export const obtenerClima = () => solicitar('/clima');
+// La ubicación aproximada viaja al backend en el cuerpo; no se guarda en el perfil ni en la URL.
+export async function obtenerClima() {
+  const punto = await ubicarParaClima();
+  return solicitar('/clima', { metodo: 'POST', cuerpo: punto });
+}

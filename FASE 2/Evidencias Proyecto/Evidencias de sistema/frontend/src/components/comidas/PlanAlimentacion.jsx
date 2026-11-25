@@ -145,85 +145,81 @@ export default function PlanAlimentacion({ alGuardar }) {
     : 'Usas el plan según tu meta.';
 
   return (
-    <div className="plan">
-      <div className="plan__columna">
-        <section className="panel-tarjeta plan__principal" aria-labelledby="titulo-plan">
-          <div className="plan__encabezado">
-            <h2 id="titulo-plan" className="panel-tarjeta__titulo">Tu plan de macronutrientes</h2>
-            <p className="texto-secundario">{vigente}</p>
-          </div>
+    <div className="comidas__cuadricula">
+      <section className="panel-tarjeta plan__principal comidas__fila-completa" aria-labelledby="titulo-plan">
+        <div className="plan__encabezado">
+          <h2 id="titulo-plan" className="panel-tarjeta__titulo">Tu plan de macronutrientes</h2>
+          <p className="texto-secundario">{vigente}</p>
+        </div>
 
-          <div className="plan__modos" role="group" aria-label="Tipo de plan">
-            <button type="button" className="plan__modo" aria-pressed={modo === 'meta'} onClick={() => elegirModo('meta')}>Según tu meta</button>
-            <button type="button" className="plan__modo" aria-pressed={modo === 'personalizado'} onClick={() => elegirModo('personalizado')}>Personalizados</button>
-          </div>
+        <div className="plan__modos" role="group" aria-label="Tipo de plan">
+          <button type="button" className="plan__modo" aria-pressed={modo === 'meta'} onClick={() => elegirModo('meta')}>Según tu meta</button>
+          <button type="button" className="plan__modo" aria-pressed={modo === 'personalizado'} onClick={() => elegirModo('personalizado')}>Personalizados</button>
+        </div>
 
-          {!perfil.completo && (
-            <Alerta tipo="info">
-              Completa tu peso, altura, edad, sexo y actividad física para calcular tus calorías y gramos. <Link to="/perfil">Ir a mi perfil</Link>
-            </Alerta>
-          )}
+        {!perfil.completo && (
+          <Alerta tipo="info">
+            Completa tu peso, altura, edad, sexo y actividad física para calcular tus calorías y gramos. <Link to="/perfil">Ir a mi perfil</Link>
+          </Alerta>
+        )}
 
-          <div className="plan__calorias">
-            <p className="plan__kcal"><strong>{plan.kcal ? formatearNumero(plan.kcal) : '—'}</strong> kcal al día</p>
-            <p className="texto-secundario">{textoCalorias(plan.kcal, perfil.kcalBase, meta)}</p>
-          </div>
+        <div className="plan__calorias">
+          <p className="plan__kcal"><strong>{plan.kcal ? formatearNumero(plan.kcal) : '—'}</strong> kcal al día</p>
+          <p className="texto-secundario">{textoCalorias(plan.kcal, perfil.kcalBase, meta)}</p>
+        </div>
 
-          {modo === 'meta' ? (
-            <>
-              <div className="plan__meta">
-                <p className="plan__meta-nombre">Meta: <strong>{meta.etiqueta ?? 'Sin meta definida'}</strong></p>
-                <Link to="/perfil" className="enlace-panel">{meta.etiqueta ? 'Cambiar meta' : 'Elegir meta'}</Link>
-                <p className="texto-secundario plan__por-que">{porQue(meta.valor, meta.ritmoSemanalKg)}</p>
+        {modo === 'meta' ? (
+          <>
+            <div className="plan__meta">
+              <p className="plan__meta-nombre">Meta: <strong>{meta.etiqueta ?? 'Sin meta definida'}</strong></p>
+              <Link to="/perfil" className="enlace-panel">{meta.etiqueta ? 'Cambiar meta' : 'Elegir meta'}</Link>
+              <p className="texto-secundario plan__por-que">{porQue(meta.valor, meta.ritmoSemanalKg)}</p>
+            </div>
+            <Reparto porcentajes={recomendado.porcentajes} kcal={recomendado.kcal} />
+            {plan.tipo === 'personalizado' && (
+              <div className="plan__acciones">
+                <button type="button" className="boton boton--principal boton--compacto" disabled={guardando}
+                  onClick={() => ejecutar('plan', () => elegirPlan({ tipo: 'meta' }), 'Listo: desde hoy usas el plan según tu meta.')}>
+                  {guardando ? 'Guardando…' : 'Usar el plan de mi meta'}
+                </button>
+                <p className="texto-secundario">Deja de usar «{plan.nombre ?? 'tu plan personalizado'}» desde hoy.</p>
               </div>
-              <Reparto porcentajes={recomendado.porcentajes} kcal={recomendado.kcal} />
-              {plan.tipo === 'personalizado' && (
-                <div className="plan__acciones">
-                  <button type="button" className="boton boton--principal boton--compacto" disabled={guardando}
-                    onClick={() => ejecutar('plan', () => elegirPlan({ tipo: 'meta' }), 'Listo: desde hoy usas el plan según tu meta.')}>
-                    {guardando ? 'Guardando…' : 'Usar el plan de mi meta'}
-                  </button>
-                  <p className="texto-secundario">Deja de usar «{plan.nombre ?? 'tu plan personalizado'}» desde hoy.</p>
-                </div>
-              )}
-            </>
-          ) : (
-            <PlanesPersonalizados datos={datos} guardando={guardando} editor={editor} setEditor={setEditor} acciones={acciones} />
-          )}
-          {mensajeDe('plan')}
-        </section>
+            )}
+          </>
+        ) : (
+          <PlanesPersonalizados datos={datos} guardando={guardando} editor={editor} setEditor={setEditor} acciones={acciones} />
+        )}
+        {mensajeDe('plan')}
+      </section>
 
-        <MetaPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('peso')} />
-        <HistorialPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('historial')} />
-      </div>
+      <MetaPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('peso')} />
+      <HistorialPeso datos={datos} guardando={guardando} acciones={acciones} mensaje={mensajeDe('historial')} />
 
-      <aside className="plan__lateral">
-        <section className="panel-tarjeta plan-calculo" aria-labelledby="titulo-calculo">
-          <h2 id="titulo-calculo" className="panel-tarjeta__titulo">Cómo se calcula</h2>
-          <ol className="plan-calculo__pasos">
-            <li>
-              <strong>Calorías:</strong> tu gasto diario estimado con tu perfil (fórmula de Mifflin-St Jeor y tu actividad física), ajustado según tu meta.
-              Con una meta de peso, el ajuste sale del ritmo: cerca de {formatearNumero(planes.metaPeso.kcalPorKg)} kcal por kilo, repartidas en la semana.
-              Para bajar de peso no baja de {formatearNumero(planes.caloriasMinimas.femenino)} kcal en mujeres ni de {formatearNumero(planes.caloriasMinimas.masculino)} kcal en hombres.
-            </li>
-            <li><strong>Proteína:</strong> gramos por kilo de peso según tu meta, hasta un {planes.proteinaMaxPct} % de las calorías.</li>
-            <li><strong>Grasas:</strong> entre un {planes.grasasPct.min} % y un {planes.grasasPct.max} % de las calorías.</li>
-            <li><strong>Carbohidratos:</strong> el resto de las calorías.</li>
-          </ol>
-          <p className="plan-calculo__nota texto-secundario">La fecha de tu meta de peso es una estimación: el cuerpo se adapta y el avance suele hacerse más lento con el tiempo.</p>
-          <details className="plan-calculo__fuentes">
-            <summary>Fuentes <Icono nombre="chevron" tamano={16} /></summary>
-            <ul>
-              {FUENTES.map(([nombre, url]) => <li key={url}><a href={url} target="_blank" rel="noreferrer">{nombre}</a></li>)}
-            </ul>
-          </details>
-        </section>
-        <section className="plan-aviso" aria-labelledby="titulo-aviso-plan">
-          <h2 id="titulo-aviso-plan">Una orientación general</h2>
-          <p>Está pensada para adultos sanos. No aplica en embarazo, lactancia, menores de edad ni enfermedades que requieran una dieta especial; para eso, consulta a un nutricionista.</p>
-          <Link to="/profesionales?especialidad=Nutrici%C3%B3n" className="boton boton--secundario boton--compacto">Buscar nutricionistas</Link>
-        </section>
-      </aside>
+      <section className="panel-tarjeta plan-calculo comidas__fila-completa" aria-labelledby="titulo-calculo">
+        <h2 id="titulo-calculo" className="panel-tarjeta__titulo">Cómo se calcula</h2>
+        <ol className="plan-calculo__pasos">
+          <li>
+            <strong>Calorías:</strong> tu gasto diario estimado con tu perfil (fórmula de Mifflin-St Jeor y tu actividad física), ajustado según tu meta.
+            Con una meta de peso, el ajuste sale del ritmo: cerca de {formatearNumero(planes.metaPeso.kcalPorKg)} kcal por kilo, repartidas en la semana.
+            Para bajar de peso no baja de {formatearNumero(planes.caloriasMinimas.femenino)} kcal en mujeres ni de {formatearNumero(planes.caloriasMinimas.masculino)} kcal en hombres.
+          </li>
+          <li><strong>Proteína:</strong> gramos por kilo de peso según tu meta, hasta un {planes.proteinaMaxPct} % de las calorías.</li>
+          <li><strong>Grasas:</strong> entre un {planes.grasasPct.min} % y un {planes.grasasPct.max} % de las calorías.</li>
+          <li><strong>Carbohidratos:</strong> el resto de las calorías.</li>
+        </ol>
+        <p className="plan-calculo__nota texto-secundario">La fecha de tu meta de peso es una estimación: el cuerpo se adapta y el avance suele hacerse más lento con el tiempo.</p>
+        <details className="plan-calculo__fuentes">
+          <summary>Fuentes <Icono nombre="chevron" tamano={16} /></summary>
+          <ul>
+            {FUENTES.map(([nombre, url]) => <li key={url}><a href={url} target="_blank" rel="noreferrer">{nombre}</a></li>)}
+          </ul>
+        </details>
+      </section>
+      <section className="plan-aviso comidas__fila-completa" aria-labelledby="titulo-aviso-plan">
+        <h2 id="titulo-aviso-plan">Una orientación general</h2>
+        <p>Está pensada para adultos sanos. No aplica en embarazo, lactancia, menores de edad ni enfermedades que requieran una dieta especial; para eso, consulta a un nutricionista.</p>
+        <Link to="/profesionales?especialidad=Nutrici%C3%B3n" className="boton boton--secundario boton--compacto">Buscar nutricionistas</Link>
+      </section>
     </div>
   );
 }

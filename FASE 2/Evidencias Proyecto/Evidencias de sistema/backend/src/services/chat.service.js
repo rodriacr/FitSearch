@@ -2,6 +2,7 @@
 // de todas sus reservas, y sigue disponible aunque una reserva se cancele. Solo los dos participantes lo ven: para cualquier
 // otra cuenta «no existe» (404). Cada uno puede eliminarlo para sí; si el otro vuelve a escribir, reaparece con lo nuevo.
 const modelo = require('../models/chat.model');
+const avisos = require('./aviso.service');
 const ErrorHttp = require('../utils/ErrorHttp');
 const { fotoUrlDe } = require('../utils/fotos');
 const { mensajesReserva: reglas } = require('../../../shared/reglas.json');
@@ -105,7 +106,11 @@ async function enviar(usuario, chatId, texto) {
     throw new ErrorHttp(400, `Escribe un mensaje de hasta ${reglas.texto.max} caracteres`, { texto: `Escribe un mensaje de hasta ${reglas.texto.max} caracteres` });
   }
   const { chat } = await participante(usuario, chatId);
-  return { mensaje: formatear(await modelo.crearMensaje(chat.id, usuario.id, limpio), usuario.id) };
+  const mensaje = await modelo.crearMensaje(chat.id, usuario.id, limpio);
+  if (usuario.rol === 'profesional' && chat.usuario?.avisosMensajesCorreo) {
+    avisos.avisarMensajeNuevo(chat.usuarioId, mensaje.id);
+  }
+  return { mensaje: formatear(mensaje, usuario.id) };
 }
 
 async function eliminar(usuario, chatId) {

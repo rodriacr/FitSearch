@@ -29,6 +29,32 @@ const nombreVisible = (nombre) => {
 };
 const OBJETIVOS = Object.fromEntries(reglas.perfil.objetivoPrincipal.map(({ valor, etiqueta }) => [valor, etiqueta]));
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
+const MACRONUTRIENTES = [
+  { clave: 'proteinasG', nombre: 'Proteínas', tono: 'proteinas' },
+  { clave: 'carbohidratosG', nombre: 'Carbohidratos', tono: 'carbohidratos' },
+  { clave: 'grasasG', nombre: 'Grasas', tono: 'grasas' },
+];
+
+function MacrosHoy({ consumo, metas }) {
+  return <div className="inicio-macros" role="group" aria-labelledby="titulo-macros-inicio">
+    <h3 id="titulo-macros-inicio">Macros de hoy</h3>
+    <dl className="inicio-macros__lista">
+      {MACRONUTRIENTES.map(({ clave, nombre, tono }) => {
+        const valor = Number.isFinite(consumo?.[clave]) ? consumo[clave] : null;
+        const meta = Number.isFinite(metas?.[clave]) && metas[clave] > 0 ? metas[clave] : null;
+        return <div key={clave} className={`inicio-macros__nutriente inicio-macros__nutriente--${tono}`}>
+          <dt>{nombre}</dt>
+          <dd><strong>{valor === null ? '—' : formatearNumero(valor)}</strong><span>{meta ? ` / ${formatearNumero(meta)}` : ''} g</span></dd>
+          {valor !== null && meta !== null && <div className="inicio-macros__barra" role="progressbar" aria-label={`${nombre} de hoy`}
+            aria-valuemin={0} aria-valuemax={meta} aria-valuenow={Math.min(Math.max(valor, 0), meta)}
+            aria-valuetext={`${formatearNumero(valor)} g consumidos de ${formatearNumero(meta)} g de meta`}>
+            <span style={{ transform: `scaleX(${Math.min(Math.max(valor / meta, 0), 1)})` }} />
+          </div>}
+        </div>;
+      })}
+    </dl>
+  </div>;
+}
 
 function TarjetaObjetivo({ objetivo }) {
   return (
@@ -53,12 +79,13 @@ function TarjetaObjetivo({ objetivo }) {
 // consumidas: calorías registradas hoy en Comidas (FS-HU-10), o null si aún no se cargan o no se pudieron cargar.
 // «Pasos hoy» se quitó (SC-33): contar pasos necesita relojes o pulseras, que quedan fuera del alcance.
 // «Agua hoy» se registra a mano desde aquí (FS-HU-33).
-function TarjetaProgreso({ kcal, consumidas }) {
+function TarjetaProgreso({ kcal, consumidas, consumo, metas, error, onReintentar }) {
   return (
-    <section className="panel-tarjeta" aria-labelledby="titulo-progreso">
+    <section className="panel-tarjeta inicio__progreso" aria-labelledby="titulo-progreso">
       <h2 id="titulo-progreso" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Tu progreso</h2>
       <ul className="progreso">
-        <li>
+        {error && <li><p role="alert">No pudimos cargar las calorías de hoy. <button type="button" className="boton-texto" onClick={onReintentar}>Reintentar calorías</button></p></li>}
+        <li className="progreso__calorias">
           <span className="progreso__icono progreso__icono--calorias"><Icono nombre="fuego" tamano={22} /></span>
           <div>
             <span className="progreso__nombre">Calorías hoy</span>
@@ -70,12 +97,13 @@ function TarjetaProgreso({ kcal, consumidas }) {
             <Link to="/comidas" className="progreso__enlace">Registrar comida</Link>
           </div>
         </li>
-        <li>
+        <li className="progreso__macros"><MacrosHoy consumo={consumo} metas={metas} /></li>
+        <li className="progreso__agua">
           <span className="progreso__icono progreso__icono--agua"><Icono nombre="gota" tamano={22} /></span>
           <AguaHoy />
         </li>
       </ul>
-      {kcal && <p className="progreso__nota">Tu meta diaria de calorías sale de tus datos personales y de tu plan de alimentación; las calorías de hoy, de lo que registras en Comidas.</p>}
+      <p className="progreso__nota">Consumo de hoy y metas de tu plan en <Link to="/comidas">Comidas</Link>.</p>
     </section>
   );
 }
@@ -101,8 +129,8 @@ export default function Inicio() {
     let activo = true;
     // Si las comidas no cargan, la tarjeta muestra «—» y el resto del Inicio sigue igual.
     obtenerDia()
-      .then(({ consumo, objetivo }) => activo && setHoy({ calorias: consumo.calorias, meta: objetivo?.calorias ?? null }))
-      .catch(() => activo && setHoy(null));
+      .then(({ consumo, objetivo }) => activo && setHoy({ calorias: consumo.calorias, meta: objetivo?.calorias ?? null, consumo, objetivo }))
+      .catch((error) => activo && setHoy({ error: error.message }));
     return () => { activo = false; };
   }, [intento]);
 
@@ -160,6 +188,21 @@ export default function Inicio() {
         </div>
       </section>
 
+      <div className="inicio__panel">
+        <TarjetaCitas />
+        {cargandoPerfil ? <p className="panel-tarjeta texto-secundario" role="status">Cargando tu información…</p> : perfil.error ? (
+          <div className="panel-tarjeta">
+            <Alerta>{perfil.error}</Alerta>
+            <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setIntento(intento + 1)}>Reintentar</button>
+          </div>
+        ) : (
+          <>
+            <TarjetaProgreso kcal={hoy?.meta ?? perfil.datos.requerimientoCaloricoKcal} consumidas={hoy?.calorias ?? null} consumo={hoy?.consumo} metas={hoy?.objetivo} error={hoy?.error} onReintentar={() => setIntento((n) => n + 1)} />
+            <TarjetaObjetivo objetivo={perfil.datos.objetivos.objetivoPrincipal} />
+          </>
+        )}
+      </div>
+
       <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>
         <Carrusel como="ul" className="accesos-rapidos" nombre="accesos rápidos">
@@ -184,20 +227,7 @@ export default function Inicio() {
         <Especialidades variante="inicio" />
       </section>
 
-      <div data-revelar className="inicio__panel">
-        {cargandoPerfil ? <p className="panel-tarjeta texto-secundario" role="status">Cargando tu información…</p> : perfil.error ? (
-          <div className="panel-tarjeta">
-            <Alerta>{perfil.error}</Alerta>
-            <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setIntento(intento + 1)}>Reintentar</button>
-          </div>
-        ) : (
-          <>
-            <TarjetaObjetivo objetivo={perfil.datos.objetivos.objetivoPrincipal} />
-            <TarjetaProgreso kcal={hoy?.meta ?? perfil.datos.requerimientoCaloricoKcal} consumidas={hoy?.calorias ?? null} />
-          </>
-        )}
-        <TarjetaCitas />
-      </div>
+
 
       <section data-revelar className="inicio__destacados" aria-labelledby="titulo-destacados">
         <div className="inicio__titulo-seccion">

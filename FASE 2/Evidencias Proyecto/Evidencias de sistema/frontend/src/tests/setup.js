@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, vi } from 'vitest';
+import { afterEach, beforeAll, vi } from 'vitest';
 import { olvidarUbicacion } from '../services/ubicacion.js';
 import { olvidarFotoCuenta } from '../services/fotoCuenta.js';
 
@@ -20,3 +20,6 @@ afterEach(() => {
   delete navigator.geolocation;
   delete navigator.permissions;
 });
+
+// Precarga las rutas para las pruebas que montan pantallas de forma síncrona.
+beforeAll(async () => { const { precargarPantallas } = await import('../services/diferirPantalla.jsx'); await precargarPantallas(); });

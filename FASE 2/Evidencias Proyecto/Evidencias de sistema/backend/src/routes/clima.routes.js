@@ -6,4 +6,6 @@ const { autenticar, autorizarRoles } = require('../middlewares/autenticar');
 const router = Router();
 router.use(autenticar, autorizarRoles('profesional'));
 router.get('/', controlador.actual);
+// El navegador envía solo coordenadas aproximadas en el cuerpo, sin guardarlas en la URL.
+router.post('/', controlador.actual);
 module.exports = router;

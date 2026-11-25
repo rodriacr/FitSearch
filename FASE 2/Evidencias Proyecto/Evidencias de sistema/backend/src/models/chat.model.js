@@ -5,7 +5,7 @@ const { CON_FOTO } = require('../utils/fotos');
 // Con la foto de cada participante, para mostrarla en la lista y en la cabecera del chat (15-11-2026).
 const persona = { select: { id: true, nombre: true, ...CON_FOTO } };
 const conPartes = {
-  usuario: persona,
+  usuario: { select: { ...persona.select, avisosMensajesCorreo: true } },
   profesional: { select: { id: true, usuarioId: true, especialidad: true, usuario: persona } },
 };
 // adjunto y guardadoEn: planes enviados por el chat (SC-46).

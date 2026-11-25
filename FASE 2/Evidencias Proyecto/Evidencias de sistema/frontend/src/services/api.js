@@ -66,5 +66,6 @@ export async function solicitar(ruta, { metodo = 'GET', cuerpo, conSesion = true
     throw new ErrorApi(respuesta.status, datos.error || 'Ocurrió un error inesperado', datos.detalles);
   }
   avisarOperacion(ruta, metodo);
+  if (/^\/chats\/\d+(?:\/|$)/.test(ruta)) window.dispatchEvent(new Event('fitsearch:mensajes-actualizados'));
   return datos;
 }

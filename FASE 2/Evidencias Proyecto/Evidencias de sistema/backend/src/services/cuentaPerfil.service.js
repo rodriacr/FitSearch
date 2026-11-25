@@ -58,4 +58,21 @@ async function guardar(id, datos, vencimiento) {
   }
 }
 
-module.exports = { obtener, guardar };
+const preferencias = { recordatoriosCitas: true, avisosMensajesCorreo: true };
+
+async function obtenerPreferencias(id) {
+  const configuracion = await prisma.usuario.findUnique({ where: { id }, select: preferencias });
+  if (!configuracion) throw new ErrorHttp(401, 'La cuenta ya no está disponible');
+  return { configuracion };
+}
+
+async function guardarPreferencias(id, datos) {
+  const entradas = Object.entries(datos ?? {}).filter(([clave]) => Object.hasOwn(preferencias, clave));
+  if (!entradas.length || entradas.some(([, valor]) => typeof valor !== 'boolean')) {
+    throw new ErrorHttp(400, 'Indica qué aviso quieres activar o desactivar');
+  }
+  const configuracion = await prisma.usuario.update({ where: { id }, data: Object.fromEntries(entradas), select: preferencias });
+  return { configuracion };
+}
+
+module.exports = { obtener, guardar, obtenerPreferencias, guardarPreferencias };

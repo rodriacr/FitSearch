@@ -66,8 +66,10 @@ function FotoPerfil({ nombre, cuenta, guardar }) {
   );
 }
 
-export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaEstado, identidad, identidadAcciones, resumen, secciones, activa, onCambiar, pie, aviso, acciones, cabeceraAcciones, vistaPrevia }) {
+export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaEstado, identidad, identidadAcciones, resumen, secciones, activa, onCambiar, pie, aviso, acciones, cabeceraAcciones }) {
   const cuenta = cuentaEstado.cuenta;
+  const [visitadas, setVisitadas] = useState([activa]);
+  if (!visitadas.includes(activa)) setVisitadas([...visitadas, activa]);
   return <div className="perfil-editor">
     <header className="perfil-editor__cabecera">
       <div><h1>{titulo}</h1><p>{subtitulo}</p></div>
@@ -87,15 +89,12 @@ export default function PerfilEditable({ titulo, subtitulo, nombre, rol, cuentaE
       {secciones.map((s) => <button key={s.id} type="button" aria-current={activa === s.id ? 'page' : undefined}
         aria-controls={`seccion-perfil-${s.id}`} onClick={() => onCambiar(s.id)}>{s.titulo}</button>)}
     </nav>
-    <div className={`perfil-editor__grilla${vistaPrevia ? ' perfil-editor__grilla--con-previa' : ''}`}>
-      <section className="perfil-editor__contenido" aria-label="Edición del perfil">
-        {secciones.filter((s) => activa === s.id).map((s) => <div key={s.id} id={`seccion-perfil-${s.id}`} className="perfil-editor__panel">
-          <header><h2>{s.titulo}</h2>{s.ayuda && <p>{s.ayuda}</p>}</header>{s.contenido}
-        </div>)}
-        {acciones}
-      </section>
-      {vistaPrevia && <aside className="perfil-editor__previa" aria-label="Vista previa del perfil">{vistaPrevia}</aside>}
-    </div>
+    <section className="perfil-editor__contenido" aria-label="Edición del perfil">
+      {secciones.filter((s) => visitadas.includes(s.id) || activa === s.id).map((s) => <div key={s.id} hidden={activa !== s.id} id={`seccion-perfil-${s.id}`} className="perfil-editor__panel">
+        <header><h2>{s.titulo}</h2>{s.ayuda && <p>{s.ayuda}</p>}</header>{s.contenido}
+      </div>)}
+      {acciones}
+    </section>
     {pie && <div className="perfil-editor__pie">{pie}</div>}
   </div>;
 }
