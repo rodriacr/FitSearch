@@ -68,6 +68,17 @@ describe('reservar uso', () => {
     expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
   });
 
+  test('si MySQL resuelve las inserciones simultáneas con un deadlock, suma sobre la fila que quedó', async () => {
+    const deadlock = Object.assign(new Error('Transaction failed due to a write conflict or a deadlock'), { code: 'P2034' });
+    prisma.usoAsistente.updateMany.mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 0 }).mockResolvedValueOnce({ count: 1 });
+    prisma.usoAsistente.create.mockRejectedValue(deadlock);
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(true);
+    expect(prisma.usoAsistente.updateMany).toHaveBeenLastCalledWith(sumar);
+
+    prisma.usoAsistente.updateMany.mockResolvedValue({ count: 0 });
+    expect(await modelo.reservarUso(7, '2026-10-21', 30)).toBe(false);
+  });
+
   test('otro error al crear la fila no se oculta', async () => {
     prisma.usoAsistente.updateMany.mockResolvedValue({ count: 0 });
     prisma.usoAsistente.create.mockRejectedValue(new Error('sin conexión'));
