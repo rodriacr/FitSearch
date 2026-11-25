@@ -1,0 +1,32 @@
+erDiagram
+  roles {
+    INT id PK
+    VARCHAR30 nombre UK
+  }
+  usuarios {
+    INT id PK
+    VARCHAR150 correo UK
+    VARCHAR255 google_id UK
+    INT rol_id FK
+  }
+  datos_cuenta {
+    INT usuario_id PK,FK
+  }
+  perfiles_usuario {
+    INT id PK
+    INT usuario_id FK,UK
+  }
+  informacion_salud {
+    INT id PK
+    INT usuario_id FK,UK
+  }
+  tokens_recuperacion {
+    INT id PK
+    INT usuario_id FK
+    CHAR64 token_hash UK
+  }
+  roles ||--o{ usuarios : "rol_id"
+  usuarios ||--|o datos_cuenta : "usuario_id"
+  usuarios ||--|o perfiles_usuario : "usuario_id"
+  usuarios ||--|o informacion_salud : "usuario_id"
+  usuarios ||--o{ tokens_recuperacion : "usuario_id"

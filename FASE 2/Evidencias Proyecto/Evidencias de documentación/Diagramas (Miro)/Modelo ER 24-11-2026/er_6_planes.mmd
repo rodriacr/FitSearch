@@ -1,0 +1,42 @@
+erDiagram
+  usuarios {
+    INT id PK
+  }
+  alimentos {
+    INT id PK
+  }
+  planes_alimentacion {
+    INT id PK
+    INT usuario_id FK
+    INT plan_personalizado_id FK
+  }
+  planes_personalizados {
+    INT id PK
+    INT usuario_id FK
+  }
+  metas_peso {
+    INT id PK
+    INT usuario_id FK
+  }
+  registros_peso {
+    INT id PK
+    INT usuario_id FK
+  }
+  planes_comida {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  plan_comida_items {
+    INT id PK
+    INT plan_id FK
+    INT alimento_id FK
+  }
+  usuarios ||--o{ planes_alimentacion : "usuario_id"
+  planes_personalizados |o--o{ planes_alimentacion : "plan_personalizado_id"
+  usuarios ||--o{ planes_personalizados : "usuario_id"
+  usuarios ||--o{ metas_peso : "usuario_id"
+  usuarios ||--o{ registros_peso : "usuario_id"
+  usuarios ||--o{ planes_comida : "usuario_id"
+  planes_comida ||--o{ plan_comida_items : "plan_id"
+  alimentos |o--o{ plan_comida_items : "alimento_id"

@@ -1,0 +1,35 @@
+erDiagram
+  usuarios {
+    INT id PK
+  }
+  profesionales {
+    INT id PK
+  }
+  chats {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  mensajes_chat {
+    INT id PK
+    INT chat_id FK
+    INT autor_id FK
+  }
+  permisos_compartir {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  accesos_compartidos {
+    INT id PK
+    INT usuario_id FK
+    INT profesional_id FK
+  }
+  usuarios ||--o{ chats : "usuario_id"
+  profesionales ||--o{ chats : "profesional_id"
+  chats ||--o{ mensajes_chat : "chat_id"
+  usuarios ||--o{ mensajes_chat : "autor_id"
+  usuarios ||--o{ permisos_compartir : "usuario_id"
+  profesionales ||--o{ permisos_compartir : "profesional_id"
+  usuarios ||--o{ accesos_compartidos : "usuario_id"
+  profesionales ||--o{ accesos_compartidos : "profesional_id"
