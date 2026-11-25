@@ -4,7 +4,7 @@ import reglas from '@shared/reglas.json';
 import Alerta from '../../components/Alerta.jsx';
 import Icono from '../../components/Icono.jsx';
 import CalendarioSemana from '../../components/agenda/CalendarioSemana.jsx';
-import { BloquearFechas, DetalleHorario, PublicarHorarios, ResumenAgenda } from '../../components/agenda/PanelesAgenda.jsx';
+import { BloquearFechas, DetalleHorario, PublicarHorarios, ReservaFueraDelCalendario, ResumenAgenda } from '../../components/agenda/PanelesAgenda.jsx';
 import { ESTADOS, LEYENDA, lunesDe, rangoVisible, sumarDias, tituloSemana } from '../../components/agenda/semana.js';
 import useAncho from '../../components/agenda/useAncho.js';
 import { MisCitas } from '../Agenda.jsx';
@@ -15,6 +15,7 @@ import './AgendaSemanal.css';
 // Bajo este ancho (del área de la agenda) se muestra un día a la vez: siete columnas no caben en un celular.
 const ANCHO_SEMANA = 640;
 const esFecha = (texto) => /^\d{4}-\d{2}-\d{2}$/.test(texto || '') && !Number.isNaN(Date.parse(`${texto}T12:00:00Z`));
+const idDeEnlace = (valor) => /^\d+$/.test(valor ?? '') ? Number(valor) : null;
 
 // Las dos partes de la agenda (pedido del PO del 15-11-2026): el calendario y la lista de reservas recibidas, que antes
 // quedaba al final de la página. La elegida va en la dirección (?vista=reservas) para poder volver a ella.
@@ -33,20 +34,25 @@ export default function AgendaSemanal() {
   const semana = lunesDe(esFecha(pedida) ? pedida : hoy);
   const vista = parametros.get('vista') === 'reservas' ? 'reservas' : 'calendario';
   const diaEnlace = esFecha(parametros.get('dia')) ? parametros.get('dia') : null;
-  const horarioEnlace = /^\d+$/.test(parametros.get('horario') ?? '') ? Number(parametros.get('horario')) : null;
-  const claveEnlace = `${diaEnlace}-${horarioEnlace}`;
+  const horarioEnlace = idDeEnlace(parametros.get('horario'));
+  const reservaEnlace = idDeEnlace(parametros.get('reserva'));
+  const claveEnlace = `${diaEnlace}-${horarioEnlace}-${reservaEnlace}`;
   const [revision, setRevision] = useState(0);
   const [respuesta, setRespuesta] = useState(null);
   const [reservasPendientes, setReservasPendientes] = useState(null);
 
   const [seleccionId, setSeleccionId] = useState(horarioEnlace);
-  const [panel, setPanel] = useState(() => horarioEnlace ? { tipo: 'detalle' } : null);
+  const [panel, setPanel] = useState(() => horarioEnlace ? { tipo: 'detalle', reservaId: reservaEnlace } : null);
   const [aviso, setAviso] = useState('');
   const [diaElegido, setDiaElegido] = useState(diaEnlace);
   const [ultimoEnlace, setUltimoEnlace] = useState(claveEnlace);
   if (ultimoEnlace !== claveEnlace) {
     setUltimoEnlace(claveEnlace);
-    if (diaEnlace && horarioEnlace) { setDiaElegido(diaEnlace); setSeleccionId(horarioEnlace); setPanel({ tipo: 'detalle' }); }
+    if (diaEnlace && horarioEnlace) {
+      setDiaElegido(diaEnlace);
+      setSeleccionId(horarioEnlace);
+      setPanel({ tipo: 'detalle', reservaId: reservaEnlace });
+    }
   }
   const [previa, setPrevia] = useState(null);
   const contenedor = useRef(null);
@@ -82,7 +88,11 @@ export default function AgendaSemanal() {
   const errorPendientes = reservasPendientes?.clave === clave ? reservasPendientes.error : null;
   const pendientes = (reservasPendientes?.clave === clave ? reservasPendientes.reservas : null)?.filter((r) => `${r.horario.fecha}T${r.horario.horaInicio}` > ahora) ?? null;
   const cargando = respuesta?.clave !== clave;
-  const seleccionado = datos?.horarios.find((h) => h.id === seleccionId) || null;
+  const errorSemana = cargando ? null : respuesta.error;
+  const semanaVerificada = cargando ? null : semanaCargada;
+  const horarioSeleccionado = datos?.horarios.find((h) => h.id === seleccionId);
+  const reservaFuera = Boolean(seleccionId && panel?.reservaId && horarioSeleccionado?.reserva?.id !== panel.reservaId);
+  const seleccionado = reservaFuera ? null : horarioSeleccionado;
   const dia = diaElegido && diaElegido >= semana && diaElegido <= sumarDias(semana, 6) ? diaElegido : hoy >= semana && hoy <= sumarDias(semana, 6) ? hoy : semana;
 
   const irASemana = useCallback((fecha) => {
@@ -114,15 +124,17 @@ export default function AgendaSemanal() {
   };
   const elegirHorario = (h) => {
     setAviso('');
-    setSeleccionId(h.id === seleccionId ? null : h.id);
-    abrir(h.id === seleccionId ? null : { tipo: 'detalle' });
+    const mismoHorario = h.id === seleccionado?.id;
+    setSeleccionId(mismoHorario ? null : h.id);
+    abrir(mismoHorario ? null : { tipo: 'detalle' });
   };
   // Elegir un día de otra semana (con las flechas o el selector del costado) también lleva el calendario a esa semana.
   const elegirDia = (fecha) => {
     setDiaElegido(fecha);
     if (lunesDe(fecha) !== semana) { setSeleccionId(null); irASemana(fecha); }
   };
-  const refrescar = (texto) => { setAviso(texto); setRevision((r) => r + 1); };
+  const recargarSemana = () => setRevision((r) => r + 1);
+  const refrescar = (texto) => { setAviso(texto); recargarSemana(); };
   const cerrarPanel = () => { setPanel(null); setSeleccionId(null); };
   // Tocar un día en el calendario siempre muestra sus reservas: cierra el detalle o el formulario que estuviera abierto
   // (pedido del PO del 15-11-2026; antes había que cerrarlo primero).
@@ -132,22 +144,25 @@ export default function AgendaSemanal() {
   let contenidoCostado;
   if (panel?.tipo === 'publicar') {
     contenidoCostado = (
-      <PublicarHorarios key={JSON.stringify(panel.inicial || {})} inicial={panel.inicial} ahora={ahora} datos={semanaCargada} onDia={elegirDia} onCerrar={cerrarPanel} onPrevia={setPrevia}
-        onRevisar={() => setRevision((r) => r + 1)}
+      <PublicarHorarios key={JSON.stringify(panel.inicial || {})} inicial={panel.inicial} ahora={ahora} datos={semanaVerificada}
+        cargandoAgenda={cargando} errorAgenda={errorSemana} onDia={elegirDia} onCerrar={cerrarPanel} onPrevia={setPrevia}
+        onRevisar={(fecha) => { elegirDia(fecha); recargarSemana(); }}
         onPublicado={(texto, fecha) => { cerrarPanel(); irASemana(fecha); setDiaElegido(fecha); refrescar(texto); }} />
     );
   } else if (panel?.tipo === 'bloquear') {
     contenidoCostado = <BloquearFechas hoy={hoy} onCerrar={cerrarPanel} onCambio={refrescar} />;
   } else if (panel?.tipo === 'detalle' && seleccionado) {
     contenidoCostado = <DetalleHorario key={seleccionado.id} horario={seleccionado} onCerrar={cerrarPanel} onCambio={refrescar} />;
+  } else if (reservaFuera && semanaVerificada) {
+    contenidoCostado = <ReservaFueraDelCalendario onCerrar={cerrarPanel} />;
   } else if (datos) {
     contenidoCostado = (
       <ResumenAgenda datos={datos} dia={dia} onDia={elegirDia} onElegirHorario={elegirHorario} conLista={modo === 'semana'}
-        pendientes={pendientes} errorPendientes={errorPendientes} onReintentarPendientes={() => setRevision((r) => r + 1)} onElegirPendiente={(r) => {
+        pendientes={pendientes} errorPendientes={errorPendientes} onReintentarPendientes={recargarSemana} onElegirPendiente={(r) => {
           irASemana(r.horario.fecha);
           setDiaElegido(r.horario.fecha);
           setSeleccionId(r.horario.id);
-          abrir({ tipo: 'detalle' });
+          abrir({ tipo: 'detalle', reservaId: r.id });
         }} />
     );
   }
@@ -207,17 +222,17 @@ export default function AgendaSemanal() {
                 </ul>
               </div>
               <div className={`agenda-semanal__vista${cargando && datos ? ' agenda-semanal__vista--actualizando' : ''}`} aria-busy={cargando}>
-                {respuesta?.error && respuesta.clave === clave ? (
+                {errorSemana ? (
                   <div className="agenda-semanal__estado">
-                    <Alerta>{respuesta.error}</Alerta>
-                    <button type="button" className="boton boton--secundario boton--compacto" onClick={() => setRevision((r) => r + 1)}>Reintentar</button>
+                    <Alerta>{errorSemana}</Alerta>
+                    <button type="button" className="boton boton--secundario boton--compacto" onClick={recargarSemana}>Reintentar</button>
                   </div>
                 ) : !datos ? (
                   <div className="agenda-semanal__esqueleto" role="status"><span className="solo-lector">Cargando la semana…</span></div>
                 ) : (
                   <CalendarioSemana modo={modo} datos={datos} ahora={ahora} dia={dia} onDia={verDia} previa={enPublicar}
                     rango={rangoVisible(enPublicar?.fecha >= datos.desde && enPublicar?.fecha <= datos.hasta ? [...datos.horarios, ...enPublicar.bloques] : datos.horarios, reglas.agenda.vistaSemana)}
-                    seleccionId={seleccionId} onElegirHorario={elegirHorario}
+                    seleccionId={seleccionado?.id ?? null} onElegirHorario={elegirHorario}
                     onElegirHueco={(inicial) => { setAviso(''); setSeleccionId(null); abrir({ tipo: 'publicar', inicial }); }} />
                 )}
               </div>

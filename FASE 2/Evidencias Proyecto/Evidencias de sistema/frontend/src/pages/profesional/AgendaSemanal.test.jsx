@@ -1,9 +1,9 @@
 // Mi agenda semanal del profesional (mejoras del 09-11-2026): semana, detalle, publicar en serie, bloquear fechas y
 // vista de un día en pantallas angostas.
-import { fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import { llamadasA, renderizarApp, simularApi, SESION_PROFESIONAL } from '../../tests/utilidades.jsx';
+import { llamadasA, renderizarApp, respuestaJson, simularApi, SESION_PROFESIONAL } from '../../tests/utilidades.jsx';
 
 // Lunes 12 de octubre de 2099 a las 10:00 en Chile (13:00 UTC).
 const fijarHoy = () => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date('2099-10-12T13:00:00Z')); };
@@ -162,6 +162,48 @@ describe('publicar y bloquear', () => {
     expect(await screen.findByRole('button', { name: /^Ver las reservas del jueves 22 de octubre/ })).toHaveAttribute('aria-pressed', 'true');
     expect(llamadasA(fetch, '/api/agenda/semana?desde=2099-10-19')).toHaveLength(1);
     expect(document.querySelectorAll('.horario--nuevo')).toHaveLength(4);
+  });
+
+  test('publicar espera la respuesta de la semana elegida y detecta si el día está bloqueado', async () => {
+    let responderSemana;
+    const semanaPendiente = new Promise((resolve) => { responderSemana = resolve; });
+    const fetch = simularApi({ '/api/agenda/semana': SEMANA });
+    const responder = fetch.getMockImplementation();
+    fetch.mockImplementation((url, opciones) => url.startsWith('/api/agenda/semana?desde=2099-10-19')
+      ? semanaPendiente : responder(url, opciones));
+    renderizarApp('/profesional/agenda');
+    await userEvent.click(await screen.findByRole('button', { name: 'Publicar horarios' }));
+    const panel = within(screen.getByRole('region', { name: 'Publicar horarios' }));
+    fireEvent.change(panel.getByLabelText('Día'), { target: { value: '2099-10-22' } });
+    expect(await panel.findByText('Comprobando la agenda del día…')).toBeInTheDocument();
+    expect(panel.getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
+    expect(panel.queryByText('Ver bloques')).not.toBeInTheDocument();
+    fireEvent.submit(panel.getByLabelText('Día').form);
+    expect(llamadasA(fetch, '/api/disponibilidades/serie')).toHaveLength(0);
+
+    await act(async () => {
+      responderSemana(await respuestaJson(200, {
+        ...SEMANA, desde: '2099-10-19', hasta: '2099-10-25', horarios: [],
+        bloqueos: [{ id: 2, fechaInicio: '2099-10-22', fechaFin: '2099-10-22', motivo: 'Congreso' }],
+      }));
+    });
+    expect(await panel.findByText('Este día está bloqueado. Elige otro día para publicar.')).toBeInTheDocument();
+    expect(panel.getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
+  });
+
+  test('si falla la verificación de cruces, permite reintentar antes de publicar', async () => {
+    let falla = true;
+    simularApi({ '/api/agenda/semana': () => falla
+      ? [503, { error: 'Agenda no disponible' }]
+      : [200, { ...SEMANA, horarios: [] }] });
+    renderizarApp('/profesional/agenda');
+    await userEvent.click(await screen.findByRole('button', { name: 'Publicar horarios' }));
+    const panel = within(screen.getByRole('region', { name: 'Publicar horarios' }));
+    expect(await panel.findByRole('alert')).toHaveTextContent('No pudimos comprobar la agenda del día.');
+    expect(panel.getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
+    falla = false;
+    await userEvent.click(panel.getByRole('button', { name: 'Comprobar disponibilidad' }));
+    expect(await panel.findByRole('button', { name: 'Publicar 4 horarios' })).toBeEnabled();
   });
 
   test('bloquear fechas envía el rango y muestra el motivo del rechazo si hay reservas activas', async () => {

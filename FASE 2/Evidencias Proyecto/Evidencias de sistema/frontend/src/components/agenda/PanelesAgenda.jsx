@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import reglas from '@shared/reglas.json';
 import Alerta from '../Alerta.jsx';
@@ -135,6 +135,15 @@ export function DetalleHorario({ horario, onCambio, onCerrar }) {
   );
 }
 
+export function ReservaFueraDelCalendario({ onCerrar }) {
+  return (
+    <Panel id="reserva-fuera-calendario" titulo="Reserva fuera del calendario" onCerrar={onCerrar}>
+      <p className="panel-agenda__texto">La reserva seleccionada ya no aparece en el calendario. Puedes consultarla en el historial.</p>
+      <Link className="boton boton--secundario boton--compacto" to="/profesional/agenda?vista=reservas&grupo=historial" onClick={onCerrar}>Volver al historial</Link>
+    </Panel>
+  );
+}
+
 const cantidadHorarios = (n) => `${n} ${n === 1 ? 'horario' : 'horarios'}`;
 
 function primerosCampos(inicial, ahora) {
@@ -166,7 +175,7 @@ function validarPublicacion(campos, ahora, hasta, bloqueado, cantidad) {
 
 // Publicar horarios: uno solo o varios bloques de igual duración en el mismo día (POST /disponibilidades/serie).
 // onPrevia: avisa el día y las horas que se están por publicar, para marcarlos en el calendario (15-11-2026).
-export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, onCerrar, onPrevia, onRevisar }) {
+export function PublicarHorarios({ inicial, ahora, datos, cargandoAgenda, errorAgenda, onDia, onPublicado, onCerrar, onPrevia, onRevisar }) {
   const [campos, setCampos] = useState(() => primerosCampos(inicial, ahora));
   const [ocupado, setOcupado] = useState(false);
   const [error, setError] = useState('');
@@ -178,8 +187,8 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
   const bloques = useMemo(() => bloquesPrevistos(campos), [campos]);
   const validacion = validarPublicacion(campos, ahora, hasta, bloqueado, bloques.length);
   const previstos = useMemo(() => {
-    if (validacion) return [];
-    const horarios = conoceDia ? datos.horarios.filter((h) => h.fecha === fecha && !h.retirado) : [];
+    if (!conoceDia || validacion) return [];
+    const horarios = datos.horarios.filter((h) => h.fecha === fecha && !h.retirado);
     return bloques.map((bloque) => ({
       ...bloque,
       ocupado: horarios.some((h) => h.horaInicio < bloque.horaFin && h.horaFin > bloque.horaInicio),
@@ -190,10 +199,10 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
   const conflictos = previstos.length - disponibles;
   const resto = previstos.length ? aMinutos(horaFin) - aMinutos(previstos.at(-1).horaFin) : 0;
   const cambiar = (cambio) => { setError(''); setCampos((actual) => ({ ...actual, ...cambio })); };
-  const elegirFecha = (nuevaFecha) => {
-    cambiar({ fecha: nuevaFecha });
-    if (fechaValida(nuevaFecha) && nuevaFecha >= hoy && nuevaFecha <= hasta) onDia(nuevaFecha);
-  };
+  const sincronizarDia = useEffectEvent((dia) => onDia(dia));
+  useEffect(() => {
+    if (fechaValida(fecha) && fecha >= hoy && fecha <= hasta) sincronizarDia(fecha);
+  }, [fecha, hoy, hasta]);
   useEffect(() => {
     onPrevia(libres.length ? { fecha, bloques: libres } : null);
   }, [fecha, libres, onPrevia]);
@@ -211,7 +220,7 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
         const r = await solicitar('/disponibilidades/serie', { metodo: 'POST', cuerpo: { fecha, horaInicio, horaFin, duracion } });
         if (!r.horarios.length) {
           setError('Los horarios coinciden con otros que ya están publicados. Ajusta el rango e inténtalo de nuevo.');
-          onRevisar();
+          onRevisar(fecha);
           return;
         }
         const omitidos = r.omitidos.length ? ` ${cantidadHorarios(r.omitidos.length)} con cruce: ${r.omitidos.map((b) => `${b.horaInicio}–${b.horaFin}`).join(', ')}.` : '';
@@ -222,7 +231,7 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
       }
     } catch (e) {
       setError(e.message);
-      if (e.estado === 409) onRevisar();
+      if (e.estado === 409) onRevisar(fecha);
     } finally {
       setOcupado(false);
     }
@@ -234,7 +243,7 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
         <fieldset className="publicar-horarios__campos" disabled={ocupado}>
           <label className="campo">
             <span className="campo__etiqueta">Día</span>
-            <input className="campo__control" type="date" required min={hoy} max={hasta} value={fecha} onChange={(e) => elegirFecha(e.target.value)} />
+            <input className="campo__control" type="date" required min={hoy} max={hasta} value={fecha} onChange={(e) => cambiar({ fecha: e.target.value })} />
           </label>
           <div className="formulario-agenda__horas">
             <label className="campo">
@@ -265,7 +274,16 @@ export function PublicarHorarios({ inicial, ahora, datos, onDia, onPublicado, on
           )}
         </fieldset>
         <div className="publicar-horarios__previa">
-          <p aria-live="polite">{validacion || (disponibles ? `${cantidadHorarios(disponibles)} para publicar` : 'Todos los bloques coinciden con horarios publicados.')}</p>
+          {!validacion && !conoceDia ? (
+            <>
+              <p role={errorAgenda ? 'alert' : 'status'}>
+                {cargandoAgenda ? 'Comprobando la agenda del día…' : errorAgenda ? 'No pudimos comprobar la agenda del día.' : 'Comprueba la agenda del día para ver los cruces.'}
+              </p>
+              {!cargandoAgenda && <button type="button" className="boton-texto" onClick={() => onRevisar(fecha)}>Comprobar disponibilidad</button>}
+            </>
+          ) : (
+            <p aria-live="polite">{validacion || (disponibles ? `${cantidadHorarios(disponibles)} para publicar` : 'Todos los bloques coinciden con horarios publicados.')}</p>
+          )}
           {conflictos > 0 && disponibles > 0 && <p className="publicar-horarios__cruces">{cantidadHorarios(conflictos)} con cruce en tu agenda.</p>}
           {resto > 0 && <p>Quedan {textoDuracion(resto)} fuera de los bloques completos.</p>}
           {previstos.length > 0 && (

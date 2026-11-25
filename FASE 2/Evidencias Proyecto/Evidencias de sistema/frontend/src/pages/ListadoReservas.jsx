@@ -152,7 +152,7 @@ export default function ListadoReservas({ profesional = false, onCambio }) {
             <p><strong>{fechaHorario(r.horario)}</strong></p>
             {r.mensaje && <p className="agenda__mensaje">{r.mensaje}</p>}
             <DetallesCita r={r} profesional={profesional} />
-            {profesional && <Link className="agenda__enlace" to={`/profesional/agenda?semana=${lunesDe(r.horario.fecha)}&dia=${r.horario.fecha}&horario=${r.horario.id}`}><Icono nombre="calendario" tamano={16} /> Ver en calendario</Link>}
+            {profesional && <Link className="agenda__enlace" to={`/profesional/agenda?semana=${lunesDe(r.horario.fecha)}&dia=${r.horario.fecha}&horario=${r.horario.id}&reserva=${r.id}`}><Icono nombre="calendario" tamano={16} /> Ver en calendario</Link>}
           </div>
           {futura && (
             <div className="agenda__acciones" hidden={confirmacion?.id === r.id}>

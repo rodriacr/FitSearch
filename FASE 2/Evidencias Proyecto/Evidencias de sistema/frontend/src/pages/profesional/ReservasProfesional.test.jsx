@@ -100,3 +100,26 @@ test('Ver en calendario abre el día y el detalle de esa reserva', async () => {
   expect(await screen.findByRole('region', { name: /jueves 15 de octubre/ })).toHaveTextContent('Ana');
   expect(screen.getByRole('tab', { name: /Calendario/ })).toHaveAttribute('aria-selected', 'true');
 });
+
+test('una reserva cancelada que comparte horario con otra no abre el detalle de la reserva vigente', async () => {
+  const cancelada = { ...filas[0], estado: 'cancelada' };
+  const vigente = { ...filas[1], horario: cancelada.horario };
+  simularApi({
+    '/api/reservas': { reservas: [cancelada, vigente] },
+    '/api/agenda/semana': {
+      desde: '2099-10-12', hasta: '2099-10-18', hoy: '2099-10-12', ahora: '10:00', modalidad: 'ambas',
+      listaEspera: 0, bloqueos: [],
+      horarios: [{ ...vigente.horario, estado: vigente.estado, pasado: false, bloqueado: false, reserva: vigente }],
+    },
+  });
+  renderizarApp('/profesional/agenda?vista=reservas&grupo=historial');
+  const enlace = await screen.findByRole('link', { name: 'Ver en calendario' });
+  expect(enlace).toHaveAttribute('href', expect.stringContaining(`&reserva=${cancelada.id}`));
+  await userEvent.click(enlace);
+  const aviso = await screen.findByRole('region', { name: 'Reserva fuera del calendario' });
+  expect(aviso).toHaveTextContent('La reserva seleccionada ya no aparece en el calendario.');
+  expect(screen.queryByRole('link', { name: 'Bruno' })).not.toBeInTheDocument();
+  await userEvent.click(within(aviso).getByRole('link', { name: 'Volver al historial' }));
+  expect(await screen.findByRole('heading', { name: 'Ana' })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Historial' })).toHaveAttribute('aria-pressed', 'true');
+});
