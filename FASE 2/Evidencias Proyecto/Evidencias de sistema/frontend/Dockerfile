@@ -15,7 +15,8 @@ RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS final
 ENV BACKEND_UPSTREAM=backend:3000
-ENV NGINX_ENVSUBST_FILTER=BACKEND_UPSTREAM
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+ENV NGINX_ENVSUBST_FILTER="BACKEND_UPSTREAM|NGINX_LOCAL_RESOLVERS"
 USER root
 RUN mkdir -p /etc/nginx/templates \
     && chmod 755 /etc/nginx/templates \

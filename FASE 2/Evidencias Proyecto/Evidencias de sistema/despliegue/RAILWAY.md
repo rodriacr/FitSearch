@@ -17,7 +17,7 @@ Configurar `RAILWAY_DOCKERFILE_PATH` como `backend/Dockerfile` o `frontend/Docke
 | `PORT` | `3000` |
 | `NODE_ENV` | `production` |
 | `DATABASE_URL` | Referencia a `MySQL.MYSQL_URL` de Railway |
-| `SHADOW_DATABASE_URL` | La misma referencia; el arranque usa `migrate deploy`, sin base sombra |
+| `SHADOW_DATABASE_URL` | `mysql://sin_uso:sin_uso@127.0.0.1:3306/fitsearch_shadow` |
 | `JWT_SECRET` | Un secreto nuevo y aleatorio, guardado únicamente en Railway |
 | `TRUST_PROXY` | `2`, para la cadena Railway → Nginx → API; la API debe permanecer privada |
 | `FRONTEND_URL` | Dirección HTTPS pública del frontend |
@@ -27,6 +27,8 @@ Montar un volumen en `/app/backend/storage/verificaciones`. El script `backend/d
 
 Las migraciones y los roles se cargan al iniciar el backend. No ejecutar `db:reset` sobre datos que se quieran conservar.
 
+Prisma exige que la dirección auxiliar sea distinta de `DATABASE_URL`, incluso con `migrate deploy`. Ese comando no se conecta a la base auxiliar; la dirección de ejemplo solo permite validar la configuración. Para crear migraciones en desarrollo sí hace falta una base auxiliar real y separada.
+
 ## Frontend
 
 | Variable | Valor |
@@ -35,7 +37,7 @@ Las migraciones y los roles se cargan al iniciar el backend. No ejecutar `db:res
 | `BACKEND_UPSTREAM` | `${{backend.RAILWAY_PRIVATE_DOMAIN}}:3000` |
 | `VITE_GOOGLE_CLIENT_ID` | ID público de Google, si se habilita ese acceso |
 
-Nginx genera su configuración al arrancar. Solo sustituye `BACKEND_UPSTREAM`; conserva las variables propias de Nginx. Sin configuración adicional, usa `backend:3000` para mantener la compatibilidad con Docker Compose.
+Nginx genera su configuración al arrancar. Sustituye `BACKEND_UPSTREAM` y los servidores DNS detectados por su imagen (`NGINX_LOCAL_RESOLVERS`); conserva las variables propias de Nginx. Vuelve a resolver el destino cada diez segundos para admitir cambios de dirección del backend al desplegar. Sin configuración adicional, usa `backend:3000` para mantener la compatibilidad con Docker Compose.
 
 Generar el dominio del frontend apuntando al puerto `8080`. Las llamadas `/api` pasan al backend por la red privada. Para Google, configurar también `GOOGLE_CLIENT_ID` en el backend y autorizar el origen HTTPS publicado en Google Cloud.
 
