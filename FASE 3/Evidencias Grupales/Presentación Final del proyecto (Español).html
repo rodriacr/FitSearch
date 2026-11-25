@@ -825,15 +825,15 @@ aside.notes { display: none; }
       <li><b>Derechos del titular:</b> descargar mis datos y eliminar la cuenta (Ley 21.719).</li>
     </ul></div>
   <div class="stats">
-    <div class="stat reveal" style="--d:.3s"><div class="n">1.248</div><p>pruebas automatizadas: <b>695 backend</b> (Jest) y <b>553 frontend</b> (Vitest).</p></div>
+    <div class="stat reveal" style="--d:.3s"><div class="n">1.297</div><p>pruebas automatizadas: <b>709 backend</b> (Jest) y <b>588 frontend</b> (Vitest).</p></div>
     <div class="stat reveal" style="--d:.4s"><div class="n">280<small> / 281</small></div><p>casos de prueba aprobados en la planilla; uno espera acceso real con Google.</p></div>
-    <div class="stat reveal" style="--d:.5s"><div class="n">58</div><p>defectos registrados con causa y corrección: <b>55 corregidos</b>, 2 cerrados, 1 abierto.</p></div>
+    <div class="stat reveal" style="--d:.5s"><div class="n">59</div><p>defectos registrados con causa y corrección: <b>56 corregidos</b>, 2 cerrados, 1 abierto.</p></div>
     <div class="stat reveal" style="--d:.6s"><div class="n">121<small> ms</small></div><p>p95 de la búsqueda con <b>50 conexiones</b> y 515 profesionales (meta: menos de 2 s).</p></div>
   </div>
   <div class="qa-line reveal" style="--d:.7s"><span class="ok">● OK</span><b>50 reservas simultáneas</b> al mismo horario: 1 confirmada y 49 rechazadas con 409. Además, <b>13 scripts</b> contra MySQL real y CI en cada pull request.</div>
   <aside class="notes">
     <p>El modelo de datos tiene 32 modelos y 33 migraciones versionadas con Prisma, lo que mantuvo igual la base de datos de los tres. Cuidamos la integridad con claves foráneas, índices únicos y restricciones, y la concurrencia con transacciones con bloqueo. También la privacidad: el usuario comparte su progreso con consentimiento revocable, cada consulta queda registrada, y puede descargar sus datos o eliminar su cuenta.</p>
-    <p>En calidad: 1.248 pruebas automatizadas, 280 de 281 casos de prueba aprobados y 58 defectos registrados con su causa y corrección. En la prueba de carga, la búsqueda respondió en 121 milisegundos con 50 conexiones; y de 50 reservas simultáneas al mismo horario, solo una se confirmó. El inicio de sesión, que cifra contraseñas, fue el único escenario sobre la meta con 50 conexiones; con 20 conexiones cumple.</p>
+    <p>En calidad: 1.297 pruebas automatizadas, 280 de 281 casos de prueba aprobados y 59 defectos registrados con su causa y corrección. En la prueba de carga, la búsqueda respondió en 121 milisegundos con 50 conexiones; y de 50 reservas simultáneas al mismo horario, solo una se confirmó. El inicio de sesión, que cifra contraseñas, fue el único escenario sobre la meta con 50 conexiones; con 20 conexiones cumple.</p>
   </aside>
 </section>
 
@@ -895,7 +895,7 @@ aside.notes { display: none; }
     <div class="comp reveal" style="--c:var(--l);--d:.3s"><div class="top"><span class="lbl"><i></i>Luis</span><h3>Modelos de datos</h3></div>
       <ul><li><b>Diseña</b>DER y diccionario de datos en el DAS (modelo 4+1).</li><li><b>Implementa</b>Prisma con 33 migraciones, transacciones, índices y restricciones.</li></ul></div>
     <div class="comp reveal" style="--c:var(--n);--d:.4s"><div class="top"><span class="lbl"><i></i>Nicolás</span><h3>Pruebas de certificación</h3></div>
-      <ul><li><b>Diseña</b>Plan de Pruebas con 281 casos por historia.</li><li><b>Aplica</b>1.248 pruebas automatizadas, carga y CI.</li><li><b>Mejora</b>58 defectos registrados con su corrección.</li></ul></div>
+      <ul><li><b>Diseña</b>Plan de Pruebas con 281 casos por historia.</li><li><b>Aplica</b>1.297 pruebas automatizadas, carga y CI.</li><li><b>Mejora</b>59 defectos registrados con su corrección.</li></ul></div>
     <div class="comp reveal" style="--c:var(--r);--d:.5s"><div class="top"><span class="lbl"><i></i>Rodrigo</span><h3>Solución de software</h3></div>
       <ul><li><b>Construye</b>Frontend React y API REST por capas.</li><li><b>Integra</b>IA, mapas, correo y acceso con Google.</li><li><b>Implanta</b>Docker Compose e integración continua.</li></ul></div>
   </div>
@@ -903,7 +903,7 @@ aside.notes { display: none; }
     <p>Cada integrante presenta una competencia (ajustar el reparto si lo prefieren).</p>
     <p>Rodrigo, gestión de proyectos: planificamos con el Product Backlog, cinco sprints y la EDT, y controlamos con burndown, retrospectivas y la matriz de cambios.</p>
     <p>Luis, modelos de datos: diseñamos el DER y el diccionario, y los implementamos con 33 migraciones, transacciones e índices.</p>
-    <p>Nicolás, pruebas de certificación: diseñamos 281 casos, aplicamos 1.248 pruebas automatizadas y mejoramos a partir de 58 defectos registrados.</p>
+    <p>Nicolás, pruebas de certificación: diseñamos 281 casos, aplicamos 1.297 pruebas automatizadas y mejoramos a partir de 59 defectos registrados.</p>
     <p>Rodrigo, solución de software: la construimos por capas, integramos IA, mapas, correo y Google, y la implantamos con Docker e integración continua; enseguida la verán funcionando.</p>
   </aside>
 </section>
