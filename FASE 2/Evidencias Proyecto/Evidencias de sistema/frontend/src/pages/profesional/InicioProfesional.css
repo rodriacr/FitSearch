@@ -1,5 +1,5 @@
 /* Inicio del profesional (mockup del PO del 04-10-2026). */
-.inicio-prof { display: grid; gap: 1.25rem; max-width: 72rem; margin: 0 auto; }
+.inicio-prof { display: grid; gap: 1.1rem; }
 
 /* ---------- Saludo con paisaje y clima ---------- */
 .inicio-prof__hero {
@@ -33,25 +33,27 @@
 .clima__fuente { grid-column: 1 / -1; font-size: 0.68rem; color: rgb(255 255 255 / 70%); }
 
 /* ---------- Tareas y accesos ---------- */
-.inicio-prof__grilla { display: grid; gap: 1.25rem; }
-.tareas { display: grid; gap: 0.25rem; margin: 0; padding: 0; list-style: none; }
-.tarea { display: flex; align-items: center; gap: 0.85rem; padding: 0.75rem 0.25rem; border-bottom: 1px solid var(--color-borde); }
-.tarea:last-child { border-bottom: 0; }
-.tarea__icono { display: grid; place-items: center; flex: none; width: 2.5rem; height: 2.5rem; border-radius: 12px; color: var(--color-primario); background: var(--color-info-fondo); }
-.tarea__texto { display: grid; gap: 0.1rem; flex: 1; min-width: 0; font-size: 0.9rem; }
+.tareas { display: grid; margin: 0; padding: 0; list-style: none; }
+.tarea { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: .65rem; padding: .7rem 0; }
+.tarea + .tarea { border-top: 1px solid var(--color-borde); }
+.tarea:first-child { padding-top: 0; }
+.tarea:last-child { padding-bottom: 0; }
+.tarea__icono { display: grid; place-items: center; width: 2.25rem; height: 2.25rem; border-radius: 10px; color: var(--color-primario); background: var(--color-info-fondo); }
+.tarea__texto { display: grid; gap: .2rem; font-size: .85rem; }
 .tarea__texto strong { color: var(--color-primario); font-weight: 600; }
 .tarea__texto span { color: var(--color-texto-secundario); font-size: 0.82rem; }
-.tarea__accion { display: inline-flex; align-items: center; gap: 0.3rem; flex: none; font-size: 0.85rem; font-weight: 600; color: var(--color-acento-oscuro); text-decoration: none; }
+.tarea__accion { display: inline-flex; align-items: center; justify-self: start; gap: .3rem; min-height: 1.5rem; font-size: .82rem; font-weight: 600; color: var(--color-acento-oscuro); text-decoration: none; }
 @media (hover: hover) and (pointer: fine) {
   .tarea__accion:hover { text-decoration: underline; }
 }
 
-.accesos-prof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; margin: 0; padding: 0; list-style: none; }
+.accesos-prof { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; gap: .5rem; margin: 0; padding: 0; list-style: none; }
 .acceso-prof {
-  display: grid; justify-items: center; align-content: center; gap: 0.45rem; height: 100%; min-height: 6.5rem; padding: 0.9rem 0.6rem;
-  border-radius: 14px; border: 1px solid var(--color-borde); background: var(--color-superficie-suave);
-  color: var(--color-primario); font-size: 0.85rem; font-weight: 600; text-align: center; text-decoration: none;
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: .4rem; height: 100%; min-height: 2.75rem; padding: .45rem .55rem;
+  border-radius: 10px; border: 1px solid var(--color-borde); background: var(--color-superficie-suave);
+  color: var(--color-primario); font-size: .78rem; font-weight: 600; line-height: 1.3; text-decoration: none; overflow-wrap: anywhere;
 }
+.acceso-prof .etiqueta-proximamente { grid-column: 1 / -1; }
 @media (hover: hover) and (pointer: fine) {
   .acceso-prof:hover { border-color: var(--color-primario); background: var(--color-info-fondo); }
 }
@@ -72,9 +74,83 @@
 @media (min-width: 40rem) {
   .inicio-prof__hero { grid-template-columns: 1fr auto; align-items: start; padding: 2rem 2rem 4.5rem; min-height: 15rem; }
   .clima { justify-self: end; }
-  .accesos-prof, .resumen-semanal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .resumen-semanal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+/* La agenda pasa al centro del espacio; el saludo y las tareas dejan espacio para trabajar. */
+.inicio-prof__hero { min-height: 0; padding: 1.5rem 1.6rem; border-radius: 18px; align-items: center; }
+.inicio-prof__paisaje { height: 100%; opacity: .7; }
+.inicio-prof__saludo { max-width: 42rem; }
+.inicio-prof__saludo h1 { font-size: clamp(1.5rem, 2.7vw, 2rem); margin-block: .35rem .55rem; overflow-wrap: anywhere; }
+.inicio-prof__saludo .inicio-prof__fecha { font-size: .76rem; letter-spacing: .03em; color: #dbeaf7; }
+.inicio-prof__fecha::first-letter { text-transform: uppercase; }
+.inicio-prof__saludo > p:last-child { font-size: .87rem; }
+.inicio-prof__hero .clima { padding: .7rem .85rem; min-width: 0; }
+.inicio-prof__hero .clima__temperatura { font-size: 1.4rem; }
+.clima__origen { grid-column: 1 / -1; font-size: .65rem; color: #e2edf7; }
+.clima__pie { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: .8rem; }
+.clima__actualizar { padding: .15rem 0; border: 0; background: transparent; color: #fff; font: inherit; font-size: .7rem; text-decoration: underline; text-underline-offset: .2em; cursor: pointer; }
+.clima__actualizar:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.clima--sin-datos { max-width: 19rem; }
+.clima__ayuda { font-size: .75rem; line-height: 1.5; color: #f2f6fa; }
+.clima--sin-datos > button { grid-column: 1 / -1; justify-self: start; }
+.inicio-prof__actividad .panel-tarjeta__icono, .inicio__panel .panel-tarjeta__icono { flex-shrink: 0; }
+.inicio-prof__resumen { padding: 1.1rem 1.25rem; box-shadow: none; }
+.dia-prof__cabecera { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .65rem; margin-bottom: .85rem; }
+.dia-prof__cabecera .enlace-panel { font-size: .8rem; flex-shrink: 0; }
+.inicio-prof__resumen .panel-tarjeta__titulo { margin: 0; }
+.resumen-semanal { gap: .65rem; }
+.resumen-semanal li { padding: .8rem 1rem; background: var(--color-superficie-suave); border: 0; }
+.resumen-semanal strong { font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.resumen-semanal__nota { font-size: .72rem; }
+.inicio-prof__actividad { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 1.1rem; }
+.inicio-prof__actividad > *, .inicio-prof__costado > * { min-width: 0; }
+.inicio-prof__costado { display: grid; align-items: start; gap: 1.1rem; }
+.inicio-prof__costado .panel-tarjeta { padding: 1.15rem; }
+.inicio-prof__costado .panel-tarjeta__titulo { font-size: 1rem; margin-bottom: .8rem; }
+.inicio-prof__al-dia { display: flex; align-items: flex-start; gap: .6rem; margin: 0; padding: .85rem; border-radius: 10px; background: var(--color-superficie-suave); font-size: .82rem; color: var(--color-texto-secundario); }
+.inicio-prof__al-dia .icono { flex-shrink: 0; color: var(--color-exito, #177751); }
+.inicio-prof__error { font-size: .82rem; }
+.dia-prof { padding: 1.4rem; box-shadow: none; }
+.dia-prof .panel-tarjeta__titulo { margin: 0; }
+.dia-prof__etiqueta { margin: 0 0 .35rem; color: var(--color-texto-secundario); font-size: .66rem; font-weight: 700; letter-spacing: .12em; }
+.dia-prof h2 { margin: 0; font-size: 1.3rem; color: var(--color-primario); }
+.dia-prof__zona { margin: -.15rem 0 1.1rem; font-size: .76rem; }
+.dia-prof__lista { list-style: none; margin: 0; padding: 0; }
+.dia-prof__cita { display: grid; grid-template-columns: 3.4rem minmax(0, 1fr) auto auto; align-items: center; gap: .8rem; padding: 1rem 0; border-top: 1px solid var(--color-borde); }
+.dia-prof__hora { display: grid; gap: .15rem; color: var(--color-primario); font-weight: 700; font-size: .94rem; font-variant-numeric: tabular-nums; }
+.dia-prof__hora small { color: var(--color-texto-secundario); font-size: .7rem; font-weight: 400; }
+.dia-prof__persona { display: grid; min-width: 0; gap: .25rem; }
+.dia-prof__persona strong { font-size: .88rem; overflow-wrap: anywhere; }
+.dia-prof__persona > span { color: var(--color-texto-secundario); font-size: .72rem; }
+.dia-prof__estado { font-size: .65rem; padding: .3rem .55rem; border-radius: 999px; color: var(--color-primario); background: var(--color-info-fondo); white-space: nowrap; }
+.dia-prof__estado--confirmada, .dia-prof__estado--realizada { color: light-dark(#176342, #9de1bb); background: light-dark(#e9f6ee, #183c2e); }
+.dia-prof__estado--pendiente { color: light-dark(#8c4b00, #ffd59a); background: light-dark(#fff2dd, #49321c); }
+.dia-prof__cita--pasada .dia-prof__persona { color: var(--color-texto-secundario); }
+.dia-prof__proximas { margin-top: 1.2rem; }
+.dia-prof__proximas h3 { font-size: .9rem; color: var(--color-primario); }
+.dia-prof__vacio { display: grid; justify-items: center; text-align: center; padding: 1.4rem .75rem; border: 1px dashed var(--color-borde); border-radius: 14px; background: var(--color-superficie-suave); }
+.dia-prof__vacio-icono { display: grid; place-items: center; width: 3rem; height: 3rem; border-radius: 50%; background: var(--color-info-fondo); color: var(--color-primario); }
+.dia-prof__vacio h3 { margin: .85rem 0 .4rem; font-size: 1rem; color: var(--color-primario); }
+.dia-prof__vacio p { color: var(--color-texto-secundario); font-size: .8rem; margin: 0 0 1rem; }
+@media (min-width: 40rem) {
+  .inicio-prof__hero { grid-template-columns: minmax(0, 1fr) auto; }
+  .resumen-semanal { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (48rem <= width < 64rem) {
+  .inicio-prof__costado { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 64rem) {
-  .inicio-prof__grilla { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
-  .inicio-prof__grilla .accesos-prof { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inicio-prof__actividad { grid-template-columns: minmax(0, 1.85fr) minmax(17rem, 1fr); }
+}
+@media (max-width: 39.99rem) {
+  .inicio-prof__hero { grid-template-columns: minmax(0, 1fr); padding: 1.3rem; }
+  .inicio-prof__hero .clima { display: grid; grid-template-columns: auto 1fr; justify-self: start; }
+  .inicio-prof__hero .clima__fuente { font-size: .7rem; }
+  .dia-prof { padding: 1rem; }
+  .dia-prof__cita { grid-template-columns: 3rem minmax(0, 1fr) 2.75rem; gap: .6rem; }
+  .dia-prof__estado { grid-column: 2; grid-row: auto; justify-self: start; margin-top: -.3rem; }
+  .dia-prof__cita > a { grid-column: 3; grid-row: 1 / span 2; }
+  .inicio-prof__resumen { padding: 1rem; }
+  .resumen-semanal li { padding: .75rem; }
 }

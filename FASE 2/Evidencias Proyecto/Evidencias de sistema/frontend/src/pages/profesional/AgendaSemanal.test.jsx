@@ -99,10 +99,14 @@ describe('publicar y bloquear', () => {
     fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '09:00' } });
     fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '11:30' } });
     await userEvent.click(within(panel).getByRole('button', { name: '45 min' }));
-    expect(within(panel).getByText('Se publicarán 3 horarios: 09:00, 09:45 y 10:30.')).toBeInTheDocument();
-    await userEvent.click(within(panel).getByRole('button', { name: 'Publicar' }));
+    expect(within(panel).getByText('3 horarios para publicar')).toBeInTheDocument();
+    expect(within(panel).getByText('Quedan 15 min fuera de los bloques completos.')).toBeInTheDocument();
+    await userEvent.click(within(panel).getByText('Ver bloques'));
+    expect(within(panel).getByText('10:30–11:15')).toBeVisible();
+    expect(document.querySelectorAll('.horario--nuevo')).toHaveLength(3);
+    await userEvent.click(within(panel).getByRole('button', { name: 'Publicar 3 horarios' }));
 
-    expect(await screen.findByText(/Publicaste 2 horarios el jueves 15 de octubre\. 1 no se publicaron/)).toBeInTheDocument();
+    expect(await screen.findByText(/Publicaste 2 horarios el jueves 15 de octubre\. 1 horario con cruce: 10:30–11:15/)).toBeInTheDocument();
     expect(JSON.parse(llamadasA(fetch, '/api/disponibilidades/serie')[0][1].body))
       .toEqual({ fecha: '2099-10-15', horaInicio: '09:00', horaFin: '11:30', duracion: 45 });
   });
@@ -115,11 +119,49 @@ describe('publicar y bloquear', () => {
     await userEvent.click(within(panel).getByRole('checkbox', { name: 'Dividir en varios bloques' }));
     fireEvent.change(within(panel).getByLabelText('Desde'), { target: { value: '12:00' } });
     fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '11:00' } });
-    expect(within(panel).getByRole('button', { name: 'Publicar' })).toBeDisabled();
+    expect(within(panel).getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
     fireEvent.change(within(panel).getByLabelText('Hasta'), { target: { value: '13:00' } });
-    await userEvent.click(within(panel).getByRole('button', { name: 'Publicar' }));
+    await userEvent.click(within(panel).getByRole('button', { name: 'Publicar horario' }));
     const post = llamadasA(fetch, '/api/disponibilidades').find(([, o]) => o.method === 'POST');
     expect(JSON.parse(post[1].body)).toEqual({ fecha: '2099-10-12', horaInicio: '12:00', horaFin: '13:00' });
+  });
+
+  test('avisa de cruces, horas pasadas y días bloqueados antes de publicar', async () => {
+    const fetch = simularApi({ '/api/agenda/semana': SEMANA });
+    renderizarApp('/profesional/agenda');
+    await screen.findByRole('button', { name: /lunes 12 de octubre, 11:00/ });
+    await userEvent.click(screen.getByRole('button', { name: 'Publicar horarios' }));
+    const panel = within(screen.getByRole('region', { name: 'Publicar horarios' }));
+    expect(panel.getByLabelText('Desde')).toHaveValue('10:30');
+    fireEvent.change(panel.getByLabelText('Desde'), { target: { value: '09:00' } });
+    expect(panel.getByText('El horario debe comenzar más tarde, en hora de Chile.')).toBeInTheDocument();
+    expect(panel.getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
+
+    fireEvent.change(panel.getByLabelText('Desde'), { target: { value: '11:00' } });
+    fireEvent.change(panel.getByLabelText('Hasta'), { target: { value: '13:00' } });
+    expect(panel.getByText('1 horario con cruce en tu agenda.')).toBeInTheDocument();
+    expect(document.querySelectorAll('.horario--nuevo')).toHaveLength(1);
+    expect(document.querySelector('.horario--nuevo')).toHaveTextContent('12:00');
+    fireEvent.change(panel.getByLabelText('Hasta'), { target: { value: '12:00' } });
+    expect(panel.getByText('Todos los bloques coinciden con horarios publicados.')).toBeInTheDocument();
+    expect(panel.getByRole('button', { name: 'Publicar horario' })).toBeDisabled();
+
+    fireEvent.change(panel.getByLabelText('Día'), { target: { value: '2099-10-17' } });
+    expect(panel.getByText('Este día está bloqueado. Elige otro día para publicar.')).toBeInTheDocument();
+    expect(llamadasA(fetch, '/api/disponibilidades/serie')).toHaveLength(0);
+  });
+
+  test('al elegir otro día, el calendario muestra la semana de la publicación', async () => {
+    const fetch = simularApi({ '/api/agenda/semana': (url) => [200, url.includes('2099-10-19')
+      ? { ...SEMANA, desde: '2099-10-19', hasta: '2099-10-25', horarios: [] } : SEMANA] });
+    renderizarApp('/profesional/agenda');
+    await userEvent.click(await screen.findByRole('button', { name: 'Publicar horarios' }));
+    const panel = within(screen.getByRole('region', { name: 'Publicar horarios' }));
+    fireEvent.change(panel.getByLabelText('Día'), { target: { value: '2099-10-22' } });
+    expect(await screen.findByRole('heading', { name: '19 – 25 de octubre de 2099' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Ver las reservas del jueves 22 de octubre/ })).toHaveAttribute('aria-pressed', 'true');
+    expect(llamadasA(fetch, '/api/agenda/semana?desde=2099-10-19')).toHaveLength(1);
+    expect(document.querySelectorAll('.horario--nuevo')).toHaveLength(4);
   });
 
   test('bloquear fechas envía el rango y muestra el motivo del rechazo si hay reservas activas', async () => {

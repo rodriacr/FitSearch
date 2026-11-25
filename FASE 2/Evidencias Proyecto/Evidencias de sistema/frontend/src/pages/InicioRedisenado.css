@@ -1,5 +1,4 @@
-.inicio { gap: 1.25rem; grid-template-areas: "aviso" "hero" "accesos" "especialidades" "panel" "destacados" "banner"; }
-.inicio__aviso { padding: 0.75rem 1rem; font-size: 0.8rem; }
+.inicio { gap: 1.25rem; grid-template-areas: "hero" "accesos" "especialidades" "panel" "destacados" "banner"; }
 .inicio__hero { isolation: isolate; grid-template-columns: 1fr; display: block; padding: 2.5rem 1.4rem; min-height: 21rem; background: #073b58; border-radius: 20px; }
 .inicio__foto { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: 70% calc(20% + var(--desplazamiento-hero, 0px)); }
 .inicio__hero::before { content: ''; position: absolute; inset: 0; z-index: -1; border-radius: inherit; background: linear-gradient(90deg, #073b58, rgb(7 59 88 / 91%) 25%, rgb(7 59 88 / 75%) 55%, rgb(7 59 88 / 15%)); }
@@ -84,7 +83,7 @@
   .inicio__lista-destacados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 @media (min-width: 75rem) {
-  .inicio { grid-template-columns: minmax(0, 1fr) 18rem; grid-template-areas: "aviso aviso" "hero hero" "accesos accesos" "especialidades panel" "destacados panel" "banner banner"; grid-template-rows: none; }
+  .inicio { grid-template-columns: minmax(0, 1fr) 18rem; grid-template-areas: "hero hero" "accesos accesos" "especialidades panel" "destacados panel" "banner banner"; grid-template-rows: none; }
   .inicio__hero { min-height: 24rem; padding: 3rem; }
   .inicio__hero-texto { max-width: 57%; }
   .inicio__panel { grid-template-columns: 1fr; }
@@ -93,4 +92,85 @@
 
 @media (prefers-reduced-motion: reduce) {
   .inicio__foto { object-position: 70% 20%; }
+}
+
+/* El inicio prioriza la actividad diaria y mantiene la búsqueda siempre a mano. */
+.inicio { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hero" "panel" "accesos" "especialidades" "destacados" "banner"; }
+.inicio__hero { min-height: 0; padding: 1.6rem; }
+.inicio__hero-texto { max-width: 40rem; }
+.inicio__hero-pregunta { font-size: clamp(1.65rem, 2.5vw, 2.35rem); }
+.inicio__hero-saludo { font-size: 1rem; margin-bottom: .4rem; }
+.inicio__hero h1 { margin-bottom: .65rem; }
+.inicio__hero-texto > p { font-size: .85rem; margin-bottom: 1rem; max-width: 32rem; }
+.inicio__hero .buscador-hero { min-height: 3rem; }
+.inicio__hero .buscador-hero input { font-size: 1rem; }
+.inicio__hero .buscador-hero button { width: 2.5rem; height: 2.5rem; }
+.inicio__panel { grid-template-columns: minmax(0, 1fr); align-items: stretch; }
+.inicio__panel > * { min-width: 0; }
+.inicio__citas { order: 0; }
+.inicio__panel .panel-tarjeta { padding: 1.1rem; }
+.inicio__panel .progreso { gap: .75rem; }
+.inicio__panel .progreso__nota { font-size: .72rem; }
+.inicio__panel .objetivo__nombre { margin-block: .85rem; font-size: 1.2rem; }
+.inicio__panel .progreso__valor { font-variant-numeric: tabular-nums; }
+.inicio__panel .progreso__enlace { min-height: 1.5rem; }
+.inicio__panel .progreso li { align-items: flex-start; }
+.inicio__panel .progreso__icono { width: 2.25rem; height: 2.25rem; margin-top: .1rem; }
+.inicio__panel .progreso .agua-hoy { align-content: flex-start; align-items: baseline; }
+.inicio__panel .progreso__macros > .inicio-macros { display: block; }
+.inicio-macros { min-width: 0; padding-block: .65rem; border-block: 1px solid var(--color-borde); }
+.inicio-macros h3 { margin: 0 0 .55rem; color: var(--color-texto-secundario); font-size: .74rem; font-weight: 500; }
+.inicio-macros__lista { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .6rem; margin: 0; }
+.inicio-macros__nutriente { min-width: 0; --color-macro: light-dark(#2375c4, #77baff); }
+.inicio-macros__nutriente--carbohidratos { --color-macro: light-dark(#15866d, #61d2ac); }
+.inicio-macros__nutriente--grasas { --color-macro: light-dark(#bd670b, #ffc079); }
+.inicio-macros dt { margin: 0 0 .25rem; font-size: .68rem; color: var(--color-texto-secundario); }
+.inicio-macros dd { margin: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem; font-size: .72rem; font-variant-numeric: tabular-nums; }
+.inicio-macros dd strong { color: var(--color-primario-oscuro); font-size: .94rem; }
+.inicio-macros dd > span { color: var(--color-texto-secundario); }
+.inicio-macros__barra { height: .3rem; margin-top: .45rem; overflow: hidden; border-radius: 999px; background: var(--color-info-fondo); }
+.inicio-macros__barra > span { display: block; width: 100%; height: 100%; background: var(--color-macro); transform-origin: left center; }
+.inicio__panel .panel-tarjeta__titulo, .inicio__citas .agenda__cabecera { min-height: 2.25rem; }
+.inicio__citas .agenda__cabecera h2 > .icono { width: 2.25rem; height: 2.25rem; padding: .5rem; border-radius: 50%; color: var(--color-primario); background: var(--color-info-fondo); }
+.inicio__citas .agenda__lista { margin-bottom: 0; }
+.inicio__citas .agenda--compacta .agenda__lista { gap: .55rem; }
+.inicio__citas .agenda--compacta .agenda__tarjeta {
+  grid-template-columns: minmax(0, 1fr);
+  padding: .75rem;
+  box-shadow: none;
+}
+.inicio__citas .agenda--compacta .agenda__tarjeta h3 { margin: .3rem 0; font-size: .9rem; }
+.inicio__citas .agenda--compacta .agenda__tarjeta p { margin: .25rem 0 0; font-size: .75rem; line-height: 1.4; overflow-wrap: anywhere; }
+.inicio__accesos { margin-top: .25rem; }
+@media (min-width: 40rem) {
+  .inicio__hero { padding: 1.5rem 2rem; }
+  .inicio__hero-texto { max-width: 65%; }
+  .inicio__panel { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .inicio__panel > :last-child { grid-column: 1 / -1; }
+}
+@media (min-width: 64rem) {
+  .inicio__panel { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .inicio__panel > :last-child { grid-column: auto; }
+  .inicio__panel > .panel-tarjeta { height: 100%; display: flex; flex-direction: column; }
+  .inicio__panel > .panel-tarjeta > .enlace-panel { margin-top: auto; padding-top: 1rem; }
+  .accesos-rapidos { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .accesos-rapidos, .inicio__lista-destacados { align-items: stretch; grid-auto-rows: 1fr; }
+  .inicio .accesos-rapidos > li, .inicio__lista-destacados > * { height: 100%; }
+  .inicio .acceso-rapido:not(.acceso-rapido--proximamente) { flex-direction: column; justify-content: center; text-align: center; gap: .5rem; padding: .85rem .5rem; min-height: 6rem; }
+  .inicio .acceso-rapido__flecha { display: none; }
+  .inicio .acceso-rapido__nombre { font-size: .8rem; }
+  .inicio__hero-texto > p { max-width: 34rem; }
+}
+@media (max-width: 23rem) {
+  .inicio-macros__lista { grid-template-columns: minmax(0, 1fr); gap: .6rem; }
+  .inicio-macros__nutriente { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: .5rem; }
+  .inicio-macros__barra { grid-column: 1 / -1; margin-top: .2rem; }
+  .inicio-macros dt { font-size: .75rem; }
+}
+@media (max-width: 39.99rem) {
+  .inicio__hero { padding: 1.25rem; }
+  .inicio__hero-texto > p { line-height: 1.5; }
+  .inicio__hero-pregunta { max-width: 18ch; }
+  .inicio__hero::before { background: linear-gradient(90deg, #073b58, rgb(7 59 88 / 88%) 65%, rgb(7 59 88 / 68%)); }
+  .inicio__panel .panel-tarjeta { border-radius: 16px; }
 }

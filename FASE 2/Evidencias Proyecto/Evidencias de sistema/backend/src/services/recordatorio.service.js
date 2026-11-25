@@ -19,7 +19,7 @@ async function pendientes(ahora) {
       estado: 'confirmada',
       recordatorioEn: null,
       ...intento.libre('recordatorioIntento', ahora),
-      usuario: { activo: true },
+      usuario: { activo: true, recordatoriosCitas: true },
       disponibilidad: {
         fecha: { gte: new Date(`${hoy}T00:00:00Z`), lte: new Date(`${sumarDias(hoy, 2)}T00:00:00Z`) },
         profesional: { recordatorios: true },
@@ -53,7 +53,11 @@ async function enviarPendientes(ahora = new Date()) {
   for (const reserva of await pendientes(ahora)) {
     try {
       const { count } = await prisma.reserva.updateMany({
-        where: { id: reserva.id, recordatorioEn: null, ...intento.libre('recordatorioIntento', ahora) },
+        where: {
+          id: reserva.id, estado: 'confirmada', recordatorioEn: null, ...intento.libre('recordatorioIntento', ahora),
+          usuario: { activo: true, recordatoriosCitas: true },
+          disponibilidad: { profesional: { recordatorios: true } },
+        },
         data: { recordatorioIntento: marca },
       });
       if (!count) continue;

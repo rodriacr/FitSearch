@@ -32,13 +32,22 @@ export default function AgendaSemanal() {
   const pedida = parametros.get('semana');
   const semana = lunesDe(esFecha(pedida) ? pedida : hoy);
   const vista = parametros.get('vista') === 'reservas' ? 'reservas' : 'calendario';
+  const diaEnlace = esFecha(parametros.get('dia')) ? parametros.get('dia') : null;
+  const horarioEnlace = /^\d+$/.test(parametros.get('horario') ?? '') ? Number(parametros.get('horario')) : null;
+  const claveEnlace = `${diaEnlace}-${horarioEnlace}`;
   const [revision, setRevision] = useState(0);
   const [respuesta, setRespuesta] = useState(null);
   const [reservasPendientes, setReservasPendientes] = useState(null);
-  const [seleccionId, setSeleccionId] = useState(null);
-  const [panel, setPanel] = useState(null);
+
+  const [seleccionId, setSeleccionId] = useState(horarioEnlace);
+  const [panel, setPanel] = useState(() => horarioEnlace ? { tipo: 'detalle' } : null);
   const [aviso, setAviso] = useState('');
-  const [diaElegido, setDiaElegido] = useState(null);
+  const [diaElegido, setDiaElegido] = useState(diaEnlace);
+  const [ultimoEnlace, setUltimoEnlace] = useState(claveEnlace);
+  if (ultimoEnlace !== claveEnlace) {
+    setUltimoEnlace(claveEnlace);
+    if (diaEnlace && horarioEnlace) { setDiaElegido(diaEnlace); setSeleccionId(horarioEnlace); setPanel({ tipo: 'detalle' }); }
+  }
   const [previa, setPrevia] = useState(null);
   const contenedor = useRef(null);
   const costado = useRef(null);
@@ -58,8 +67,8 @@ export default function AgendaSemanal() {
       .then((datos) => activo && setRespuesta({ clave, datos }))
       .catch((error) => activo && setRespuesta({ clave, error: error.message }));
     solicitar('/reservas')
-      .then(({ reservas }) => activo && setReservasPendientes(reservas.filter((r) => r.estado === 'pendiente')))
-      .catch(() => activo && setReservasPendientes([]));
+      .then(({ reservas }) => activo && setReservasPendientes({ clave, reservas: reservas.filter((r) => r.estado === 'pendiente') }))
+      .catch((error) => activo && setReservasPendientes({ clave, error: error.message }));
     return () => { activo = false; };
   }, [clave, semana]);
 
@@ -70,7 +79,8 @@ export default function AgendaSemanal() {
     ...semanaCargada, hoy, ahora: ahora.slice(11),
     horarios: semanaCargada.horarios.map((h) => ({ ...h, pasado: `${h.fecha}T${h.horaInicio}` <= ahora })),
   };
-  const pendientes = reservasPendientes?.filter((r) => `${r.horario.fecha}T${r.horario.horaInicio}` > ahora) ?? null;
+  const errorPendientes = reservasPendientes?.clave === clave ? reservasPendientes.error : null;
+  const pendientes = (reservasPendientes?.clave === clave ? reservasPendientes.reservas : null)?.filter((r) => `${r.horario.fecha}T${r.horario.horaInicio}` > ahora) ?? null;
   const cargando = respuesta?.clave !== clave;
   const seleccionado = datos?.horarios.find((h) => h.id === seleccionId) || null;
   const dia = diaElegido && diaElegido >= semana && diaElegido <= sumarDias(semana, 6) ? diaElegido : hoy >= semana && hoy <= sumarDias(semana, 6) ? hoy : semana;
@@ -122,7 +132,8 @@ export default function AgendaSemanal() {
   let contenidoCostado;
   if (panel?.tipo === 'publicar') {
     contenidoCostado = (
-      <PublicarHorarios key={JSON.stringify(panel.inicial || {})} inicial={panel.inicial} hoy={hoy} onCerrar={cerrarPanel} onPrevia={setPrevia}
+      <PublicarHorarios key={JSON.stringify(panel.inicial || {})} inicial={panel.inicial} ahora={ahora} datos={semanaCargada} onDia={elegirDia} onCerrar={cerrarPanel} onPrevia={setPrevia}
+        onRevisar={() => setRevision((r) => r + 1)}
         onPublicado={(texto, fecha) => { cerrarPanel(); irASemana(fecha); setDiaElegido(fecha); refrescar(texto); }} />
     );
   } else if (panel?.tipo === 'bloquear') {
@@ -132,7 +143,7 @@ export default function AgendaSemanal() {
   } else if (datos) {
     contenidoCostado = (
       <ResumenAgenda datos={datos} dia={dia} onDia={elegirDia} onElegirHorario={elegirHorario} conLista={modo === 'semana'}
-        pendientes={pendientes} onElegirPendiente={(r) => {
+        pendientes={pendientes} errorPendientes={errorPendientes} onReintentarPendientes={() => setRevision((r) => r + 1)} onElegirPendiente={(r) => {
           irASemana(r.horario.fecha);
           setDiaElegido(r.horario.fecha);
           setSeleccionId(r.horario.id);
@@ -205,7 +216,7 @@ export default function AgendaSemanal() {
                   <div className="agenda-semanal__esqueleto" role="status"><span className="solo-lector">Cargando la semana…</span></div>
                 ) : (
                   <CalendarioSemana modo={modo} datos={datos} ahora={ahora} dia={dia} onDia={verDia} previa={enPublicar}
-                    rango={rangoVisible(enPublicar ? [...datos.horarios, enPublicar] : datos.horarios, reglas.agenda.vistaSemana)}
+                    rango={rangoVisible(enPublicar?.fecha >= datos.desde && enPublicar?.fecha <= datos.hasta ? [...datos.horarios, ...enPublicar.bloques] : datos.horarios, reglas.agenda.vistaSemana)}
                     seleccionId={seleccionId} onElegirHorario={elegirHorario}
                     onElegirHueco={(inicial) => { setAviso(''); setSeleccionId(null); abrir({ tipo: 'publicar', inicial }); }} />
                 )}

@@ -23,6 +23,41 @@ function simular({ perfil = respuestaPerfil(PERFIL_COMPLETO), profesionales = li
   });
 }
 
+describe('Resumen de macronutrientes en el inicio', () => {
+  test('muestra consumo real, metas y decimales en español sin consultas adicionales', async () => {
+    simular({ extra: { '/api/comidas': { consumo: { calorias: 1420, proteinasG: 85.5, carbohidratosG: 150, grasasG: 45 }, objetivo: { calorias: 2200, proteinasG: 110, carbohidratosG: 250, grasasG: 70 } } } });
+    renderizarApp('/inicio');
+    const macros = await screen.findByRole('group', { name: 'Macros de hoy' });
+    await waitFor(() => expect(within(macros).getByText('85,5')).toBeInTheDocument());
+    expect(within(macros).getByRole('progressbar', { name: 'Proteínas de hoy' })).toHaveAttribute('aria-valuenow', '85.5');
+    expect(within(macros).getByRole('progressbar', { name: 'Carbohidratos de hoy' })).toHaveAttribute('aria-valuemax', '250');
+    expect(within(macros).getByRole('progressbar', { name: 'Grasas de hoy' })).toHaveAttribute('aria-valuetext', '45 g consumidos de 70 g de meta');
+  });
+  test('sin metas muestra los gramos consumidos, incluidos ceros reales, sin inventar objetivos', async () => {
+    simular({ extra: { '/api/comidas': { consumo: { calorias: 0, proteinasG: 0, carbohidratosG: 0, grasasG: 0 }, objetivo: null } } });
+    renderizarApp('/inicio');
+    const macros = await screen.findByRole('group', { name: 'Macros de hoy' });
+    await waitFor(() => expect(within(macros).getAllByText('0')).toHaveLength(3));
+    expect(within(macros).queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+  test('al superar la meta conserva los gramos reales y limita la barra a su tamaño', async () => {
+    simular({ extra: { '/api/comidas': { consumo: { calorias: 1420, proteinasG: 180, carbohidratosG: 150, grasasG: 45 }, objetivo: { proteinasG: 100 } } } });
+    renderizarApp('/inicio');
+    const barra = await screen.findByRole('progressbar', { name: 'Proteínas de hoy' });
+    expect(barra).toHaveAttribute('aria-valuenow', '100');
+    expect(barra).toHaveAttribute('aria-valuetext', '180 g consumidos de 100 g de meta');
+    expect(barra.firstChild).toHaveStyle({ transform: 'scaleX(1)' });
+  });
+  test('si falla Comidas no confunde datos desconocidos con cero consumido', async () => {
+    simular({ extra: { '/api/comidas': () => [503, { error: 'Sin conexión' }] } });
+    renderizarApp('/inicio');
+    await screen.findByText(/No pudimos cargar las calorías/);
+    const macros = screen.getByRole('group', { name: 'Macros de hoy' });
+    expect(within(macros).getAllByText('—')).toHaveLength(3);
+    expect(within(macros).queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+});
+
 describe('Inicio con datos', () => {
   test('muestra el hero, los accesos rápidos, el objetivo, la meta de calorías y los profesionales destacados de la API', async () => {
     const fetch = simular();

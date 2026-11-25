@@ -39,8 +39,9 @@ test('conserva la conversación y el borrador al ampliar, achicar y minimizar', 
   expect(screen.getByRole('region', { name: 'Ventana de mensajes' }).closest('.mensajes-flotantes')).toHaveClass('mensajes-flotantes--ampliado');
   await userEvent.click(screen.getByRole('button', { name: 'Achicar mensajes' }));
   expect(texto).toHaveValue('Hola, quiero confirmar mi hora');
-  await userEvent.click(screen.getByRole('button', { name: 'Minimizar mensajes' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Cerrar ventana de mensajes' }));
   expect(screen.queryByRole('textbox', { name: 'Escribe un mensaje' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /^Mensajes/ })).toHaveFocus();
   await userEvent.click(screen.getByRole('button', { name: /^Mensajes/ }));
   expect(await screen.findByRole('textbox', { name: 'Escribe un mensaje' })).toHaveValue('Hola, quiero confirmar mi hora');
 });

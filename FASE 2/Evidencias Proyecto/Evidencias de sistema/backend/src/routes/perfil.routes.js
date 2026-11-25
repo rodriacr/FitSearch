@@ -13,6 +13,10 @@ const cuentaValidadores = require('../validators/cuentaPerfil.validators');
 const { matchedData } = require('express-validator');
 const { limitarConfirmacionIdentidad } = require('../middlewares/limiteIntentos');
 router.get('/cuenta', async (req, res) => res.json(await cuentaPerfil.obtener(req.usuario.id)));
+router.get('/configuracion', autorizarRoles('usuario'), async (req, res) =>
+  res.json(await cuentaPerfil.obtenerPreferencias(req.usuario.id)));
+router.put('/configuracion', autorizarRoles('usuario'), async (req, res) =>
+  res.json(await cuentaPerfil.guardarPreferencias(req.usuario.id, req.body)));
 // Cambiar el correo pide confirmar la identidad: los intentos fallidos tienen límite por cuenta (SC-41).
 router.put('/cuenta', cuentaValidadores.guardar, validar, limitarConfirmacionIdentidad, async (req, res) => {
   const resultado = await cuentaPerfil.guardar(req.usuario.id, matchedData(req), req.usuario.vencimiento);

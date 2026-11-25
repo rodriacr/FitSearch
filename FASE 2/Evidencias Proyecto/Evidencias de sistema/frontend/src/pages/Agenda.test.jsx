@@ -64,7 +64,7 @@ test('retira un bloque con historial cancelado solo tras confirmar y mantiene la
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar retiro' }));
   expect(await screen.findByText(/Horario retirado/)).toBeInTheDocument();
   expect(await screen.findByText('Aún no has publicado horarios disponibles.')).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(screen.getByRole('button', { name: /^Todas(?: e historial)?$/ }));
   expect(await screen.findByText(r.mensaje)).toBeInTheDocument();
 });
 test('publica un horario eligiendo el día en el calendario y la duración rápida', async () => {
@@ -116,7 +116,7 @@ test('cancelar requiere confirmación explícita y actualiza el historial', asyn
   expect(fetch.mock.calls.some(([, o]) => o.method === 'PATCH')).toBe(false);
   await userEvent.click(screen.getByRole('button', { name: 'Confirmar cambio' }));
   expect(await screen.findByText(/Reserva cancelada/)).toBeInTheDocument();
-  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(screen.getByRole('button', { name: /^Todas(?: e historial)?$/ }));
   expect(within(await screen.findByRole('article')).getByText('Cancelada')).toBeInTheDocument();
 });
 test('la confirmación aparece dentro de la tarjeta elegida (no al final de la lista) y al volver el foco regresa al botón', async () => {
@@ -160,10 +160,11 @@ test('las reservas recibidas se buscan por nombre y se filtran por estado y fech
   renderizarApp('/profesional/agenda?vista=reservas');
 
   await screen.findByRole('search', { name: 'Buscar reservas' });
+  await userEvent.click(screen.getByRole('button', { name: 'Próximas' }));
   expect(nombres()).toEqual(['Ana', 'Bruno Díaz']);
   expect(screen.getByText('2 reservas')).toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(screen.getByRole('button', { name: /^Todas(?: e historial)?$/ }));
   expect(nombres()).toEqual(['Bruno Díaz', 'Ana', 'Carla Soto', 'José Núñez', 'Diego Lagos']);
   expect(screen.getByText('5 reservas, de la más reciente a la más antigua')).toBeInTheDocument();
   expect(within(screen.getAllByRole('article')[2]).getByText('Realizada')).toBeInTheDocument();
@@ -202,10 +203,42 @@ test('en «Mis citas» la persona busca por el nombre del profesional', async ()
   fijarHoy('2099-10-12T13:00:00Z');
   simularApi({ '/api/reservas': { reservas: VARIAS } });
   renderizarApp('/citas');
-  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(await screen.findByRole('button', { name: /^Todas(?: e historial)?$/ }));
   await userEvent.type(screen.getByRole('searchbox', { name: 'Buscar' }), 'juan');
   expect(nombres()).toEqual(['Juan Soto']);
   expect(screen.getByText('1 cita, de la más reciente a la más antigua')).toBeInTheDocument();
+});
+
+test('Mis citas separa las próximas de las pasadas y canceladas, y solo permite cancelar citas vigentes', async () => {
+  sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION));
+  fijarHoy('2099-10-12T13:00:00Z');
+  let reservas = [
+    reservaDe(31, 'Ana', 'confirmada', '2099-10-15'),
+    reservaDe(32, 'Carla', 'confirmada', '2099-10-05'),
+    reservaDe(33, 'Diego', 'cancelada', '2099-10-20'),
+  ];
+  simularApi({
+    '/api/reservas': () => [200, { reservas }],
+    '/api/reservas/31': () => {
+      reservas = reservas.map((cita) => cita.id === 31 ? { ...cita, estado: 'cancelada' } : cita);
+      return [200, { reserva: reservas[0] }];
+    },
+  });
+  renderizarApp('/citas');
+  await screen.findByRole('article');
+  expect(nombres()).toEqual(['Juan Soto']);
+  await userEvent.click(screen.getByRole('button', { name: 'Historial' }));
+  expect(nombres()).toEqual(['Marta Ríos', 'Marta Ríos']);
+  expect(screen.getByRole('link', { name: 'Calificar' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Cancelar cita' })).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Todas' }));
+  expect(screen.getAllByRole('article')).toHaveLength(3);
+  await userEvent.click(screen.getByRole('button', { name: 'Próximas' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Cancelar cita' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Sí, cancelar la cita' }));
+  expect(await screen.findByRole('heading', { name: 'No tienes próximas citas' })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Historial' }));
+  expect(screen.getAllByRole('article')).toHaveLength(3);
 });
 
 test.each([
@@ -226,7 +259,7 @@ test.each([
   ];
   simularApi({ '/api/reservas': { reservas: filas } });
   renderizarApp('/profesional/agenda?vista=reservas');
-  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(await screen.findByRole('button', { name: /^Todas(?: e historial)?$/ }));
   await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), periodo);
   expect(nombres()).toEqual(esperados);
 });
@@ -240,7 +273,7 @@ test('Mes pasado en enero corresponde a diciembre del año anterior', async () =
     reservaDe(74, 'Enero', 'confirmada', '2100-01-01'),
   ] } });
   renderizarApp('/profesional/agenda?vista=reservas');
-  await userEvent.click(await screen.findByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(await screen.findByRole('button', { name: /^Todas(?: e historial)?$/ }));
   await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Fecha de la cita' }), 'mesPasado');
   expect(nombres()).toEqual(['Ultimo', 'Primero']);
 });
@@ -257,17 +290,17 @@ test.each(['pendiente', 'confirmada'])('una cita %s que comienza con «Mis citas
 
   const tarjeta = (await screen.findByRole('heading', { name: 'Juan' })).closest('article');
   expect(within(tarjeta).getByText(estado === 'pendiente' ? 'Por confirmar' : 'Confirmada')).toBeInTheDocument();
-  await userEvent.click(within(tarjeta).getByRole('button', { name: 'Cancelar reserva' }));
-  expect(within(tarjeta).getByRole('group', { name: '¿Cancelar esta reserva?' })).toBeInTheDocument();
+  await userEvent.click(within(tarjeta).getByRole('button', { name: 'Cancelar cita' }));
+  expect(within(tarjeta).getByRole('group', { name: '¿Cancelar esta cita?' })).toBeInTheDocument();
 
   // La cita era a las 09:00 (hora de Chile): pasan once minutos y ya comenzó.
   vi.setSystemTime(new Date('2099-10-15T12:01:00Z'));
   act(() => { vi.advanceTimersByTime(60000); });
   expect(screen.queryByRole('heading', { name: 'Juan' })).not.toBeInTheDocument();
 
-  await userEvent.click(screen.getByRole('button', { name: 'Todas e historial' }));
+  await userEvent.click(screen.getByRole('button', { name: 'Historial' }));
   const pasada = screen.getByRole('heading', { name: 'Juan' }).closest('article');
   expect(within(pasada).getByText(estado === 'pendiente' ? 'No realizada' : 'Realizada')).toBeInTheDocument();
-  expect(within(pasada).queryByRole('group', { name: '¿Cancelar esta reserva?' })).not.toBeInTheDocument();
-  expect(within(pasada).queryByRole('button', { name: 'Cancelar reserva' })).not.toBeInTheDocument();
+  expect(within(pasada).queryByRole('group', { name: '¿Cancelar esta cita?' })).not.toBeInTheDocument();
+  expect(within(pasada).queryByRole('button', { name: 'Cancelar cita' })).not.toBeInTheDocument();
 });

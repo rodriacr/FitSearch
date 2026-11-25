@@ -3,6 +3,7 @@
 // Desde el 11-11-2026 cada aviso sigue la estructura pedida por el PO: saludo, panel con el detalle de la cita,
 // «¿Qué debes hacer?», botón y nota (la plantilla está en correo.service).
 const modelo = require('../models/aviso.model');
+const prisma = require('../models/prisma');
 const correo = require('./correo.service');
 const { marcaDe } = require('../utils/intentoDeEnvio');
 
@@ -231,12 +232,45 @@ async function recordatorio(r) {
   });
 }
 
+const MINUTOS_ENTRE_AVISOS = 30;
+
+async function mensajeNuevo(usuarioId, mensajeId, ahora = new Date()) {
+  const marca = marcaDe(ahora);
+  const limite = new Date(marca.getTime() - MINUTOS_ENTRE_AVISOS * 60000);
+  const destino = { id: usuarioId, activo: true, avisosMensajesCorreo: true };
+  // Toma un solo envío por cuenta, aun si llegan varios mensajes a la vez o desde distintos chats.
+  const { count } = await prisma.usuario.updateMany({
+    where: {
+      ...destino,
+      OR: [{ ultimoAvisoMensajes: null }, { ultimoAvisoMensajes: { lte: limite } }],
+      chats: { some: { borradoUsuarioHasta: { lt: mensajeId }, mensajes: { some: { id: mensajeId, autorId: { not: usuarioId }, leido: false } } } },
+    },
+    data: { ultimoAvisoMensajes: marca },
+  });
+  if (!count) return;
+  try {
+    const usuario = await prisma.usuario.findFirst({ where: destino, select: { nombre: true, correo: true } });
+    if (!usuario) return;
+    await correo.enviarAviso({
+      para: usuario.correo, nombre: primerNombre(usuario.nombre),
+      asunto: 'FitSearch | Tienes un mensaje nuevo', icono: 'campana', titulo: 'Tienes un mensaje nuevo',
+      intro: 'Un profesional te escribió en FitSearch.',
+      accion: { texto: 'Ver mis mensajes', ruta: '/mensajes' },
+      nota: 'Puedes cambiar estos avisos desde Configuración en tu cuenta.',
+    });
+  } catch (error) {
+    await prisma.usuario.updateMany({ where: { id: usuarioId, ultimoAvisoMensajes: marca }, data: { ultimoAvisoMensajes: null } });
+    throw error;
+  }
+}
+
 // Disparadores sin espera: la respuesta de la API no depende del correo.
 const enSegundoPlano = (evento, tarea) => { Promise.resolve().then(tarea).catch(registrarFallo(evento)); };
 
 module.exports = {
   cuando,
-  reservaCreada, reservaCambiada, horaLiberada, recordatorio, cuentaEliminada,
+  reservaCreada, reservaCambiada, horaLiberada, recordatorio, cuentaEliminada, mensajeNuevo,
+  avisarMensajeNuevo: (usuarioId, mensajeId) => enSegundoPlano('mensaje nuevo', () => mensajeNuevo(usuarioId, mensajeId)),
   avisarCuentaEliminada: (id, datos) => enSegundoPlano('cuenta eliminada', () => cuentaEliminada(id, datos)),
   avisarReservaCreada: (id) => enSegundoPlano('reserva nueva', () => reservaCreada(id)),
   avisarReservaCambiada: (id) => enSegundoPlano('cambio de reserva', () => reservaCambiada(id)),

@@ -83,36 +83,21 @@
 .formulario-agenda { display: grid; gap: 0.85rem; }
 .formulario-agenda .campo { margin: 0; min-width: 0; }
 .formulario-agenda__horas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
-.formulario-agenda__previa { margin: 0; font-size: 0.85rem; color: var(--color-texto-secundario); }
 .formulario-agenda .boton { min-height: 2.75rem; }
 
-/* Interruptor (casilla con apariencia de switch): la casilla real sigue ahí para el teclado y los lectores. */
-.interruptor { position: relative; display: inline-flex; align-items: center; gap: 0.65rem; font-size: 0.92rem; cursor: pointer; }
-.interruptor input { position: absolute; opacity: 0; width: 2.5rem; height: 1.5rem; margin: 0; cursor: pointer; }
-.interruptor__pista {
-  position: relative;
-  flex: none;
-  width: 2.5rem;
-  height: 1.5rem;
-  border-radius: 999px;
-  background: light-dark(#c7d3de, var(--color-info-fondo));
-  transition: background-color 160ms ease;
+.publicar-horarios__campos { display: grid; gap: .8rem; min-width: 0; margin: 0; padding: 0; border: 0; }
+.publicar-horarios__duracion { display: grid; gap: .4rem; }
+.publicar-horarios__duracion .segmentos { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.publicar-horarios__previa {
+  display: grid; gap: .4rem; padding: .75rem; background: var(--color-superficie-suave);
+  border: 1px solid var(--color-borde); border-radius: 12px; font-size: .8rem; color: var(--color-texto-secundario);
 }
-.interruptor__pista::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 50%;
-  background: light-dark(#fff, var(--color-superficie));
-  box-shadow: 0 1px 3px rgb(6 38 63 / 25%);
-  transition: transform 180ms var(--curva-salida);
-}
-.interruptor input:checked + .interruptor__pista { background: var(--color-boton, var(--color-primario)); }
-.interruptor input:checked + .interruptor__pista::after { transform: translateX(1rem); }
-.interruptor input:focus-visible + .interruptor__pista { outline: 3px solid var(--color-foco); outline-offset: 2px; }
+.publicar-horarios__previa p { margin: 0; }
+.publicar-horarios__previa p:first-child { color: var(--color-texto); font-weight: 600; }
+.publicar-horarios__previa summary { width: fit-content; padding-block: .25rem; color: var(--color-primario-oscuro); font-weight: 600; cursor: pointer; }
+.publicar-horarios__previa ul { display: grid; gap: .3rem; max-height: 10rem; overflow: auto; margin: .3rem 0 0; padding: 0; list-style: none; }
+.publicar-horarios__previa li { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .3rem; padding: .25rem .1rem; border-top: 1px solid var(--color-borde); font-variant-numeric: tabular-nums; }
+.publicar-horarios__cruces { color: var(--color-acento-oscuro); }
 
 /* Control segmentado (duración de los bloques). */
 .segmentos {
@@ -236,5 +221,5 @@
 }
 .resumen-agenda__espera .icono { flex: none; margin-top: 0.1rem; }
 @media (prefers-reduced-motion: reduce) {
-  .interruptor__pista, .interruptor__pista::after, .segmentos__opcion, .resumen-agenda__reserva { transition: none; }
+  .segmentos__opcion, .resumen-agenda__reserva { transition: none; }
 }

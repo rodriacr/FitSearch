@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, test } from 'vitest';
 import {
-  CLIMA, listado, MI_FICHA, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, SESION_PROFESIONAL, simularApi,
+  CLIMA, listado, MI_FICHA, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, SESION_PROFESIONAL, simularApi, simularUbicacion,
 } from '../../tests/utilidades.jsx';
 
 const SALUDO = { level: 1, name: '¡Hola, Matías!' };
@@ -17,7 +17,7 @@ const simular = ({ ficha = MI_FICHA, clima = CLIMA, biografia = 'Entrenador func
   '/api/profesional/reportes': { semanaActual: { reservas: 3, confirmadas: 2, canceladas: 1, pendientes: 0, clientesNuevos: 1 } },
 });
 
-beforeEach(() => sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)));
+beforeEach(() => { sessionStorage.setItem('fitsearch_sesion', JSON.stringify(SESION_PROFESIONAL)); simularUbicacion({ lat: -33.42, lng: -70.61, permiso: 'granted' }); });
 
 describe('Separación por rol', () => {
   test.each(['/inicio', '/profesionales', '/favoritos', '/perfil', '/asistente'])('un profesional que entra a %s del usuario llega a su propio Inicio', async (ruta) => {
@@ -83,7 +83,7 @@ describe('Inicio del profesional', () => {
     await screen.findByRole('group', { name: 'Clima en Providencia: 18 grados, Despejado' });
     expect(screen.queryByText('Define tu disponibilidad')).not.toBeInTheDocument();
   });
-  test('saluda, muestra el clima de su comuna con la fuente y, si el resumen no carga, no inventa datos', async () => {
+  test('saluda, muestra el clima de su ubicación actual con la fuente y, si el resumen no carga, no inventa datos', async () => {
     simular();
     renderizarApp('/profesional/inicio');
 
@@ -117,6 +117,7 @@ describe('Inicio del profesional', () => {
 
   test('sin tareas pendientes lo dice en vez de dejar el panel vacío', async () => {
     simularApi({
+      '/api/profesional/reportes': { resumenSemanal: { inicio: '2026-11-23', fin: '2026-11-29', totalClientes: 0, citasRealizadas: 0, citasPendientes: 0, clientesNuevos: 0 } },
       '/api/profesionales/mi-ficha': { ficha: MI_FICHA }, '/api/clima': CLIMA, '/api/disponibilidades': { horarios: [{ id: 1 }] },
       '/api/perfil/cuenta': { cuenta: { biografia: 'Entrenador funcional en Providencia.' } },
     });
@@ -124,14 +125,15 @@ describe('Inicio del profesional', () => {
     expect(await screen.findByText('Estás al día: no tienes tareas pendientes.')).toBeInTheDocument();
   });
 
-  test('si el clima no está disponible, el Inicio funciona igual sin esa tarjeta', async () => {
+  test('si el clima no está disponible, el Inicio sigue funcionando y permite reintentar', async () => {
     simular({ clima: () => [503, { error: 'El clima no está disponible en este momento' }] });
     renderizarApp('/profesional/inicio');
 
     expect(await screen.findByRole('heading', SALUDO)).toBeInTheDocument();
     expect(await screen.findByText('Define tu disponibilidad')).toBeInTheDocument();
     expect(screen.queryByRole('group', { name: /Clima en/ })).not.toBeInTheDocument();
-    expect(screen.queryByText(/no está disponible/)).not.toBeInTheDocument();
+    expect(await screen.findByText(/El clima no está disponible/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Reintentar ubicación' })).toBeInTheDocument();
   });
 
   test('sin ficha, la primera tarea es completarla para aparecer en el buscador', async () => {

@@ -1,4 +1,4 @@
-.perfil-editor { max-width: 81rem; margin: 0 auto; color: var(--color-texto); padding-bottom: 1.5rem; }
+.perfil-editor { color: var(--color-texto); padding-bottom: 1.5rem; }
 .perfil-editor *, .perfil-editor *::before, .perfil-editor *::after { box-sizing: border-box; }
 .perfil-editor__cabecera { display: flex; align-items: center; gap: 1rem; position: relative; overflow: hidden; padding: 1.65rem 1.8rem; margin-bottom: 1.3rem; border: 1px solid light-dark(#d8e9f4, var(--color-borde)); border-radius: 1.3rem; background: linear-gradient(115deg, light-dark(#f6fbff, var(--color-superficie)) 0%, light-dark(#e3f3ff, var(--color-info-fondo)) 100%); }
 .perfil-editor__cabecera::after { content: ''; position: absolute; right: -3rem; bottom: -6rem; width: 24rem; height: 12rem; border-radius: 50%; border: 2rem solid light-dark(#c8e8fc, var(--color-borde)); transform: rotate(-20deg); opacity: .65; pointer-events: none; }
@@ -6,7 +6,6 @@
 .perfil-editor__cabecera h1 { font-size: clamp(1.4rem, 2.1vw, 1.85rem); margin: 0; color: light-dark(#074e79, var(--color-primario)); }
 .perfil-editor__cabecera p { margin: .35rem 0 0; color: light-dark(#466580, var(--color-texto-secundario)); font-size: .93rem; }
 .perfil-editor__icono { display: grid; place-items: center; width: 3.2rem; height: 3.2rem; flex-shrink: 0; color: light-dark(#086698, var(--color-primario)); border: 1.5px solid light-dark(#9ccce8, var(--color-borde)); border-radius: 50%; }
-.perfil-editor__grilla { display: grid; grid-template-columns: 17rem minmax(0, 1fr); gap: 1.25rem; align-items: start; }
 .perfil-editor__lateral { display: grid; gap: 1rem; min-width: 0; }
 .perfil-editor__identidad, .perfil-editor__navegacion, .perfil-editor__contenido { background: light-dark(#fff, var(--color-superficie)); border: 1px solid light-dark(#e0ebf3, var(--color-borde)); border-radius: 1.2rem; box-shadow: 0 6px 24px #113e6510; }
 .perfil-editor__identidad { text-align: center; padding: 1.35rem 1rem; overflow-wrap: anywhere; }
@@ -98,9 +97,8 @@
 @keyframes confirmar-foto-entrada { from { opacity: 0; transform: translateY(8px) scale(.97); } }
 @media (prefers-reduced-motion: reduce) { .confirmar-foto, .confirmar-foto__tarjeta { animation: none; } }
 @media (hover: hover) { .perfil-editor__navegacion button:hover { background: var(--color-info-fondo); } .perfil-editor__camara:hover { background: light-dark(#eaf6ff, var(--color-info-fondo)); } }
-@media (max-width: 68rem) { .perfil-editor__grilla { grid-template-columns: 14.5rem minmax(0, 1fr); gap: 1rem; } .perfil-editor__contenido { padding: 1.15rem; } }
+@media (max-width: 68rem) { .perfil-editor__contenido { padding: 1.15rem; } }
 @media (max-width: 48rem) {
-  .perfil-editor__grilla { grid-template-columns: 1fr; }
   .perfil-editor__cabecera { padding: 1rem; border-radius: 1rem; gap: .65rem; }
   .perfil-editor__cabecera p { font-size: .8rem; }
   .perfil-editor__icono { display: none; }
@@ -130,3 +128,6 @@
 }
 /* Especialidad del profesional en «Información personal» (16-11-2026) y el aviso si cambiarla le quita la verificación. */
 .perfil-editor__aviso-especialidad { margin-top: 0.35rem; padding: 0.45rem 0.65rem; border-radius: var(--radio-control); color: light-dark(#724515, var(--color-acento-oscuro)); background: light-dark(#fff5e9, var(--color-aviso-fondo)); }
+
+/* Los paneles visitados conservan sus borradores sin exponer controles ocultos al teclado. */
+.perfil-editor__panel[hidden] { display: none; }

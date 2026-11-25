@@ -1,10 +1,11 @@
 // Navegación con sesión: logo, enlace "Profesionales", menú de la cuenta, menú lateral, barra inferior y secciones próximas.
-import { screen, within } from '@testing-library/react';
+import { act, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, test } from 'vitest';
-import { listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
+import { llamadasA, listado, PERFIL_COMPLETO, renderizarApp, respuestaPerfil, SESION, simularApi } from '../../tests/utilidades.jsx';
 
 const API = {
+  '/api/chats/no-leidos': { total: 0 },
   '/api/perfil': respuestaPerfil(PERFIL_COMPLETO),
   '/api/profesionales/filtros': { especialidades: [], comunas: [] },
   '/api/profesionales': listado([]),
@@ -64,7 +65,7 @@ describe('Con sesión', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     expect(within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent)).toEqual([
-      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Favoritos', 'Mis citas', 'Mensajes', 'Mi perfil',
+      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mis citas', 'Mensajes', 'Mi perfil',
     ]);
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
   });
@@ -76,6 +77,31 @@ describe('Con sesión', () => {
     expect(boton.querySelector('.notificaciones__contador')).toBeNull();
     await userEvent.click(boton);
     expect(screen.getByText('No tienes notificaciones')).toBeInTheDocument();
+  });
+
+  test('en móvil la campana está en el encabezado y en escritorio vuelve al menú principal', async () => {
+    const ancho = window.innerWidth;
+    window.innerWidth = 390;
+    try {
+      simularApi({ ...API, '/api/chats/no-leidos': { total: 2 } });
+      renderizarApp('/inicio');
+      const encabezado = within(screen.getByRole('banner'));
+      const menu = within(screen.getByRole('navigation', { name: 'Menú principal' }));
+      const etiqueta = 'Notificaciones: 2 mensajes sin leer';
+      const campana = await encabezado.findByRole('button', { name: etiqueta });
+      expect(menu.queryByRole('button', { name: /Notificaciones/ })).not.toBeInTheDocument();
+      await userEvent.click(campana);
+      expect(screen.getByRole('link', { name: /2 mensajes nuevos/ })).toHaveAttribute('href', '/mensajes');
+      await userEvent.click(encabezado.getByRole('button', { name: 'Abrir menú' }));
+      expect(menu.queryByRole('button', { name: /Notificaciones/ })).not.toBeInTheDocument();
+
+      await act(async () => { window.innerWidth = 1024; window.dispatchEvent(new Event('resize')); });
+      expect(encabezado.queryByRole('button', { name: /Notificaciones/ })).not.toBeInTheDocument();
+      expect(menu.getByRole('button', { name: etiqueta })).toBeInTheDocument();
+      expect(encabezado.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute('aria-expanded', 'false');
+    } finally {
+      window.innerWidth = ancho;
+    }
   });
 
   test('los mensajes sin leer muestran su contador y el enlace a mensajes', async () => {
@@ -127,6 +153,57 @@ describe('Con sesión', () => {
     expect(localStorage.getItem('fitsearch_aspecto')).toBe('claro');
   });
 
+  test('Configuración abre desde Más, guarda avisos y sigue el cambio de tema del dispositivo', async () => {
+    const medio = Object.assign(new EventTarget(), { matches: false });
+    vi.stubGlobal('matchMedia', () => medio);
+    try {
+      const configuracion = { recordatoriosCitas: true, avisosMensajesCorreo: false };
+      const fetch = simularApi({ ...API,
+        '/api/perfil/cuenta': { cuenta: { nombre: 'Ana', correo: 'ana@example.test', tienePassword: true } },
+        '/api/compartir': { profesionales: [], registro: [] },
+        '/api/perfil/configuracion': (_url, opciones) => [200, { configuracion: opciones.method === 'PUT'
+          ? { ...configuracion, ...JSON.parse(opciones.body) } : configuracion }],
+      });
+      renderizarApp('/inicio');
+      await userEvent.click(screen.getByRole('button', { name: 'Más opciones' }));
+      await userEvent.click(screen.getByRole('link', { name: 'Configuración' }));
+      expect(await screen.findByRole('heading', { level: 1, name: 'Configuración' })).toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Cambiar correo' })).toBeEnabled();
+      expect(await screen.findByRole('heading', { name: 'Profesionales con acceso a tu progreso' })).toBeInTheDocument();
+      const mensajes = await screen.findByRole('switch', { name: 'Mensajes nuevos por correo' });
+      expect(mensajes).not.toBeChecked();
+      await userEvent.click(mensajes);
+      expect(await screen.findByText('Preferencia guardada.')).toBeInTheDocument();
+      expect(mensajes).toBeChecked();
+      const [, guardado] = llamadasA(fetch, '/api/perfil/configuracion').find(([, opciones]) => opciones.method === 'PUT');
+      expect(JSON.parse(guardado.body)).toEqual({ avisosMensajesCorreo: true });
+
+      const apariencia = within(screen.getByRole('region', { name: 'Apariencia' }));
+      await userEvent.click(apariencia.getByRole('radio', { name: 'Sistema' }));
+      expect(localStorage.getItem('fitsearch_aspecto')).toBe('sistema');
+      act(() => { medio.dispatchEvent(Object.assign(new Event('change'), { matches: true })); });
+      expect(document.documentElement).toHaveAttribute('data-tema', 'oscuro');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  test('si falla el guardado de un aviso conserva la preferencia confirmada', async () => {
+    simularApi({ ...API,
+      '/api/perfil/cuenta': { cuenta: { nombre: 'Ana', correo: 'ana@example.test' } },
+      '/api/compartir': { profesionales: [], registro: [] },
+      '/api/perfil/configuracion': (_url, opciones) => opciones.method === 'PUT'
+        ? [503, { error: 'No pudimos guardar tu preferencia.' }]
+        : [200, { configuracion: { recordatoriosCitas: true, avisosMensajesCorreo: false } }],
+    });
+    renderizarApp('/configuracion');
+    const recordatorios = await screen.findByRole('switch', { name: 'Recordatorios de citas' });
+    await userEvent.click(recordatorios);
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos guardar tu preferencia.');
+    expect(recordatorios).toBeChecked();
+    expect(recordatorios).toBeEnabled();
+  });
+
   // FS-HU-25: Centros de salud y Gimnasios ya no son «Próximamente» (las secciones próximas del profesional se prueban
   // en EspacioProfesional.test.jsx).
   test('"Gimnasios" del menú abre el directorio de gimnasios, sin datos simulados', async () => {
@@ -145,14 +222,22 @@ describe('Con sesión', () => {
     expect(screen.getByText('No tienes notificaciones')).toBeInTheDocument();
   });
 
-  test('el botón de menú del celular abre el menú y se cierra al navegar', async () => {
+  test('Favoritos abre desde Más y al navegar se cierran ambos menús del celular', async () => {
     renderizarApp('/inicio');
     const boton = screen.getByRole('button', { name: 'Abrir menú' });
     await userEvent.click(boton);
     expect(screen.getByRole('button', { name: 'Cerrar menú', expanded: true })).toBeInTheDocument();
-    await userEvent.click(within(screen.getByRole('navigation', { name: 'Menú principal' })).getByRole('link', { name: 'Favoritos' }));
+    expect(screen.queryByRole('link', { name: 'Favoritos' })).not.toBeInTheDocument();
+    const mas = screen.getByRole('button', { name: 'Más opciones' });
+    await userEvent.click(mas);
+    const cuenta = screen.getByRole('navigation', { name: 'Cuenta' });
+    await userEvent.click(within(cuenta).getByRole('link', { name: 'Favoritos' }));
     expect(await screen.findByRole('heading', { level: 1, name: 'Favoritos' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Abrir menú' })).toHaveAttribute('aria-expanded', 'false');
+    expect(mas).toHaveAttribute('aria-expanded', 'false');
+    await userEvent.click(screen.getByRole('button', { name: 'Abrir menú' }));
+    await userEvent.click(mas);
+    expect(within(cuenta).getByRole('link', { name: 'Favoritos' })).toHaveAttribute('aria-current', 'page');
   });
 
   test('con el menú del celular abierto la página de fondo no se desplaza, y vuelve a hacerlo al cerrarlo', async () => {

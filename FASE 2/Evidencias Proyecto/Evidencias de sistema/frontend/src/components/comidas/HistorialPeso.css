@@ -4,6 +4,8 @@
   --grafico-peso: #1565a0;
   --grafico-meta: #c9500a;
   display: grid;
+  align-content: start;
+  container: historial-peso / inline-size;
   gap: 1rem;
 }
 
@@ -23,7 +25,7 @@
   align-items: end;
   gap: .75rem;
 }
-.historial-peso__formulario .campo { margin: 0; }
+.historial-peso__formulario .campo { min-width: 0; margin: 0; }
 .historial-peso__formulario .boton { min-height: 2.9rem; }
 .historial-peso__error { grid-column: 1 / -1; margin-top: -.35rem; }
 
@@ -95,8 +97,8 @@
   .historial-peso__borrar:hover { color: var(--color-error); background: var(--color-error-fondo); }
 }
 
-@media (max-width: 36rem) {
-  .historial-peso__formulario { grid-template-columns: 1fr 1fr; }
+@container historial-peso (max-width: 27rem) {
+  .historial-peso__formulario { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .historial-peso__formulario .boton { grid-column: 1 / -1; width: 100%; }
   .grafico-peso__eje text, .grafico-peso__fecha, .grafico-peso__etiqueta { font-size: 14px; }
 }

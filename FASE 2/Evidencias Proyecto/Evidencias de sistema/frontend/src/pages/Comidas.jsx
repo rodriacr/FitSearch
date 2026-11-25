@@ -74,8 +74,14 @@ export default function Comidas() {
   const [fecha, setFecha] = useState(null);
   const [intento, setIntento] = useState(0);
   // ?seccion= abre una pestaña concreta (por ejemplo, desde un plan guardado en el chat; SC-46).
-  const [parametros] = useSearchParams();
-  const [pestana, setPestana] = useState(() => (PESTANAS.some((p) => p.clave === parametros.get('seccion') && !p.proximamente) ? parametros.get('seccion') : 'resumen'));
+  const [parametros, setParametros] = useSearchParams();
+  const pedida = parametros.get('seccion');
+  const pestana = PESTANAS.some((p) => p.clave === pedida && !p.proximamente) ? pedida : 'resumen';
+  const setPestana = (valor) => {
+    const siguientes = new URLSearchParams(parametros);
+    if (valor === 'resumen') siguientes.delete('seccion'); else siguientes.set('seccion', valor);
+    setParametros(siguientes);
+  };
   const [registro, setRegistro] = useState({ abierto: false, momento: null });
   const [datos, setDatos] = useState(null);
   const clave = `${fecha}-${intento}`;
@@ -180,8 +186,6 @@ export default function Comidas() {
           <ComidasDelDia momentos={dia.momentos} compacta alRegistrar={abrirRegistro} />
         </section>
 
-        <HoyTeToca fecha={dia.fecha} esHoy={esHoy} version={intento} alRegistrar={recargar} alVerPlanes={() => setPestana('planes-comida')} />
-
         <section className="panel-tarjeta tarjeta-nutricional" aria-labelledby="titulo-nutricional">
           <h2 id="titulo-nutricional" className="panel-tarjeta__titulo">Resumen nutricional</h2>
           <AyudaPanel>Cuánto llevas de cada nutriente y del agua, qué porcentaje de tu meta es y cuánto te falta.</AyudaPanel>
@@ -191,6 +195,8 @@ export default function Comidas() {
           ))}
           <AguaDelDia fecha={dia.fecha} version={intento} />
         </section>
+
+        <HoyTeToca fecha={dia.fecha} esHoy={esHoy} version={intento} alRegistrar={recargar} alVerPlanes={() => setPestana('planes-comida')} />
 
         <div className="comidas__pie">
           <TarjetaObjetivo objetivo={objetivo} />

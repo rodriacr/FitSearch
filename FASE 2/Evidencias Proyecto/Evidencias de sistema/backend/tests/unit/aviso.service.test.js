@@ -1,7 +1,10 @@
 // Avisos por correo de la agenda, lista de espera y recordatorios (09-11-2026). El correo y los datos se simulan.
 jest.mock('../../src/models/aviso.model');
 jest.mock('../../src/services/correo.service');
-jest.mock('../../src/models/prisma', () => ({ reserva: { findMany: jest.fn(), updateMany: jest.fn() } }));
+jest.mock('../../src/models/prisma', () => ({
+  reserva: { findMany: jest.fn(), updateMany: jest.fn() },
+  usuario: { findFirst: jest.fn(), updateMany: jest.fn() },
+}));
 const modelo = require('../../src/models/aviso.model');
 const correo = require('../../src/services/correo.service');
 const prisma = require('../../src/models/prisma');
@@ -125,7 +128,10 @@ describe('recordatorio', () => {
     expect(await recordatorios.enviarPendientes(ahora)).toBe(1);
     const [tomar, marcar, tomarOtra] = prisma.reserva.updateMany.mock.calls.map(([consulta]) => consulta);
     expect(tomar).toEqual({
-      where: { id: 2, recordatorioEn: null, OR: [{ recordatorioIntento: null }, { recordatorioIntento: { lt: vencido } }] },
+      where: {
+        id: 2, estado: 'confirmada', recordatorioEn: null, OR: [{ recordatorioIntento: null }, { recordatorioIntento: { lt: vencido } }],
+        usuario: { activo: true, recordatoriosCitas: true }, disponibilidad: { profesional: { recordatorios: true } },
+      },
       data: { recordatorioIntento: marca },
     });
     expect(marcar).toEqual({ where: { id: 2, recordatorioIntento: marca }, data: { recordatorioEn: marca, recordatorioIntento: null } });
@@ -136,6 +142,7 @@ describe('recordatorio', () => {
     // Las citas con un envío en curso no vencido no se vuelven a pedir.
     expect(prisma.reserva.findMany).toHaveBeenCalledWith(expect.objectContaining({ where: expect.objectContaining({
       estado: 'confirmada', recordatorioEn: null, OR: [{ recordatorioIntento: null }, { recordatorioIntento: { lt: vencido } }],
+      usuario: { activo: true, recordatoriosCitas: true },
     }) }));
   });
 
@@ -151,6 +158,23 @@ describe('recordatorio', () => {
     expect(consultas[1]).toEqual({ where: { id: 2, recordatorioIntento: marca }, data: { recordatorioIntento: null } });
     expect(consultas.some((c) => c.data.recordatorioEn)).toBe(false);
   });
+});
+
+test('el aviso del chat pide permiso y un mensaje no leído que pertenezca al destinatario', async () => {
+  prisma.usuario.updateMany.mockResolvedValueOnce({ count: 1 }).mockResolvedValueOnce({ count: 0 });
+  prisma.usuario.findFirst.mockResolvedValue({ nombre: 'Ana Pérez', correo: 'ana@example.test' });
+  await avisos.mensajeNuevo(7, 20, ahora);
+  await avisos.mensajeNuevo(7, 21, ahora);
+  expect(prisma.usuario.updateMany).toHaveBeenNthCalledWith(1, {
+    where: {
+      id: 7, activo: true, avisosMensajesCorreo: true,
+      OR: [{ ultimoAvisoMensajes: null }, { ultimoAvisoMensajes: { lte: new Date(marca.getTime() - 30 * 60000) } }],
+      chats: { some: { borradoUsuarioHasta: { lt: 20 }, mensajes: { some: { id: 20, autorId: { not: 7 }, leido: false } } } },
+    },
+    data: { ultimoAvisoMensajes: marca },
+  });
+  expect(correo.enviarAviso).toHaveBeenCalledTimes(1);
+  expect(correo.enviarAviso).toHaveBeenCalledWith(expect.objectContaining({ para: 'ana@example.test', intro: 'Un profesional te escribió en FitSearch.', accion: { ruta: '/mensajes', texto: 'Ver mis mensajes' } }));
 });
 
 test('la marca de un envío en curso va sin milisegundos y vence a los 15 minutos', () => {

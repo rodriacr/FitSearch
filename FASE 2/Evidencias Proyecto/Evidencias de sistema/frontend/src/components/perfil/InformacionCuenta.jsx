@@ -7,12 +7,12 @@ const CAMPOS = ['nombre', 'correo', 'telefono', 'biografia', 'instagram', 'linke
 // especialidad (solo el profesional, 16-11-2026): { valor, opciones, guardar(nueva) → texto del aviso }. Se elige aquí
 // y se guarda con el mismo botón, aunque va en su ficha (la descripción de la ficha se dejó de pedir: la presentación
 // ya cumple ese papel).
-export default function InformacionCuenta({ estado, profesional = false, especialidad, onGuardado }) {
+export default function InformacionCuenta({ estado, profesional = false, especialidad, onGuardado, soloCorreo = false }) {
   if (estado.cargando) return <p role="status">Cargando tus datos de contacto…</p>;
   if (estado.error) return <><Alerta>{estado.error}</Alerta><button type="button" className="boton-texto" onClick={estado.reintentar}>Reintentar datos personales</button></>;
-  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} especialidad={especialidad} onGuardado={onGuardado} />;
+  return <Formulario cuenta={estado.cuenta} guardar={estado.guardar} profesional={profesional} especialidad={especialidad} onGuardado={onGuardado} soloCorreo={soloCorreo} />;
 }
-function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) {
+function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado, soloCorreo }) {
   const [datos, setDatos] = useState(() => Object.fromEntries(CAMPOS.map((c) => [c, cuenta[c] || ''])));
   const [elegida, setElegida] = useState(especialidad?.valor ?? '');
   // La ficha (y con ella la especialidad guardada) puede llegar después que la cuenta: al cambiar, se toma su valor.
@@ -44,7 +44,7 @@ function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) 
         await guardar({ ...cambios, ...(cambios.correo !== undefined && { password, credencial }) });
         cuentaGuardada = true;
         setPassword(''); setCredencial(''); setCorreoEditable(false);
-        textos.push('Datos personales guardados.');
+        textos.push(soloCorreo ? 'Correo actualizado.' : 'Datos personales guardados.');
       }
       if (cambiaEspecialidad) textos.push(await especialidad.guardar(elegida));
       const texto = textos.find((t) => t.includes('para guardar tu especialidad')) || (textos.length > 1 ? 'Cambios guardados.' : textos[0]);
@@ -63,11 +63,11 @@ function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) 
     <form className="perfil-editor__formulario" onSubmit={enviar}>
       <Alerta tipo={aviso?.tipo}>{aviso?.texto}</Alerta>
       <fieldset disabled={ocupado} className="perfil-editor__campos">
-        <legend className="solo-lector">Datos personales y de contacto</legend>
-        <div className="perfil-editor__dos-columnas">
+        <legend className="solo-lector">{soloCorreo ? 'Correo de acceso' : 'Datos personales y de contacto'}</legend>
+        {!soloCorreo && <div className="perfil-editor__dos-columnas">
           {campo('nombre', 'Nombre completo', { required: true, maxLength: 100, autoComplete: 'name' })}
           {campo('telefono', 'Teléfono de contacto (opcional)', { type: 'tel', maxLength: 20, autoComplete: 'tel', placeholder: '+56 9 1234 5678' })}
-        </div>
+        </div>}
         {especialidad && (
           <div className="campo perfil-editor__especialidad">
             <label htmlFor="especialidad-perfil" className="campo__etiqueta">Especialidad (obligatorio)</label>
@@ -93,7 +93,7 @@ function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) 
           {cuenta.tieneGoogle && <BotonGoogle separador={cuenta.tienePassword ? 'o confirma con Google' : 'Confirma tu cuenta de Google'} onCredencial={(token) => { setCredencial(token); setAviso({ tipo: 'info', texto: 'Cuenta de Google seleccionada. Guarda los cambios para confirmar.' }); }} />}
         </div>}
         {/* Para el profesional es su presentación en el perfil público (15-11-2026): quién es, a qué se dedica y qué le gusta. */}
-        <label className="campo"><span className="campo__etiqueta">{profesional ? 'Tu presentación (opcional)' : 'Sobre mí (opcional)'}</span>
+        {!soloCorreo && <><label className="campo"><span className="campo__etiqueta">{profesional ? 'Tu presentación (opcional)' : 'Sobre mí (opcional)'}</span>
           {profesional && <span className="campo__ayuda">Se muestra al inicio de tu perfil público, para que los usuarios te conozcan.</span>}
           <textarea className="campo__control" name="biografia" value={datos.biografia} onChange={cambiar} maxLength={500} rows={profesional ? 5 : 3}
             placeholder={profesional ? 'Ej.: Soy Juan, kinesiólogo deportivo hace 8 años. Me dedico a la recuperación de lesiones y me encanta el trail running.' : 'Cuéntanos un poco sobre ti'} />
@@ -104,9 +104,9 @@ function Formulario({ cuenta, guardar, profesional, especialidad, onGuardado }) 
             {campo('linkedin', 'LinkedIn', { type: 'url', maxLength: 200, placeholder: 'https://linkedin.com/in/tu_usuario' })}
             {campo('sitioWeb', 'Sitio web', { type: 'url', maxLength: 250, placeholder: 'https://tusitio.cl' })}
           </div>
-        </details>
-        <div className="perfil-editor__acciones"><button type="button" className="boton boton--secundario boton--compacto" onClick={cancelar}>Cancelar</button>
-          <button type="submit" className="boton boton--principal boton--compacto">{ocupado ? 'Guardando…' : <><Icono nombre="check" tamano={18} /> Guardar datos personales</>}</button></div>
+        </details></>}
+        {(!soloCorreo || correoEditable) && <div className="perfil-editor__acciones"><button type="button" className="boton boton--secundario boton--compacto" onClick={cancelar}>Cancelar</button>
+          <button type="submit" className="boton boton--principal boton--compacto">{ocupado ? 'Guardando…' : <><Icono nombre="check" tamano={18} /> {soloCorreo ? 'Guardar correo' : 'Guardar datos personales'}</>}</button></div>}
       </fieldset>
     </form>
   );

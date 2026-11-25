@@ -43,7 +43,7 @@ export function DialogoCompartir({ profesional, categorias, alGuardado, alCerrar
           </li>
         ))}
       </ul>
-      <p className="compartir__registro-nota"><Icono nombre="escudo" tamano={16} /> Cada vez que mire tu progreso queda anotado en tu registro de accesos (Mi perfil › Privacidad y datos).</p>
+      <p className="compartir__registro-nota"><Icono nombre="escudo" tamano={16} /> Cada consulta a tu progreso queda anotada en el registro de accesos de Configuración › Privacidad y datos.</p>
       <Alerta>{estado.error}</Alerta>
       <div className="dialogo__acciones">
         {comparte && (
@@ -91,15 +91,19 @@ export function BotonCompartir({ profesionalId, alCambiar }) {
 // Profesionales con acceso y registro de accesos, dentro de «Privacidad y datos».
 export function AccesosCompartidos() {
   const [datos, setDatos] = useState(null);
+  const [intento, setIntento] = useState(0);
   const [editando, setEditando] = useState(null);
   const [mensaje, setMensaje] = useState('');
   useEffect(() => {
     let activo = true;
     listarCompartidos().then((d) => activo && setDatos(d)).catch(() => activo && setDatos({ error: true }));
     return () => { activo = false; };
-  }, []);
+  }, [intento]);
   if (!datos) return <p className="texto-secundario" role="status">Cargando con quién compartes tu progreso…</p>;
-  if (datos.error) return null;
+  if (datos.error) return <div>
+    <Alerta>No pudimos cargar los permisos de acceso a tu progreso.</Alerta>
+    <button type="button" className="boton-texto" onClick={() => { setDatos(null); setIntento((n) => n + 1); }}>Reintentar permisos</button>
+  </div>;
   const conAcceso = datos.profesionales.filter((p) => Object.values(p.permisos).some(Boolean));
   return (
     <section className="privacidad__bloque compartir__accesos" aria-labelledby="titulo-accesos">

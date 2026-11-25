@@ -144,6 +144,7 @@ describe('Perfil profesional editable', () => {
     expect(await screen.findByText('Verificado')).toBeInTheDocument();
     expect(screen.getByRole('img', { name: 'Calificación 4,8 de 5, 5 reseñas' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /Ver mi perfil público/ })).toHaveAttribute('href', '/profesional/perfil/publico');
+    expect(screen.queryByRole('heading', { name: 'Así se ve tu perfil' })).not.toBeInTheDocument();
     expect(within(screen.getByRole('region', { name: 'Resumen de tu perfil' })).getByRole('button', { name: 'Copiar enlace' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Ir a mi agenda/ })).not.toBeInTheDocument();
   });
@@ -176,7 +177,7 @@ describe('Perfil profesional editable', () => {
     expect(nav.getByRole('button', { name: 'Información personal' })).not.toHaveAttribute('aria-current');
     expect(await screen.findByLabelText('Dirección de atención (obligatorio)')).toHaveValue('Av. Italia 850');
     expect(screen.getByLabelText('Modalidad de atención (obligatorio)')).toBeInTheDocument();
-    expect(screen.queryByLabelText('Especialidad (obligatorio)')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Especialidad (obligatorio)')).not.toBeVisible();
     expect(screen.queryByLabelText('Descripción sobre tu atención')).not.toBeInTheDocument();
 
     await abrirSeccion('Experiencia y formación');

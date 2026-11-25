@@ -1,9 +1,13 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Alerta from '../../components/Alerta.jsx';
 import Icono from '../../components/Icono.jsx';
 import { SECCIONES_PROFESIONAL as SECCIONES } from '../../components/diseno/secciones.js';
 import { useSesion } from '../../context/SesionContext.jsx';
-import { obtenerClima } from '../../services/clima.service.js';
+import ClimaActual from '../../components/profesional/ClimaActual.jsx';
+import { ahoraChile } from '../../services/agenda.js';
+import { diaLargo, lunesDe } from '../../components/agenda/semana.js';
+import { estadoCita } from '../../services/actividadProfesional.service.js';
 import { primerNombre } from '../../services/formato.js';
 import { obtenerMiFicha } from '../../services/profesional.service.js';
 import { diaYMes, obtenerReportes } from '../../services/actividadProfesional.service.js';
@@ -11,30 +15,6 @@ import { solicitar } from '../../services/api.js';
 import './InicioProfesional.css';
 
 const Proximamente = () => <span className="etiqueta-proximamente">Próximamente</span>;
-
-// Ícono según el estado del clima que entrega la API (DAS, D26).
-const ICONO_CLIMA = { despejado: 'sol', parcial: 'nubeSol', nublado: 'nube', niebla: 'niebla', llovizna: 'lluvia', lluvia: 'lluvia', nieve: 'nieve', tormenta: 'tormenta' };
-const iconoClima = ({ estado, esDeDia }) => {
-  if (!esDeDia && estado === 'despejado') return 'luna';
-  if (!esDeDia && estado === 'parcial') return 'nube';
-  return ICONO_CLIMA[estado] ?? 'nube';
-};
-
-// Si el clima no está disponible, la tarjeta simplemente no aparece: el Inicio no depende de Open-Meteo.
-function TarjetaClima({ clima }) {
-  if (!clima) return null;
-  return (
-    <div className={`clima clima--${clima.esDeDia ? 'dia' : 'noche'}`} aria-label={`Clima en ${clima.lugar}: ${clima.temperatura} grados, ${clima.descripcion}`} role="group">
-      <Icono nombre={iconoClima(clima)} tamano={34} className="clima__icono" />
-      <div>
-        <p className="clima__lugar">{clima.lugar}</p>
-        <p className="clima__temperatura">{clima.temperatura}°C</p>
-        <p className="clima__descripcion">{clima.descripcion}</p>
-      </div>
-      <a className="clima__fuente" href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Datos: Open-Meteo</a>
-    </div>
-  );
-}
 
 // Tareas que el profesional puede resolver desde su espacio. Las citas por confirmar vienen del resumen semanal (FS-HU-28).
 // Desde el 16-11-2026 se sugiere la presentación (la descripción de la ficha ya no se edita).
@@ -81,104 +61,115 @@ function Paisaje() {
 // Inicio del profesional (mockup del PO del 04-10-2026; DAS, D25 y D26).
 export default function InicioProfesional() {
   const { sesion } = useSesion();
-  const [ficha, setFicha] = useState({ cargando: true });
-  const [clima, setClima] = useState(null);
-  const [tieneHorarios, setTieneHorarios] = useState(null);
-  const [resumen, setResumen] = useState(null);
-  const [sinPresentacion, setSinPresentacion] = useState(false);
-
+  const [intento, setIntento] = useState(0);
+  const [estado, setEstado] = useState({ intento: -1 });
+  const [ahora, setAhora] = useState(ahoraChile);
+  const hoy = ahora.slice(0, 10);
+  const semana = lunesDe(hoy);
+  useEffect(() => {
+    const reloj = setInterval(() => setAhora(ahoraChile()), 60000);
+    return () => clearInterval(reloj);
+  }, []);
   useEffect(() => {
     let activo = true;
-    obtenerMiFicha()
-      .then(async ({ ficha: datos }) => {
-        if (!activo) return;
-        setFicha({ datos });
-        if (!datos) { setTieneHorarios(false); return; }
-        // Sin ficha no hay reservas: el resumen se pide solo cuando existe. Si falla, se muestra sin datos.
-        obtenerReportes(4)
-          .then(({ resumenSemanal }) => activo && setResumen(resumenSemanal))
-          .catch(() => {});
-        // Si no se puede leer la cuenta, no se afirma que falte la presentación.
-        solicitar('/perfil/cuenta')
-          .then(({ cuenta } = {}) => activo && setSinPresentacion(Boolean(cuenta) && !cuenta.biografia?.trim()))
-          .catch(() => {});
-        try {
-          const { horarios } = await solicitar('/disponibilidades');
-          if (activo) setTieneHorarios(horarios.length > 0);
-        } catch { /* No se afirma que falten horarios si la consulta falla. */ }
-      })
-      .catch(() => activo && setFicha({ error: true }));
-    obtenerClima()
-      .then((datos) => activo && setClima(datos))
-      .catch(() => activo && setClima(null));
+    const fuentes = [obtenerMiFicha(), obtenerReportes(4), solicitar('/perfil/cuenta'), solicitar('/disponibilidades'), solicitar('/reservas')];
+    Promise.allSettled(fuentes).then(([ficha, reporte, cuenta, horarios, reservas]) => {
+      if (!activo) return;
+      const errores = [];
+      const leer = (resultado, etiqueta) => {
+        if (resultado.status === 'fulfilled') return resultado.value;
+        errores.push(etiqueta);
+        return null;
+      };
+      const propia = leer(ficha, 'tu ficha');
+      const citas = leer(reservas, 'tus reservas');
+      const personal = leer(cuenta, 'tu presentación');
+      const disponibilidad = propia?.ficha ? leer(horarios, 'tus horarios') : null;
+      const estadisticas = propia?.ficha ? leer(reporte, 'el resumen semanal') : null;
+      setEstado({ intento, semana, ficha: propia?.ficha, fichaComprobada: Boolean(propia),
+        reservas: citas?.reservas ?? null, cuenta: personal?.cuenta,
+        tieneHorarios: propia && !propia.ficha ? false : disponibilidad ? disponibilidad.horarios.length > 0 : null,
+        resumen: estadisticas?.resumenSemanal ?? null, errores });
+    });
     return () => { activo = false; };
-  }, []);
-
-  const tareas = ficha.cargando || ficha.error ? [] : tareasDe(ficha.datos, tieneHorarios, resumen?.citasPendientes, sinPresentacion);
-
-  return (
-    <div className="inicio-prof">
-      <section className="inicio-prof__hero" aria-labelledby="titulo-inicio-prof">
-        <Paisaje />
-        <div className="inicio-prof__saludo">
-          <h1 id="titulo-inicio-prof">¡Hola, {primerNombre(sesion.usuario.nombre)}!</h1>
-          <p>Aquí tienes un resumen de tu día y lo más importante de tu actividad profesional.</p>
-          <p className="inicio-prof__frase"><Icono nombre="chispa" tamano={16} /> La constancia de hoy es el resultado de mañana.</p>
-        </div>
-        <TarjetaClima clima={clima} />
-      </section>
-
-      <div className="inicio-prof__grilla">
-        <section className="panel-tarjeta" aria-labelledby="titulo-tareas">
-          <h2 id="titulo-tareas" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="check" tamano={20} /></span> Tareas pendientes</h2>
-          {ficha.cargando ? <p className="texto-secundario" role="status">Cargando tus tareas…</p> : (
-            <ul className="tareas">
-              {ficha.error && <li className="texto-secundario">No pudimos revisar tu ficha. Intenta nuevamente más tarde.</li>}
-              {!ficha.error && !tareas.length && <li className="texto-secundario">Estás al día: no tienes tareas pendientes.</li>}
-              {tareas.map(({ icono, titulo, detalle, a, accion, proximamente }) => (
-                <li key={titulo} className="tarea">
-                  <span className="tarea__icono"><Icono nombre={icono} tamano={20} /></span>
-                  <div className="tarea__texto"><strong>{titulo}</strong><span>{detalle}</span></div>
-                  {proximamente ? <Proximamente /> : <Link to={a} className="tarea__accion">{accion} <Icono nombre="flecha" tamano={16} /></Link>}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="panel-tarjeta" aria-labelledby="titulo-accesos-prof">
-          <h2 id="titulo-accesos-prof" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="rayo" tamano={20} /></span> Accesos rápidos</h2>
-          <ul className="accesos-prof">
-            {ACCESOS.map(({ seccion, nombre, icono }) => (
-              <li key={seccion}>
-                <Link to={SECCIONES[seccion].ruta} className="acceso-prof">
-                  <Icono nombre={icono} tamano={24} />
-                  <span>{nombre}</span>
-                  {SECCIONES[seccion].proximamente && <Proximamente />}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
+  }, [intento, semana]);
+  const cargando = estado.intento !== intento || estado.semana !== semana;
+  const reintentar = () => setIntento((n) => n + 1);
+  const futuras = estado.reservas?.filter((r) => r.estado !== 'cancelada' && `${r.horario.fecha}T${r.horario.horaInicio}` > ahora)
+    .sort((a, b) => `${a.horario.fecha}T${a.horario.horaInicio}`.localeCompare(`${b.horario.fecha}T${b.horario.horaInicio}`));
+  const delDia = estado.reservas?.filter((r) => r.estado !== 'cancelada' && r.horario.fecha === hoy)
+    .sort((a, b) => a.horario.horaInicio.localeCompare(b.horario.horaInicio));
+  const siguientes = futuras?.filter((r) => r.horario.fecha !== hoy).slice(0, 3) ?? [];
+  const tareas = estado.fichaComprobada ? tareasDe(estado.ficha, estado.tieneHorarios,
+    Math.max(futuras?.filter((r) => r.estado === 'pendiente').length ?? 0, estado.resumen?.citasPendientes ?? 0),
+    Boolean(estado.cuenta) && !estado.cuenta.biografia?.trim()) : [];
+  const resumen = estado.resumen;
+  const cita = (r) => {
+    const pasada = `${r.horario.fecha}T${r.horario.horaInicio}` <= ahora;
+    const visible = estadoCita({ estado: r.estado, pasada });
+    return <li key={r.id} className={`dia-prof__cita${pasada ? ' dia-prof__cita--pasada' : ''}`}>
+      <time className="dia-prof__hora">{r.horario.horaInicio}<small>{r.horario.horaFin}</small></time>
+      <div className="dia-prof__persona"><strong>{r.usuario.nombre}</strong><span>{r.horario.fecha !== hoy && `${diaYMes(r.horario.fecha)} · `}{r.modalidad === 'online' ? 'Atención online' : 'Atención presencial'}</span></div>
+      <span className={`dia-prof__estado dia-prof__estado--${visible.clave}`}>{visible.nombre}</span>
+      <Link className="boton-icono" to={`/profesional/agenda?semana=${lunesDe(r.horario.fecha)}&dia=${r.horario.fecha}&horario=${r.horario.id}`} aria-label={`Ver reserva de ${r.usuario.nombre}`}><Icono nombre="chevronDerecha" tamano={18} /></Link>
+    </li>;
+  };
+  return <div className="inicio-prof">
+    <section className="inicio-prof__hero" aria-labelledby="titulo-inicio-prof">
+      <Paisaje />
+      <div className="inicio-prof__saludo">
+        <p className="inicio-prof__fecha">{diaLargo(hoy)}</p>
+        <h1 id="titulo-inicio-prof">¡Hola, {primerNombre(sesion.usuario.nombre)}!</h1>
+        <p>Tu agenda, tus clientes y lo que necesita tu atención hoy.</p>
       </div>
+      <ClimaActual />
+    </section>
 
-      <section className="panel-tarjeta" aria-labelledby="titulo-resumen-semanal">
-        <h2 id="titulo-resumen-semanal" className="panel-tarjeta__titulo">
-          <span className="panel-tarjeta__icono"><Icono nombre="grafico" tamano={20} /></span> Resumen semanal
-        </h2>
-        <ul className="resumen-semanal">
-          {RESUMEN.map(({ clave, nombre }) => (
-            <li key={clave}>
-              <span>{nombre}</span>
-              {resumen ? <strong>{resumen[clave]}</strong> : <strong aria-label="Sin datos todavía">—</strong>}
-            </li>
-          ))}
-        </ul>
-        <p className="texto-secundario resumen-semanal__nota">
-          {resumen && `Semana del ${diaYMes(resumen.inicio)} al ${diaYMes(resumen.fin)}. `}
-          Los clientes se cuentan desde tu primera reserva. <Link to={SECCIONES.reportes.ruta}>Ver reportes</Link>
-        </p>
+    <section className="panel-tarjeta inicio-prof__resumen" aria-labelledby="titulo-resumen-semanal">
+      <div className="dia-prof__cabecera"><h2 id="titulo-resumen-semanal" className="panel-tarjeta__titulo"><Icono nombre="grafico" tamano={20} /> Resumen semanal</h2><Link className="enlace-panel" to={SECCIONES.reportes.ruta}>Ver reportes <Icono nombre="flecha" tamano={16} /></Link></div>
+      <ul className="resumen-semanal">{RESUMEN.map(({ clave, nombre }) => <li key={clave}><span>{nombre}</span>{resumen ? <strong>{resumen[clave]}</strong> : <strong aria-label={cargando ? 'Cargando' : 'Sin datos todavía'}>—</strong>}</li>)}</ul>
+      <p className="texto-secundario resumen-semanal__nota">{resumen && `Semana del ${diaYMes(resumen.inicio)} al ${diaYMes(resumen.fin)}. `}Los clientes se cuentan desde tu primera reserva.</p>
+    </section>
+
+    <div className="inicio-prof__actividad">
+      <section className="panel-tarjeta dia-prof" aria-labelledby="titulo-dia-prof">
+        <div className="dia-prof__cabecera"><div><h2 id="titulo-dia-prof" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="calendario" tamano={20} /></span> Atenciones de hoy</h2></div><Link to={SECCIONES.agenda.ruta} className="enlace-panel">Ver agenda <Icono nombre="flecha" tamano={16} /></Link></div>
+        <p className="texto-secundario dia-prof__zona">Horarios en hora de Chile (Santiago).</p>
+        {cargando && <p role="status">Cargando tus reservas…</p>}
+        {!cargando && !delDia && (
+          <div><Alerta>No pudimos cargar tus reservas.</Alerta><button type="button" className="boton-texto" onClick={reintentar}>Reintentar reservas</button></div>
+        )}
+        {!cargando && delDia?.length > 0 && (
+          <ul className="dia-prof__lista">{delDia.map(cita)}</ul>
+        )}
+        {!cargando && delDia?.length === 0 && (
+          <div className="dia-prof__vacio">
+            <span className="dia-prof__vacio-icono"><Icono nombre="calendario" tamano={26} /></span>
+            <h3>No tienes atenciones hoy</h3>
+            <Link className="boton boton--secundario boton--compacto" to={SECCIONES.agenda.ruta}>Revisar mi disponibilidad</Link>
+          </div>
+        )}
+        {!cargando && siguientes.length > 0 && <div className="dia-prof__proximas"><h3>Próximas atenciones</h3><ul className="dia-prof__lista">{siguientes.map(cita)}</ul></div>}
       </section>
+      <div className="inicio-prof__costado">
+        <section className="panel-tarjeta inicio-prof__tareas" aria-labelledby="titulo-tareas">
+          <h2 id="titulo-tareas" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="check" tamano={20} /></span> Tareas pendientes</h2>
+          {cargando ? <p className="texto-secundario" role="status">Cargando tus tareas…</p> : <>
+            {estado.errores.length > 0 && <div className="inicio-prof__error"><p role="alert">No pudimos comprobar {estado.errores.join(', ')}. Las tareas pueden estar incompletas.</p><button type="button" className="boton-texto" onClick={reintentar}>Reintentar tareas</button></div>}
+            {tareas.length > 0 ? <ul className="tareas">{tareas.map(({ icono, titulo, detalle, a, accion }) => (
+              <li key={titulo} className="tarea">
+                <span className="tarea__icono"><Icono nombre={icono} tamano={20} /></span>
+                <div className="tarea__texto">
+                  <strong>{titulo}</strong>
+                  <span>{detalle}</span>
+                  <Link to={a} className="tarea__accion">{accion} <Icono nombre="flecha" tamano={16} /></Link>
+                </div>
+              </li>
+            ))}</ul> : estado.errores.length === 0 && <p className="inicio-prof__al-dia"><Icono nombre="check" tamano={18} /> Estás al día: no tienes tareas pendientes.</p>}
+          </>}
+        </section>
+        <section className="panel-tarjeta" aria-labelledby="titulo-accesos-prof"><h2 id="titulo-accesos-prof" className="panel-tarjeta__titulo"><span className="panel-tarjeta__icono"><Icono nombre="rayo" tamano={20} /></span> Accesos rápidos</h2><ul className="accesos-prof">{ACCESOS.map(({ seccion, nombre, icono }) => <li key={seccion}><Link to={SECCIONES[seccion].ruta} className="acceso-prof"><Icono nombre={icono} tamano={18} /><span>{nombre}</span>{SECCIONES[seccion].proximamente && <Proximamente />}</Link></li>)}</ul></section>
+      </div>
     </div>
-  );
+  </div>;
 }

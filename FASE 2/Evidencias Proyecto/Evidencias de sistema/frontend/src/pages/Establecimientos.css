@@ -18,7 +18,7 @@
 .detalle-mapa__avatar .icono { color: #fff; }
 
 /* ---------- Ficha del establecimiento ---------- */
-.ficha-establecimiento { display: grid; gap: 1.25rem; max-width: 60rem; margin: 0 auto; }
+.ficha-establecimiento { display: grid; gap: 1.25rem; }
 .ficha-establecimiento > .volver { margin-bottom: 0; }
 .ficha-establecimiento__cabecera {
   display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1rem; align-items: center;

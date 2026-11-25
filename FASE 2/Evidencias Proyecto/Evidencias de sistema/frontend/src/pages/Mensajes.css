@@ -7,10 +7,8 @@
   grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
   width: 100%;
-  max-width: 72rem;
   height: calc(100dvh - 11.75rem);
   min-height: 26rem;
-  margin: 0 auto;
 }
 @media (min-width: 64rem) {
   .mensajes { height: calc(100dvh - 8.75rem); min-height: 30rem; }
