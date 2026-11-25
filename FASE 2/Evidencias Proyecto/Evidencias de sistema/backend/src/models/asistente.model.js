@@ -41,6 +41,8 @@ async function usoDelDia(usuarioId, fecha) {
   return fila && fila.fecha.toISOString().slice(0, 10) === fecha ? fila.mensajes : 0;
 }
 
+const CONFLICTOS_AL_CREAR = new Set(['P2002', 'P2034']);
+
 // Reserva un mensaje del día y devuelve si quedaba cupo. Cada paso es un solo UPDATE o INSERT con la condición en la
 // misma sentencia, así que dos solicitudes simultáneas no pueden quedarse con el último cupo. Si el día cambió, el
 // contador parte de nuevo en 1.
@@ -58,8 +60,10 @@ async function reservarUso(usuarioId, fecha, limite) {
     await prisma.usoAsistente.create({ data: { usuarioId, fecha: dia, mensajes: 1 } });
     return true;
   } catch (error) {
-    // Otra solicitud creó la fila primero (clave duplicada): se intenta sumar sobre ella, sin pasar el límite.
-    if (error.code !== 'P2002') throw error;
+    // Otra solicitud creó la fila primero: se intenta sumar sobre ella, sin pasar el límite. MySQL lo informa como
+    // clave duplicada (P2002) o, con varias inserciones simultáneas de la misma fila, como un deadlock en el que
+    // descarta una de ellas (P2034); la fila de la que ganó queda igual.
+    if (!CONFLICTOS_AL_CREAR.has(error.code)) throw error;
     return (await sumar()).count > 0;
   }
 }
