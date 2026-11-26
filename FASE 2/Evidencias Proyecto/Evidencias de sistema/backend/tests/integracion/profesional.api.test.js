@@ -31,7 +31,7 @@ const fichaEsperada = {
 // horas para elegir.
 const tarjetaEsperada = { ...fichaEsperada, presentacion: null, proximaHora: null, proximasHoras: [] };
 const filtrosPorDefecto = {
-  usuarioId: 1, q: '', especialidad: '', comuna: '', region: '', modalidad: '', calificacionMin: null, ubicacion: null,
+  usuarioId: 1, q: '', especialidad: '', comuna: '', region: '', modalidad: '', calificacionMin: null, soloVerificados: false, ubicacion: null,
   distanciaKm: null, orden: 'nombre', pagina: 1, limite: 12,
   // Momento actual en Chile para las horas libres y, sin filtro de disponibilidad, sin fecha límite.
   ahora: expect.objectContaining({ hoy: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/) }), conHorasHasta: null,
@@ -91,6 +91,18 @@ describe('GET /api/profesionales', () => {
     const res = await consulta('/api/profesionales');
     expect(res.body).toMatchObject({ total: 30, totalPaginas: 3, hayMas: true });
     expect(res.body.profesionales).toHaveLength(12);
+  });
+
+  // SC-47: la tarjeta de recomendación del asistente puede pedir solo los verificados.
+  test('SC-47: filtra solo los profesionales verificados y rechaza otro valor', async () => {
+    modelo.listar.mockResolvedValue({ filas: [{ ...fila, verificado: 1 }], total: 1 });
+    const res = await consulta('/api/profesionales').query({ especialidad: 'Nutrición', verificado: 'true', orden: 'calificacion', limite: '3' });
+    expect(res.status).toBe(200);
+    expect(modelo.listar).toHaveBeenCalledWith({
+      ...filtrosPorDefecto, especialidad: 'Nutrición', soloVerificados: true, orden: 'calificacion', limite: 3,
+    });
+    const invalida = await consulta('/api/profesionales').query({ verificado: 'si' });
+    expect(invalida.status).toBe(400);
   });
 
   test('el Inicio pide los destacados con un límite menor', async () => {

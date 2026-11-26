@@ -27,6 +27,9 @@ const TRAZOS = {
   rayo: <path d="M13 2 4 14h7l-1 8 9-12h-7Z" />,
   mas: <><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></>,
   check: <path d="m5 12 5 5 9-10" />,
+  // Valoración de las respuestas del asistente (SC-47): «me sirvió» y «no me sirvió».
+  meGusta: <><path d="M7 10v10H4V10Z" /><path d="M7 10l4.2-6.3a1.8 1.8 0 0 1 3.2 1.5L13.6 9H19a2 2 0 0 1 2 2.4l-1.4 6.8A2.2 2.2 0 0 1 17.4 20H7" /></>,
+  noMeGusta: <g transform="rotate(180 12 12)"><path d="M7 10v10H4V10Z" /><path d="M7 10l4.2-6.3a1.8 1.8 0 0 1 3.2 1.5L13.6 9H19a2 2 0 0 1 2 2.4l-1.4 6.8A2.2 2.2 0 0 1 17.4 20H7" /></g>,
   lapiz: <><path d="M4 20h4L19 9l-4-4L4 16Z" /><path d="m13.5 6.5 4 4" /></>,
   escudo: <><path d="M12 3 4 6v6c0 4.5 3.4 8 8 9 4.6-1 8-4.5 8-9V6Z" /><path d="m9 12 2 2 4-4" /></>,
   corazon: <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z" />,

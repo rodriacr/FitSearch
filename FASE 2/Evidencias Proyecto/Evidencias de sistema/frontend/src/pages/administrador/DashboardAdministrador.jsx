@@ -94,6 +94,16 @@ export default function DashboardAdministrador() {
               <div><dt>Usuarios activos</dt><dd className="cifra">{formatearNumero(datos.plataforma.usuariosActivos)}</dd></div>
               <div><dt>Profesionales verificados</dt><dd className="cifra">{datos.plataforma.verificados} de {datos.plataforma.profesionales}</dd></div>
               <div><dt>Cuentas desactivadas</dt><dd className="cifra">{formatearNumero(datos.plataforma.usuariosInactivos)}</dd></div>
+              {/* SC-47: respuestas del asistente que las personas marcaron como útiles en los últimos 7 días. */}
+              {datos.asistente && (
+                <div>
+                  <dt>Respuestas útiles del asistente</dt>
+                  <dd className="cifra">{datos.asistente.valoradas ? `${Math.round((datos.asistente.utiles / datos.asistente.valoradas) * 100)} %` : 'Sin valorar'}</dd>
+                  <dd className="admin-estado__detalle">{datos.asistente.valoradas
+                    ? `${formatearNumero(datos.asistente.utiles)} de ${formatearNumero(datos.asistente.valoradas)} valoradas en 7 días`
+                    : 'Aún nadie valoró respuestas esta semana'}</dd>
+                </div>
+              )}
               {Object.entries(datos.plataforma.establecimientos).map(([categoria, total]) => (
                 <div key={categoria}><dt>{CATEGORIAS[categoria] ?? capitalizar(categoria.replace('_', ' '))}</dt><dd className="cifra">{formatearNumero(total)}</dd></div>
               ))}

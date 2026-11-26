@@ -96,7 +96,13 @@ async function exportar(usuarioId) {
       nombre: u.nombre, correo: u.correo, tipoDeCuenta: u.rol.nombre, fechaRegistro: u.fechaRegistro,
       tieneContrasena: Boolean(u.passwordHash), vinculadaConGoogle: Boolean(u.googleId),
       contactoYPresentacion: u.datosCuenta,
-      ...(u.rol.nombre === 'usuario' && { preferencias: { recordatoriosCitas: u.recordatoriosCitas, avisosMensajesCorreo: u.avisosMensajesCorreo } }),
+      ...(u.rol.nombre === 'usuario' && {
+        preferencias: {
+          recordatoriosCitas: u.recordatoriosCitas, avisosMensajesCorreo: u.avisosMensajesCorreo,
+          // SC-47: si el asistente puede usar el perfil y cuándo se decidió.
+          asistenteUsaPerfil: { permiso: u.permisoPerfilIa, fecha: u.permisoPerfilIaFecha },
+        },
+      }),
     },
     perfil: u.perfil,
     informacionDeSalud: u.informacionSalud,
@@ -113,7 +119,11 @@ async function exportar(usuarioId) {
       usoDeHoy: u.usoAsistente,
       conversaciones: u.conversaciones.map((c) => ({
         titulo: c.titulo, fijada: c.fijada, inicio: c.fechaInicio,
-        mensajes: c.mensajes.map((m) => ({ de: m.remitente, contenido: m.contenido, especialidad: m.especialidad, comidasAgregadas: m.comidasAgregadas, fecha: m.fecha })),
+        mensajes: c.mensajes.map((m) => ({
+          de: m.remitente, contenido: m.contenido, especialidad: m.especialidad, comidasAgregadas: m.comidasAgregadas,
+          // SC-47: modalidad y orden de la recomendación, resumen del día y valoración de la respuesta.
+          modalidad: m.modalidad, criterio: m.criterio, resumenDia: m.resumenDia, valoracion: m.valoracion, fecha: m.fecha,
+        })),
       })),
     },
     favoritos: u.favoritos.map(conProfesional),
@@ -239,7 +249,7 @@ async function eliminar(usuarioId, datos, reloj = new Date()) {
         nombre: NOMBRE_ELIMINADO[rol] || NOMBRE_ELIMINADO.usuario,
         correo: `eliminado-${usuarioId}-${crypto.randomBytes(6).toString('hex')}@fitsearch.invalid`,
         passwordHash: null, googleId: null, activo: false, eliminadoEn: reloj, versionSesion: { increment: 1 },
-        recordatoriosCitas: false, avisosMensajesCorreo: false, ultimoAvisoMensajes: null,
+        recordatoriosCitas: false, avisosMensajesCorreo: false, ultimoAvisoMensajes: null, permisoPerfilIa: null, permisoPerfilIaFecha: null,
       },
     });
     return { futuras, claves };

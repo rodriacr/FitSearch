@@ -38,7 +38,7 @@ function horariosLibres({ hoy, segundos }) {
 // La comuna guardada con sus espacios unidos, como unirEspacios de utils/regiones.js (15-11-2026).
 const COMUNA = Prisma.sql`TRIM(REGEXP_REPLACE(p.comuna, '[[:space:]]+', ' '))`;
 
-function construirConsulta({ q, especialidad, comuna, region, modalidad, calificacionMin, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
+function construirConsulta({ q, especialidad, comuna, region, modalidad, calificacionMin, soloVerificados, ubicacion, distanciaKm, soloFavoritosDe, ahora, conHorasHasta }) {
   const distancia = ubicacion
     ? Prisma.sql`CASE WHEN p.modalidad <> 'online' AND p.ubicacion_lng IS NOT NULL AND p.ubicacion_lat IS NOT NULL
       THEN ST_Distance_Sphere(POINT(p.ubicacion_lng, p.ubicacion_lat), POINT(${ubicacion.lng}, ${ubicacion.lat})) / 1000 END`
@@ -59,6 +59,8 @@ function construirConsulta({ q, especialidad, comuna, region, modalidad, calific
   // Quien atiende de ambas formas aparece tanto en "presencial" como en "online".
   if (modalidad) condiciones.push(Prisma.sql`p.modalidad IN (${modalidad}, 'ambas')`);
   if (calificacionMin) condiciones.push(Prisma.sql`COALESCE(c.promedio, 0) >= ${calificacionMin}`);
+  // Solo los verificados por la plataforma (recomendación del asistente, SC-47).
+  if (soloVerificados) condiciones.push(Prisma.sql`p.verificado = TRUE`);
   if (ubicacion && distanciaKm) condiciones.push(Prisma.sql`${distancia} <= ${distanciaKm}`);
   // «Con horas disponibles»: al menos un horario libre hasta la fecha indicada (filtro del buscador).
   if (ahora && conHorasHasta) {

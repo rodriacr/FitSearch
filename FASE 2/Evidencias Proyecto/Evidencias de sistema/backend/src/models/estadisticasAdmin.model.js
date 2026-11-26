@@ -32,6 +32,11 @@ const preguntasAsistente = (desde, hasta) => prisma.mensaje.findMany({
   where: { remitente: 'usuario', fecha: rango(desde, hasta) }, select: { fecha: true, conversacion: { select: { usuarioId: true } } },
 });
 
+// Valoraciones de las respuestas del asistente (SC-47), según la fecha de la respuesta: cuántas útiles y cuántas no.
+const valoracionesAsistente = (desde, hasta) => prisma.mensaje.groupBy({
+  by: ['valoracion'], where: { remitente: 'asistente', valoracion: { not: null }, fecha: rango(desde, hasta) }, _count: { _all: true },
+});
+
 // Todas las fichas profesionales vigentes: son pocas y de aquí salen el embudo, la cola y las distribuciones.
 const profesionales = () => prisma.profesional.findMany({
   where: profesionalVigente,
@@ -73,5 +78,5 @@ async function plataforma() {
 const verificacionesPendientes = () => prisma.profesional.count({ where: { ...profesionalVigente, estadoVerificacion: 'pendiente' } });
 
 module.exports = {
-  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes,
+  cuentas, ultimasCuentas, reservas, resenas, preguntasAsistente, valoracionesAsistente, profesionales, personasPorFuncion, plataforma, verificacionesPendientes,
 };

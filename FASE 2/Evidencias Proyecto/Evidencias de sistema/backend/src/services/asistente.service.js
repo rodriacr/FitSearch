@@ -3,12 +3,17 @@
 // FS-HU-08 (D34): cada respuesta guarda la especialidad recomendada (o null) para mostrarla al reabrir la conversación.
 // Solo se recomiendan especialidades activas del catálogo (FS-HU-30).
 // FS-HU-09: si la persona pide agregar alimentos, se registran en sus comidas y la respuesta guarda lo agregado.
+// SC-47: la recomendación guarda cómo quiere atenderse la persona y el orden de los profesionales que muestra la tarjeta;
+// «¿Cómo voy hoy?» guarda el resumen del día; cada respuesta se puede valorar, y puede llegar en vivo (alTexto).
 const { asistente: reglas } = require('../../../shared/reglas.json');
 const { ia } = require('../config/env');
 const modelo = require('../models/asistente.model');
 const proveedor = require('./proveedorIa.service');
 const comidas = require('./comida.service');
+const resumenDia = require('./resumenDia.service');
+const perfilAsistente = require('./perfilAsistente.service');
 const especialidades = require('../models/especialidad.model');
+const { atencionPedida } = require('../utils/atencionPedida');
 const { fechaEnChile } = require('../utils/fechaChile');
 const ErrorHttp = require('../utils/ErrorHttp');
 
@@ -38,21 +43,39 @@ async function conCupo(usuarioId, ahora, responderYGuardar) {
   }
 }
 
-const mensaje = ({ id, remitente, contenido, especialidad = null, comidasAgregadas = null, fecha }) => ({
-  id, remitente, contenido, especialidad, comidasAgregadas, fecha,
-});
+const mensaje = ({
+  id, remitente, contenido, especialidad = null, comidasAgregadas = null, modalidad = null, criterio = null, resumenDia: resumen = null,
+  valoracion = null, fecha,
+}) => ({ id, remitente, contenido, especialidad, comidasAgregadas, modalidad, criterio, resumenDia: resumen, valoracion, fecha });
 
 // Respuesta del asistente, pedida fuera de cualquier transacción. Si la persona pidió agregar alimentos (FS-HU-09), se
 // buscan en el catálogo sin guardarlos todavía y el backend arma el texto con lo que se agregará, sin una segunda
-// consulta al proveedor; la red de seguridad se aplica igual.
-async function responder(mensajes, ahora) {
-  const respuesta = await proveedor.responder(mensajes, await especialidades.nombresActivos());
-  if (!respuesta.pedido) {
-    return { respuesta: { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, fecha: new Date() }, comidasPedidas: null };
+// consulta al proveedor; la red de seguridad se aplica igual. Con alTexto, la respuesta llega en vivo (SC-47).
+async function responder(usuarioId, mensajes, ahora, alTexto) {
+  // SC-47: con el permiso de la persona, el proveedor recibe un resumen de su perfil, sin datos que la identifiquen.
+  const [activas, perfil] = await Promise.all([especialidades.nombresActivos(), perfilAsistente.contextoPermitido(usuarioId, ahora)]);
+  const opciones = perfil ? { perfil } : {};
+  const respuesta = alTexto
+    ? await proveedor.responderEnVivo(mensajes, activas, alTexto, opciones)
+    : await proveedor.responder(mensajes, activas, opciones);
+  const ultimo = mensajes.at(-1).contenido;
+  if (respuesta.resumen) {
+    const resumen = await resumenDia.resumenDelDia(usuarioId, ahora);
+    const contenido = proveedor.agregarAvisos(ultimo, resumenDia.textoResumen(resumen));
+    return { respuesta: { remitente: 'asistente', contenido, especialidad: null, resumenDia: resumen, fecha: new Date() }, comidasPedidas: null };
   }
-  const comidasPedidas = await comidas.prepararDesdeAsistente(respuesta.pedido, ahora);
-  const contenido = proveedor.agregarAvisos(mensajes.at(-1).contenido, comidas.textoAgregados(comidasPedidas));
-  return { respuesta: { remitente: 'asistente', contenido, especialidad: null, fecha: new Date() }, comidasPedidas };
+  if (respuesta.pedido) {
+    const comidasPedidas = await comidas.prepararDesdeAsistente(respuesta.pedido, ahora);
+    const contenido = proveedor.agregarAvisos(ultimo, comidas.textoAgregados(comidasPedidas));
+    return { respuesta: { remitente: 'asistente', contenido, especialidad: null, fecha: new Date() }, comidasPedidas };
+  }
+  // SC-47: con una recomendación, cómo quiere atenderse y qué orden prefiere, según lo que escribió.
+  const textos = mensajes.filter((m) => m.remitente === 'usuario').map((m) => m.contenido).reverse();
+  const atencion = respuesta.especialidad ? atencionPedida(textos) : { modalidad: null, criterio: null };
+  return {
+    respuesta: { remitente: 'asistente', contenido: respuesta.contenido, especialidad: respuesta.especialidad, ...atencion, fecha: new Date() },
+    comidasPedidas: null,
+  };
 }
 
 // Los alimentos y los mensajes se guardan en una sola transacción: si falla cualquier escritura no queda nada a medias,
@@ -70,7 +93,13 @@ const resumenConversacion = ({ id, titulo, fijada, fechaInicio, fechaActualizaci
 const datosConversacion = ({ id, titulo, fijada, fechaInicio, fechaActualizacion }) => ({ id, titulo, fijada, fechaInicio, fechaActualizacion });
 
 async function estado(usuarioId) {
-  return { modo: proveedor.modo(), limiteDiario: ia.mensajesPorDia, restantesHoy: await restantesHoy(usuarioId) };
+  const [restantes, permisoPerfil] = await Promise.all([restantesHoy(usuarioId), perfilAsistente.permiso(usuarioId)]);
+  return { modo: proveedor.modo(), limiteDiario: ia.mensajesPorDia, restantesHoy: restantes, permisoPerfil };
+}
+
+// SC-47: la persona decide si el asistente usa su perfil (y su información de salud). Se puede cambiar cuando quiera.
+async function guardarPermisoPerfil(usuarioId, permiso, ahora = new Date()) {
+  return { permisoPerfil: await perfilAsistente.guardarPermiso(usuarioId, permiso, ahora) };
 }
 
 async function listar(usuarioId) {
@@ -85,9 +114,9 @@ async function obtener(usuarioId, id) {
 }
 
 // Primer mensaje: se responde y recién entonces se crea la conversación, con el mensaje como título.
-async function iniciar(usuarioId, texto, ahora = new Date()) {
+async function iniciar(usuarioId, texto, ahora = new Date(), alTexto = null) {
   const creada = await conCupo(usuarioId, ahora, async () => {
-    const resultado = await responder([{ remitente: 'usuario', contenido: texto }], ahora);
+    const resultado = await responder(usuarioId, [{ remitente: 'usuario', contenido: texto }], ahora, alTexto);
     return guardar(usuarioId, resultado, (respuesta, tx) => modelo.crearConversacion(usuarioId, proveedor.resumir(texto, reglas.titulo.max), [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
       respuesta,
@@ -96,12 +125,12 @@ async function iniciar(usuarioId, texto, ahora = new Date()) {
   return { conversacion: datosConversacion(creada), mensajes: creada.mensajes.map(mensaje), restantesHoy: await restantesHoy(usuarioId, ahora) };
 }
 
-async function enviar(usuarioId, id, texto, ahora = new Date()) {
+async function enviar(usuarioId, id, texto, ahora = new Date(), alTexto = null) {
   const conversacion = await modelo.obtenerConversacion(id, usuarioId);
   if (!conversacion) throw noEncontrada();
   const guardados = await conCupo(usuarioId, ahora, async () => {
     const historial = await modelo.ultimosMensajes(id, reglas.historialEnviado - 1);
-    const resultado = await responder([...historial, { remitente: 'usuario', contenido: texto }], ahora);
+    const resultado = await responder(usuarioId, [...historial, { remitente: 'usuario', contenido: texto }], ahora, alTexto);
     return guardar(usuarioId, resultado, (respuesta, tx) => modelo.agregarMensajes(id, [
       { remitente: 'usuario', contenido: texto, fecha: ahora },
       respuesta,
@@ -125,4 +154,23 @@ async function eliminar(usuarioId, id) {
   if (!count) throw noEncontrada();
 }
 
-module.exports = { estado, listar, obtener, iniciar, enviar, fijar, eliminar, fechaEnChile };
+// SC-47: valorar una respuesta (1 útil, -1 no útil, null para quitar la valoración) y guardar la modalidad y el orden que
+// la persona eligió en la tarjeta de la recomendación. Solo respuestas del asistente en conversaciones propias.
+async function actualizarMensaje(usuarioId, id, { valoracion, modalidad, criterio }) {
+  const actual = await modelo.mensajeDelAsistente(id, usuarioId);
+  if (!actual) throw new ErrorHttp(404, 'No encontramos esta respuesta del asistente');
+  const datos = {};
+  if (valoracion !== undefined) datos.valoracion = valoracion;
+  if (modalidad !== undefined || criterio !== undefined) {
+    if (!actual.especialidad) throw new ErrorHttp(409, 'Esta respuesta no recomienda profesionales');
+    if (modalidad !== undefined) datos.modalidad = modalidad;
+    if (criterio !== undefined) datos.criterio = criterio;
+    const queda = { modalidad: datos.modalidad ?? actual.modalidad, criterio: datos.criterio ?? actual.criterio };
+    if (queda.modalidad === 'online' && queda.criterio === 'cercania') {
+      throw new ErrorHttp(400, 'La atención online no se ordena por cercanía: elige los mejor evaluados o los verificados');
+    }
+  }
+  return { mensaje: mensaje(await modelo.actualizarMensaje(id, datos)) };
+}
+
+module.exports = { estado, guardarPermisoPerfil, listar, obtener, iniciar, enviar, fijar, eliminar, actualizarMensaje, fechaEnChile };

@@ -51,6 +51,7 @@ function datosVacios() {
   estadisticas.reservas.mockResolvedValue([]);
   estadisticas.resenas.mockResolvedValue([]);
   estadisticas.preguntasAsistente.mockResolvedValue([]);
+  estadisticas.valoracionesAsistente.mockResolvedValue([]);
   estadisticas.profesionales.mockResolvedValue([]);
   estadisticas.ultimasCuentas.mockResolvedValue([]);
   estadisticas.plataforma.mockResolvedValue({ usuariosActivos: 0, usuariosInactivos: 0, profesionalesActivos: 0, establecimientos: {} });
@@ -60,7 +61,7 @@ test('el dashboard y los reportes responden lo suyo; los reportes solo aceptan 3
   datosVacios();
   const dashboard = await consultar('/api/administrador/dashboard');
   expect(dashboard.status).toBe(200);
-  expect(Object.keys(dashboard.body)).toEqual(['hoy', 'cola', 'cifras', 'actividad', 'ultimasCuentas', 'plataforma']);
+  expect(Object.keys(dashboard.body)).toEqual(['hoy', 'cola', 'cifras', 'actividad', 'ultimasCuentas', 'plataforma', 'asistente']);
   expect(dashboard.body.actividad).toHaveLength(14);
   const reportes = await consultar('/api/administrador/reportes?dias=365');
   expect(reportes.status).toBe(200);

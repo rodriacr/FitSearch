@@ -442,6 +442,55 @@
     "remitentes": [
       "usuario",
       "asistente"
+    ],
+    "recomendacion": {
+      "cantidad": 3,
+      "distanciaCercaKm": 25,
+      "modalidades": [
+        {
+          "valor": "presencial",
+          "etiqueta": "Presencial",
+          "criterio": "cercania"
+        },
+        {
+          "valor": "online",
+          "etiqueta": "Online",
+          "criterio": "calificacion"
+        }
+      ],
+      "criterios": [
+        {
+          "valor": "cercania",
+          "etiqueta": "Más cerca",
+          "soloPresencial": true
+        },
+        {
+          "valor": "calificacion",
+          "etiqueta": "Mejor evaluados"
+        },
+        {
+          "valor": "verificados",
+          "etiqueta": "Verificados"
+        }
+      ]
+    },
+    "valoraciones": [
+      1,
+      -1
+    ],
+    "permisosPerfil": [
+      {
+        "valor": "no",
+        "etiqueta": "No usar mi perfil"
+      },
+      {
+        "valor": "perfil",
+        "etiqueta": "Usar mi perfil"
+      },
+      {
+        "valor": "perfil_salud",
+        "etiqueta": "Usar mi perfil y mi información de salud"
+      }
     ]
   },
   "comidas": {

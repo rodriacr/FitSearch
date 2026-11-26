@@ -22,6 +22,8 @@ const listar = [
   unico('modalidad', 'Indica una sola modalidad').isIn(valores(reglas.filtroModalidad)).withMessage('Selecciona una modalidad válida'),
   unico('calificacionMin', 'Indica una sola calificación mínima').isInt({ min: resena.puntaje.min, max: resena.puntaje.max })
     .withMessage(`La calificación mínima debe ser un entero entre ${resena.puntaje.min} y ${resena.puntaje.max}`),
+  // Solo profesionales verificados (SC-47): el asistente recomienda por este criterio.
+  unico('verificado', 'Indica una sola vez si son solo verificados').isIn(['true']).withMessage('El filtro de verificados solo admite true'),
   unico('lat', 'Indica una sola latitud').isFloat({ min: -90, max: 90 }).withMessage('La latitud no es válida'),
   unico('lng', 'Indica una sola longitud').isFloat({ min: -180, max: 180 }).withMessage('La longitud no es válida'),
   unico('distanciaKm', 'Indica una sola distancia').isIn(reglas.distanciasKm.map(String))

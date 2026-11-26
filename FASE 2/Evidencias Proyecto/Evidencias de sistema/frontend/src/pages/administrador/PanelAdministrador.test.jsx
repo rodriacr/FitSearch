@@ -122,6 +122,7 @@ const DASHBOARD = {
   actividad: Array.from({ length: 14 }, (_, i) => ({ fecha: `2026-${i < 3 ? '10' : '11'}-${String(i < 3 ? 29 + i : i - 2).padStart(2, '0')}`, cuentas: i % 2, reservas: i % 3 ? 1 : 0, resenas: 0 })),
   ultimasCuentas: [{ id: 9, nombre: 'Camila Rojas', rol: 'profesional', activo: true, fechaRegistro: '2026-11-11T13:00:00Z' }],
   plataforma: { usuariosActivos: 40, usuariosInactivos: 2, profesionalesActivos: 6, establecimientos: { gimnasio: 12, centro_salud: 4 }, profesionales: 8, verificados: 6 },
+  asistente: { utiles: 17, valoradas: 21 },
 };
 const sesionAdmin = () => sessionStorage.setItem('fitsearch_sesion', JSON.stringify({ ...SESION, usuario: { ...SESION.usuario, nombre: 'Rodrigo Cárcamo', rol: 'administrador' } }));
 
@@ -144,6 +145,8 @@ test('el dashboard muestra la cola por antigüedad, las cifras de 7 días, la ac
   expect(cuentas).toHaveTextContent('Camila RojasProfesional');
   const plataforma = screen.getByRole('heading', { name: 'Estado de la plataforma' }).closest('section');
   expect(plataforma).toHaveTextContent('Profesionales verificados6 de 8');
+  // SC-47: porcentaje de respuestas del asistente valoradas como útiles en la semana.
+  expect(plataforma).toHaveTextContent('Respuestas útiles del asistente81 %17 de 21 valoradas en 7 días');
   expect(plataforma).toHaveTextContent('Gimnasios12');
   expect(within(plataforma).getByRole('img', { name: '75 % de los profesionales está verificado' })).toBeInTheDocument();
 });
