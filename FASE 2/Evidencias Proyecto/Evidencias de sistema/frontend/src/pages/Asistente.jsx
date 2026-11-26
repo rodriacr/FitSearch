@@ -4,12 +4,14 @@ import reglas from '@shared/reglas.json';
 import Alerta from '../components/Alerta.jsx';
 import Icono from '../components/Icono.jsx';
 import { useSesion } from '../context/SesionContext.jsx';
+import RecomendacionProfesionales from '../components/asistente/RecomendacionProfesionales.jsx';
+import { PermisoPerfil, ResumenDia, Valoracion } from '../components/asistente/PiezasAsistente.jsx';
 import {
-  ACCIONES, bloquesDe, CONSEJOS, enlaceProfesionales, fechaCorta, horaDe, nombreProfesionales, SUGERENCIAS,
+  ACCIONES, bloquesDe, CONSEJOS, fechaCorta, horaDe, seguimientoDe, SUGERENCIAS, textoPermiso,
 } from '../services/asistente.js';
 import {
-  abrirConversacion, eliminarConversacion, enviarMensaje, fijarConversacion, iniciarConversacion, listarConversaciones,
-  obtenerEstadoAsistente,
+  abrirConversacion, actualizarMensaje, eliminarConversacion, enviarMensaje, fijarConversacion, guardarPermisoPerfil, iniciarConversacion,
+  listarConversaciones, obtenerEstadoAsistente,
 } from '../services/asistente.service.js';
 import { formatearNumero, primerNombre } from '../services/formato.js';
 import './Asistente.css';
@@ -25,19 +27,6 @@ function Contenido({ texto }) {
   return bloquesDe(texto).map((bloque, i) => (bloque.tipo === 'lista'
     ? <ul key={i}>{bloque.items.map((item, j) => <li key={j}>{item}</li>)}</ul>
     : <p key={i}>{bloque.lineas.join('\n')}</p>));
-}
-
-// FS-HU-08: especialidad que recomendó el asistente y acceso al buscador con ese filtro.
-function Recomendacion({ especialidad }) {
-  return (
-    <div className="recomendacion-ia">
-      <span className="recomendacion-ia__icono" aria-hidden="true"><Icono nombre="profesional" tamano={20} /></span>
-      <p className="recomendacion-ia__texto">Te recomendamos consultar con: <strong>{especialidad}</strong></p>
-      <Link to={enlaceProfesionales(especialidad)} className="boton boton--secundario boton--compacto recomendacion-ia__boton">
-        Ver {nombreProfesionales(especialidad)} <Icono nombre="flecha" tamano={16} />
-      </Link>
-    </div>
-  );
 }
 
 // FS-HU-09: alimentos que el asistente agregó a las comidas de hoy, con acceso a Comidas para revisarlos.
@@ -58,16 +47,28 @@ function ComidasAgregadas({ comidas }) {
   );
 }
 
-function Burbuja({ remitente, contenido, especialidad = null, comidasAgregadas = null, fecha, pendiente = false }) {
+// FS-HU-08 y SC-47: bajo una recomendación, profesionales reales de esa especialidad (no solo el buscador); bajo
+// «¿Cómo voy hoy?», el resumen del día; y en cada respuesta guardada, «¿Te sirvió?». enVivo: la respuesta que se está
+// escribiendo (aún sin guardar).
+function Burbuja({
+  id, remitente, contenido, especialidad = null, comidasAgregadas = null, resumenDia = null, modalidad = null, criterio = null,
+  valoracion = null, fecha, pendiente = false, enVivo = false, pregunta = '', onActualizar,
+}) {
   const esAsistente = remitente === 'asistente';
+  const guardada = esAsistente && Boolean(id) && Boolean(onActualizar);
   return (
-    <li className={`burbuja burbuja--${remitente}${pendiente ? ' burbuja--pendiente' : ''}`}>
+    <li className={`burbuja burbuja--${remitente}${pendiente ? ' burbuja--pendiente' : ''}${enVivo ? ' burbuja--en-vivo' : ''}`}>
       {esAsistente && <span className="burbuja__avatar" aria-hidden="true"><Icono nombre="robot" tamano={18} /></span>}
       <div className="burbuja__cuerpo">
         <span className="solo-lector">{esAsistente ? 'Asistente: ' : 'Tú: '}</span>
         {esAsistente ? <Contenido texto={contenido} /> : <p>{contenido}</p>}
-        {esAsistente && especialidad && <Recomendacion especialidad={especialidad} />}
+        {guardada && especialidad && (
+          <RecomendacionProfesionales mensaje={{ id, especialidad, modalidad, criterio }} pregunta={pregunta}
+            onElegir={(mensajeId, cambios) => onActualizar(mensajeId, cambios, { silencioso: true })} />
+        )}
+        {esAsistente && resumenDia && <ResumenDia resumen={resumenDia} />}
         {esAsistente && comidasAgregadas?.length > 0 && <ComidasAgregadas comidas={comidasAgregadas} />}
+        {guardada && <Valoracion valor={valoracion} onValorar={(valor) => onActualizar(id, { valoracion: valor })} />}
         {fecha && <time className="burbuja__hora" dateTime={fecha}>{horaDe(fecha)}</time>}
         {pendiente && <span className="burbuja__hora">Enviando…</span>}
       </div>
@@ -110,6 +111,9 @@ export default function Asistente() {
   const [abiertas, setAbiertas] = useState({});
   const [texto, setTexto] = useState('');
   const [enviando, setEnviando] = useState(null);
+  // SC-47: texto de la respuesta mientras llega en vivo, y si se está cambiando el permiso del perfil.
+  const [enVivo, setEnVivo] = useState(null);
+  const [editarPermiso, setEditarPermiso] = useState(false);
   const [error, setError] = useState('');
   const [verTodas, setVerTodas] = useState(false);
   const [confirmarBorrado, setConfirmarBorrado] = useState(false);
@@ -139,7 +143,7 @@ export default function Asistente() {
   const cantidad = actual?.mensajes?.length ?? 0;
   useEffect(() => {
     if (lista.current) lista.current.scrollTop = lista.current.scrollHeight;
-  }, [cantidad, enviando, conversacionId]);
+  }, [cantidad, enviando, conversacionId, enVivo]);
 
   const restantes = estado?.restantesHoy;
   const sinCupo = restantes === 0;
@@ -180,15 +184,17 @@ export default function Asistente() {
     setError('');
     setEnviando(limpio);
     setTexto('');
+    // SC-47: la respuesta aparece mientras se escribe.
+    const alTexto = (parcial) => setEnVivo(parcial);
     try {
       if (conversacionId) {
-        const { mensajes, restantesHoy } = await enviarMensaje(conversacionId, limpio);
+        const { mensajes, restantesHoy } = await enviarMensaje(conversacionId, limpio, { alTexto });
         setAbiertas((previas) => ({ ...previas, [conversacionId]: { ...previas[conversacionId], mensajes: [...previas[conversacionId].mensajes, ...mensajes] } }));
         actualizarHistorial((conversaciones) => conversaciones.map((c) => (c.id === conversacionId
           ? { ...c, fechaActualizacion: mensajes.at(-1).fecha, vistaPrevia: resumir(mensajes.at(-1).contenido) } : c)));
         setEstado((previo) => ({ ...previo, restantesHoy }));
       } else {
-        const { conversacion, mensajes, restantesHoy } = await iniciarConversacion(limpio);
+        const { conversacion, mensajes, restantesHoy } = await iniciarConversacion(limpio, { alTexto });
         setAbiertas((previas) => ({ ...previas, [conversacion.id]: { conversacion, mensajes } }));
         actualizarHistorial((conversaciones) => [{ ...conversacion, vistaPrevia: resumir(mensajes.at(-1).contenido) }, ...conversaciones]);
         setEstado((previo) => ({ ...previo, restantesHoy }));
@@ -201,8 +207,30 @@ export default function Asistente() {
       if (e.estado === 429) setEstado((previo) => ({ ...previo, restantesHoy: 0 }));
     } finally {
       setEnviando(null);
+      setEnVivo(null);
       enfocar();
     }
+  }
+
+  // SC-47: valoración de una respuesta, o modalidad y orden elegidos en la tarjeta (silencioso: si falla, la tarjeta
+  // sigue funcionando y solo no se recuerda la elección).
+  async function actualizarRespuesta(mensajeId, cambios, { silencioso = false } = {}) {
+    const abierta = conversacionId;
+    try {
+      const { mensaje } = await actualizarMensaje(mensajeId, cambios);
+      setAbiertas((previas) => (previas[abierta]?.mensajes ? {
+        ...previas, [abierta]: { ...previas[abierta], mensajes: previas[abierta].mensajes.map((m) => (m.id === mensajeId ? { ...m, ...mensaje } : m)) },
+      } : previas));
+    } catch (e) {
+      if (!silencioso) throw e;
+    }
+  }
+
+  // SC-47: el asistente pide permiso antes de usar el perfil; la decisión se puede cambiar cuando se quiera.
+  async function decidirPermiso(permiso) {
+    const { permisoPerfil } = await guardarPermisoPerfil(permiso);
+    setEstado((previo) => ({ ...previo, permisoPerfil }));
+    setEditarPermiso(false);
   }
 
   async function alternarFijada() {
@@ -235,6 +263,10 @@ export default function Asistente() {
   const recientes = conversaciones.filter((c) => !c.fijada);
   const recientesVisibles = verTodas ? recientes : recientes.slice(0, RECIENTES_VISIBLES);
   const mensajes = actual?.mensajes ?? [];
+  const permiso = estado?.permisoPerfil?.valor;
+  const mostrarPermiso = Boolean(estado?.permisoPerfil) && (permiso === null || editarPermiso) && !actual?.error;
+  const seguimiento = conversacionId && !enviando && !sinCupo ? seguimientoDe(mensajes.at(-1)) : [];
+  const preguntaDe = (i) => mensajes.slice(0, i).reverse().find((m) => m.remitente === 'usuario')?.contenido ?? '';
 
   return (
     <div className={`chat-ia${id ? ' chat-ia--en-chat' : ''}`}>
@@ -329,11 +361,29 @@ export default function Asistente() {
             <ol className="chat-ia__lista" role="log" aria-label="Mensajes de la conversación" aria-live="polite">
               {!conversacionId && <Burbuja remitente="asistente" contenido={`Hola, ${nombre}. ¿En qué puedo ayudarte hoy?`} />}
               {conversacionId && !actual && <li className="chat-ia__vacio" role="status">Cargando la conversación…</li>}
-              {mensajes.map((m) => <Burbuja key={m.id} {...m} />)}
+              {mensajes.map((m, i) => (
+                <Burbuja key={m.id} {...m} pregunta={m.remitente === 'asistente' ? preguntaDe(i) : ''} onActualizar={actualizarRespuesta} />
+              ))}
               {enviando && <Burbuja remitente="usuario" contenido={enviando} pendiente />}
+              {enviando && enVivo && <Burbuja remitente="asistente" contenido={enVivo} enVivo />}
+              {mostrarPermiso && !enviando && (
+                <li className="burbuja burbuja--asistente burbuja--tarjeta">
+                  <span className="burbuja__avatar" aria-hidden="true"><Icono nombre="robot" tamano={18} /></span>
+                  <div className="burbuja__cuerpo">
+                    <PermisoPerfil actual={permiso ?? null} onGuardar={decidirPermiso} onCerrar={permiso !== null ? () => setEditarPermiso(false) : undefined} />
+                  </div>
+                </li>
+              )}
             </ol>
           )}
-          {enviando && <p className="chat-ia__escribiendo" role="status"><span aria-hidden="true" className="chat-ia__puntos" /> El asistente está escribiendo…</p>}
+          {enviando && !enVivo && <p className="chat-ia__escribiendo" role="status"><span aria-hidden="true" className="chat-ia__puntos" /> El asistente está escribiendo…</p>}
+          {seguimiento.length > 0 && (
+            <ul className="chat-ia__seguimiento" aria-label="Sugerencias para seguir">
+              {seguimiento.map((sugerencia) => (
+                <li key={sugerencia}><button type="button" className="chip-sugerencia" onClick={() => enviar(sugerencia)}>{sugerencia}</button></li>
+              ))}
+            </ul>
+          )}
           {!conversacionId && (
             <ul className="chat-ia__sugerencias-chat" aria-label="Sugerencias rápidas">
               {SUGERENCIAS.slice(0, 3).map((sugerencia) => (
@@ -368,6 +418,12 @@ export default function Asistente() {
           <p id="aviso-asistente" className="chat-ia__aviso">
             Orientación general: no reemplaza a un profesional de salud. Lo que escribes se procesa con un servicio de IA externo; no incluyas datos que te identifiquen.
           </p>
+          {estado?.permisoPerfil && permiso !== null && (
+            <p className="chat-ia__perfil">
+              {textoPermiso(permiso)}
+              <button type="button" className="boton-texto" aria-expanded={editarPermiso} onClick={() => setEditarPermiso(!editarPermiso)}>Cambiar</button>
+            </p>
+          )}
         </form>
       </section>
 

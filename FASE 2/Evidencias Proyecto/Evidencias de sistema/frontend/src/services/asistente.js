@@ -31,6 +31,8 @@ export const enlaceProfesionales = (especialidad) => `/profesionales?${new URLSe
 
 // Sugerencias rápidas: preguntas completas que se envían al tocarlas.
 export const SUGERENCIAS = [
+  // SC-47: el resumen del día con los datos de Comidas y Agua.
+  '¿Cómo voy hoy?',
   '¿Cuántas calorías necesito al día?',
   '¿Cómo calculo mi IMC?',
   '¿Qué profesional me ayuda a bajar de peso?',
@@ -86,4 +88,20 @@ export function bloquesDe(texto) {
       }
       return bloques;
     });
+}
+
+// SC-47: estado del permiso para usar el perfil, en una línea bajo el campo del mensaje.
+export const textoPermiso = (valor) => ({
+  perfil: 'Personalizo mis respuestas con tu perfil.',
+  perfil_salud: 'Personalizo mis respuestas con tu perfil y tu salud.',
+  no: 'No uso los datos de tu perfil.',
+}[valor] ?? 'Aún no decides si uso los datos de tu perfil.');
+
+// SC-47: sugerencias de seguimiento bajo la última respuesta, según lo que respondió el asistente. Con una
+// recomendación no hacen falta: la tarjeta ya permite cambiar el orden, la modalidad y ver los que tienen hora hoy.
+export function seguimientoDe(mensaje) {
+  if (!mensaje || mensaje.remitente !== 'asistente' || mensaje.especialidad) return [];
+  if (mensaje.resumenDia) return ['¿Qué puedo comer para completar el día?'];
+  if (mensaje.comidasAgregadas?.length) return ['¿Cómo voy hoy?'];
+  return ['¿Cómo voy hoy?', '¿Qué profesional me puede ayudar con esto?'];
 }

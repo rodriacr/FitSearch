@@ -2,6 +2,8 @@ const path = require('node:path');
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 // Regresión real del cupo diario (PR #29): solo crea una cuenta temporal y la elimina con sus conversaciones.
+// SC-47: también la modalidad y el orden de la recomendación, el resumen del día, la valoración de las respuestas y el
+// permiso para usar el perfil, con las restricciones CHECK de la migración 20261126120000/20261126130000.
 // El proveedor es simulado: no envía mensajes a Groq ni consume una clave externa.
 // La evidencia de Plan de Pruebas solo se reescribe con --guardar-evidencia.
 const base = path.resolve(__dirname, '..');
@@ -88,6 +90,37 @@ function check(name, actual, expected) { assert.deepEqual(actual, expected, name
   evidence.solicitudDeDiaAnterior={aceptada:oldRequest,fechaFinal:current.fecha.toISOString().slice(0,10),consumosFinales:current.mensajes,esperado:{aceptada:false,fechaFinal:tomorrow.toISOString().slice(0,10),consumosFinales:7}};
   check('Solicitud anterior no reinicia el día nuevo',oldRequest,false);
   check('Solicitud anterior conserva el contador nuevo',{fecha:current.fecha.toISOString().slice(0,10),mensajes:current.mensajes},{fecha:tomorrow.toISOString().slice(0,10),mensajes:7});
+  // SC-47: mejora del asistente contra MySQL real.
+  const auth = (r) => r.set('Authorization','Bearer '+token);
+  await setUsage(0);
+  provider.responder = async () => ({ contenido: 'Te conviene un kinesiólogo.', especialidad: 'Kinesiología' });
+  let res = await auth(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Me duele la rodilla, busco alguien cerca de mi casa' });
+  const recomendada = await db.mensaje.findFirst({ where: { conversacionId: res.body.conversacion.id, remitente: 'asistente' } });
+  check('SC-47 guarda la especialidad, la modalidad y el orden pedidos', { e: recomendada.especialidad, m: recomendada.modalidad, c: recomendada.criterio }, { e: 'Kinesiología', m: 'presencial', c: 'cercania' });
+  res = await auth(request(app).patch(`/api/asistente/mensajes/${recomendada.id}`)).send({ modalidad: 'online', criterio: 'cercania' });
+  check('SC-47 online no se ordena por cercanía', res.status, 400);
+  res = await auth(request(app).patch(`/api/asistente/mensajes/${recomendada.id}`)).send({ modalidad: 'online', criterio: 'calificacion', valoracion: 1 });
+  const elegida = await db.mensaje.findUnique({ where: { id: recomendada.id } });
+  check('SC-47 guarda lo elegido en la tarjeta y la valoración', { s: res.status, m: elegida.modalidad, c: elegida.criterio, v: elegida.valoracion }, { s: 200, m: 'online', c: 'calificacion', v: 1 });
+  const sinRecomendacion = await db.mensaje.findFirst({ where: { conversacionId: conversation, remitente: 'asistente' } });
+  check('SC-47 sin recomendación no acepta modalidad', (await auth(request(app).patch(`/api/asistente/mensajes/${sinRecomendacion.id}`)).send({ modalidad: 'online' })).status, 409);
+  const otroCheck = async (cambio) => { try { await cambio(); return 'aceptado'; } catch { return 'rechazado'; } };
+  check('SC-47 MySQL rechaza una valoración fuera de 1 y -1', await otroCheck(() => db.mensaje.update({ where: { id: recomendada.id }, data: { valoracion: 5 } })), 'rechazado');
+  check('SC-47 MySQL rechaza una modalidad desconocida', await otroCheck(() => db.mensaje.update({ where: { id: recomendada.id }, data: { modalidad: 'domicilio' } })), 'rechazado');
+  provider.responder = async () => ({ resumen: true });
+  res = await auth(request(app).post(`/api/asistente/conversaciones/${conversation}/mensajes`)).send({ mensaje: '¿Cómo voy hoy?' });
+  const resumen = await db.mensaje.findFirst({ where: { conversacionId: conversation, remitente: 'asistente' }, orderBy: { id: 'desc' } });
+  check('SC-47 guarda el resumen del día con el consumo real (cuenta sin comidas)', { s: res.status, kcal: resumen.resumenDia?.calorias?.consumo, agua: resumen.resumenDia?.aguaMl?.consumo }, { s: 201, kcal: 0, agua: 0 });
+  res = await auth(request(app).put('/api/asistente/permiso-perfil')).send({ permiso: 'perfil_salud' });
+  const conPermiso = await db.usuario.findUnique({ where: { id: user.id }, select: { permisoPerfilIa: true, permisoPerfilIaFecha: true } });
+  check('SC-47 guarda el permiso para usar el perfil y su fecha', { s: res.status, p: conPermiso.permisoPerfilIa, conFecha: conPermiso.permisoPerfilIaFecha instanceof Date }, { s: 200, p: 'perfil_salud', conFecha: true });
+  check('SC-47 MySQL rechaza un permiso desconocido', await otroCheck(() => db.usuario.update({ where: { id: user.id }, data: { permisoPerfilIa: 'todo' } })), 'rechazado');
+  const datos = (await auth(request(app).get('/api/perfil/mis-datos'))).body;
+  const exportados = datos?.asistente?.conversaciones?.flatMap((c) => c.mensajes) ?? [];
+  check('SC-47 Mis datos incluye el permiso, la valoración y el resumen', {
+    permiso: datos?.cuenta?.preferencias?.asistenteUsaPerfil?.permiso ?? datos?.preferencias?.asistenteUsaPerfil?.permiso,
+    valorada: exportados.some((m) => m.valoracion === 1), resumen: exportados.some((m) => m.resumenDia),
+  }, { permiso: 'perfil_salud', valorada: true, resumen: true });
   evidence.resultado='COMPROBADO';
  } catch(e) {
   evidence.resultado='ERROR'; evidence.error=e.code||e.message; process.exitCode=1;

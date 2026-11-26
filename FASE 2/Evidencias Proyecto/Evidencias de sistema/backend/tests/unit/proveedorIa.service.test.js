@@ -181,3 +181,112 @@ test('el límite diario usa el día de Chile, no el de UTC', () => {
   // 02:30 UTC son las 23:30 del 20 en Santiago.
   expect(fechaEnChile(new Date('2026-10-21T02:30:00Z'))).toBe('2026-10-20');
 });
+
+// SC-47: mejora del asistente de IA.
+describe('recomendación de profesionales reales (SC-47)', () => {
+  test('las instrucciones dicen que FitSearch muestra profesionales reales y prohíben inventarlos o mandar al buscador', () => {
+    const texto = proveedor.instrucciones(CATALOGO);
+    expect(texto).toMatch(/profesionales reales/);
+    expect(texto).toMatch(/Nunca inventes ni nombres profesionales/);
+    expect(texto).toMatch(/No expliques cómo buscar, filtrar ni usar el buscador/);
+    expect(proveedor.instrucciones([])).not.toMatch(/profesionales reales/);
+  });
+});
+
+describe('¿Cómo voy hoy? (SC-47)', () => {
+  const conResumen = (contenido = null) => respuestaJson(200, { choices: [{ message: {
+    role: 'assistant', content: contenido, tool_calls: [{ id: 'c2', type: 'function', function: { name: 'resumen_del_dia', arguments: '{}' } }],
+  } }] });
+
+  test('ofrece la función resumen_del_dia y devuelve { resumen: true } cuando el modelo la usa', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(conResumen());
+    expect(await proveedor.responder([{ remitente: 'usuario', contenido: '¿Cómo voy hoy?' }], CATALOGO)).toEqual({ resumen: true });
+    const cuerpo = JSON.parse(fetch.mock.calls[0][1].body);
+    expect(cuerpo.tools.map((h) => h.function.name)).toEqual(['agregar_alimentos', 'resumen_del_dia']);
+    expect(proveedor.instrucciones(CATALOGO)).toContain('resumen_del_dia');
+  });
+
+  test('en modo de prueba reconoce las preguntas por el día, sin confundirlas con otras', async () => {
+    const pide = async (texto) => Boolean((await proveedor.responder([{ remitente: 'usuario', contenido: texto }], CATALOGO)).resumen);
+    expect(await pide('¿Cómo voy hoy?')).toBe(true);
+    expect(await pide('¿Cuánta proteína me falta?')).toBe(true);
+    expect(await pide('¿cuántas calorías llevo?')).toBe(true);
+    expect(await pide('Dame un resumen del día')).toBe(true);
+    expect(await pide('¿Qué comer después de entrenar?')).toBe(false);
+    expect(await pide('Me duele la rodilla')).toBe(false);
+  });
+});
+
+describe('respuesta en vivo (SC-47)', () => {
+  // Respuesta del proveedor por partes, como eventos «data:» de la API compatible con OpenAI.
+  const enPartes = (eventos) => {
+    const codificador = new TextEncoder();
+    const texto = `${eventos.map((e) => `data: ${typeof e === 'string' ? e : JSON.stringify(e)}\n\n`).join('')}`;
+    // Se corta en trozos de 7 bytes para probar que una línea puede llegar partida.
+    const trozos = [];
+    const bytes = codificador.encode(texto);
+    for (let i = 0; i < bytes.length; i += 7) trozos.push(bytes.slice(i, i + 7));
+    return {
+      ok: true,
+      status: 200,
+      body: new ReadableStream({ start(control) { trozos.forEach((t) => control.enqueue(t)); control.close(); } }),
+    };
+  };
+  const delta = (contenido) => ({ choices: [{ delta: { content: contenido } }] });
+
+  test('entrega el texto visible a medida que llega y al final quita la marca y valida la especialidad', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    const fetch = jest.spyOn(globalThis, 'fetch').mockResolvedValue(enPartes([
+      delta('Para la rodilla te conviene **un kinesiólogo**.'), delta('\nESPECIAL'), delta('IDAD: Kinesiología'), '[DONE]',
+    ]));
+    const partes = [];
+    const resultado = await proveedor.responderEnVivo([{ remitente: 'usuario', contenido: 'Me duele la rodilla' }], CATALOGO, (t) => partes.push(t));
+    expect(JSON.parse(fetch.mock.calls[0][1].body).stream).toBe(true);
+    expect(resultado).toEqual({ contenido: 'Para la rodilla te conviene un kinesiólogo.', especialidad: 'Kinesiología' });
+    expect(partes.length).toBeGreaterThan(0);
+    // Ninguna parte mostró la marca ni el formato.
+    for (const parte of partes) expect(parte).not.toMatch(/ESPECIAL|\*\*/);
+    expect(partes.at(-1)).toBe('Para la rodilla te conviene un kinesiólogo.');
+  });
+
+  test('junta las llamadas a funciones que llegan por partes', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    jest.spyOn(globalThis, 'fetch').mockResolvedValue(enPartes([
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { name: 'agregar_alimentos', arguments: '{"alimentos":[{"nombre":"arroz",' } }] } }] },
+      { choices: [{ delta: { tool_calls: [{ index: 0, function: { arguments: '"gramos":150}],"momento":"almuerzo"}' } }] } }] },
+      '[DONE]',
+    ]));
+    const resultado = await proveedor.responderEnVivo([{ remitente: 'usuario', contenido: 'agrega 150 g de arroz al almuerzo' }], CATALOGO);
+    expect(resultado).toEqual({ pedido: { alimentos: [{ nombre: 'arroz', gramos: 150 }], momento: 'almuerzo' } });
+  });
+
+  test('un corte del proveedor o una respuesta vacía responden 503', async () => {
+    ia.apiKey = 'clave-de-prueba';
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+      ok: true, status: 200, body: new ReadableStream({ start(control) { control.error(new Error('corte')); } }),
+    });
+    await expect(proveedor.responderEnVivo([{ remitente: 'usuario', contenido: 'Hola' }], CATALOGO)).rejects.toMatchObject({ estado: 503 });
+    jest.spyOn(globalThis, 'fetch').mockResolvedValueOnce(enPartes(['[DONE]']));
+    await expect(proveedor.responderEnVivo([{ remitente: 'usuario', contenido: 'Hola' }], CATALOGO)).rejects.toMatchObject({ estado: 503 });
+  });
+
+  test('en modo de prueba la respuesta simulada también llega por partes', async () => {
+    const partes = [];
+    const { contenido } = await proveedor.responderEnVivo([{ remitente: 'usuario', contenido: '¿Cómo empiezo a trotar?' }], CATALOGO, (t) => partes.push(t));
+    expect(partes.length).toBeGreaterThan(2);
+    expect(partes.at(-1)).toBe(contenido.trim());
+  });
+
+  test.each([
+    ['Te recomiendo un kinesiólogo.\nESPEC', 'Te recomiendo un kinesiólogo.'],
+    ['Te recomiendo un kinesiólogo. ESPECIALIDAD: Kinesio', 'Te recomiendo un kinesiólogo.'],
+    ['Te recomiendo un kinesiólogo. ESPE', 'Te recomiendo un kinesiólogo.'],
+    ['Hola **bien', 'Hola bien'],
+    ['Empieza suave.\n- Camina\n- Tro', 'Empieza suave.\n- Camina\n- Tro'],
+    // Una palabra en mayúsculas que no es la marca se muestra igual.
+    ['Usa el IMC', 'Usa el IMC'],
+  ])('lo visible de «%s» es «%s»', (parcial, visible) => {
+    expect(proveedor.visibleParcial(parcial)).toBe(visible);
+  });
+});

@@ -3,7 +3,10 @@
 const prisma = require('./prisma');
 
 const CONVERSACION = { id: true, titulo: true, fijada: true, fechaInicio: true, fechaActualizacion: true };
-const MENSAJE = { id: true, remitente: true, contenido: true, especialidad: true, comidasAgregadas: true, fecha: true };
+const MENSAJE = {
+  id: true, remitente: true, contenido: true, especialidad: true, comidasAgregadas: true, modalidad: true, criterio: true, resumenDia: true,
+  valoracion: true, fecha: true,
+};
 
 // Historial con el último mensaje de cada conversación (para la vista previa): primero las fijadas, luego las recientes.
 function listarConversaciones(usuarioId, limite) {
@@ -99,9 +102,33 @@ async function agregarMensajes(conversacionId, mensajes, db) {
 }
 
 const fijar = (id, usuarioId, fijada) => prisma.conversacion.updateMany({ where: { id, usuarioId }, data: { fijada } });
+
+// Una respuesta del asistente en una conversación propia (SC-47); null si es ajena, de la persona o no existe.
+const mensajeDelAsistente = (id, usuarioId) => prisma.mensaje.findFirst({
+  where: { id, remitente: 'asistente', conversacion: { usuarioId } }, select: MENSAJE,
+});
+const actualizarMensaje = (id, datos) => prisma.mensaje.update({ where: { id }, data: datos, select: MENSAJE });
+
+// Permiso para usar el perfil en el asistente (SC-47) y los datos que se usan con él: nunca el nombre, el correo ni el
+// teléfono. La información de salud solo se lee si el permiso la incluye.
+const permisoPerfil = (usuarioId) => prisma.usuario.findUnique({
+  where: { id: usuarioId }, select: { permisoPerfilIa: true, permisoPerfilIaFecha: true },
+});
+const guardarPermisoPerfil = (usuarioId, permiso, fecha) => prisma.usuario.update({
+  where: { id: usuarioId }, data: { permisoPerfilIa: permiso, permisoPerfilIaFecha: fecha },
+  select: { permisoPerfilIa: true, permisoPerfilIaFecha: true },
+});
+const datosDelPerfil = (usuarioId, conSalud) => prisma.usuario.findUnique({
+  where: { id: usuarioId },
+  select: {
+    perfil: { select: { pesoKg: true, alturaCm: true, edad: true, sexo: true, actividadFisica: true, objetivoPrincipal: true, comidasDia: true, horasSueno: true } },
+    ...(conSalud && { informacionSalud: { select: { condicionesMedicas: true, tomaMedicamentos: true, medicamentos: true, alergias: true } } }),
+  },
+});
 const eliminar = (id, usuarioId) => prisma.conversacion.deleteMany({ where: { id, usuarioId } });
 
 module.exports = {
   listarConversaciones, obtenerConversacion, ultimosMensajes, usoDelDia, reservarUso, liberarUso, contarFijadas,
-  enTransaccion, crearConversacion, agregarMensajes, fijar, eliminar,
+  enTransaccion, crearConversacion, agregarMensajes, fijar, eliminar, mensajeDelAsistente, actualizarMensaje, permisoPerfil,
+  guardarPermisoPerfil, datosDelPerfil,
 };

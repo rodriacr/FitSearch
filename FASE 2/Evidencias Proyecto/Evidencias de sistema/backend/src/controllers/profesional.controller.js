@@ -17,6 +17,7 @@ function filtrosDesdeConsulta(query) {
     region: texto(query.region),
     modalidad: query.modalidad || '',
     calificacionMin: entero(query.calificacionMin, null),
+    soloVerificados: query.verificado === 'true',
     ubicacion: query.lat === undefined ? null : { lat: coordenada(query.lat), lng: coordenada(query.lng) },
     distanciaKm: entero(query.distanciaKm, null),
     orden: query.orden || 'nombre',

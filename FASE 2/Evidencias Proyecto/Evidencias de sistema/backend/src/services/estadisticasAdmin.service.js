@@ -72,10 +72,13 @@ async function dashboard(ahora = new Date()) {
   const semana = [sumarDias(hoy, -6), hoy];
   const anterior = [desde, sumarDias(hoy, -7)];
   const [inicio, fin] = limites(desde, hoy);
-  const [cuentas, reservas, resenas, preguntas, fichas, ultimas, plataforma] = await Promise.all([
+  const [cuentas, reservas, resenas, preguntas, fichas, ultimas, plataforma, valoraciones] = await Promise.all([
     modelo.cuentas(inicio, fin), modelo.reservas(inicio, fin), modelo.resenas(inicio, fin), modelo.preguntasAsistente(inicio, fin),
-    modelo.profesionales(), modelo.ultimasCuentas(5), modelo.plataforma(),
+    modelo.profesionales(), modelo.ultimasCuentas(5), modelo.plataforma(), modelo.valoracionesAsistente(...limites(semana[0], hoy)),
   ]);
+  // SC-47: respuestas del asistente valoradas en los últimos 7 días y cuántas fueron útiles.
+  const contarValoracion = (valor) => valoraciones.find((fila) => fila.valoracion === valor)?._count._all ?? 0;
+  const asistente = { utiles: contarValoracion(1), valoradas: contarValoracion(1) + contarValoracion(-1) };
   const fuentes = {
     cuentas: [cuentas, (fila) => fechaEnChile(fila.fechaRegistro)],
     reservas: [reservas, (fila) => fechaEnChile(fila.fechaCreacion)],
@@ -114,6 +117,7 @@ async function dashboard(ahora = new Date()) {
       id: fila.id, nombre: fila.nombre, fotoUrl: fotoUrlConClave(fila.id, claves.get(fila.id)), rol: fila.rol.nombre, activo: fila.activo, fechaRegistro: fila.fechaRegistro.toISOString(),
     })),
     plataforma: { ...plataforma, profesionales: fichas.length, verificados: fichas.filter((ficha) => ficha.verificado).length },
+    asistente,
   };
 }
 

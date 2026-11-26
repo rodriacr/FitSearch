@@ -62,6 +62,8 @@
 .admin-estado { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.85rem 1rem; margin: 0; }
 .admin-estado dt { font-size: 0.8rem; color: var(--color-texto-secundario); }
 .admin-estado dd { margin: 0.15rem 0 0; font-size: 1.2rem; font-weight: 600; color: var(--color-primario-oscuro); }
+/* SC-47: detalle bajo la cifra (respuestas útiles del asistente). */
+.admin-estado .admin-estado__detalle { font-size: 0.78rem; font-weight: 400; color: var(--color-texto-secundario); }
 .admin-medidor { height: 0.5rem; overflow: hidden; border-radius: 999px; background: light-dark(#e3ebf2, var(--color-info-fondo)); }
 .admin-medidor span { display: block; height: 100%; border-radius: inherit; background: var(--color-relleno-exito, var(--color-exito)); }
 

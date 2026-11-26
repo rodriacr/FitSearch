@@ -38,7 +38,7 @@ describe('estado e historial', () => {
     modelo.usoDelDia.mockResolvedValue(4);
     const res = await conSesion(request(app).get('/api/asistente/estado'));
     expect(res.status).toBe(200);
-    expect(res.body).toEqual({ modo: 'simulado', limiteDiario: 30, restantesHoy: 26 });
+    expect(res.body).toEqual({ modo: 'simulado', limiteDiario: 30, restantesHoy: 26, permisoPerfil: { valor: null, fecha: null } });
     expect(modelo.usoDelDia).toHaveBeenCalledWith(1, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
   });
 
@@ -348,5 +348,249 @@ describe('fijar y borrar', () => {
     expect((await conSesion(request(app).delete('/api/asistente/conversaciones/5'))).status).toBe(204);
     expect(modelo.eliminar).toHaveBeenCalledWith(5, 1);
     expect((await conSesion(request(app).delete('/api/asistente/conversaciones/5'))).status).toBe(404);
+  });
+});
+
+// SC-47: mejora del asistente de IA.
+describe('mejora del asistente (SC-47)', () => {
+  const comidaServicio = require('../../src/services/comida.service');
+  const resumenDia = require('../../src/services/resumenDia.service');
+  const guardarConId = () => {
+    modelo.obtenerConversacion.mockResolvedValue({ ...conversacion(), mensajes: [] });
+    modelo.agregarMensajes.mockImplementation(async (id, mensajes) => mensajes.map((m, i) => ({ id: 10 + i, ...m })));
+    modelo.crearConversacion.mockImplementation(async (u, titulo, mensajes) => ({ ...conversacion({ titulo }), mensajes: mensajes.map((m, i) => ({ id: i + 1, ...m })) }));
+  };
+  const enviarEn5 = (mensaje) => conSesion(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje });
+
+  describe('recomendación: modalidad y orden según lo que escribió', () => {
+    beforeEach(guardarConId);
+
+    test.each([
+      ['Me duele la rodilla, busco un kinesiólogo cerca de mi casa', 'Kinesiología', 'presencial', 'cercania'],
+      ['Necesito una nutricionista online con buenas reseñas para bajar de peso', 'Nutrición', 'online', 'calificacion'],
+      ['Quiero un kinesiólogo verificado para mi esguince', 'Kinesiología', null, 'verificados'],
+      ['Me duele la rodilla al correr', 'Kinesiología', null, null],
+      // Online no se ordena por cercanía: queda el orden propio de esa modalidad.
+      ['Busco un nutricionista online cerca para mi dieta', 'Nutrición', 'online', null],
+    ])('«%s» → %s, %s, %s', async (texto, especialidad, modalidad, criterio) => {
+      modelo.ultimosMensajes.mockResolvedValue([]);
+      const res = await enviarEn5(texto);
+      expect(res.status).toBe(201);
+      expect(res.body.mensajes[1]).toMatchObject({ especialidad, modalidad, criterio, valoracion: null, resumenDia: null });
+      expect(modelo.agregarMensajes.mock.calls[0][1][1]).toMatchObject({ especialidad, modalidad, criterio });
+    });
+
+    test('si el último mensaje no lo dice, usa lo que escribió antes en la conversación', async () => {
+      modelo.ultimosMensajes.mockResolvedValue([mensajeDe(1, 'usuario', 'Prefiero atenderme online'), mensajeDe(2, 'asistente', 'Perfecto.')]);
+      const res = await enviarEn5('Me duele la espalda');
+      expect(res.body.mensajes[1]).toMatchObject({ especialidad: 'Kinesiología', modalidad: 'online', criterio: null });
+    });
+
+    test('sin recomendación no guarda modalidad ni orden aunque los mencione', async () => {
+      modelo.ultimosMensajes.mockResolvedValue([]);
+      const res = await enviarEn5('¿Cómo empiezo a trotar cerca de mi casa?');
+      expect(res.body.mensajes[1]).toMatchObject({ especialidad: null, modalidad: null, criterio: null });
+    });
+  });
+
+  describe('¿Cómo voy hoy?', () => {
+    beforeEach(guardarConId);
+    const RESUMEN = {
+      fecha: '2026-11-26', calorias: { consumo: 1250, meta: 1900 }, proteinasG: { consumo: 50, meta: 110 },
+      carbohidratosG: { consumo: 140, meta: 210 }, grasasG: { consumo: 40, meta: 60 }, aguaMl: { consumo: 750, meta: 2000 },
+    };
+
+    test('responde con el resumen del día armado en el backend y lo guarda en el mensaje', async () => {
+      modelo.ultimosMensajes.mockResolvedValue([]);
+      const resumir = jest.spyOn(resumenDia, 'resumenDelDia').mockResolvedValue(RESUMEN);
+      const responder = jest.spyOn(proveedor, 'responder');
+      const res = await enviarEn5('¿Cómo voy hoy?');
+      expect(res.status).toBe(201);
+      expect(resumir).toHaveBeenCalledWith(1, expect.any(Date));
+      expect(res.body.mensajes[1].resumenDia).toEqual(RESUMEN);
+      expect(res.body.mensajes[1].contenido).toMatch(/^Así vas hoy:/);
+      expect(res.body.mensajes[1].contenido).toContain('llevas 1.250 de 1.900 kcal (66 %) y 750 de 2.000 ml (38 %) de agua.');
+      expect(res.body.mensajes[1].contenido).toContain('Te faltan unos 60 g de proteína');
+      expect(res.body.mensajes[1].contenido).toContain('Te faltan 1.250 ml de agua: unos 5 vasos.');
+      expect(modelo.agregarMensajes.mock.calls[0][1][1]).toMatchObject({ resumenDia: RESUMEN, especialidad: null });
+      // Al proveedor solo fue la pregunta: los datos del día nunca salen del backend.
+      expect(JSON.stringify(responder.mock.calls[0])).not.toContain('1250');
+    });
+  });
+
+  describe('valorar una respuesta y elegir modalidad u orden', () => {
+    const respuesta = (extra = {}) => ({ id: 12, remitente: 'asistente', contenido: 'Te recomiendo un kinesiólogo.', especialidad: 'Kinesiología', modalidad: null, criterio: null, valoracion: null, fecha, ...extra });
+    const patch = (id, cuerpo) => conSesion(request(app).patch(`/api/asistente/mensajes/${id}`)).send(cuerpo);
+    beforeEach(() => {
+      modelo.mensajeDelAsistente.mockResolvedValue(respuesta());
+      modelo.actualizarMensaje.mockImplementation(async (id, datos) => respuesta(datos));
+    });
+
+    test('guarda útil, no útil o quita la valoración', async () => {
+      for (const valoracion of [1, -1, null]) {
+        const res = await patch(12, { valoracion });
+        expect(res.status).toBe(200);
+        expect(res.body.mensaje.valoracion).toBe(valoracion);
+      }
+      expect(modelo.mensajeDelAsistente).toHaveBeenCalledWith(12, 1);
+      expect(modelo.actualizarMensaje).toHaveBeenLastCalledWith(12, { valoracion: null });
+    });
+
+    test('guarda la modalidad y el orden elegidos en la tarjeta', async () => {
+      const res = await patch(12, { modalidad: 'presencial', criterio: 'verificados' });
+      expect(res.status).toBe(200);
+      expect(modelo.actualizarMensaje).toHaveBeenCalledWith(12, { modalidad: 'presencial', criterio: 'verificados' });
+      expect(res.body.mensaje).toMatchObject({ modalidad: 'presencial', criterio: 'verificados' });
+    });
+
+    test('valida los valores y exige al menos un cambio', async () => {
+      for (const cuerpo of [{ valoracion: 2 }, { valoracion: '1' }, { modalidad: 'domicilio' }, { criterio: 'precio' }, {}]) {
+        expect((await patch(12, cuerpo)).status).toBe(400);
+      }
+      expect((await patch('abc', { valoracion: 1 })).status).toBe(400);
+      expect(modelo.actualizarMensaje).not.toHaveBeenCalled();
+    });
+
+    test('una respuesta ajena o inexistente da 404; sin recomendación no acepta modalidad (409); online no va por cercanía (400)', async () => {
+      modelo.mensajeDelAsistente.mockResolvedValueOnce(null);
+      expect((await patch(99, { valoracion: 1 })).status).toBe(404);
+      modelo.mensajeDelAsistente.mockResolvedValueOnce(respuesta({ especialidad: null }));
+      expect((await patch(12, { modalidad: 'online' })).status).toBe(409);
+      modelo.mensajeDelAsistente.mockResolvedValueOnce(respuesta({ modalidad: 'online' }));
+      const res = await patch(12, { criterio: 'cercania' });
+      expect(res.status).toBe(400);
+      expect(res.body.error).toMatch(/online no se ordena por cercanía/);
+      expect(modelo.actualizarMensaje).not.toHaveBeenCalled();
+    });
+
+    test('solo cuentas de usuario', async () => {
+      expect((await conSesion(request(app).patch('/api/asistente/mensajes/12'), 'profesional').send({ valoracion: 1 })).status).toBe(403);
+    });
+  });
+
+  describe('permiso para usar el perfil', () => {
+    const PERFIL = {
+      perfil: { edad: 30, sexo: 'femenino', pesoKg: '70.00', alturaCm: '165.00', actividadFisica: 'moderada', objetivoPrincipal: 'bajar_peso', comidasDia: 4, horasSueno: '7_8' },
+      informacionSalud: { condicionesMedicas: ['respiratoria'], tomaMedicamentos: false, medicamentos: [], alergias: ['alimentarias'] },
+    };
+    beforeEach(() => {
+      guardarConId();
+      modelo.ultimosMensajes.mockResolvedValue([]);
+      jest.spyOn(comidaServicio, 'objetivoDiario').mockResolvedValue({ calorias: 1800, proteinasG: 100, carbohidratosG: 200, grasasG: 60 });
+    });
+
+    test('el estado informa si la persona ya decidió; mientras no responde es null', async () => {
+      modelo.permisoPerfil.mockResolvedValueOnce({ permisoPerfilIa: null, permisoPerfilIaFecha: null });
+      expect((await conSesion(request(app).get('/api/asistente/estado'))).body.permisoPerfil).toEqual({ valor: null, fecha: null });
+      modelo.permisoPerfil.mockResolvedValueOnce({ permisoPerfilIa: 'perfil', permisoPerfilIaFecha: fecha });
+      expect((await conSesion(request(app).get('/api/asistente/estado'))).body.permisoPerfil).toEqual({ valor: 'perfil', fecha: fecha.toISOString() });
+    });
+
+    test('guarda la decisión (sí, sí con salud o no) y rechaza otro valor', async () => {
+      modelo.guardarPermisoPerfil.mockImplementation(async (u, permiso, cuando) => ({ permisoPerfilIa: permiso, permisoPerfilIaFecha: cuando }));
+      for (const permiso of ['perfil_salud', 'perfil', 'no']) {
+        const res = await conSesion(request(app).put('/api/asistente/permiso-perfil')).send({ permiso });
+        expect(res.status).toBe(200);
+        expect(res.body.permisoPerfil.valor).toBe(permiso);
+      }
+      expect(modelo.guardarPermisoPerfil).toHaveBeenCalledWith(1, 'no', expect.any(Date));
+      expect((await conSesion(request(app).put('/api/asistente/permiso-perfil')).send({ permiso: 'todo' })).status).toBe(400);
+      expect((await conSesion(request(app).put('/api/asistente/permiso-perfil'), 'profesional').send({ permiso: 'perfil' })).status).toBe(403);
+    });
+
+    test('sin permiso, al proveedor no llega nada del perfil', async () => {
+      for (const permiso of [null, 'no']) {
+        modelo.permisoPerfil.mockResolvedValueOnce({ permisoPerfilIa: permiso });
+        const responder = jest.spyOn(proveedor, 'responder');
+        await enviarEn5('¿Qué como antes de entrenar?');
+        expect(responder.mock.calls.at(-1)[2]).toEqual({});
+      }
+      expect(modelo.datosDelPerfil).not.toHaveBeenCalled();
+    });
+
+    test('con permiso, el proveedor recibe el resumen del perfil sin datos que identifiquen; la salud solo con su permiso', async () => {
+      modelo.permisoPerfil.mockResolvedValueOnce({ permisoPerfilIa: 'perfil' });
+      modelo.datosDelPerfil.mockResolvedValueOnce({ perfil: PERFIL.perfil });
+      const responder = jest.spyOn(proveedor, 'responder');
+      const res = await enviarEn5('¿Qué como antes de entrenar?');
+      expect(modelo.datosDelPerfil).toHaveBeenCalledWith(1, false);
+      const { perfil } = responder.mock.calls[0][2];
+      expect(perfil).toContain('- Edad: 30 años');
+      expect(perfil).toContain('- IMC: 25,7');
+      expect(perfil).toContain('- Objetivo principal: Bajar de peso');
+      expect(perfil).toContain('- Plan de alimentación de hoy: 1.800 kcal');
+      expect(perfil).not.toMatch(/Alergias|Condiciones/);
+      // En modo de prueba la respuesta avisa que usó el perfil.
+      expect(res.body.mensajes[1].contenido).toContain('tomé en cuenta los datos de tu perfil');
+
+      modelo.permisoPerfil.mockResolvedValueOnce({ permisoPerfilIa: 'perfil_salud' });
+      modelo.datosDelPerfil.mockResolvedValueOnce(PERFIL);
+      await enviarEn5('¿Puedo comer maní?');
+      expect(modelo.datosDelPerfil).toHaveBeenLastCalledWith(1, true);
+      const conSalud = responder.mock.calls[1][2].perfil;
+      expect(conSalud).toContain('- Condiciones médicas: Asma u otra enfermedad respiratoria');
+      expect(conSalud).toContain('- Medicamentos: no toma');
+      expect(conSalud).toContain('- Alergias: Alimentarias');
+    });
+  });
+
+  describe('respuesta en vivo', () => {
+    beforeEach(() => {
+      guardarConId();
+      modelo.ultimosMensajes.mockResolvedValue([]);
+    });
+    const eventos = (texto) => texto.trim().split('\n\n').map((bloque) => {
+      const [linea1, linea2] = bloque.split('\n');
+      return { nombre: linea1.replace('event: ', ''), datos: JSON.parse(linea2.replace('data: ', '')) };
+    });
+    const enVivo = (peticion) => conSesion(peticion).set('Accept', 'text/event-stream');
+
+    test('entrega el texto por partes y termina con lo mismo que la respuesta normal', async () => {
+      const res = await enVivo(request(app).post('/api/asistente/conversaciones')).send({ mensaje: '¿Cómo empiezo a trotar?' });
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toMatch(/^text\/event-stream/);
+      expect(res.headers['x-accel-buffering']).toBe('no');
+      const lista = eventos(res.text);
+      expect(lista.filter((e) => e.nombre === 'texto').length).toBeGreaterThan(2);
+      const fin = lista.at(-1);
+      expect(fin.nombre).toBe('fin');
+      expect(fin.datos).toMatchObject({ conversacion: { titulo: '¿Cómo empiezo a trotar?' }, restantesHoy: 30 });
+      expect(fin.datos.mensajes[1].contenido).toBe(lista.filter((e) => e.nombre === 'texto').at(-1).datos.texto);
+    });
+
+    test('en una conversación también responde en vivo', async () => {
+      const res = await enVivo(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Me duele la rodilla cerca de mi casa' });
+      const fin = eventos(res.text).at(-1);
+      expect(fin.datos.mensajes[1]).toMatchObject({ especialidad: 'Kinesiología', modalidad: 'presencial', criterio: 'cercania' });
+    });
+
+    test('el límite diario y una conversación ajena se informan con la respuesta JSON de siempre', async () => {
+      modelo.reservarUso.mockResolvedValueOnce(false);
+      const sinCupo = await enVivo(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Hola' });
+      expect(sinCupo.status).toBe(429);
+      expect(sinCupo.body.error).toMatch(/límite de 30 mensajes/);
+      modelo.obtenerConversacion.mockResolvedValueOnce(null);
+      expect((await enVivo(request(app).post('/api/asistente/conversaciones/77/mensajes')).send({ mensaje: 'Hola' })).status).toBe(404);
+    });
+
+    test('si el proveedor se corta a mitad, llega un evento de error, no se guarda nada y se devuelve el cupo', async () => {
+      jest.spyOn(proveedor, 'responderEnVivo').mockImplementation(async (mensajes, activas, alTexto) => {
+        alTexto('Para empezar');
+        throw new ErrorHttp(503, 'El asistente no está disponible en este momento. Intenta nuevamente en unos minutos.');
+      });
+      const res = await enVivo(request(app).post('/api/asistente/conversaciones/5/mensajes')).send({ mensaje: 'Hola' });
+      expect(res.status).toBe(200);
+      const lista = eventos(res.text);
+      expect(lista.map((e) => e.nombre)).toEqual(['texto', 'error']);
+      expect(lista[1].datos).toEqual({ estado: 503, error: expect.stringMatching(/no está disponible/) });
+      expect(modelo.agregarMensajes).not.toHaveBeenCalled();
+      expect(modelo.liberarUso).toHaveBeenCalledTimes(1);
+    });
+
+    test('sin pedirlo, la respuesta sigue siendo JSON con 201', async () => {
+      const res = await conSesion(request(app).post('/api/asistente/conversaciones')).send({ mensaje: 'Hola' });
+      expect(res.status).toBe(201);
+      expect(res.headers['content-type']).toMatch(/json/);
+    });
   });
 });

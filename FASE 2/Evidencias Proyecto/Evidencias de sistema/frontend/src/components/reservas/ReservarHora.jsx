@@ -66,8 +66,8 @@ function ListaEspera({ profesionalId, nombre }) {
   );
 }
 
-// Respuesta en botones del mismo ancho (primera visita y modalidad).
-function Opciones({ nombre, leyenda, opciones, valor, onCambiar }) {
+// Respuesta en botones del mismo ancho (primera visita y modalidad). También la usa la reserva desde el asistente (SC-47).
+export function Opciones({ nombre, leyenda, opciones, valor, onCambiar }) {
   return (
     <fieldset className="opciones-reserva">
       <legend>{leyenda}</legend>

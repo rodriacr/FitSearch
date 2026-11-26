@@ -28,6 +28,7 @@ beforeEach(() => {
   modelo.reservas.mockResolvedValue([]);
   modelo.resenas.mockResolvedValue([]);
   modelo.preguntasAsistente.mockResolvedValue([]);
+  modelo.valoracionesAsistente.mockResolvedValue([]);
   modelo.profesionales.mockResolvedValue([]);
   modelo.ultimasCuentas.mockResolvedValue([]);
   modelo.plataforma.mockResolvedValue({ usuariosActivos: 40, usuariosInactivos: 2, profesionalesActivos: 6, establecimientos: { gimnasio: 3 } });
@@ -64,6 +65,17 @@ test('el dashboard compara los últimos 7 días con los 7 anteriores y agrupa po
     id: 3, nombre: 'Ana', fotoUrl: `/api/fotos/${cifrarCuenta(3)}/abcdef0123456789`, rol: 'usuario', activo: true, fechaRegistro: '2026-11-11T12:00:00.000Z',
   }]);
   expect(d.plataforma).toMatchObject({ profesionales: 2, verificados: 1, establecimientos: { gimnasio: 3 } });
+});
+
+// SC-47: respuestas del asistente valoradas en los últimos 7 días (desde el día 5 hasta el 11 en Chile).
+test('el dashboard informa cuántas respuestas del asistente fueron útiles en la semana', async () => {
+  modelo.valoracionesAsistente.mockResolvedValue([{ valoracion: 1, _count: { _all: 17 } }, { valoracion: -1, _count: { _all: 4 } }]);
+  const d = await servicio.dashboard(AHORA);
+  expect(modelo.valoracionesAsistente).toHaveBeenCalledWith(new Date('2026-11-05T03:00:00Z'), new Date('2026-11-12T03:00:00Z'));
+  expect(d.asistente).toEqual({ utiles: 17, valoradas: 21 });
+
+  modelo.valoracionesAsistente.mockResolvedValue([]);
+  expect((await servicio.dashboard(AHORA)).asistente).toEqual({ utiles: 0, valoradas: 0 });
 });
 
 test('la cola de verificación pone primero la solicitud más antigua y cuenta los días de espera', async () => {

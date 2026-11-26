@@ -39,6 +39,9 @@ model Usuario {
   recordatoriosCitas   Boolean             @default(true) @map("recordatorios_citas")
   avisosMensajesCorreo Boolean             @default(false) @map("avisos_mensajes_correo")
   ultimoAvisoMensajes  DateTime?           @map("ultimo_aviso_mensajes") @db.DateTime(0)
+  // SC-47: permiso para que el asistente de IA use el perfil: null sin responder, 'no', 'perfil' o 'perfil_salud'.
+  permisoPerfilIa      String?             @map("permiso_perfil_ia") @db.VarChar(20)
+  permisoPerfilIaFecha DateTime?           @map("permiso_perfil_ia_fecha") @db.DateTime(0)
   // SC-42: cuándo la persona eliminó su cuenta. La fila queda anonimizada (nombre «Usuario eliminado», sin correo real,
   // contraseña ni Google) y desactivada, para conservar sin datos personales las citas y reseñas pasadas.
   eliminadoEn          DateTime?           @map("eliminado_en") @db.DateTime(0)
@@ -215,6 +218,14 @@ model Mensaje {
   especialidad     String?      @db.VarChar(100)
   // FS-HU-09: alimentos que el asistente agregó a las comidas en esta respuesta ([{ id, nombre, gramos, calorias, momento }]).
   comidasAgregadas Json?        @map("comidas_agregadas")
+  // SC-47: cómo quiere atenderse la persona (presencial u online) y el orden de los profesionales recomendados
+  // (cercania, calificacion o verificados). Los detecta el backend en lo que escribió o los elige en la tarjeta.
+  modalidad        String?      @db.VarChar(20)
+  criterio         String?      @db.VarChar(20)
+  // SC-47: «¿Cómo voy hoy?», el consumo y el agua del día frente al plan, tal como estaban al responder.
+  resumenDia       Json?        @map("resumen_dia")
+  // SC-47: valoración de la respuesta (1 útil, -1 no útil); null si la persona no la valoró.
+  valoracion       Int?         @db.TinyInt
   fecha            DateTime     @default(now()) @db.DateTime(0)
   conversacion     Conversacion @relation(fields: [conversacionId], references: [id], onDelete: Cascade)
 
