@@ -2,7 +2,7 @@
 // («Agua hoy») o desde Comidas, como si fuera un alimento, al día que se está viendo.
 const ErrorHttp = require('../utils/ErrorHttp');
 const modelo = require('../models/agua.model');
-const { fechaEnChile, horaEnChile } = require('../utils/fechaChile');
+const { fechaEnChile, horaEnChile, lunesDeLaSemana, sumarDias } = require('../utils/fechaChile');
 const { agua: reglas } = require('../../../shared/reglas.json');
 
 function resumen(fecha, registros, ahora) {
@@ -40,4 +40,27 @@ async function eliminar(usuarioId, id, fecha = null, ahora = new Date()) {
   return resumen(dia, await modelo.eliminar(usuarioId, dia, id), ahora);
 }
 
-module.exports = { delDia, agregar, eliminar };
+// Agua de cada día de la semana actual, de lunes a domingo, para el resumen semanal del Inicio (25-11-2026). Los días que
+// aún no llegan quedan marcados; diasConMeta cuenta los días que llegaron a la meta general.
+async function semana(usuarioId, ahora = new Date()) {
+  const hoy = fechaEnChile(ahora);
+  const desde = lunesDeLaSemana(hoy);
+  const hasta = sumarDias(desde, 6);
+  const totales = await modelo.totalesPorDia(usuarioId, desde, hasta);
+  const porDia = new Map(totales.map(({ fecha, _sum }) => [fecha.toISOString().slice(0, 10), _sum.ml ?? 0]));
+  const dias = Array.from({ length: 7 }, (_, i) => {
+    const fecha = sumarDias(desde, i);
+    return { fecha, totalMl: porDia.get(fecha) ?? 0, futuro: fecha > hoy };
+  });
+  return {
+    desde,
+    hasta,
+    hoy,
+    metaMl: reglas.metaDiariaMl,
+    totalMl: dias.reduce((suma, { totalMl }) => suma + totalMl, 0),
+    diasConMeta: dias.filter(({ totalMl }) => totalMl >= reglas.metaDiariaMl).length,
+    dias,
+  };
+}
+
+module.exports = { delDia, agregar, eliminar, semana };

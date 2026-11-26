@@ -8,6 +8,7 @@ import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import AguaHoy from '../components/inicio/AguaHoy.jsx';
 import Especialidades from '../components/inicio/Especialidades.jsx';
+import ResumenSemanal from '../components/inicio/ResumenSemanal.jsx';
 import fotoInicio from '../assets/inicio/bienestar-inicio.webp';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
 import TarjetaProfesional from '../components/profesionales/TarjetaProfesional.jsx';
@@ -202,6 +203,9 @@ export default function Inicio() {
           </>
         )}
       </div>
+
+      {/* Resumen semanal (25-11-2026): calorías de cada día frente a la meta, días con registro, promedio y agua. */}
+      <ResumenSemanal />
 
       <section data-revelar className="inicio__accesos" aria-labelledby="titulo-accesos">
         <h2 id="titulo-accesos">Tus accesos rápidos</h2>

@@ -1,0 +1,112 @@
+/* Resumen semanal del Inicio (25-11-2026): tarjeta a todo el ancho con el gráfico de la semana y sus indicadores. */
+.resumen-semanal {
+  grid-area: semana; position: relative; display: grid; gap: 1.1rem; min-width: 0; padding: 1.3rem; overflow: hidden;
+  border: 1px solid light-dark(#e6eef4, var(--color-borde)); border-radius: 20px;
+  background:
+    radial-gradient(circle at 100% 0%, light-dark(rgb(244 123 32 / 9%), transparent) 0, transparent 38%),
+    radial-gradient(circle at 0% 100%, light-dark(rgb(21 101 160 / 8%), transparent) 0, transparent 42%),
+    light-dark(#fff, var(--color-superficie));
+}
+.resumen-semanal--cargando { min-height: 9rem; place-items: center; color: var(--color-texto-secundario); font-size: 0.85rem; }
+
+.semana__cabecera { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.semana__cabecera > div { flex: 1; min-width: 10rem; }
+.semana__cabecera h2 { margin: 0; color: light-dark(#10273a, var(--color-primario)); font-size: 1.25rem; letter-spacing: -0.035em; }
+.semana__rango { margin: 0.1rem 0 0; color: var(--color-texto-secundario); font-size: 0.8rem; }
+.semana__insignia {
+  display: grid; place-items: center; width: 2.75rem; height: 2.75rem; flex-shrink: 0; border-radius: 14px; color: #fff;
+  background: linear-gradient(135deg, var(--color-primario-claro), var(--color-primario-oscuro)); box-shadow: 0 6px 16px rgb(11 79 128 / 22%);
+}
+.semana__enlace { font-size: 0.78rem; }
+
+.semana__cuerpo { display: grid; gap: 1.1rem; }
+
+/* Gráfico */
+.semana__grafico { margin: 0; padding: 1rem; border-radius: 16px; background: light-dark(#f6f9fc, var(--color-superficie-suave)); }
+.semana__leyenda { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.75rem; font-size: 0.78rem; font-weight: 600; color: light-dark(#4e6a7d, var(--color-texto-secundario)); }
+.semana__leyenda-meta { display: inline-flex; align-items: center; gap: 0.35rem; }
+.semana__leyenda-meta::before { content: ''; width: 1.1rem; border-top: 2px dashed var(--color-acento); }
+.semana__columnas { position: relative; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 0.35rem; }
+/* La línea de la meta se dibuja en la zona de cada barra, a la altura de la meta; los tramos se ven como una sola línea. */
+.semana__columnas--con-meta .semana__barra-zona::before {
+  content: ''; position: absolute; left: -0.2rem; right: -0.2rem; bottom: calc(var(--meta) * 100%); z-index: 1;
+  border-top: 2px dashed light-dark(rgb(244 123 32 / 65%), var(--color-acento)); pointer-events: none;
+}
+.semana__dia { display: flex; flex-direction: column; align-items: center; gap: 0.2rem; min-width: 0; }
+.semana__barra-zona { position: relative; display: flex; align-items: flex-end; justify-content: center; width: 100%; height: 7.5rem; }
+.semana__barra {
+  display: block; width: min(1.6rem, 70%); height: 100%; border-radius: 9px 9px 4px 4px;
+  transform-origin: bottom; transform: scaleY(var(--alto)); transition: transform 700ms var(--curva-salida) var(--retraso);
+}
+@starting-style { .semana__barra { transform: scaleY(0); } }
+.semana__barra--meta { background: linear-gradient(180deg, #34b37a, var(--color-exito)); }
+.semana__barra--bajo { background: linear-gradient(180deg, #4b97d1, var(--color-primario-claro)); }
+.semana__barra--sobre { background: linear-gradient(180deg, var(--color-acento-claro), var(--color-acento-oscuro)); }
+.semana__barra--neutro { background: linear-gradient(180deg, #4b97d1, var(--color-primario)); }
+.semana__sin-registro { width: 0.5rem; height: 0.5rem; margin-bottom: 0.2rem; border-radius: 50%; background: light-dark(#cfdbe5, var(--color-borde)); }
+.semana__nombre { margin-top: 0.35rem; font-size: 0.72rem; font-weight: 600; color: light-dark(#4e6a7d, var(--color-texto-secundario)); }
+.semana__numero { font-size: 0.72rem; color: var(--color-texto-secundario); }
+.semana__dia--hoy .semana__nombre { padding: 0.05rem 0.45rem; border-radius: 999px; color: #fff; background: var(--color-primario); }
+.semana__dia--hoy .semana__numero { font-weight: 700; color: var(--color-primario); }
+.semana__dia--futuro { opacity: 0.45; }
+.semana__dia--futuro .semana__barra-zona::after {
+  content: ''; width: min(1.6rem, 70%); height: 30%; border: 1.5px dashed light-dark(#b9c9d6, var(--color-borde)); border-radius: 9px 9px 4px 4px;
+}
+.semana__gota { display: grid; place-items: center; height: 1rem; color: light-dark(#c3d3df, var(--color-borde)); }
+.semana__gota--meta { color: var(--color-primario-claro); }
+.semana__claves { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; margin: 0.8rem 0 0; padding: 0; list-style: none; font-size: 0.72rem; color: var(--color-texto-secundario); }
+.semana__claves li { display: inline-flex; align-items: center; gap: 0.35rem; }
+.semana__punto { width: 0.6rem; height: 0.6rem; border-radius: 50%; }
+.semana__punto--meta { background: var(--color-exito); }
+.semana__punto--bajo { background: var(--color-primario-claro); }
+.semana__punto--sobre { background: var(--color-acento); }
+.semana__punto--agua { border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--color-primario-claro); }
+
+/* Indicadores */
+.semana__indicadores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; margin: 0; padding: 0; list-style: none; align-content: start; }
+.semana__indicador {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; border: 1px solid light-dark(#e6eef4, var(--color-borde)); border-radius: 16px;
+  background: light-dark(#fff, var(--color-superficie));
+  transition: transform 200ms var(--curva-salida), box-shadow 200ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .semana__indicador:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgb(11 79 128 / 9%); }
+}
+.semana__indicador > div { display: flex; flex-direction: column; gap: 0.1rem; min-width: 0; }
+.semana__etiqueta { font-size: 0.75rem; color: var(--color-texto-secundario); }
+.semana__valor strong { font-size: 1.35rem; color: var(--color-primario-oscuro); font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.semana__valor small { font-size: 0.8rem; font-weight: 500; color: var(--color-texto-secundario); }
+.semana__tendencia, .semana__detalle { font-size: 0.72rem; color: var(--color-texto-secundario); }
+.semana__perfil { font-size: 0.8rem; font-weight: 600; }
+.semana__icono { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; flex-shrink: 0; border-radius: 50%; }
+.semana__icono--meta { color: var(--color-exito); background: var(--color-exito-fondo); }
+.semana__icono--calorias { color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
+.semana__icono--agua { color: var(--color-primario-claro); background: var(--color-info-fondo); }
+.semana__anillo { width: 2.6rem; height: 2.6rem; flex-shrink: 0; transform: rotate(-90deg); }
+.semana__anillo circle { fill: none; stroke-width: 5; }
+.semana__anillo-fondo { stroke: light-dark(#e3edf5, var(--color-info-fondo)); }
+.semana__anillo-avance { stroke: var(--color-primario-claro); stroke-linecap: round; transition: stroke-dashoffset 900ms var(--curva-salida); }
+
+.semana__mensaje {
+  display: flex; align-items: center; gap: 0.5rem; margin: 0; padding: 0.75rem 0.9rem; border-radius: 14px; font-size: 0.82rem; font-weight: 600;
+  color: light-dark(#0b4f80, var(--color-primario)); background: light-dark(#eaf5fc, var(--color-info-fondo));
+}
+.semana__mensaje .icono { flex-shrink: 0; color: var(--color-acento); }
+
+@media (min-width: 52rem) {
+  .semana__cuerpo { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
+  .semana__indicadores { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+/* En el celular, dos indicadores por fila: el ícono va arriba del texto para que quepan. */
+@media (max-width: 39.99rem) {
+  .resumen-semanal { padding: 1rem; }
+  .semana__grafico { padding: 0.85rem 0.6rem; }
+  .semana__indicador { flex-direction: column; align-items: flex-start; gap: 0.5rem; padding: 0.75rem; }
+  .semana__valor strong { font-size: 1.2rem; }
+}
+@media (max-width: 23rem) {
+  .semana__barra-zona { height: 6rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .semana__barra, .semana__anillo-avance, .semana__indicador { transition: none; }
+}
