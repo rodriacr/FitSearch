@@ -269,3 +269,34 @@ describe('alimentos pedidos en el chat (FS-HU-09)', () => {
     expect(agregados).toHaveLength(8);
   });
 });
+
+describe('racha de registro (25-11-2026)', () => {
+  const dias = (...fechas) => fechas.map((fecha) => ({ fecha: new Date(`${fecha}T00:00:00Z`) }));
+
+  test('cuenta los días seguidos con comidas hasta hoy', async () => {
+    modelo.diasConRegistros.mockResolvedValue(dias('2026-10-26', '2026-10-25', '2026-10-24', '2026-10-20'));
+    expect(await servicio.racha(1, AHORA)).toEqual({ dias: 3, registradoHoy: true, diasMaximos: 365 });
+  });
+
+  test('si hoy aún no hay registros, la racha sigue viva desde ayer', async () => {
+    modelo.diasConRegistros.mockResolvedValue(dias('2026-10-25', '2026-10-24'));
+    expect(await servicio.racha(1, AHORA)).toEqual({ dias: 2, registradoHoy: false, diasMaximos: 365 });
+  });
+
+  test('un día sin registros corta la racha, y sin registros es 0', () => {
+    expect(servicio.contarRacha(new Set(['2026-10-26', '2026-10-24']), '2026-10-26')).toBe(1);
+    expect(servicio.contarRacha(new Set(['2026-10-24']), '2026-10-26')).toBe(0);
+    expect(servicio.contarRacha(new Set(), '2026-10-26')).toBe(0);
+  });
+
+  test('consulta solo los últimos 365 días del usuario, hasta hoy en Chile', async () => {
+    modelo.diasConRegistros.mockResolvedValue([]);
+    await servicio.racha(1, AHORA);
+    expect(modelo.diasConRegistros).toHaveBeenCalledWith(1, '2025-10-27', '2026-10-26');
+  });
+
+  test('cruza el cambio de mes y de año', () => {
+    const fechas = new Set(['2027-01-01', '2026-12-31', '2026-12-30']);
+    expect(servicio.contarRacha(fechas, '2027-01-01')).toBe(3);
+  });
+});

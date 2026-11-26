@@ -575,6 +575,9 @@
     "alimentosPorMensaje": 8,
     "estadisticas": {
       "margenMeta": 0.1
+    },
+    "racha": {
+      "diasMaximos": 365
     }
   },
   "agua": {

@@ -10,6 +10,7 @@ async function semana(req, res) { res.json(await servicio.semana(req.usuario.id,
 async function estadisticas(req, res) {
   res.json(await servicio.estadisticas(req.usuario.id, { periodo: req.query.periodo || 'semana', fecha: fechaDe(req.query.fecha) }));
 }
+async function racha(req, res) { res.json(await servicio.racha(req.usuario.id)); }
 async function agregar(req, res) {
   const { fecha, momento, alimentoId, gramos } = req.body;
   res.status(201).json(await servicio.agregar(req.usuario.id, { fecha: fechaDe(fecha), momento, alimentoId, gramos }));
@@ -63,7 +64,7 @@ async function registrarPeso(req, res) {
 async function eliminarPeso(req, res) { res.json(await planes.eliminarPeso(req.usuario.id, req.params.id)); }
 
 module.exports = {
-  alimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar, plan, guardarPlan, crearPersonalizado, actualizarPersonalizado,
+  alimentos, delDia, semana, estadisticas, racha, agregar, actualizar, eliminar, plan, guardarPlan, crearPersonalizado, actualizarPersonalizado,
   eliminarPersonalizado, guardarMetaPeso, eliminarMetaPeso, registrarPeso, eliminarPeso,
   planesComida: listarPlanesComida, crearPlanComida, actualizarPlanComida, eliminarPlanComida, usarPlanComida, registrarPlanComida,
 };

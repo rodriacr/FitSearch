@@ -5,6 +5,8 @@ import { solicitar } from './api.js';
 const conFecha = (ruta, fecha) => (fecha ? `${ruta}?fecha=${fecha}` : ruta);
 export const obtenerDia = (fecha) => solicitar(conFecha('/comidas', fecha));
 export const obtenerSemana = (fecha) => solicitar(conFecha('/comidas/semana', fecha));
+// Racha de registro (25-11-2026): días seguidos, hasta hoy, con al menos una comida registrada.
+export const obtenerRacha = () => solicitar('/comidas/racha');
 // Estadísticas de una semana o un mes (FS-HU-26).
 export const obtenerEstadisticas = (periodo, fecha) => solicitar(`/comidas/estadisticas?periodo=${periodo}${fecha ? `&fecha=${fecha}` : ''}`);
 export const buscarAlimentos = (texto) => solicitar(`/comidas/alimentos?q=${encodeURIComponent(texto)}`);
