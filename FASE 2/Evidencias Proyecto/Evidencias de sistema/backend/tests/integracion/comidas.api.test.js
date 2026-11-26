@@ -213,3 +213,12 @@ describe('plan de alimentación', () => {
     expect(planModelo.eliminarMetaPeso).toHaveBeenCalledWith(1, HOY);
   });
 });
+
+test('la racha responde los días seguidos con comidas y es solo para cuentas de usuario', async () => {
+  modelo.diasConRegistros.mockResolvedValue([HOY, sumarDias(HOY, -1)].map((dia) => ({ fecha: new Date(`${dia}T00:00:00Z`) })));
+  const res = await conSesion(request(app).get('/api/comidas/racha'));
+  expect(res.status).toBe(200);
+  expect(res.body).toEqual({ dias: 2, registradoHoy: true, diasMaximos: 365 });
+  const profesional = await conSesion(request(app).get('/api/comidas/racha'), 'profesional');
+  expect(profesional.status).toBe(403);
+});

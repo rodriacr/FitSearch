@@ -144,6 +144,26 @@ async function semana(usuarioId, fecha, ahora = new Date()) {
   };
 }
 
+// Racha de registro (25-11-2026): días seguidos, hasta hoy, con al menos una comida registrada. Si hoy todavía no hay
+// registros, la racha sigue viva desde ayer, porque el día aún no termina; se corta con el primer día sin registros.
+function contarRacha(fechas, hoy) {
+  let dia = fechas.has(hoy) ? hoy : sumarDias(hoy, -1);
+  let dias = 0;
+  while (fechas.has(dia)) {
+    dias += 1;
+    dia = sumarDias(dia, -1);
+  }
+  return dias;
+}
+
+// Solo se miran los últimos diasMaximos días (shared/reglas.json): una racha más larga se muestra con ese tope.
+async function racha(usuarioId, ahora = new Date()) {
+  const hoy = fechaEnChile(ahora);
+  const filas = await modelo.diasConRegistros(usuarioId, sumarDias(hoy, 1 - reglas.racha.diasMaximos), hoy);
+  const fechas = new Set(filas.map(({ fecha }) => fecha.toISOString().slice(0, 10)));
+  return { dias: contarRacha(fechas, hoy), registradoHoy: fechas.has(hoy), diasMaximos: reglas.racha.diasMaximos };
+}
+
 // Primer y último día del período de una fecha: la semana va de lunes a domingo y el mes, del día 1 al último.
 function limitesDelPeriodo(periodo, fecha) {
   if (periodo === 'mes') {
@@ -343,6 +363,6 @@ function textoAgregados({ agregados, noEncontrados, momento }) {
 }
 
 module.exports = {
-  buscarAlimentos, delDia, semana, estadisticas, agregar, actualizar, eliminar, objetivoDiario,
+  buscarAlimentos, delDia, semana, estadisticas, racha, contarRacha, agregar, actualizar, eliminar, objetivoDiario,
   prepararDesdeAsistente, guardarDesdeAsistente, textoAgregados, resolverAlimento, aporte, momentoSegunHora, MOMENTOS,
 };

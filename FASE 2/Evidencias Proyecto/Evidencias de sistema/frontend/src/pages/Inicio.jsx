@@ -7,6 +7,7 @@ import BuscadorGeneral from '../components/BuscadorGeneral.jsx';
 import EstadoVacio from '../components/EstadoVacio.jsx';
 import Icono from '../components/Icono.jsx';
 import AguaHoy from '../components/inicio/AguaHoy.jsx';
+import RachaComidas from '../components/inicio/RachaComidas.jsx';
 import Especialidades from '../components/inicio/Especialidades.jsx';
 import fotoInicio from '../assets/inicio/bienestar-inicio.webp';
 import { ACCESOS_RAPIDOS, SECCIONES } from '../components/diseno/secciones.js';
@@ -78,7 +79,7 @@ function TarjetaObjetivo({ objetivo }) {
 
 // consumidas: calorías registradas hoy en Comidas (FS-HU-10), o null si aún no se cargan o no se pudieron cargar.
 // «Pasos hoy» se quitó (SC-33): contar pasos necesita relojes o pulseras, que quedan fuera del alcance.
-// «Agua hoy» se registra a mano desde aquí (FS-HU-33).
+// «Agua hoy» se registra a mano desde aquí (FS-HU-33). La racha de comidas (25-11-2026) se carga por su cuenta.
 function TarjetaProgreso({ kcal, consumidas, consumo, metas, error, onReintentar }) {
   return (
     <section className="panel-tarjeta inicio__progreso" aria-labelledby="titulo-progreso">
@@ -102,6 +103,7 @@ function TarjetaProgreso({ kcal, consumidas, consumo, metas, error, onReintentar
           <span className="progreso__icono progreso__icono--agua"><Icono nombre="gota" tamano={22} /></span>
           <AguaHoy />
         </li>
+        <RachaComidas />
       </ul>
       <p className="progreso__nota">Consumo de hoy y metas de tu plan en <Link to="/comidas">Comidas</Link>.</p>
     </section>

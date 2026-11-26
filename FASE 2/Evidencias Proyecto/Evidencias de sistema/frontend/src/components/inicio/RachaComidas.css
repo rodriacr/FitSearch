@@ -1,0 +1,12 @@
+/* Racha de comidas en la tarjeta de progreso del Inicio (25-11-2026). Hereda el diseño de .progreso (Inicio.css). */
+.progreso__icono--racha { color: var(--color-texto-secundario); background: var(--color-info-fondo); }
+.progreso__icono--encendida { color: var(--color-acento-oscuro); background: light-dark(#fff1e6, var(--color-aviso-fondo)); }
+.racha__mensaje { flex-basis: 100%; font-size: 0.78rem; font-weight: 600; color: var(--color-exito); }
+.progreso__racha--riesgo .racha__mensaje { color: var(--color-acento-oscuro); }
+@media (prefers-reduced-motion: no-preference) {
+  .progreso__icono--encendida { animation: racha-encender 600ms var(--curva-salida) both; }
+}
+@keyframes racha-encender {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

@@ -9,6 +9,8 @@ const router = Router();
 router.use(autenticar, autorizarRoles('usuario'));
 router.get('/alimentos', v.busqueda, validar, controlador.alimentos);
 router.get('/semana', v.fechaConsulta, validar, controlador.semana);
+// Racha de registro (25-11-2026): días seguidos con al menos una comida registrada.
+router.get('/racha', controlador.racha);
 // Planes de comidas (SC-44): hasta 10 por persona, uno en uso; «Lo comí» registra un momento del plan en el día.
 router.get('/planes-comida', controlador.planesComida);
 router.post('/planes-comida', v.planComida, validar, controlador.crearPlanComida);
