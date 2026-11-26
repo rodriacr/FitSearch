@@ -11,6 +11,7 @@ import { useSesion } from './context/SesionContext.jsx';
 const ElegirPerfil = diferirPantalla(() => import('./pages/ElegirPerfil.jsx'));
 const Asistente = diferirPantalla(() => import('./pages/Asistente.jsx'));
 const Comidas = diferirPantalla(() => import('./pages/Comidas.jsx'));
+const Logros = diferirPantalla(() => import('./pages/Logros.jsx'));
 const AccesoNoDisponible = diferirPantalla(() => import('./pages/AccesoNoDisponible.jsx'));
 const LienzoAdministrador = diferirPantalla(() => import('./pages/administrador/PanelAdministrador.jsx').then((m) => ({ default: m.LienzoAdministrador })));
 const ListadoAdministrador = diferirPantalla(() => import('./pages/administrador/PanelAdministrador.jsx').then((m) => ({ default: m.ListadoAdministrador })));
@@ -100,6 +101,7 @@ export default function App() {
               <Route path="/mensajes/:id?" element={<Mensajes />} />
               <Route path="/asistente/:id?" element={<Asistente />} />
               <Route path="/comidas" element={<Comidas />} />
+              <Route path="/logros" element={<Logros />} />
               <Route path="/perfil" element={<Perfil />} />
               {SECCIONES_PROXIMAMENTE.map((clave) => (
                 <Route key={clave} path={SECCIONES[clave].ruta} element={<Proximamente key={clave} seccion={clave} />} />

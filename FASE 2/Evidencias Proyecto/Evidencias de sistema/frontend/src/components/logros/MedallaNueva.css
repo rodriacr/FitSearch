@@ -1,0 +1,33 @@
+/* Aviso de medalla nueva (25-11-2026): tarjeta oscura con rayos, confeti y la medalla iluminada. */
+.dialogo__tarjeta--logro {
+  position: relative; overflow: hidden; width: min(100%, 28rem); color: #fff; text-align: center; border: 0;
+  background: radial-gradient(circle at 50% 22%, #2a6fb0 0%, #0b3f69 45%, #0a2540 100%);
+}
+.dialogo__tarjeta--logro .dialogo__cabecera { position: relative; z-index: 2; justify-content: center; }
+.dialogo__tarjeta--logro .dialogo__cabecera h2 { color: #fff; font-size: 1.55rem; letter-spacing: -0.03em; }
+.dialogo__tarjeta--logro .dialogo__cerrar { position: absolute; top: -0.2rem; right: -0.2rem; color: #cfe6f6; }
+.medalla-nueva { position: relative; display: grid; justify-items: center; }
+.medalla-nueva__rayos {
+  position: absolute; left: 50%; top: 5.5rem; width: 30rem; height: 30rem; margin: -15rem 0 0 -15rem; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(rgb(255 210 120 / 20%) 0 7deg, transparent 7deg 20deg);
+  -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%); mask: radial-gradient(circle, #000 20%, transparent 65%);
+}
+.medalla-nueva__confeti { position: absolute; inset: 0; pointer-events: none; }
+.medalla-nueva__confeti i { position: absolute; width: 0.5rem; height: 0.85rem; border-radius: 3px; transform: rotate(var(--giro)); opacity: 0.9; }
+.medalla-nueva__medalla { position: relative; }
+.medalla-nueva__medalla .medalla { filter: drop-shadow(0 0 30px rgb(255 205 100 / 70%)) drop-shadow(0 14px 18px rgb(0 0 0 / 40%)); }
+.medalla-nueva__sup {
+  position: relative; margin: 0.6rem 0 0.3rem; padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: #1a1a1a; background: linear-gradient(90deg, #ffe08a, #f2b420);
+}
+.medalla-nueva__desc { position: relative; margin: 0.6rem 0 0.4rem; font-size: 0.9rem; line-height: 1.55; color: #d3e8f7; }
+.medalla-nueva__puntos { position: relative; margin: 0 0 1rem; font-size: 0.85rem; color: #cfe6f6; }
+.medalla-nueva__puntos strong { font-size: 1.15rem; color: #ffd27a; }
+.medalla-nueva__acciones { position: relative; display: grid; width: 100%; }
+.medalla-nueva__acciones .boton { width: 100%; }
+@media (prefers-reduced-motion: no-preference) {
+  .medalla-nueva__medalla { animation: medalla-aparecer 700ms var(--curva-salida) both; }
+  .medalla-nueva__confeti i { animation: confeti-caer 1.4s ease-out var(--retraso) both; }
+}
+@keyframes medalla-aparecer { from { transform: scale(0.4) rotate(-12deg); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes confeti-caer { from { transform: translateY(-2rem) rotate(0deg); opacity: 0; } to { transform: translateY(0) rotate(var(--giro)); opacity: 0.9; } }

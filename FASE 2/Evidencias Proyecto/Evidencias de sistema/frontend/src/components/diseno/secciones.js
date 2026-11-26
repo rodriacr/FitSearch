@@ -13,6 +13,8 @@ export const SECCIONES = {
   comidas: { ruta: '/comidas', nombre: 'Comidas', icono: 'comida' },
   perfil: { ruta: '/perfil', nombre: 'Mi perfil', icono: 'usuario' },
   favoritos: { ruta: '/favoritos', nombre: 'Favoritos', icono: 'corazon' },
+  // Logros y medallas (25-11-2026).
+  logros: { ruta: '/logros', nombre: 'Mis logros', icono: 'trofeo' },
   configuracion: { ruta: '/configuracion', nombre: 'Configuración', icono: 'ajustes' },
   citas: {
     ruta: '/citas', nombre: 'Mis citas', icono: 'calendario',
@@ -20,7 +22,7 @@ export const SECCIONES = {
   },
 };
 
-export const MENU_LATERAL = ['inicio', 'profesionales', 'centros', 'gimnasios', 'asistente', 'comidas', 'perfil', 'citas'];
+export const MENU_LATERAL = ['inicio', 'profesionales', 'centros', 'gimnasios', 'asistente', 'comidas', 'logros', 'perfil', 'citas'];
 export const ACCESOS_RAPIDOS = ['profesionales', 'centros', 'gimnasios', 'citas', 'asistente', 'comidas'];
 export const BARRA_INFERIOR = [
   { seccion: 'inicio', nombre: 'Inicio', icono: 'casa' },
