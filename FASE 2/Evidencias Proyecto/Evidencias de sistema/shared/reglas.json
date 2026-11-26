@@ -638,5 +638,223 @@
         }
       ]
     }
+  },
+  "logros": {
+    "puntos": {
+      "bronce": 50,
+      "plata": 100,
+      "oro": 250,
+      "platino": 500,
+      "secreta": 150,
+      "temporada": 200
+    },
+    "niveles": [
+      {
+        "desde": 0,
+        "nombre": "Primeros pasos"
+      },
+      {
+        "desde": 100,
+        "nombre": "En marcha"
+      },
+      {
+        "desde": 250,
+        "nombre": "Activo"
+      },
+      {
+        "desde": 450,
+        "nombre": "Comprometido"
+      },
+      {
+        "desde": 700,
+        "nombre": "Constante"
+      },
+      {
+        "desde": 1000,
+        "nombre": "Equilibrado"
+      },
+      {
+        "desde": 1400,
+        "nombre": "Inspirador"
+      },
+      {
+        "desde": 1900,
+        "nombre": "Leyenda del bienestar"
+      }
+    ],
+    "colecciones": [
+      {
+        "clave": "constancia",
+        "nombre": "Constancia",
+        "descripcion": "Días seguidos registrando comidas",
+        "icono": "rayo",
+        "color": "#f47b20",
+        "metas": [
+          3,
+          7,
+          30,
+          100
+        ],
+        "etiquetas": [
+          "3 días",
+          "7 días",
+          "30 días",
+          "100 días"
+        ]
+      },
+      {
+        "clave": "hidratacion",
+        "nombre": "Hidratación",
+        "descripcion": "Días con la meta de agua",
+        "icono": "gota",
+        "color": "#1aa3d9",
+        "metas": [
+          3,
+          10,
+          30,
+          100
+        ],
+        "etiquetas": [
+          "3 días",
+          "10 días",
+          "30 días",
+          "100 días"
+        ]
+      },
+      {
+        "clave": "equilibrio",
+        "nombre": "Equilibrio",
+        "descripcion": "Días cerca de tu meta de calorías (±10 %)",
+        "icono": "balanza",
+        "color": "#12805a",
+        "metas": [
+          3,
+          10,
+          30,
+          60
+        ],
+        "etiquetas": [
+          "3 días",
+          "10 días",
+          "30 días",
+          "60 días"
+        ]
+      },
+      {
+        "clave": "variedad",
+        "nombre": "Variedad",
+        "descripcion": "Alimentos distintos registrados",
+        "icono": "hoja",
+        "color": "#7cb518",
+        "metas": [
+          10,
+          25,
+          50,
+          100
+        ],
+        "etiquetas": [
+          "10 alimentos",
+          "25 alimentos",
+          "50 alimentos",
+          "100 alimentos"
+        ]
+      },
+      {
+        "clave": "cuidado",
+        "nombre": "Cuidado profesional",
+        "descripcion": "Citas, reseñas y controles con profesionales",
+        "icono": "medico",
+        "color": "#1565a0",
+        "metas": [
+          1,
+          1,
+          3,
+          6
+        ],
+        "etiquetas": [
+          "Primera cita confirmada",
+          "Primera reseña",
+          "3 controles",
+          "6 controles"
+        ]
+      },
+      {
+        "clave": "explorador",
+        "nombre": "Explorador",
+        "descripcion": "Conoce todo FitSearch",
+        "icono": "brujula",
+        "color": "#6b4fd8",
+        "metas": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "etiquetas": [
+          "Perfil completo",
+          "Primer chat con el asistente",
+          "Primer favorito",
+          "Primer plan de comidas propio"
+        ]
+      }
+    ],
+    "secretas": [
+      {
+        "clave": "madrugador",
+        "nombre": "Madrugador",
+        "descripcion": "Registraste 5 desayunos antes de las 8:00",
+        "pista": "Temprano",
+        "icono": "amanecer",
+        "meta": 5
+      },
+      {
+        "clave": "arcoiris",
+        "nombre": "Plato arcoíris",
+        "descripcion": "Registraste las 5 comidas del día en una misma jornada",
+        "pista": "Todas las comidas",
+        "icono": "arcoiris",
+        "meta": 1
+      },
+      {
+        "clave": "finde",
+        "nombre": "Fin de semana firme",
+        "descripcion": "Registraste sábado y domingo en 4 fines de semana",
+        "pista": "Sábado y domingo",
+        "icono": "calendario",
+        "meta": 4
+      }
+    ],
+    "temporada": [
+      {
+        "clave": "noviembre-constante",
+        "nombre": "Noviembre constante",
+        "descripcion": "Registra tus comidas 15 días de noviembre",
+        "icono": "rayo",
+        "tipo": "registro",
+        "meta": 15,
+        "desde": "11-01",
+        "hasta": "11-30"
+      },
+      {
+        "clave": "fiestas-equilibrio",
+        "nombre": "Fiestas en equilibrio",
+        "descripcion": "12 días cerca de tu meta en diciembre, con fiestas incluidas",
+        "icono": "estrella",
+        "tipo": "equilibrio",
+        "meta": 12,
+        "desde": "12-01",
+        "hasta": "12-31"
+      },
+      {
+        "clave": "verano-hidratado",
+        "nombre": "Verano hidratado",
+        "descripcion": "Cumple tu meta de agua 20 días este verano",
+        "icono": "sol",
+        "tipo": "agua",
+        "meta": 20,
+        "desde": "12-01",
+        "hasta": "02-28"
+      }
+    ]
   }
 }

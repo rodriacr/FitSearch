@@ -65,6 +65,7 @@ model Usuario {
   planesComida         PlanComida[]
   permisosCompartir    PermisoCompartir[]
   accesosCompartidos   AccesoCompartido[]
+  medallas             MedallaUsuario[]
 
   @@index([rolId])
   @@map("usuarios")
@@ -624,4 +625,20 @@ model MensajeCita {
   @@index([chatId, id])
   @@index([autorId])
   @@map("mensajes_chat")
+}
+
+// Logros y medallas (25-11-2026): medallas ganadas; periodo distingue ediciones de los retos de temporada.
+model MedallaUsuario {
+  id            Int      @id @default(autoincrement())
+  usuarioId     Int      @map("usuario_id")
+  clave         String   @db.VarChar(40)
+  nivel         String   @db.VarChar(10)
+  periodo       String   @default("") @db.VarChar(10)
+  fechaObtenida DateTime @default(now()) @map("fecha_obtenida") @db.DateTime(0)
+  vista         Boolean  @default(false)
+  usuario       Usuario  @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, clave, nivel, periodo])
+  @@index([usuarioId, fechaObtenida])
+  @@map("medallas_usuario")
 }

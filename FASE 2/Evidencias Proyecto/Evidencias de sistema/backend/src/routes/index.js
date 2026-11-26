@@ -19,6 +19,8 @@ router.use('/asistente', require('./asistente.routes'));
 router.use('/comidas', require('./comida.routes'));
 // Registro de agua del Inicio (FS-HU-33).
 router.use('/agua', require('./agua.routes'));
+// Logros y medallas (25-11-2026).
+router.use('/logros', require('./logro.routes'));
 router.use('/administrador', require('./administrador.routes'));
 router.use('/verificaciones', require('./verificacion.routes'));
 // Clientes y reportes del profesional (FS-HU-27 y FS-HU-28).

@@ -65,7 +65,7 @@ describe('Con sesión', () => {
     renderizarApp('/inicio');
     const menu = screen.getByRole('navigation', { name: 'Menú principal' });
     expect(within(menu).getAllByRole('link').filter((enlace) => enlace.classList.contains('menu-lateral__enlace')).map((enlace) => enlace.querySelector('.menu-lateral__texto').textContent)).toEqual([
-      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mis citas', 'Mensajes', 'Mi perfil',
+      'Inicio', 'Profesionales', 'Centros de salud', 'Gimnasios', 'Asistente IA', 'Comidas', 'Mis logros', 'Mis citas', 'Mensajes', 'Mi perfil',
     ]);
     expect(within(menu).getByRole('button', { name: 'Notificaciones' })).toBeInTheDocument();
   });
