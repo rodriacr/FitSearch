@@ -150,3 +150,33 @@ describe('DELETE /api/agua/:id', () => {
     expect((await conSesion(request(app).delete('/api/agua/abc'))).status).toBe(400);
   });
 });
+
+describe('GET /api/agua/semana', () => {
+  test('entrega el agua de cada día de la semana actual, el total y los días que llegaron a la meta', async () => {
+    const { fechaEnChile, lunesDeLaSemana, sumarDias } = require('../../src/utils/fechaChile');
+    const lunes = lunesDeLaSemana(fechaEnChile());
+    modelo.totalesPorDia.mockResolvedValue([
+      { fecha: new Date(`${lunes}T00:00:00Z`), _sum: { ml: 2250 } },
+      { fecha: new Date(`${sumarDias(lunes, 1)}T00:00:00Z`), _sum: { ml: 750 } },
+    ]);
+    const res = await conSesion(request(app).get('/api/agua/semana'));
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ desde: lunes, hasta: sumarDias(lunes, 6), metaMl: 2000, totalMl: 3000, diasConMeta: 1 });
+    expect(res.body.dias).toHaveLength(7);
+    expect(res.body.dias.slice(0, 3).map((d) => d.totalMl)).toEqual([2250, 750, 0]);
+    expect(modelo.totalesPorDia).toHaveBeenCalledWith(1, lunes, sumarDias(lunes, 6));
+  });
+
+  test('los días que aún no llegan quedan marcados', async () => {
+    modelo.totalesPorDia.mockResolvedValue([]);
+    const res = await conSesion(request(app).get('/api/agua/semana'));
+    const hoy = res.body.hoy;
+    expect(res.body.dias.every((d) => d.futuro === d.fecha > hoy)).toBe(true);
+    expect(res.body).toMatchObject({ totalMl: 0, diasConMeta: 0 });
+  });
+
+  test('es de la cuenta de usuario: el profesional no entra', async () => {
+    expect((await conSesion(request(app).get('/api/agua/semana'), firmar('profesional'))).status).toBe(403);
+    expect(modelo.totalesPorDia).not.toHaveBeenCalled();
+  });
+});

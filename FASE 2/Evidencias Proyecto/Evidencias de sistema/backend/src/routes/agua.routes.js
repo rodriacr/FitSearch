@@ -25,6 +25,8 @@ const fecha = body('fecha').optional().custom(esFecha).withMessage('La fecha deb
 const fechaConsulta = query('fecha').optional().custom(esFecha).withMessage('La fecha debe tener el formato AAAA-MM-DD');
 
 router.get('/', fechaConsulta, validar, async (req, res) => res.json(await servicio.delDia(req.usuario.id, req.query.fecha ?? null)));
+// Resumen semanal del Inicio (25-11-2026): agua de cada día de la semana actual.
+router.get('/semana', async (req, res) => res.json(await servicio.semana(req.usuario.id)));
 router.post('/', ml, fecha, validar,
   async (req, res) => res.status(201).json(await servicio.agregar(req.usuario.id, req.body.ml, req.body.fecha ?? null)));
 router.delete('/:id', id, fechaConsulta, validar,

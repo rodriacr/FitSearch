@@ -41,4 +41,13 @@ async function eliminar(usuarioId, fecha, id) {
   return delDia(usuarioId, fecha);
 }
 
-module.exports = { delDia, agregar, eliminar };
+// Total de agua de cada día entre dos fechas, para el resumen semanal del Inicio (25-11-2026).
+function totalesPorDia(usuarioId, desde, hasta) {
+  return prisma.registroAgua.groupBy({
+    by: ['fecha'],
+    where: { usuarioId, fecha: { gte: dia(desde), lte: dia(hasta) } },
+    _sum: { ml: true },
+  });
+}
+
+module.exports = { delDia, agregar, eliminar, totalesPorDia };

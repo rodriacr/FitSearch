@@ -95,7 +95,7 @@
 }
 
 /* El inicio prioriza la actividad diaria y mantiene la búsqueda siempre a mano. */
-.inicio { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hero" "panel" "accesos" "especialidades" "destacados" "banner"; }
+.inicio { grid-template-columns: minmax(0, 1fr); grid-template-areas: "hero" "panel" "semana" "accesos" "especialidades" "destacados" "banner"; }
 .inicio__hero { min-height: 0; padding: 1.6rem; }
 .inicio__hero-texto { max-width: 40rem; }
 .inicio__hero-pregunta { font-size: clamp(1.65rem, 2.5vw, 2.35rem); }
