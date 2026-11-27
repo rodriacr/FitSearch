@@ -14,8 +14,16 @@ ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS final
+ENV BACKEND_UPSTREAM=backend:3000
+ENV NGINX_ENTRYPOINT_LOCAL_RESOLVERS=1
+ENV NGINX_ENVSUBST_FILTER="BACKEND_UPSTREAM|NGINX_LOCAL_RESOLVERS"
+USER root
+RUN mkdir -p /etc/nginx/templates \
+    && chmod 755 /etc/nginx/templates \
+    && rm -f /etc/nginx/conf.d/default.conf
+USER 101
 # Solo lectura para el usuario de Nginx, aunque el archivo llegue con permisos 777 desde Windows o WSL.
-COPY --chmod=644 frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --chmod=644 frontend/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=build --chmod=u=rwX,go=rX /app/frontend/dist /usr/share/nginx/html
 EXPOSE 8080
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=5 \
